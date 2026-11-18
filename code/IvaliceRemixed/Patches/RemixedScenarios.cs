@@ -190,7 +190,19 @@ internal static unsafe class RemixedScenarios
     /// <summary>World-map frames seen (the autopilot waits for them).</summary>
     internal static volatile int WorldFrames;
 
-    /// <summary>Whether ReMixed has unlocked Dispatch Missions: its posting is shown (<see cref="Unlocked"/>).</summary>
+    /// <summary>Which of the bar's rumors the list shows (<see cref="RumorShown"/>): all (outside the Tavern's lists),
+    /// only the rumors (its Rumors button) or only ReMixed's mission postings (its Missions button, asked 2026-11-18).
+    /// TavernStorage sets it as a button is chosen and clears it as the Tavern's menu comes back.</summary>
+    internal static volatile int RumorFilter;
+    internal const int AllRumors = 0, RumorsOnly = 1, MissionsOnly = 2;
+    /// <summary>The Tavern screen's state while its rumor list is up (its +0x98).</summary>
+    internal const int RumorListBarState = 2;
+
+    /// <summary>Whether any of ReMixed's missions is posted (Dispatch Missions' posting aside, which is never listed).</summary>
+    internal static bool AnyMissionPosted =>
+        Postings.Exists(p => p.Scenario != TavernStorage.DispatchScenario && Unlocked(p));
+
+    /// <summary>Whether ReMixed has unlocked Dispatch Missions: its posting's unlock (<see cref="Unlocked"/>).</summary>
     internal static bool DispatchUnlocked =>
         Postings.Exists(p => p.Scenario == TavernStorage.DispatchScenario && Unlocked(p));
 
@@ -689,19 +701,25 @@ internal static unsafe class RemixedScenarios
 
     /// <summary>The bar's check of a rumor (which it lists): one of ReMixed's postings once its mission is unlocked
     /// (<see cref="Unlocked"/>), an ordinary conditional rumor while all of its conditions hold, or one of the game's
-    /// own rumors as the game decides.</summary>
+    /// own rumors as the game decides; under the Tavern's Missions only the postings, under its Rumors only the rest
+    /// (<see cref="RumorFilter"/>). Dispatch Missions' posting is never listed: the Tavern has its own button.</summary>
     [UnmanagedCallersOnly]
     internal static byte RumorShown(int rumor, int location)
     {
+        var filter = RumorFilter;
         try
         {
             foreach (var p in ConditionalRumors)
                 if (rumor == p.Rumor)
-                    return (byte)(ReadVariable(StoryProgress) >= p.Progress && ReadVariable(p.Required) != 0
-                                  && ReadVariable(p.Clear1) == 0 && ReadVariable(p.Clear2) == 0 ? 1 : 0);
+                    return (byte)(filter != MissionsOnly && ReadVariable(StoryProgress) >= p.Progress
+                                  && ReadVariable(p.Required) != 0 && ReadVariable(p.Clear1) == 0
+                                  && ReadVariable(p.Clear2) == 0 ? 1 : 0);
             foreach (var p in Postings)
                 if (rumor == p.Rumor)
-                    return (byte)(Unlocked(p) ? 1 : 0);
+                    return (byte)(filter != RumorsOnly && p.Scenario != TavernStorage.DispatchScenario
+                                  && Unlocked(p) ? 1 : 0);
+            if (filter == MissionsOnly)
+                return 0;
         }
         catch (Exception e)
         {

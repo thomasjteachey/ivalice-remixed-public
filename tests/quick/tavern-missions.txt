@@ -1,0 +1,57 @@
+# The Tavern's Missions button and Dispatch's controller Back (asked 2026-11-18). Run with --restart --location 2
+# (Eagrose). Missions lists only ReMixed's mission postings, under its own heading, prompt and breadcrumb; Rumors only
+# the ordinary rumors; Dispatch Missions' posting is in neither. In Dispatch, a controller's B in Special Training's
+# roster picker stays in the picker (it used to pull the list back to the main page under the picker's units, seen on
+# the Deck), and B on an empty page (Jobs, before story section 3) still goes back to the main page.
+name Tavern Missions and Dispatch Back
+wait world depth=1 state=0 timeout=20
+setvar 0x6E 0x10
+key C wait=0.5
+key RETURN
+wait world depth=2 state=4 timeout=10
+key S wait=0.5
+key RETURN
+wait world depth=2 state=5 timeout=10
+wait seconds 2
+key UP wait=1
+shot menu
+key RETURN
+wait log the Tavern.s Missions chosen timeout=10
+wait seconds 2.5
+shot missions
+key ESCAPE
+wait world depth=2 state=5 timeout=10
+wait seconds 1.5
+key UP wait=0.8
+key UP wait=0.8
+key RETURN
+wait log the Tavern.s Rumors chosen timeout=10
+wait seconds 2.5
+shot rumors
+key ESCAPE
+wait world depth=2 state=5 timeout=10
+wait seconds 1.5
+key DOWN wait=0.8
+key RETURN
+wait log dispatch missions: opened the native view timeout=10
+wait seconds 2
+key DOWN wait=0.6
+key DOWN wait=0.6
+key RETURN
+wait log dispatch missions: opened Training timeout=10
+wait seconds 2
+key RETURN wait=3
+key RETURN wait=1.5
+send worldpad 0x20 4
+wait seconds 3
+shot picker-after-controller-back
+wait log "requested Tavern state 1, row -?[0-9]+ on Training" press=ESCAPE every=2.5 timeout=40
+wait seconds 2.5
+key DOWN wait=0.8
+key RETURN
+wait log dispatch missions: opened Jobs timeout=10
+wait seconds 2
+send worldpad 0x20 4
+wait log controller Back fallback returned from Jobs timeout=10
+wait seconds 2
+shot back-from-empty-jobs

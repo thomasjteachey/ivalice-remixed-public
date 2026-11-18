@@ -1564,13 +1564,19 @@ DISPATCH_UI_TEXT = {
     "prompt": "Select a dispatch category or mission.",
     "button": "Send units out on Propositions and Jobs, or to Special Training and Contests.",
     "empty": "No missions available.",
+    "missions": "Missions",
+    "missions_button": "Rendezvous missions on offer, listed apart from the tavern's rumors.",
+    "missions_help": "Select a mission. Press Start to accept it.",
 }
 # The Tavern's left menu (UIMenuButtonLeft: labels, descriptions, actions): row 3 Rumors and Errands, row 7 the same
 # with Errands locked ("???"). Dispatch Missions replaces Errands, as ReMixed's replaces vanilla's errands: row 3's
 # second button is Dispatch Missions (DISPATCH_UI_TEXT's title and button text), keeping Errands' action, and the
 # code mod picks row 3 or 7 by ReMixed's unlock and opens the Dispatch view from Errands' own case
-# (TavernStorage.OnTavernUnlock, OnBarRequest, OnPrepare). Row 7 stays the remaster's locked button.
-TAVERN_MENU_ROW = 3
+# (TavernStorage.OnTavernUnlock, OnBarRequest, OnPrepare). Row 7 keeps the remaster's locked button. Both rows get a
+# third button, Missions (asked 2026-11-18): the screen asks for Rumors for any button but the second, and the code mod
+# lists only ReMixed's mission postings there and only the rumors under Rumors (RemixedScenarios.RumorShown).
+TAVERN_MENU_ROWS = (3, 7)
+TAVERN_DISPATCH_ROW = 3
 TAVERN_MENU_ACTIONS = [9, 10]
 
 def write_options_page(cfg: dict) -> str:
@@ -1588,7 +1594,7 @@ def write_options_page(cfg: dict) -> str:
         texts[key] = value
         dispatch[name] = key
     listing["dispatch"] = dispatch
-    menu = tavern_menu_rows(cfg, dispatch["title"], dispatch["button"])
+    menu = tavern_menu_rows(cfg, dispatch)
     dialogs = nxd_keys(cfg, "uidialog", "UIDialog")
     if dialogs != set(range(max(dialogs) + 1)):
         raise SystemExit("the game's dialogs aren't an unbroken run from 0; Reveal Treasures' would not be found")
@@ -2249,21 +2255,29 @@ REUSED_SCENARIO_NUMBERS |= {0x1B5}
 NEMESIS_TRIGGER = (1, 0x8F, 0)  # the set's one condition (type 1: flag 0x8F = 0), then 0x19 and the event
 
 
-def tavern_menu_rows(cfg: dict, label: int, description: int) -> str:
-    """The Tavern's left-menu row (TAVERN_MENU_ROW) with Dispatch Missions in Errands' place (its UI text keys)."""
+def tavern_menu_rows(cfg: dict, texts: dict[str, int]) -> str:
+    """The Tavern's left-menu rows (TAVERN_MENU_ROWS): Dispatch Missions in Errands' place in the unlocked one, and a
+    third button, Missions, in both (their UI text keys from DISPATCH_UI_TEXT)."""
     db = sqlite3.connect(nxd_sqlite(cfg, "uimenubuttonleft"))
     columns = [c for (_, c, *_) in db.execute('pragma table_info("UIMenuButtonLeft")')]
-    found = db.execute('select * from "UIMenuButtonLeft" where Key = ?', (TAVERN_MENU_ROW,)).fetchone()
+    rows = {}
+    for key in TAVERN_MENU_ROWS:
+        found = db.execute('select * from "UIMenuButtonLeft" where Key = ?', (key,)).fetchone()
+        row = dict(zip(columns, found)) if found else {}
+        labels, notes, actions = (json.loads(row.get(c) or "null") for c in ("Unknown8", "Unknown10", "Unknown18"))
+        if actions != TAVERN_MENU_ACTIONS or len(labels) != 2 or len(notes) != 2:
+            db.close()
+            raise SystemExit(f"UIMenuButtonLeft row {key} isn't the Tavern's Rumors and Errands any more: {row}")
+        if key == TAVERN_DISPATCH_ROW:
+            labels[1], notes[1] = texts["title"], texts["button"]
+        row.pop("Key")
+        row["Unknown8"] = json.dumps(labels + [texts["missions"]], separators=(",", ":"))
+        row["Unknown10"] = json.dumps(notes + [texts["missions_button"]], separators=(",", ":"))
+        row["Unknown18"] = json.dumps(actions + [actions[0]], separators=(",", ":"))
+        rows[key] = [row]
     db.close()
-    row = dict(zip(columns, found)) if found else {}
-    labels, texts, actions = (json.loads(row.get(c) or "null") for c in ("Unknown8", "Unknown10", "Unknown18"))
-    if actions != TAVERN_MENU_ACTIONS or len(labels) != 2 or len(texts) != 2:
-        raise SystemExit(f"UIMenuButtonLeft row {TAVERN_MENU_ROW} isn't the Tavern's Rumors and Errands any more: {row}")
-    row.pop("Key")
-    row["Unknown8"] = json.dumps([labels[0], label], separators=(",", ":"))
-    row["Unknown10"] = json.dumps([texts[0], description], separators=(",", ":"))
-    return (replace_nxd_rows(cfg, "uimenubuttonleft", "UIMenuButtonLeft", {TAVERN_MENU_ROW: [row]})
-            + " (Dispatch Missions in place of the Tavern's Errands)")
+    return (replace_nxd_rows(cfg, "uimenubuttonleft", "UIMenuButtonLeft", rows)
+            + " (Dispatch Missions in place of the Tavern's Errands, and Missions)")
 
 
 BATTLE_OPENING = (1, 0x1FD, 1)  # a battle's first set: "var 0x1FD = 1 -> its event", its opening
@@ -3075,19 +3089,19 @@ MISSIONS[17] = (0xC4, 53, 0x1B5)
 # not its key (seen on the PC: postings from 24 showed the row after theirs), so they go straight after the game's 23.
 MISSION_RUMORS = 23
 MISSION_TEXTS = 0x5A8  # ReMixed's WORLD/WLDMES.BIN: entry i's posting is message 0x5A8 + i
-MISSION_TITLE = "Mission: {}"  # the posting's title in the rumor list
+MISSION_TITLE = "{}"  # the posting's title in the Tavern's Missions list (it said "Mission: " among the rumors)
 # ReMixed's last line of each posting, and the mod's: its battle starts once the world map is back (the code mod's
 # RemixedScenarios.Accepted), as started under the tavern's screens they stayed drawn over its formation.
 MISSION_ACCEPT = ("(Press Start to accept mission.)", "(Press Start to accept mission. It begins as you leave town.)")
 # Entry 1 of ReMixed's list is its dispatch tavern (TAVERN): its posting has no title line (the list names it; the
-# Preparation Menu calls it Dispatch Missions). It tells of the Tavern menu's Dispatch Missions button (TAVERN_MENU_ROW),
-# which opens the native dispatch view; Start on it does nothing.
+# Preparation Menu calls it Dispatch Missions). It's never listed (RemixedScenarios.RumorShown, asked 2026-11-18): the
+# Tavern menu's Dispatch Missions button (TAVERN_MENU_ROWS) opens the native dispatch view instead.
 TAVERN_POSTING = 1
 TAVERN_TITLE = "Dispatch Missions"
 TAVERN_NAME_CHARS = 40  # the tavern's lines this short with no speaker are names that go into others' slots
 TAVERN_ACCEPT = ("(Press Start to go to the tavern.)", "(Choose Dispatch Missions in the Tavern's menu.)")
-# Posted with Chocobo Defense's unlock, as in ReMixed, and last, so the missions' rows stay where earlier builds put
-# them, and as the notice that Dispatch Missions is open: the Tavern's button is locked ("???") until it's posted.
+# Still a posting, unlocked with Chocobo Defense as in ReMixed, and last, so the missions' rows stay where earlier
+# builds put them: its unlock is the Tavern button's, locked ("???") until then.
 TAVERN_POSTED = True
 if TAVERN_POSTED:
     MISSIONS[TAVERN_POSTING] = (TAVERN_SCENE, 15, 0x1B7)
@@ -3130,10 +3144,9 @@ def mission_unlock_reads(code: bytes, lengths: bytes) -> list[tuple[bytes, bytes
 # and Wedge's bartender (0x0A4, which unlocks the first mission) sends the player to Bonus Content in the Brave Story;
 # the mod posts the missions in the taverns.
 LINE_CHANGES = {0xA4: {"Check out \"Bonus Content\" in the Brave Story if you're thinking about giving them a try!":
-                       "Look over the postings among the Rumors in any tavern if you're thinking about giving them a "
-                       "try!",
+                       "Look over the Missions in any tavern if you're thinking about giving them a try!",
                        "New Bonus Content unlocked! Check it out in the Brave Story.":
-                       "Rendezvous missions are now posted among the Rumors in taverns."},
+                       "Rendezvous missions are now posted under Missions in taverns."},
                 WHEEL: {"Start: Cash In": "Triangle: Cash In"}}
 # Lines that only size a box, by event and message number: the tavern's picker opens its card's box with message 0x25
 # ("1234567890123456789012345", its message written in as it runs), and the remaster sizes a box by the line its
@@ -6915,7 +6928,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata.
-RELEASE_VERSION = "0.9.14"
+RELEASE_VERSION = "0.9.15"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:

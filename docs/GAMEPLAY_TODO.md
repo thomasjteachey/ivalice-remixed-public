@@ -32,8 +32,9 @@ events: built means the mod ships it; working means seen running in the game. Ea
 
 The events, by group:
 
-- **Missions** (31 events, all built; once called location battles): ReMixed's Rendezvous battles, posted among the
-  Rumors in every tavern as its story unlocks each ("Mission: Lost Heirloom" and so on, with ReMixed's text). Start on
+- **Missions** (31 events, all built; once called location battles): ReMixed's Rendezvous battles, posted under the
+  Missions button in every tavern as its story unlocks each (since 2026-11-18; they were among the Rumors as "Mission:
+  Lost Heirloom" and so on before), with ReMixed's text. Start on
   a posting accepts it, and the battle begins as you leave town. Nobody is lost for good in one (a fallen unit stays
   down for that battle only) and Math Skill can't be brought in, as in ReMixed. Two are fought in rounds: The Shrine
   Knights in four, Brave Story in ten, each round on from the last. Seen on the PC (2026-11-07): Lost Heirloom from
@@ -420,6 +421,21 @@ side chapter 1-A above):
   the party is made from its own battle data. The remaster's own battles are as before. Seen in the hidden PC game:
   Hirame loaded from the party and Wright from his data (`tests/quick/roster-loads-hirame.txt`), 1-A's knights from
   theirs (`roster-loads-knights.txt`), Araguay as before (`araguay-battle.txt`). *medium*
+
+Asked on the Deck (2026-11-18):
+
+- [x] The Tavern's menu has its own Missions button under Dispatch Missions: ReMixed's mission postings are listed
+  there under their own heading and prompt, and Rumors lists only the ordinary rumors. Dispatch Missions' posting is
+  gone from both (the Tavern's Dispatch button opens it). The bartender who unlocks the first mission, and the notice
+  after him, point to Missions. Seen in the hidden PC game (`tests/quick/tavern-missions.txt`). *small*
+- [x] B on a controller in Dispatch's roster picker (Special Training's, seen on the Deck) pulled the catalog back to
+  its main page under the picker's units. The mod's Back fallback for empty pages now acts only when the catalog's
+  list was on screen as B was pressed; B on an empty page still goes back. Seen in the hidden PC game with a
+  controller's B held in the pad words (`tests/quick/tavern-missions.txt`). *small*
+- Dispatch Missions with nothing to send yet is ReMixed's own design: its catalog opens by the story section (var
+  0x6F, which the story's events step and side chapter 1-A restarts at 1): Special Training from the start, Jobs and
+  the first Mining and Exploration sets at section 3 (the Wiegraf and Gustav scene in chapter 1, or 1-A's scene at its
+  progress 7), Salvaging and Investigation at 4, Combat, Odd Jobs and the monthly Contests at 5.
 
 Reported by a player:
 

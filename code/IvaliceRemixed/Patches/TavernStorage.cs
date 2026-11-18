@@ -29,7 +29,15 @@ internal static unsafe class TavernStorage
     /// Errands' note; -1 is nothing. Its menu (0x19F498) requests 4 or 5 for its second button, by whether that
     /// button is enabled, and 2 for any other (seen in the PC game, 2026-11-18). Dispatch Missions replaces Errands
     /// there (tools/build_mod.py, TAVERN_MENU_ROW), as ReMixed's replaces vanilla's errands.</summary>
-    internal const int MenuState = 1, ErrandsRequest = 4, LockedErrandsRequest = 5, NoRequest = -1;
+    internal const int MenuState = 1, RumorsRequest = 2, ErrandsRequest = 4, LockedErrandsRequest = 5, NoRequest = -1,
+                       MenuAt = 0x68, MenuCursorAt = 0x1F0, MissionsButton = 2, RumorsCrumb = 0x731;
+    /// <summary>The Tavern screen's rumor list (its +0x70), laid out as the Errands screen is: its layout text nodes
+    /// from the one at its +0x1B8 (the heading "Rumors", 0x741, the 5th; seen in the PC game, 2026-11-18), and its
+    /// prompt, "Select a rumor to learn more." (0x749), the node at +0x378 with its text at +0x3C8, set through the
+    /// formatter at +0x3A8 (<see cref="ApplyProfitPrompt"/>'s, which the Errands screen's has at the same places).
+    /// The catalog's list state is 4; its roster picker 6.</summary>
+    internal const int RumorsAt = 0x70, RumorsLayoutAt = 0x1B8, RumorsHeadText = 0x741, RumorsHelpText = 0x749,
+                       PromptNodeAt = 0x378, PromptTextAt = 0x3C8, PromptFormatAt = 0x3A8, CatalogListState = 4;
     /// <summary>The Tavern menu's setup (0x19F330) asks the unlock table whether Errands are open (0xFF8A4, row
     /// 0xC94) and builds UIMenuButtonLeft row 3 if so, row 7 (Errands as a locked "???") if not: that call, which
     /// <see cref="OnTavernUnlock"/> answers with ReMixed's unlock of Dispatch Missions instead.</summary>
@@ -194,6 +202,13 @@ internal static unsafe class TavernStorage
     private static int _dispatchTitleText;
     private static int _dispatchPromptText;
     private static int _dispatchEmptyText;
+    private static int _missionsText;
+    private static nint _missionsScreen;
+    private static nint _missionsHeadNode;
+    private static bool _missionsTextsShown;
+    private static int _lastCatalogState = -1;
+    private static int _missionsHelpText;
+    private static bool _uiTextsLoaded;
     private static bool _nativeNumericTextCaptured;
     private static int _nativeCostText;
     private static int _nativeDayStartText;
@@ -393,12 +408,19 @@ internal static unsafe class TavernStorage
     /// world UI frame so stale ordinary Errand widgets cannot remain below the Dispatch page.</summary>
     internal static void Tick()
     {
+        ShowMissionsTexts();
         if (!_dispatchView)
             return;
         try
         {
             var frame = RemixedScenarios.WorldFrames;
-            if (_harnessKind == null && _page != DispatchPage.Main && !_needsRefresh &&
+            // The list's state, now and the frame before: B inside the roster picker (state 6) removes a unit or
+            // closes the picker, and the list it closes to must not take that press as its own Back (seen on the
+            // Deck, 2026-11-18: Special Training's picker stayed drawn over the main page).
+            var listState = _profitMain == 0 ? -1 : *(int*)(_profitMain + 0x40);
+            var onList = listState == CatalogListState && _lastCatalogState == CatalogListState;
+            _lastCatalogState = listState;
+            if (_harnessKind == null && _page != DispatchPage.Main && !_needsRefresh && onList &&
                 (RemixedScenarios.NewlyHeldButtons & 0x20) != 0)
             {
                 // Give ProfitMain its normal update later in this frame. A zero-row native page does not always
@@ -410,7 +432,7 @@ internal static unsafe class TavernStorage
             {
                 var page = _pendingBackPage;
                 _pendingBackFrame = -1;
-                if (!_needsRefresh && _page == page)
+                if (!_needsRefresh && _page == page && listState == CatalogListState)
                 {
                     NavigateBack();
                     _needsRefresh = true;
@@ -491,6 +513,23 @@ internal static unsafe class TavernStorage
         var result = _barRequest(screen, request);
         try
         {
+            if (!_dispatchView && request != null && *(int*)(screen + 0x98) == MenuState && *request == RumorsRequest)
+            {
+                // Rumors and Missions both open the rumor list; RemixedScenarios.RumorShown lists one or the other.
+                var missions = MenuCursor(screen) == MissionsButton;
+                if (missions && !RemixedScenarios.AnyMissionPosted)
+                {
+                    *request = NoRequest;
+                    _log.Info("remixed scenarios: Missions chosen before any mission is posted; nothing opens");
+                }
+                else
+                {
+                    LoadUiTexts();
+                    _missionsScreen = missions ? screen : 0;
+                    RemixedScenarios.RumorFilter = missions ? RemixedScenarios.MissionsOnly : RemixedScenarios.RumorsOnly;
+                    _log.Info($"remixed scenarios: the Tavern's {(missions ? "Missions" : "Rumors")} chosen");
+                }
+            }
             if (!_dispatchView && request != null && *(int*)(screen + 0x98) == MenuState
                 && *request is ErrandsRequest or LockedErrandsRequest)
             {
@@ -513,11 +552,102 @@ internal static unsafe class TavernStorage
         return result;
     }
 
+    /// <summary>The Missions list's heading and prompt, once the rumor list is up for the Tavern's Missions button.</summary>
+    private static void ShowMissionsTexts()
+    {
+        if (_missionsTextsShown || _missionsScreen == 0 || _missionsText == 0 || _setText == null)
+            return;
+        try
+        {
+            if (*(int*)(_missionsScreen + 0x98) != RemixedScenarios.RumorListBarState)
+                return;
+            var rumors = *(nint*)(_missionsScreen + RumorsAt);
+            if (rumors == 0)
+                return;
+            _missionsTextsShown = true;
+            _missionsHeadNode = FindLayoutText(*(nint*)(rumors + RumorsLayoutAt), RumorsHeadText);
+            SetNodeText(_missionsHeadNode, _missionsText);
+            SetPrompt(rumors, _missionsHelpText);
+        }
+        catch (Exception e)
+        {
+            _log.Error($"remixed scenarios: the Missions list's texts couldn't change ({e.Message})");
+        }
+    }
+
+    private static void HideMissionsTexts()
+    {
+        try
+        {
+            if (_missionsTextsShown && _missionsScreen != 0)
+            {
+                SetNodeText(_missionsHeadNode, RumorsHeadText);
+                var rumors = *(nint*)(_missionsScreen + RumorsAt);
+                if (rumors != 0)
+                    SetPrompt(rumors, RumorsHelpText);
+            }
+        }
+        catch (Exception e)
+        {
+            _log.Error($"remixed scenarios: the Rumors list's texts couldn't come back ({e.Message})");
+        }
+        _missionsTextsShown = false;
+        _missionsScreen = 0;
+        _missionsHeadNode = 0;
+    }
+
+    /// <summary>The layout text node (vtable-checked, <see cref="LayoutNodeBytes"/> apart from <paramref name="first"/>)
+    /// that shows <paramref name="text"/>, or 0.</summary>
+    private static nint FindLayoutText(nint first, int text)
+    {
+        if (first == 0 || !Harness.Readable(first, LayoutNodeBytes))
+            return 0;
+        var vtable = *(nint*)first;
+        for (var k = 0; k < LayoutNodesScanned; k++)
+        {
+            var node = first + k * LayoutNodeBytes;
+            if (!Harness.Readable(node, LayoutNodeBytes) || *(nint*)node != vtable)
+                return 0;
+            if (*(int*)(node + NodeTextAt) == text)
+                return node;
+        }
+        return 0;
+    }
+
+    private static void SetNodeText(nint node, int text)
+    {
+        if (node == 0 || text <= 0 || *(int*)(node + NodeTextAt) == text)
+            return;
+        *(int*)(node + NodeTextAt) = text;
+        *(byte*)(node + NodeDirtyAt) = 1;
+    }
+
+    private static void SetPrompt(nint screen, int text)
+    {
+        var node = *(nint*)(screen + PromptNodeAt);
+        if (node == 0 || text <= 0)
+            return;
+        *(int*)(screen + PromptTextAt) = text;
+        _setText(node, text, screen + PromptFormatAt);
+    }
+
+    /// <summary>The Tavern menu's cursor (its button), or -1 while it has no menu.</summary>
+    internal static int MenuCursor(nint screen)
+    {
+        if (screen == 0 || *(int*)(screen + 0x98) != MenuState)
+            return -1;
+        var menu = *(nint*)(screen + MenuAt);
+        return menu == 0 ? -1 : *(int*)(menu + MenuCursorAt);
+    }
+
     [UnmanagedCallersOnly]
     private static nint OnBreadcrumb(nint crumbs, int level, int text)
     {
         if (_dispatchView && level == CrumbLevel && text == ErrandsCrumb && _dispatchTitleText > 0)
             text = _dispatchTitleText;
+        else if (RemixedScenarios.RumorFilter == RemixedScenarios.MissionsOnly && level == CrumbLevel
+                 && text == RumorsCrumb && _missionsText > 0)
+            text = _missionsText;
         return _breadcrumb(crumbs, level, text);
     }
 
@@ -526,6 +656,11 @@ internal static unsafe class TavernStorage
     {
         try
         {
+            if (state is 0 or MenuState && RemixedScenarios.RumorFilter != RemixedScenarios.AllRumors)
+            {
+                HideMissionsTexts();
+                RemixedScenarios.RumorFilter = RemixedScenarios.AllRumors;
+            }
             if (_dispatchView && state != 4 && state is not (>= 6 and <= 12) && state != 23)
             {
                 ApplyProfitHeading(false);
@@ -1127,22 +1262,30 @@ internal static unsafe class TavernStorage
             if (entry.Key is < TrainingTextFirst or > DispatchTextLast || !Entries.TryAdd(entry.Key, entry))
                 throw new InvalidDataException($"invalid or duplicate dispatch catalog key {entry.Key}");
         }
+        LoadUiTexts();
+        _log.Info($"dispatch missions: loaded {_catalog.Length} virtual entries from {CatalogFileName}");
+    }
+
+    /// <summary>The mod's UI texts for the Tavern (tools/build_mod.py, DISPATCH_UI_TEXT), by their keys in the
+    /// options page's listing.</summary>
+    private static void LoadUiTexts()
+    {
+        if (_uiTextsLoaded)
+            return;
+        _uiTextsLoaded = true;
         var options = Path.Combine(Path.GetDirectoryName(typeof(TavernStorage).Assembly.Location) ?? "",
                                    OptionsPage.FileName);
-        if (File.Exists(options))
-        {
-            using var document = JsonDocument.Parse(File.ReadAllText(options));
-            if (document.RootElement.TryGetProperty("dispatch", out var dispatch)
-                && dispatch.TryGetProperty("title", out var title))
-            {
-                _dispatchTitleText = title.GetInt32();
-                if (dispatch.TryGetProperty("prompt", out var prompt))
-                    _dispatchPromptText = prompt.GetInt32();
-                if (dispatch.TryGetProperty("empty", out var empty))
-                    _dispatchEmptyText = empty.GetInt32();
-            }
-        }
-        _log.Info($"dispatch missions: loaded {_catalog.Length} virtual entries from {CatalogFileName}");
+        if (!File.Exists(options))
+            return;
+        using var document = JsonDocument.Parse(File.ReadAllText(options));
+        if (!document.RootElement.TryGetProperty("dispatch", out var dispatch))
+            return;
+        int Text(string name) => dispatch.TryGetProperty(name, out var value) ? value.GetInt32() : 0;
+        _dispatchTitleText = Text("title");
+        _dispatchPromptText = Text("prompt");
+        _dispatchEmptyText = Text("empty");
+        _missionsText = Text("missions");
+        _missionsHelpText = Text("missions_help");
     }
 
     private static void ApplyProfitHeading(bool dispatch)
