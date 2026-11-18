@@ -58,5 +58,17 @@ class QuickCaseTests(unittest.TestCase):
                          wait.call_args_list)
 
 
+class RosterRecords(unittest.TestCase):
+    def test_reads_slots_sprites_and_name_ids(self):
+        size, name_at = quick_test.harness.ROSTER_SIZE, quick_test.harness.ROSTER_NAME_ID
+        data = bytearray(size * 3)
+        data[1] = 0xFF  # an empty slot
+        data[size:size + 4] = bytes([0x82, 0x01, 0x5E, 0x00])
+        data[size + name_at:size + name_at + 4] = (0x76).to_bytes(4, "little")
+        found = quick_test.roster_records(bytes(data))
+        self.assertEqual(found, [{"slot": 1, "sprites": 0x82, "name_id": 0x76}])
+        self.assertEqual(quick_test.find("roster", {"name_id": 0x76}, found), found)
+
+
 if __name__ == "__main__":
     unittest.main()

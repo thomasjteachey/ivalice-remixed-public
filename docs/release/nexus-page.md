@@ -4,14 +4,14 @@ The mod's page on Nexus Mods: https://www.nexusmods.com/finalfantasytacticstheiv
 (published 2026-11-14 with 0.9.1; the Event Instruction Upgrade has its own page, mod 186). Its text, ready to paste. Nexus's
 description editor takes BBCode. ReMixed's author, Nyzer, gave his permission on 2026-11-12 ("Sure, go nuts", in reply to
 the user on Discord); the credits link ReMixed's thread on FFHacktics.
-Written for release 0.9.11 (2026-11-18); update the "What's in it" and "Not ported yet" lists from
+Written for release 0.9.12 (2026-11-18); update the "What's in it" and "Not ported yet" lists from
 [GAMEPLAY_TODO.md](../GAMEPLAY_TODO.md) for each release.
 
 ## Page fields
 
 - **Name:** Ivalice ReMixed
 - **Category:** Overhauls (or Gameplay)
-- **Version:** 0.9.11
+- **Version:** 0.9.12
 - **Language:** English
 - **Requirements** (Nexus's requirements tab):
   - FFT Mod Loader by Nenkai: https://www.nexusmods.com/finalfantasytacticstheivalicechronicles/mods/4
@@ -61,7 +61,6 @@ All credit for ReMixed's design goes to its authors (see Credits). This port is 
 [list]
 [*]This is a beta. The mod's code is checked against the game on every build, but far fewer of its rules have been played through, so expect bugs. Reports (with the log from Reloaded-II) are welcome.
 [*]Ashley's "New Party Member" screen shows Ramza on its pedestal (her name, face and level are hers).
-[*]Araguay Woods (chapter 2) can end in its victory scene as soon as the battle begins ("Damn! We were too slow!"). Being looked into.
 [*]Saves: the mod keeps its own save folder by default (Documents/My Games/FINAL FANTASY TACTICS - Ivalice ReMixed), so the plain game's saves aren't touched and a new game is needed. Steam Cloud doesn't sync that folder. The "Separate saves" setting turns this off.
 [/list]
 
@@ -90,10 +89,10 @@ Untick Ivalice ReMixed in Reloaded-II. Its saves stay in their own folder.
 
 ## File (the upload)
 
-- **File:** `mod/release/nexus/IvaliceReMixed-0.9.11.zip`: only ReMixed's folder, cut from
-  `mod/release/IvaliceReMixed-0.9.11.zip` (the upgrade's folder goes up on its own page; never the other zips in
+- **File:** `mod/release/nexus/IvaliceReMixed-0.9.12.zip`: only ReMixed's folder, cut from
+  `mod/release/IvaliceReMixed-0.9.12.zip` (the upgrade's folder goes up on its own page; never the other zips in
   `mod/steam-deck/`, which are other people's mods)
-- **Name:** Ivalice ReMixed 0.9.11
+- **Name:** Ivalice ReMixed 0.9.12
 - **Category:** Main file
 - **Description:** Drag onto Reloaded-II with the Event Instruction Upgrade. Needs the FFT Mod Loader. Enhanced mode.
 

@@ -1,0 +1,35 @@
+# Araguay's battle without its 4-minute scene: the state the scene leaves is set directly. Luso in the party (as his
+# Mandalia join leaves him, on the save's David, slot 7), story 0x10, the units' inclusion flags 0xC0-0xC8 (0xC9, the
+# rider Luso, clear as with Luso recruited), flag 0x98 (the scene ran), and the scene noted as seen (`scenario 0x79 noted`),
+# so the mod sets the battle's run up at once (RemixedScenarios.PrepareMenuBattle). Then as araguay-luso.txt.
+name Araguay battle with the scene skipped
+wait world depth=1 state=0 timeout=20
+send poke +0x11A8D78 12
+send poke +0x11A8D7A 12
+send poke +0x11A8FA8 38 00
+setvar 0x6E 0x10
+setvar 0xC0 1
+setvar 0xC1 1
+setvar 0xC2 1
+setvar 0xC3 1
+setvar 0xC4 1
+setvar 0xC5 1
+setvar 0xC6 1
+setvar 0xC7 1
+setvar 0xC8 1
+setvar 0x98 1
+scenario 0x79 noted
+wait log "sets its battle up after event 0x79's scene" timeout=30
+wait log "reveal treasures: map 80" press=RETURN every=1 timeout=120
+formation units=1
+wait log "condition set 0 fires" timeout=60
+wait unit battle_id=0x80 job=0x5e timeout=20
+wait seconds 20
+shot battle
+defeat
+wait log "condition set 5 fires" press=RETURN every=3 timeout=60
+wait seconds 3
+shot victory
+advance world timeout=200
+expect var 0x6E 0x11
+expect roster name_id=0x76

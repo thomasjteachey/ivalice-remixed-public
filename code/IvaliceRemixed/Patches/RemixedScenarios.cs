@@ -167,6 +167,11 @@ internal static unsafe class RemixedScenarios
     private static readonly HashSet<uint> SeenButtons = [];
     /// <summary>A scenario the autopilot (a test run) asks for: the world map's next frame starts it.</summary>
     internal static int Requested;
+    /// <summary>For the harness: the scene a requested scenario's start notes as seen (var 0x3E), so a scene-first battle
+    /// (MenuBattles) starts at its battle's run. Set as the request starts, after the world map's stale-note clear.</summary>
+    internal static int RequestedNote;
+    /// <summary>A note the harness set, held from the stale-note clear until the scenario's setup has read it.</summary>
+    private static int NoteHeld;
     /// <summary>An event phase the private harness asks the battle condition walker to run. The walker consumes both
     /// on the game thread, so the ordinary loader and interpreter run it; only its in-battle condition is bypassed.</summary>
     private static int _requestedEventPhase;
@@ -377,6 +382,7 @@ internal static unsafe class RemixedScenarios
             PrepareSplitBattle(Nemesis.GetVariable(0x27));
             if (MenuBattles.Count > 0)
                 PrepareMenuBattle(Nemesis.GetVariable(0x27));
+            NoteHeld = 0;
         }
         catch (Exception e)
         {
@@ -542,7 +548,9 @@ internal static unsafe class RemixedScenarios
                 Nemesis.SetVariable(DeathCounter.RendezvousFlag, 0, 0);
                 _log.Info("remixed scenarios: the Rendezvous flag (0xD9) cleared on the world map");
             }
-            ClearStaleNote(Nemesis.GetVariable(0x3E));
+            var noted = Nemesis.GetVariable(0x3E);
+            if (noted != NoteHeld)
+                ClearStaleNote(noted);
 #if DEVELOPER_MENU
             // A private build's Configure Mod actions wait until the save and world map are actually in play.
             var developerScenario = DeveloperMenu.ApplyPendingWorldMap(PartyLocation);
@@ -568,6 +576,13 @@ internal static unsafe class RemixedScenarios
             if (asked != 0)
             {
                 _log.Info($"remixed scenarios: the autopilot starts scenario 0x{asked:X}");
+                var note = Interlocked.Exchange(ref RequestedNote, 0);
+                if (note != 0)
+                {
+                    Nemesis.SetVariable(0x3E, note, 0);
+                    NoteHeld = note;
+                    _log.Info($"remixed scenarios: the autopilot notes event 0x{note:X}'s scene as seen (var 0x3E)");
+                }
                 _watch = WatchLines;
                 Begin(asked);
                 return;
@@ -879,7 +894,10 @@ internal static unsafe class RemixedScenarios
             if (result == 2)
             {
                 if (phase && Nemesis.SetVariable != null)
+                {
                     Nemesis.SetVariable(1, set, 0);
+                    _log?.Info($"remixed scenarios: condition set {set} fires (its event's block {set})");
+                }
                 return 1;
             }
         }

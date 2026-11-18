@@ -5680,6 +5680,20 @@ internal static unsafe class SelfTest
               missing == 1 && (gaffgarionRecord[OldGuests.EntryFlags] & OldGuests.LoadsRoster) == 0
                            && (agriasRecord[OldGuests.EntryFlags] & OldGuests.LoadsRoster) != 0);
         OldGuests.RestoreLoads(records, changed);
+        var bocoRecord = records + 0 * OldGuests.EntryUnitSize;
+        bocoRecord[0] = OldGuests.Monster;
+        bocoRecord[OldGuests.EntryName] = OldGuests.BocoName;
+        bocoRecord[OldGuests.EntryFlags] = 0x38;
+        missing = OldGuests.MissingAraguayGuests(records, roster, OldGuests.AraguayProgress, changed);
+        Check($"Araguay makes its chocobo Boco from data too, with the missing Gaffgarion ({missing})",
+              missing == 2 && changed[0] == 1 && (bocoRecord[OldGuests.EntryFlags] & OldGuests.LoadsRoster) == 0
+                           && (bocoRecord[OldGuests.EntryFlags] & 0x30) == 0x30);
+        OldGuests.RestoreLoads(records, changed);
+        Check("and puts his record's roster bit back after", bocoRecord[OldGuests.EntryFlags] == 0x38);
+        bocoRecord[OldGuests.EntryName] = 0x77;
+        missing = OldGuests.MissingAraguayGuests(records, roster, OldGuests.AraguayProgress, changed);
+        Check($"another monster's record is left to the game ({missing} made: Gaffgarion)", missing == 1 && changed[0] == 0);
+        OldGuests.RestoreLoads(records, changed);
         System.Runtime.InteropServices.NativeMemory.Free(units);
         System.Runtime.InteropServices.NativeMemory.Free(records);
         System.Runtime.InteropServices.NativeMemory.Free(roster);
@@ -8429,15 +8443,26 @@ internal static unsafe class SelfTest
         var trainee = trainingRoster + UnitTables.RosterSize;
         trainee[0x1E] = 96;
         trainee[0x1F] = 96;
-        trainee[6] = 0x80;
+        trainee[0] = 0x80;
+        trainee[2] = 0x5B;
+        trainee[4] = 0x80;
+        trainee[6] = 0x71;
         var effects = TavernStorage.ApplyTraining(89, [(byte)1], trainingRoster)
                       + TavernStorage.ApplyTraining(90, [(byte)1], trainingRoster)
                       + TavernStorage.ApplyTraining(91, [(byte)1], trainingRoster)
                       + TavernStorage.ApplyTraining(92, [(byte)1], trainingRoster)
                       + TavernStorage.ApplyTraining(95, [(byte)1], trainingRoster);
-        Check("Special Training clamps Brave and Faith and Transitioning changes the unit's gender",
-              effects == 5 && trainee[0x1E] == 94 && trainee[0x1F] == 94 && (trainee[6] & 0xC0) == 0x40
+        Check($"Special Training clamps Brave and Faith; Transitioning makes a male Bard a female Dancer (sprite set "
+              + $"0x{trainee[0]:X2}, job 0x{trainee[2]:X2}, gender 0x{trainee[4]:X2}) and leaves +6 (0x{trainee[6]:X2})",
+              effects == 5 && trainee[0x1E] == 94 && trainee[0x1F] == 94 && trainee[0] == 0x81 && trainee[2] == 0x5C
+              && trainee[4] == 0x40 && trainee[6] == 0x71
               && TavernStorage.ApplyTraining(93, [(byte)1], trainingRoster) == 0);
+        TavernStorage.ApplyTraining(95, [(byte)1], trainingRoster);
+        Check($"and back: a male Bard again (0x{trainee[0]:X2}, 0x{trainee[2]:X2}, 0x{trainee[4]:X2})",
+              trainee[0] == 0x80 && trainee[2] == 0x5B && trainee[4] == 0x80);
+        trainee[0] = 0x82;
+        trainee[4] = 0x20;
+        Check("a monster isn't transitioned", TavernStorage.ApplyTraining(95, [(byte)1], trainingRoster) == 0 && trainee[0] == 0x82);
         System.Runtime.InteropServices.NativeMemory.Free(trainingRoster);
         var groups = stackalloc byte[2 * TavernStorage.RecordBytes];
         byte[] first = [1, 0x11, 5, 7, 75, 0, 3, 0, 0], second = [5, 0x80, 7, 7, 100, 0x80, 4, 0, 0];

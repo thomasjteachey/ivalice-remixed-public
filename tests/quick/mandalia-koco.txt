@@ -1,0 +1,10 @@
+# Mandalia's battle with Luso (the split battle 0x34D, straight from the test save's Mandalia node at story 4), run to
+# its opening with the big chocobo Koco (battle id 0x86) on the field, framed: ReMixed draws him larger.
+name Mandalia big chocobo
+wait world depth=1 state=0 timeout=20
+scenario 0x34D
+formation units=1
+wait log "condition set 0 fires" press=RETURN every=2 timeout=90
+wait unit battle_id=0x86 timeout=20
+wait seconds 8
+shot battle

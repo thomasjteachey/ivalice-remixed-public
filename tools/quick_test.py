@@ -8,6 +8,8 @@ Case files live in tests/quick and contain one command per line. Values use Pyth
     expect unit battle_id=0x91 job=0x5b graphic=0x38
 
 For a picture to check by eye, `shot NAME` saves the hidden window to work/harness/quick/CASE/NAME.png at that step.
+`scenario 0x79 noted` starts a scene-first battle at its battle (its scene counted as seen). `defeat [UNIT...]`
+downs the enemies (or those units); `expect roster name_id=0x76` wants exactly one roster record so.
 `key K` posts one key to the game's own window (never the desktop's input). `wait log PATTERN press=RETURN every=1`
 confirms through dialogue until a log line comes; `wait world depth=D state=S` waits for a world-map menu.
 
@@ -58,7 +60,23 @@ def describe(wanted: dict[str, int]) -> str:
     return " ".join(f"{key}=0x{value:X}" for key, value in wanted.items())
 
 
+def roster_records(data: bytes | None = None) -> list[dict]:
+    """The roster records in use: slot, sprite set and name id (harness.cmd_roster's fields)."""
+    if data is None:
+        data = harness.peek_bytes(harness.image_base() + harness.ROSTER, harness.ROSTER_SIZE * harness.ROSTER_COUNT)
+    found = []
+    for k in range(len(data) // harness.ROSTER_SIZE):
+        r = data[k * harness.ROSTER_SIZE:(k + 1) * harness.ROSTER_SIZE]
+        if r[1] == 0xFF or not any(r[:4]):
+            continue
+        found.append({"slot": k, "sprites": r[0],
+                      "name_id": int.from_bytes(r[harness.ROSTER_NAME_ID:harness.ROSTER_NAME_ID + 4], "little")})
+    return found
+
+
 def records(kind: str) -> list[dict]:
+    if kind == "roster":
+        return roster_records()
     return harness.battle_units()[1] if kind == "unit" else harness.battle_entries()
 
 
@@ -130,7 +148,8 @@ def run_case(path: Path) -> None:
                 if not harness.on_world_map(5):
                     raise CaseFailure("scenario requires the idle world map")
                 scenario = number(args[0])
-                reply = harness.send(f"scenario {scenario:X}")
+                noted = " noted" if len(args) > 1 and args[1].lower() == "noted" else ""
+                reply = harness.send(f"scenario {scenario:X}{noted}")
                 if reply.startswith("error"):
                     raise CaseFailure(reply)
             elif command == "setvar":
@@ -192,7 +211,9 @@ def run_case(path: Path) -> None:
                     pattern = " ".join(patterns)
                     if pattern not in log_matches:
                         log_matches[pattern] = harness.count_log(pattern, starting_logs)
-                    if not wait_log_pressing(pattern, timeout, log_matches[pattern], press, every):
+                    found = (wait_log_pressing(pattern, timeout, log_matches[pattern], press, every) if press
+                             else harness.wait_log(pattern, timeout, before=log_matches[pattern]) is not None)
+                    if not found:
                         raise CaseFailure(f"log did not match {pattern!r} in {timeout:g}s")
                     log_matches[pattern] += 1
                     print(f"PASS {case}: log matched {pattern!r}")
@@ -221,9 +242,12 @@ def run_case(path: Path) -> None:
             elif command == "shot":
                 path = SHOTS / path_name(case_file) / f"{args[0]}.png"
                 harness.shot(argparse.Namespace(file=path))
+            elif command == "defeat":
+                chosen = harness.defeat([number(a) for a in args] or None)
+                print(f"PASS {case}: defeated units {chosen}")
             elif command == "expect":
                 kind = args[0].lower()
-                if kind in ("unit", "entry"):
+                if kind in ("unit", "entry", "roster"):
                     expect_record(kind, fields(args[1:]), case, line_number, snapshots.get(kind))
                 elif kind == "var":
                     variable, expected = number(args[1]), number(args[2])

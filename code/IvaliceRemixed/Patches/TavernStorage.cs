@@ -1391,10 +1391,12 @@ internal static unsafe class TavernStorage
         return model == 0 ? 0 : *(nint*)(model + 0x50);
     }
 
+    /// <summary>A Special Training course's effect on the units in <paramref name="slots"/> (roster records): Valor and
+    /// Detection Brave, Theology and Evolutionary Faith (3 each way, 3-97), and Transitioning as ReMixed's 0x0E8 does it
+    /// (TransitionUnit). How many units it changed.</summary>
     internal static int ApplyTraining(int course, ReadOnlySpan<byte> slots, byte* roster)
     {
-        const int empty = 1, identity = 6, brave = 0x1E, faith = 0x1F;
-        const byte man = 0x80, woman = 0x40, gender = 0xC0;
+        const int empty = 1, brave = 0x1E, faith = 0x1F;
         var changed = 0;
         foreach (var slot in slots)
         {
@@ -1422,17 +1424,40 @@ internal static unsafe class TavernStorage
                     changed++;
                     break;
                 case 95:
-                    var before = (byte)(unit[identity] & gender);
-                    var after = before == man ? woman : before == woman ? man : before;
-                    if (after != before)
-                    {
-                        unit[identity] = (byte)(unit[identity] & ~gender | after);
+                    if (TransitionUnit(unit))
                         changed++;
-                    }
                     break;
             }
         }
         return changed;
+    }
+
+    /// <summary>Transitioning, as ReMixed's 0x0E8 does it to a roster record: the gender byte (+4, the PS1's too) a man's
+    /// 0x80 to a woman's 0x40 and back, a generic's sprite set with it (0x80 and 0x81, which pick its look), and the
+    /// gendered job: ReMixed's male Bard and female Dancer swap (the remaster's 0x5B and 0x5C), its two Dark Knights are
+    /// the remaster's one (0xA0) and stay. 0.9.7's port flipped bits of +6, which isn't the gender: it did nothing to
+    /// most units and changed another byte of the rest. Whether the unit changed (not for a monster).</summary>
+    internal static bool TransitionUnit(byte* unit)
+    {
+        const int sprites = 0, job = 2, gender = 4;
+        const byte man = 0x80, woman = 0x40, maleGeneric = 0x80, femaleGeneric = 0x81, bard = 0x5B, dancer = 0x5C;
+        var before = unit[gender] & 0xC0;
+        if (before != man && before != woman)
+            return false;
+        unit[gender] = before == man ? woman : man;
+        unit[sprites] = unit[sprites] switch
+        {
+            maleGeneric => femaleGeneric,
+            femaleGeneric => maleGeneric,
+            var other => other,
+        };
+        unit[job] = unit[job] switch
+        {
+            bard => dancer,
+            dancer => bard,
+            var other => other,
+        };
+        return true;
     }
 
     internal static string TrainingName(int course) => course switch

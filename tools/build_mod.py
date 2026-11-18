@@ -3593,9 +3593,18 @@ def location_scenario_code(code: bytes, lengths: bytes, unsafe: set[int], empty:
             ins = bytearray(AFTER_BATTLE_DEFERRED_HOME if defer_return_writeback else AFTER_BATTLE_RETURN_HOME) + ins
         elif op == 0xCE and u16(ins, 1) in unsafe and chosen and return_preset is not None:
             back = (return_presets or {}).get(return_preset, return_preset)  # the return on one path only
-            return_home = AFTER_BATTLE_DEFERRED_HOME if defer_return_writeback else AFTER_BATTLE_RETURN_HOME
-            ins = bytearray(return_home + RETURN_CHOSEN + bytes([0xCE]) + back.to_bytes(2, "little") + bytes([0x03, 0xCE])
-                            + empty.to_bytes(2, "little") + bytes([0x04]))
+            if defer_return_writeback:
+                # Only the return goes on to the source's join (Araguay's 122, Luso's thanks, joins and writes the
+                # battle back right after it). The other way ends at the world map with no join of its own, so it joins
+                # and writes back itself: Boco, whose record joins when the roster hasn't him yet. Deferring both left
+                # Araguay's results unsaved and Boco unjoined when Luso was already in the party (seen in the hidden PC
+                # game, 2026-11-18).
+                ins = bytearray(AFTER_BATTLE_DEFERRED_HOME + RETURN_CHOSEN + bytes([0xCE]) + back.to_bytes(2, "little")
+                                + bytes([0x03]) + JOIN_NOW_AND_WRITE_BACK
+                                + bytes([0xCE]) + empty.to_bytes(2, "little") + bytes([0x04]))
+            else:
+                ins = bytearray(AFTER_BATTLE_RETURN_HOME + RETURN_CHOSEN + bytes([0xCE]) + back.to_bytes(2, "little")
+                                + bytes([0x03, 0xCE]) + empty.to_bytes(2, "little") + bytes([0x04]))
             return_chosen = True
         elif op == 0xCE and u16(ins, 1) in unsafe:
             ins[1:3] = empty.to_bytes(2, "little")
@@ -6860,7 +6869,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata.
-RELEASE_VERSION = "0.9.11"
+RELEASE_VERSION = "0.9.12"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:

@@ -38,6 +38,10 @@ LIVE_RETURN_EDGES = {
 # These returns feed a recruitment scene. Their roster writer is intentionally deferred until after Join Now, or the
 # candidate is already in the roster and the native recruitment presentation is suppressed.
 DEFERRED_RETURN_EDGES = {121, 123, 845}
+# Of those, the returns chosen as the event runs: only the return goes on to the recruitment; the other way ends at the
+# world map with no join, so it joins (Boco) and writes the battle back itself in its ELSE branch (Araguay with Luso
+# already recruited: its results were never written back and Boco never joined, 2026-11-18).
+DEFERRED_CHOSEN_RETURNS = {121}
 MIDSCENE_JOINS = {122: 1, 124: 1, 874: 3, 886: 1}
 POSTBATTLE_CLEANUP = {
     122: (0x02, 0x17, 0x1E, 0x90, *range(0x80, 0x87), *range(0x78, 0x7D)),
@@ -223,6 +227,7 @@ def check() -> list[str]:
     # return instead calls the mod's synchronous native writer, sets the tavern-home flag, and keeps PostEvent mode 0.
     live_sites: dict[int, tuple[int, int]] = {}
     join_writebacks = 0
+    else_writebacks: dict[int, int] = {}
     destructive_returns = []
     for path in paths:
         number = int(path.stem[5:])
@@ -239,6 +244,11 @@ def check() -> list[str]:
             window = parsed[index + 1:index + 25]
             if not window or bytes([window[0][1]]) + window[0][2] != TAVERN_HOME:
                 raise AssertionError(f"{path.name}@0x{at:X}: live write-back does not set tavern-home flag next")
+            # A chosen deferred return's other way (ELSE, to the world map) joins and writes the battle back itself.
+            if index >= 2 and number in DEFERRED_CHOSEN_RETURNS and parsed[index - 2][1] == 0x03 \
+                    and bytes([parsed[index - 1][1]]) + parsed[index - 1][2] == JOIN_NOW:
+                else_writebacks[number] = else_writebacks.get(number, 0) + 1
+                continue
             # A recruitment scene deliberately writes after CallFunction 1 has presented and resolved its candidate.
             # It is not a return edge and therefore has no following preset load / mode-0 handoff.
             if index and bytes([parsed[index - 1][1]]) + parsed[index - 1][2] == JOIN_NOW:
@@ -255,6 +265,9 @@ def check() -> list[str]:
                              + ", ".join(f"{name}@0x{at:X}" for name, at in destructive_returns))
     if join_writebacks != sum(MIDSCENE_JOINS.values()):
         raise AssertionError(f"mid-scene join write-backs are {join_writebacks}, expected {sum(MIDSCENE_JOINS.values())}")
+    if else_writebacks != {number: 1 for number in DEFERRED_CHOSEN_RETURNS}:
+        raise AssertionError(f"chosen deferred returns' world-map write-backs are {else_writebacks}, "
+                             f"expected one each in {sorted(DEFERRED_CHOSEN_RETURNS)}")
     expected_live = set(LIVE_RETURN_EDGES) - DEFERRED_RETURN_EDGES
     if set(live_sites) != expected_live:
         raise AssertionError(f"live return events are {sorted(live_sites)}, expected {sorted(expected_live)}")

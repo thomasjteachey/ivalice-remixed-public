@@ -1,0 +1,25 @@
+# Araguay Woods as reported on 0.9.7: chapter 2's story point (0x10) with Luso already in the party (his Mandalia join
+# leaves roster sprite set 0x12, job 0x12, name 0x38; here on the save's David, slot 7) and no Boco in the roster.
+# Through the scene and the formation into the battle, where Boco must be a real chocobo (job 0x5E) and nothing may
+# fire but the opening; then its victory once the goblins fall, the world map at story 0x11, and Boco in the roster.
+name Araguay with Luso in the party
+wait world depth=1 state=0 timeout=20
+send poke +0x11A8D78 12
+send poke +0x11A8D7A 12
+send poke +0x11A8FA8 38 00
+setvar 0x6E 0x10
+scenario 0x79
+wait log "loading event 121" timeout=30
+wait log "reveal treasures: map 80" press=RETURN every=1 timeout=420
+formation units=1
+wait log "condition set 0 fires" timeout=60
+wait unit battle_id=0x80 job=0x5e timeout=20
+wait seconds 20
+shot battle
+defeat
+wait log "condition set 5 fires" press=RETURN every=3 timeout=60
+wait seconds 3
+shot victory
+advance world timeout=200
+expect var 0x6E 0x11
+expect roster name_id=0x76

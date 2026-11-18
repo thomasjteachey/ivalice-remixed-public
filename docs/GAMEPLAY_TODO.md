@@ -397,17 +397,27 @@ side chapter 1-A above):
   Squire, as generics do. Reproduced twice in the hidden PC game (the Units screen opening on Lorne's record), then
   gone with the fix: the Units screen, his status and the cursor on Bardsong, with Bryn as the Dancer beside him.
   *small*
+- [x] Araguay Woods ended as soon as its battle began (fixed 2026-11-18). Its chocobo, Boco, is loaded from the
+  roster when you have him and otherwise made from his own battle data; the remaster looks for such a unit only in
+  the guest slots, so Boco was always an empty unit. On 0.9.7 his "HP at most 0" conditions fired at once; on
+  0.9.8-0.9.11 the empty unit crashed the HP display (a divide by zero) once the battle ran. He's now made from his
+  data when missing, as Agrias and Gafgarion already were. Its victory also never wrote the battle back with Luso
+  already in the party (results unsaved, Boco never joining): that way now joins and writes back itself. Seen in the
+  hidden PC game (`tests/quick/araguay-luso.txt`, `tests/quick/araguay-battle.txt`): Boco a real chocobo, no early
+  end, the victory once the goblins fall, story 0x11, Boco in the roster. *medium*
+- [x] Dispatch's Transitioning course flipped bits of the wrong byte (+6 of a roster record, not the gender at +4),
+  so it did nothing to most units and changed an unrelated byte of others (fixed 2026-11-18). It now does what
+  ReMixed's does: the gender, a generic's sprite set with it (its look), and a Bard becomes a Dancer and back.
+  Self-tested offline. *small*
 
-Still open from the same playthrough (2026-11-17):
+Still open, found auditing for the same kinds of bug (2026-11-18):
 
-- [ ] Araguay Woods ends as soon as its battle begins: "Damn! We were too slow!" is the start of its victory
-  scene, which plays when every enemy is down and the chocobo was never marked rescued. In the hidden PC game on
-  0.9.10 (2026-11-18, `quick_test.py`, from story progress 0x10) the six goblins, Agrias, Gafgarion and Luso were all
-  there at the battle's opening, so the enemies aren't simply missing at setup. Left: what makes the victory count
-  as met once the battle begins; the harness's formation step couldn't place a unit on Araguay's map, so it stopped
-  there. Not yet played with Luso already in the party, as reported: the test save had neither him nor Boco.
-  *medium*
-
+- [ ] Other battles load units from the roster that the remaster looks for only in its guest slots, as Araguay's Boco
+  was: side chapter 1-A's end at Orbonne (its three Lionsguard knights, scenes 126 and 127), Hirame and Wright's
+  scene (0x375), Ashley in one battle (0x1FD), Mustadio's two (0x373, 0x374), Rafa's (0x369) and one more (0x1D4,
+  sprite set 0x1F). Each may get an empty unit in place of the character, as Boco did. The fix is the Argath
+  campaign's: copy the character's roster record into a free guest slot while the battle's units are made, then link
+  the unit back to its own slot. Each needs a quick-test case. *medium*
 
 
 ReMixed's in-place patches are all reviewed: BATTLE.BIN, SCUS, WORLD and the EVENT overlays (analysis/
@@ -476,7 +486,11 @@ or new art, none of which the offline check can exercise; the rules behind them 
   Its boss stats are already ported (HP, PA and MA doubled; Speed reduced), but ReMixed also walks the PS1 sprite
   object list and writes fields +0x325 and +0x327 to scale unit 0x86. Those sprite-object fields have no remaster
   mapping yet, so the enhanced game draws an ordinary-sized Chocobo. Find the remaster sprite transform/scale fields
-  and apply the same effect without changing every Chocobo. *medium*
+  and apply the same effect without changing every Chocobo. Read 2026-11-18: ReMixed finds the object whose +0x134 is
+  the unit and writes 0x14 to +0x325 and 0x18 to +0x327 (no code of BATTLE.BIN's or SCUS's reads those offsets
+  directly). The remaster's sprite objects (from 0x260ABC) are 0x608 bytes with the unit pointer at +0xE8 and no float
+  fields, so the PS1's offsets don't carry over. Left: find the remaster's draw size, with the test mode's auto-battle
+  off so a change can be seen (`tests/quick/mandalia-koco.txt` reaches the battle). *medium*
 - [x] ReMixed's characters in the story characters' second sprites (built 2026-11-12, not seen in the game yet):
   ReMixed gave each story character one sprite and put its own characters in the others. The remaster's own battles
   and scenes now draw their characters from the first ones, as ReMixed does: the guest Agrias of chapter 2, the guest

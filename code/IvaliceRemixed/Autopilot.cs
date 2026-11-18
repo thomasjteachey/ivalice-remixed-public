@@ -225,9 +225,17 @@ internal static unsafe class Autopilot
                     Thread.Sleep(250);
                     break;
                 case "scenario":
-                    Patches.RemixedScenarios.Requested = Convert.ToInt32(arg, 16);
-                    _log.Info($"autopilot: asks for scenario 0x{arg} on the world map's next frame");
+                {
+                    // "scenario 79 noted": its scene counted as seen, so a scene-first battle starts at the battle.
+                    var words = arg.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    var scenario = Convert.ToInt32(words[0], 16);
+                    if (words.Length > 1 && words[1].Equals("noted", StringComparison.OrdinalIgnoreCase))
+                        Patches.RemixedScenarios.RequestedNote = scenario;
+                    Patches.RemixedScenarios.Requested = scenario;
+                    _log.Info($"autopilot: asks for scenario 0x{scenario:X}{(words.Length > 1 ? " " + words[1] : "")} "
+                              + "on the world map's next frame");
                     break;
+                }
                 case "action":
                     _log.Info($"autopilot: action 0x{arg} (polls so far {_polls})");
                     _action = Convert.ToInt32(arg, 16);

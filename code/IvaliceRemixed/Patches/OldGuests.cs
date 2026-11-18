@@ -39,6 +39,9 @@ internal static unsafe class OldGuests
     internal const int EntryUnits = 16, EntryUnitSize = 40, EntryFlags = 1, EntryTeam = 0x18;
     internal const byte Algus = 0x07, Gaffgarion = 0x17, Agrias = 0x1E, LoadsRoster = 0x08, PlayerControl = 0x08;
     internal const byte OldAgrias = 0x34, Ps1Bard = 0x38, RemasterBard = 0x5B, SideChapterParty = 0x10;
+    /// <summary>Araguay's chocobo: a monster (sprite set 0x82) named Boco, whose record asks for him from the roster.</summary>
+    internal const byte Monster = 0x82, BocoName = 0x76;
+    internal const int EntryName = 2;
     internal const int Lorne = 0x6A, Whitney = 0x6C, Lavian = 0x78, Alicia = 0x79;
     internal const int StoryProgress = 0x6E, AraguayProgress = 0x10;
     // The guest lookup (0x2766C8): test byte [rdx+1], 8; mov rbx, rdx; movzx ecx, byte [rdx]; je; lea eax, [r9+0x33];
@@ -127,8 +130,12 @@ internal static unsafe class OldGuests
         return result;
     }
 
-    /// <summary>At Araguay, make a missing Agrias or Gaffgarion from its entry instead of an absent guest slot.</summary>
-    internal static int MissingAraguayGuests(byte* records, byte* roster, int progress, Span<byte> changed)
+    /// <summary>At Araguay, make a missing Agrias, Gaffgarion or Boco from its entry instead of an absent guest slot.
+    /// Boco is never there: the remaster looks for a record's roster unit only in the guest slots (0x2766C8), and ReMixed's
+    /// chocobo is no guest, so its battle left an empty unit holding his battle id (0x80) and Max HP 0. Its HP conditions
+    /// read that as a dead chocobo (0.9.7's early end), and the HP display divided by it (exe+0x38A844, seen in the hidden
+    /// PC game, 2026-11-18). On the PS1 the record's own data makes him, as here.</summary>
+        internal static int MissingAraguayGuests(byte* records, byte* roster, int progress, Span<byte> changed)
     {
         changed.Clear();
         if (records == null || roster == null || progress != AraguayProgress || changed.Length < EntryUnits)
@@ -137,7 +144,8 @@ internal static unsafe class OldGuests
         for (var k = 0; k < EntryUnits; k++)
         {
             var record = records + k * EntryUnitSize;
-            if (record[0] is not (Gaffgarion or Agrias) || (record[EntryFlags] & LoadsRoster) == 0)
+            var boco = record[0] == Monster && record[EntryName] == BocoName;
+            if (record[0] is not (Gaffgarion or Agrias) && !boco || (record[EntryFlags] & LoadsRoster) == 0)
                 continue;
             var found = false;
             for (var slot = FirstGuestSlot; slot < FirstGuestSlot + GuestSlots; slot++)
