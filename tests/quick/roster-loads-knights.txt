@@ -8,3 +8,7 @@ wait log "old guests: scenario 0x7E: [34] unit\(s\) made from their battle data"
 wait unit battle_id=0x84 sprites=0x81 timeout=20
 expect unit battle_id=0x90 sprites=0x81
 expect unit battle_id=0x91 sprites=0x81
+# The frame once Alicia has spoken after Lavian and Whitney (message 10, or 20): the three knights in the scene.
+wait log "message (10|20) shown" press=RETURN every=1 timeout=840
+wait seconds 3
+shot knights

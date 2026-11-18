@@ -10,3 +10,7 @@ scenario 0x375
 wait log "old guests: scenario 0x375: roster slot 7 through guest slot 5[0-3]; 1 unit\(s\) made from their battle data" timeout=30
 wait unit battle_id=0x90 sprites=0x35 timeout=20
 expect unit battle_id=0x91 sprites=0x36
+# The frame once Wright has spoken (message 8, or 20 in the other text): both stand in the scene.
+wait log "message (8|20) shown" press=RETURN every=1 timeout=360
+wait seconds 3
+shot hirame-and-wright

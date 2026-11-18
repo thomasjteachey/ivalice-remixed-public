@@ -7,7 +7,8 @@ Case files live in tests/quick and contain one command per line. Values use Pyth
     wait unit battle_id=0x91 timeout=20
     expect unit battle_id=0x91 job=0x5b graphic=0x38
 
-For a picture to check by eye, `shot NAME` saves the hidden window to work/harness/quick/CASE/NAME.png at that step.
+For a picture to check by eye, `shot NAME` saves the hidden window to work/harness/quick/CASE/NAME.png at that step;
+every case also leaves pass.png (or fail.png) there as it ends. Pictures are evidence only: no step reads them.
 `scenario 0x79 noted` starts a scene-first battle at its battle (its scene counted as seen). `defeat [UNIT...]`
 downs the enemies (or those units); `expect roster name_id=0x76` wants exactly one roster record so.
 `key K` posts one key to the game's own window (never the desktop's input). `wait log PATTERN press=RETURN every=1`
@@ -279,6 +280,17 @@ def start_game() -> None:
     harness.wait_world_ready(160)
 
 
+def final_frame(case: Path, outcome: str) -> None:
+    """Every case's evidence: the hidden window as the case ends, work/harness/quick/CASE/pass.png (or fail.png), so a
+    result can be checked by eye afterwards. Only a picture: nothing is driven from it."""
+    if not harness.game_running():
+        return
+    try:
+        harness.shot(argparse.Namespace(file=SHOTS / path_name(case) / f"{outcome}.png"))
+    except (OSError, SystemExit) as error:
+        print(f"  (no {outcome} frame: {error})")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("cases", nargs="+", type=Path)
@@ -296,7 +308,12 @@ def main() -> int:
         elif not harness.answering():
             raise CaseFailure("no warm harness game; pass --start")
         for case in args.cases:
-            run_case(case)
+            try:
+                run_case(case)
+            except CaseFailure:
+                final_frame(case, "fail")
+                raise
+            final_frame(case, "pass")
         return 0
     except (CaseFailure, OSError) as error:
         print(f"FAIL {error}")

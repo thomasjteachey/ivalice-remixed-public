@@ -228,15 +228,20 @@ python -I tools/quick_test.py --restart tests/quick/araguay-entry.txt
 ```
 
 Each case prints one `PASS` or `FAIL` line per expectation and a final elapsed time. Case files use one small command
-per line: `scenario`, `setvar`, `send`, `advance`, `formation`, `key`, `shot`, `wait unit|entry|log|world|seconds`,
-and `expect unit|entry|var`.
+per line: `scenario`, `setvar`, `send`, `advance`, `formation`, `defeat`, `key`, `shot`,
+`wait unit|entry|log|world|seconds`, and `expect unit|entry|roster|var`.
 Each `wait log` consumes a matching line logged during the current case, so earlier runs in the same game cannot pass it.
 `wait log PATTERN press=RETURN every=1` confirms through a scene until the line comes. `key K [times=N] [wait=S]`
 posts a key to the game's own window; before each key in a menu, `wait world depth=D state=S` waits for that menu
 (the world map is depth 1, state 0; Esc opens Units at depth 2, state 1), so a key never lands on the wrong screen.
-`shot NAME` saves `work/harness/quick/CASE/NAME.png` at that step, for checking by eye. Set state rather than play to
-it: `send poke` writes a roster record as a scene would leave it (`tests/quick/party-looks.txt`, 17.5 s). Scenes still
-play in real time (`tests/quick/lorne-scene-shots.txt`, about 2 minutes).
+`shot NAME` saves `work/harness/quick/CASE/NAME.png` at that step, for checking by eye, and every case also leaves
+`pass.png` (or `fail.png`) there as it ends. Frames are evidence only: no step reads them or chooses a key by them. Put a
+`shot` where the thing checked is on screen, for example after the line the tested character speaks (`wait log
+"message (8|20) shown" press=RETURN`; the numbers are ReMixed's message ids, the second set for its other translation).
+Set state rather than play to it: `send poke` writes a roster record as a scene would leave it
+(`tests/quick/party-looks.txt`, 17.5 s), `scenario N noted` starts a scene-first battle at its battle
+(`araguay-battle.txt`), `defeat` downs the enemies, `expect roster name_id=N` checks a recruit joined. Scenes still play
+in real time (`tests/quick/lorne-scene-shots.txt`, about 2 minutes; the scene in `roster-loads-knights.txt`, about 4).
 Integer values are decimal or `0x`-prefixed. `entries` exposes each raw 40-byte battle-data record,
 including its unit-selection `flags`; `units` exposes the live job, graphic, palette and battle id. Screenshots are
 still for a final visual review, not a prerequisite for these checks.
