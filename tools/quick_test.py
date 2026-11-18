@@ -7,6 +7,10 @@ Case files live in tests/quick and contain one command per line. Values use Pyth
     wait unit battle_id=0x91 timeout=20
     expect unit battle_id=0x91 job=0x5b graphic=0x38
 
+For a picture to check by eye, `shot NAME` saves the hidden window to work/harness/quick/CASE/NAME.png at that step.
+`key K` posts one key to the game's own window (never the desktop's input). `wait log PATTERN press=RETURN every=1`
+confirms through dialogue until a log line comes; `wait world depth=D state=S` waits for a world-map menu.
+
 Start or restart the hidden game and print strict PASS/FAIL lines:
 
     python -I tools/quick_test.py --start tests/quick/lorne-scene.txt
@@ -24,6 +28,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import harness
+
+SHOTS = harness.WORK / "harness" / "quick"
 
 
 class CaseFailure(RuntimeError):
@@ -85,10 +91,32 @@ def wait_record(kind: str, wanted: dict[str, int], timeout: float, case: str, li
     raise CaseFailure(f"{case}:{line}: {kind} did not appear in {timeout:g}s ({describe(wanted)})")
 
 
+def wait_log_pressing(pattern: str, timeout: float, before: int, press: str | None, every: float) -> bool:
+    """Whether a log line matching pattern beyond the first `before` comes within timeout, pressing `press` (if any)
+    every `every` seconds meanwhile, as a player confirming through a scene would."""
+    deadline = time.monotonic() + timeout
+    next_press = time.monotonic() + every
+    while time.monotonic() < deadline:
+        if harness.count_log(pattern) > before:
+            return True
+        if press and time.monotonic() >= next_press:
+            harness.send(f"key {press}")
+            next_press = time.monotonic() + every
+        time.sleep(0.25)
+    return harness.count_log(pattern) > before
+
+
+def path_name(path: Path) -> str:
+    return path.stem
+
+
 def run_case(path: Path) -> None:
+    case_file = path
     case = path.stem
     started = time.monotonic()
     snapshots: dict[str, list[dict]] = {}
+    starting_logs = harness.log_lines()
+    log_matches: dict[str, int] = {}
     for line_number, source in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         source = source.strip()
         if not source or source.startswith("#"):
@@ -150,21 +178,49 @@ def run_case(path: Path) -> None:
                             wanted[key] = number(value)
                     snapshots[kind] = wait_record(kind, wanted, timeout, case, line_number, press, every)
                 elif kind == "log":
-                    timeout = 20.0
+                    timeout, press, every = 20.0, None, 1.0
                     patterns = []
                     for arg in args[1:]:
                         if arg.startswith("timeout="):
                             timeout = float(arg.split("=", 1)[1])
+                        elif arg.startswith("press="):
+                            press = arg.split("=", 1)[1]
+                        elif arg.startswith("every="):
+                            every = float(arg.split("=", 1)[1])
                         else:
                             patterns.append(arg)
                     pattern = " ".join(patterns)
-                    if harness.wait_log(pattern, timeout, fresh=False) is None:
+                    if pattern not in log_matches:
+                        log_matches[pattern] = harness.count_log(pattern, starting_logs)
+                    if not wait_log_pressing(pattern, timeout, log_matches[pattern], press, every):
                         raise CaseFailure(f"log did not match {pattern!r} in {timeout:g}s")
+                    log_matches[pattern] += 1
                     print(f"PASS {case}: log matched {pattern!r}")
                 elif kind == "seconds":
                     time.sleep(float(args[1]))
+                elif kind == "world":
+                    options = {key: float(value) for key, value in (arg.split("=", 1) for arg in args[1:])}
+                    try:
+                        harness.wait_world_state(int(options["depth"]), int(options["state"]),
+                                                 options.get("timeout", 15.0))
+                    except RuntimeError as error:
+                        raise CaseFailure(str(error)) from error
+                    print(f"PASS {case}: world menu depth {int(options['depth'])}, state {int(options['state'])}")
                 else:
-                    raise CaseFailure("wait supports unit, entry, log, or seconds")
+                    raise CaseFailure("wait supports unit, entry, log, world, or seconds")
+            elif command == "key":
+                pause = 0.5
+                for arg in args[1:]:
+                    if arg.startswith("wait="):
+                        pause = float(arg.split("=", 1)[1])
+                for _ in range(int(next((a.split("=", 1)[1] for a in args[1:] if a.startswith("times=")), "1"))):
+                    reply = harness.send(f"key {args[0]}")
+                    if reply.startswith("error"):
+                        raise CaseFailure(reply)
+                    time.sleep(pause)
+            elif command == "shot":
+                path = SHOTS / path_name(case_file) / f"{args[0]}.png"
+                harness.shot(argparse.Namespace(file=path))
             elif command == "expect":
                 kind = args[0].lower()
                 if kind in ("unit", "entry"):

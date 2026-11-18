@@ -21,6 +21,9 @@ entry 8: sprites 0x1E flags 0x4B name 0x1E job 0x0B secondary 0x0A team 0x84 x 0
 
 
 class QuickCaseTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.logs = self.enterContext(mock.patch.object(quick_test.harness, "log_lines", return_value=[]))
+
     def case(self, text: str) -> Path:
         folder = Path(tempfile.mkdtemp())
         path = folder / "case.txt"
@@ -44,6 +47,15 @@ class QuickCaseTests(unittest.TestCase):
         with mock.patch.object(quick_test.harness, "send", return_value=UNITS):
             with self.assertRaisesRegex(quick_test.CaseFailure, "found 0"):
                 quick_test.run_case(path)
+
+    def test_log_waits_ignore_old_lines_and_consume_each_new_match_once(self) -> None:
+        path = self.case('wait log "loaded event 404" timeout=1\nwait log "loaded event 404" timeout=1\n')
+        self.logs.return_value = ["loaded event 404"]
+        with mock.patch.object(quick_test.harness, "wait_log", side_effect=("loaded event 404", None)) as wait:
+            with self.assertRaisesRegex(quick_test.CaseFailure, "log did not match"):
+                quick_test.run_case(path)
+        self.assertEqual([mock.call("loaded event 404", 1, before=1), mock.call("loaded event 404", 1, before=2)],
+                         wait.call_args_list)
 
 
 if __name__ == "__main__":

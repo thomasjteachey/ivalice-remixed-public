@@ -2349,8 +2349,14 @@ EVENT_CODE_PATCHES: dict[int, list[tuple[bytes, bytes]]] = {
     # 0x0ED makes Bryn and Lorne join, then writes their final jobs into the live units. Its man's Bard is job 0x38
     # on the PS1; the entry-data conversion cannot see this later event write, and 0x38 is a Lucavi job whose command
     # appears as Mystic Arts in the remaster. Use its Bard job (0x5B), as REMIXED_UNIT_JOBS does for entry data.
+    # The same var then goes to Lorne's graphic (PS1 +0x15F), which must stay ReMixed's 0x38 (the remaster's Bard art,
+    # REMIXED_SPRITE_ALIASES): graphic 0x5B is a Squire copy whose texture 0x5E's grave swords now use, so Lorne stood
+    # in the scene as the swords with a Squire's face (seen on the PC, 0.9.7). His block's next instruction (SETHI var
+    # 0x70, 0x20; Bryn's is 0x10, and the two POKEs are byte-for-byte hers) writes 0x38 back to the graphic first.
     0x0ED: [(bytes([0xAE, 0x70, 0x00, 0x38, 0x00]),
-             bytes([0xAE, 0x70, 0x00, BARD["job"][1], 0x00]))],
+             bytes([0xAE, 0x70, 0x00, BARD["job"][1], 0x00])),
+            (bytes([0xAC, 0x70, 0x00, 0x20, 0x00]),
+             bytes([0xAE, 0x70, 0x00, 0x38, 0x00, 0xC4, 0x70, 0x5F, 0x01, 0x00, 0x01, 0xAC, 0x70, 0x00, 0x20, 0x00]))],
     # 0x008 opens with ReMixed's after-battle switch (var 1 set: on to its block 0xFE, AFTER_BATTLE_EVENT). The mod
     # runs it only as Dycedarg's scene, from the world map, where var 1 holds whatever was left there, so its jump
     # becomes a label no code uses (a no-op of the same length).
@@ -6854,7 +6860,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata.
-RELEASE_VERSION = "0.9.10"
+RELEASE_VERSION = "0.9.11"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:

@@ -86,7 +86,7 @@ class CheckpointOrchestrationTests(unittest.TestCase):
             harness.cmd_checkpoint(args)
 
         defeat.assert_called_once_with(None)
-        waited.assert_called_once_with(0x7C, None, args.timeout, 0, self.opening(), {2, 4}, {2}, args.every)
+        waited.assert_called_once_with(0x7C, None, args.timeout, 0, self.opening(), {2, 4}, {2}, args.every, args.prefix)
         capture.assert_called_once()
         after.assert_called_once_with(0x7C, args.timeout, args.every, None)
         self.assertEqual([mock.call("scenario 34D")], send.call_args_list)
@@ -142,9 +142,11 @@ class VictoryTransitionTests(unittest.TestCase):
         closing = self.state(0x600, 0x22, event=0x7C)
         with mock.patch.object(harness, "log_lines", return_value=[]), \
                 mock.patch.object(harness, "game_state", side_effect=(notice, notice, closing)), \
-                mock.patch.object(harness, "nap"), mock.patch.object(harness, "send") as send:
+                mock.patch.object(harness, "nap"), mock.patch.object(harness, "send") as send, \
+                mock.patch.object(harness, "shot") as shot:
             harness.wait_condition_event(0x7C, None, 1, 0, opening, set(), {2}, 0)
         send.assert_called_once_with("key RETURN")
+        shot.assert_called_once()
 
     def test_after_event_never_presses_once_world_frames_move(self) -> None:
         first = self.state(0x500)
@@ -247,6 +249,23 @@ class DispatchHarnessTests(unittest.TestCase):
                 "3: Job | Jobs | Three | key 197\n4: Job | Jobs | Four | key 198")
         with self.assertRaisesRegex(RuntimeError, "duplicate"):
             harness.validate_dispatch_info(info, "jobs", 3)
+
+    def test_page_waits_for_native_rows_and_input(self) -> None:
+        header = "PropositionKinds (-), 6 row(s): 6 Menu\n"
+        stale = header + "profit-main: rows 5, focus 0, state 4, gate 0, pending -1"
+        animating = header + "profit-main: rows 6, focus 0, state 4, gate 1, pending -1"
+        ready = header + "profit-main: rows 6, focus 0, state 4, gate 0, pending -1"
+        with mock.patch.object(harness, "send", side_effect=(stale, animating, ready)) as send, \
+                mock.patch.object(harness, "nap"):
+            self.assertEqual(ready, harness.wait_dispatch_page("PropositionKinds (-)", 1))
+        self.assertEqual(3, send.call_count)
+
+    def test_navigation_stops_at_a_failed_transition(self) -> None:
+        with mock.patch.object(harness, "wait_dispatch_page", side_effect=("main", RuntimeError("stuck"))), \
+                mock.patch.object(harness, "send") as send:
+            with self.assertRaisesRegex(RuntimeError, "cycle 1/10 failed: stuck"):
+                harness.check_dispatch_navigation(10, 16, 1)
+        send.assert_called_once_with("key RETURN", timeout=1)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,23 @@
+# Bryn's and Lorne's locked looks in the party menus, without playing their scene: the save's generics David (slot 7)
+# and Alexis (slot 8) get the records 0x0ED leaves (sprite sets 0xB4 and 0xB5, the Bard and Dancer jobs, their names),
+# then the Units screen, Lorne's status and his Equipment & Abilities with the cursor on Bardsong (the 0.9.7 crash).
+name Bryn and Lorne in the party menus
+wait world depth=1 state=0 timeout=20
+send poke +0x11A8D78 B4
+send poke +0x11A8D7A 5B
+send poke +0x11A8FA8 6A 00
+send poke +0x11A8FD0 B5
+send poke +0x11A8FD2 5C
+send poke +0x11A9200 69 00
+key ESCAPE wait=1.5
+wait world depth=2 state=1 timeout=10
+shot units
+key RIGHT wait=0.8
+key F wait=1.5
+shot lorne-status
+key F wait=1.5
+key RIGHT wait=4
+shot lorne-bardsong
+send state
+key ESCAPE times=3 wait=1.2
+wait world depth=2 state=1 timeout=10

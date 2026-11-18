@@ -124,6 +124,7 @@ try
         problems += SelfTest.EventLogStub(game, log);
         problems += SelfTest.RemixedEventScripts(game, log);
         problems += SelfTest.UnitLooksRule(game, log);
+        problems += SelfTest.SideChapterRepair(log);
         problems += SelfTest.EventUnitNumbers(game, log);
         problems += SelfTest.RemixedScenarioTables(game, log);
         problems += SelfTest.PackFileGiving(log);
@@ -4540,6 +4541,42 @@ internal static unsafe class SelfTest
     /// interpreter on a small ReMixed program (IF/ELSE nesting, SWITCH, CALL/RETURN, GOTO, a unit's address, PEEK and
     /// POKE through the PS1 map, PATCH_NEXT, HAS_CHARACTER), the remaster's own ZERO run by the test as it would.
     /// </summary>
+    /// <summary>The 1-A roster repair (OldGuests.RepairSideChapterRoster), as each world-map frame runs it on a save
+    /// from before 0.9.5: Lorne's PS1 Bard job, the three knights' 1-A bit, Agrias off Ashley's sprite set; Ashley, an
+    /// empty slot and a second pass left alone.</summary>
+    public static int SideChapterRepair(Log log)
+    {
+        const int size = UnitTables.RosterSize;
+        var roster = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(UnitTables.RosterSlots * size);
+        void Record(int slot, byte sprites, byte job, int name, byte errand)
+        {
+            var r = roster + slot * size;
+            r[0] = sprites;
+            r[1] = (byte)slot;
+            r[OldGuests.RosterJob] = job;
+            r[OldGuests.RosterErrand] = errand;
+            *(int*)(r + OldGuests.RosterName) = name;
+        }
+        for (var k = 0; k < UnitTables.RosterSlots; k++)
+            roster[k * size + 1] = 0xFF;
+        Record(1, 0x80, OldGuests.Ps1Bard, OldGuests.Lorne, 0);
+        Record(2, 0x81, 0x4C, OldGuests.Lavian, 0x11);
+        Record(3, OldGuests.OldAgrias, OldGuests.OldAgrias, OldGuests.Agrias, 0);
+        Record(4, OldGuests.OldAgrias, OldGuests.OldAgrias, 0x42, 0); // Ashley
+        Record(5, 0x80, 0x4A, 0x123, 0x10); // someone else away
+        var first = OldGuests.RepairSideChapterRoster(roster);
+        var again = OldGuests.RepairSideChapterRoster(roster);
+        byte At(int slot, int offset) => roster[slot * size + offset];
+        var ok = first == 3 && again == 0 && At(1, OldGuests.RosterJob) == OldGuests.RemasterBard
+                 && At(2, OldGuests.RosterErrand) == 0x01 && At(3, 0) == OldGuests.Agrias
+                 && At(3, OldGuests.RosterJob) == OldGuests.Agrias && At(4, 0) == OldGuests.OldAgrias
+                 && At(5, OldGuests.RosterErrand) == 0x10;
+        System.Runtime.InteropServices.NativeMemory.Free(roster);
+        log.Info($"self-test: 1-A roster repair, {first} records then {again}: Lorne a Bard, Lavian's 1-A bit off (her own "
+                 + $"errand bit kept), Agrias off 0x34, Ashley and another's errand left{(ok ? "" : ": WRONG")}");
+        return ok ? 0 : 1;
+    }
+
     /// <summary>
     /// A unit keeps the graphic a ReMixed event wrote, where the remaster's recompute (0x0FCAB0) would work it out again
     /// from the sprite set; and a PS1-memory write over a unit's +0x15F marks it.
@@ -4591,6 +4628,56 @@ internal static unsafe class SelfTest
         unit[6] = 0x40;
         recompute(5, &graphic, &palette);
         Check($"Bryn's locked look (sprite set 0xB5) draws graphic 0x{graphic:X2}", graphic == 0x83);
+        unit[0] = 0xA5; // a remaster character of its added scenes, which the game draws as 0xA5
+        recompute(5, &graphic, &palette);
+        Check($"the remaster's sprite set 0xA5 keeps its own graphic: 0x{graphic:X2}", graphic == 0xA5);
+
+        // The menus' picker (0x278EDC), on a unit as 0x275B84 builds one from a roster record.
+        if (UnitLooks.PickerAt == 0)
+            Check("the menus' picker isn't installed", false);
+        else
+        {
+            var pick = (delegate* unmanaged<byte*, byte*, byte, byte>)UnitLooks.PickerAt;
+            byte Pick(byte sprite, byte gender, byte job)
+            {
+                unit[0] = sprite;
+                unit[6] = gender;
+                byte p = 0xEE;
+                var g = pick(unit, &p, job);
+                return p == 0 ? g : (byte)0xFF;
+            }
+            Check($"the menus draw Lorne (0xB4, a male Bard) as 0x{Pick(0xB4, 0x80, 0x5B):X2}", Pick(0xB4, 0x80, 0x5B) == 0x38);
+            Check($"and Bryn (0xB5, a female Dancer) as 0x{Pick(0xB5, 0x40, 0x5C):X2}", Pick(0xB5, 0x40, 0x5C) == 0x83);
+            Check($"a woman's locked Knight look (0x94) as 0x{Pick(0x94, 0x40, 0x4A):X2}", Pick(0x94, 0x40, 0x4A) == 0x65);
+            Check($"a generic male Bard as the game draws him: 0x{Pick(0x80, 0x80, 0x5B):X2}", Pick(0x80, 0x80, 0x5B) == 0x82);
+            Check($"the remaster's 0xA5, 0xA2 and 0xA4 as it draws them: 0x{Pick(0xA5, 0x80, 0x4A):X2}, 0x{Pick(0xA2, 0x80, 0x4A):X2}, "
+                  + $"0x{Pick(0xA4, 0x80, 0x4A):X2}", Pick(0xA5, 0x80, 0x4A) == 0xA5 && Pick(0xA2, 0x80, 0x4A) == 0xA3
+                  && Pick(0xA4, 0x80, 0x4A) == 0x72);
+            Check($"Agrias (0x1E) as herself: 0x{Pick(0x1E, 0x40, 0x4A):X2}", Pick(0x1E, 0x40, 0x4A) == 0x1E);
+            Check($"a man's locked Mime look (0xB6), past Lorne's and Bryn's, as 0x{Pick(0xB6, 0x80, 0x4A):X2}; a locked "
+                  + $"Ninja woman's (0xAE) as 0x{Pick(0xAE, 0x40, 0x4A):X2}", Pick(0xB6, 0x80, 0x4A) == 0x84 && Pick(0xAE, 0x40, 0x4A) == 0x7F);
+        }
+        // The job list's base job (0x2864AC), through its stub's probe: a locked look starts at the Squire like a generic.
+        if (UnitLooks.JobListProbe == 0)
+            Check("the job list isn't patched", false);
+        else
+        {
+            var probe = (delegate* unmanaged<long, long, byte*, int, int>)UnitLooks.JobListProbe;
+            var record = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(8);
+            int Base(int sprite, short job)
+            {
+                *(short*)record = job;
+                return probe(0, 0, record, sprite);
+            }
+            var site = (byte*)UnitLooks.JobListAt;
+            Check($"the job list's base job: Lorne 0x{Base(0xB4, 0x5B):X}, Bryn 0x{Base(0xB5, 0x5C):X}, a locked Knight "
+                  + $"0x{Base(0x94, 0x4C):X}, a generic 0x{Base(0x80, 0x50):X}, a monster 0x{Base(0x82, 0x5E):X}, Agrias "
+                  + $"0x{Base(0x1E, 0x1E):X}, the remaster's 0xA5 0x{Base(0xA5, 0x4A):X}; its case jumps away ({site[0]:X2} {site[1]:X2})",
+                  Base(0xB4, 0x5B) == 0x4A && Base(0xB5, 0x5C) == 0x4A && Base(0x94, 0x4C) == 0x4A && Base(0x80, 0x50) == 0x4A
+                  && Base(0x82, 0x5E) == 0x5E && Base(0x1E, 0x1E) == 0x1E && Base(0xA5, 0x4A) == 0xA5
+                  && site[0] == 0x48 && site[1] == 0xB8);
+            System.Runtime.InteropServices.NativeMemory.Free(record);
+        }
         saved.CopyTo(new Span<byte>(unit, Battle.UnitSize));
         UnitLooks.Clear();
 

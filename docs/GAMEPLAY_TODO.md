@@ -5,7 +5,7 @@ is, and what it waits on. The technical details (what ReMixed's code does, where
 [MECHANICS.md](MECHANICS.md) and [REMASTER.md](REMASTER.md); data held back is in
 [the build report](generated/mod-build.md).
 
-**Progress: 100% of gameplay** (107 done, 0 open: 0 small, 0 medium, 0 large). Worked out from this list by
+**Progress: 99% of gameplay** (107 done, 1 open: 0 small, 1 medium, 0 large). Worked out from this list by
 `python -I tools/todo_progress.py`, open items weighted by size (small 1, medium 3, large 15) and done ones at 2 each,
 and updated with every change to the list. Everything outside the story and display ports is ported or settled
 (the formulas ReMixed rewrote in place were the last, 2026-11-12; ReMixed's own battles writing their units back,
@@ -104,8 +104,8 @@ The events, by group:
   Lionsguard knights when the chapter starts, Bryn and Lorne in its second scene when Agrias offers them help. Its
   older-build roster repair now runs after a save reaches the world map, rather than only while the title-screen
   roster is resident: Lorne's PS1 Bard job is converted before the party menu opens, the three Lionsguard errand bits
-  are cleared, and an old Agrias record is moved off Ashley's slot. This covers the reported Bard Song hover crash,
-  the three locked knights, and Guest Agrias appearing as Ashley on a loaded 0.9.7 save.
+  are cleared, and an old Agrias record is moved off Ashley's slot. That covers the three locked knights and Guest
+  Agrias appearing as Ashley on a loaded 0.9.7 save; it's self-tested offline, not yet seen on a loaded save.
   battles went through ReMixed's own "Preparation Menu", which the remaster's formation screen replaces
   (each battle's formations go in its record). Its 16 world-map starts are in, each waiting for the chapter to be
   running, and the remaster's 13 chapter-1 starts wait while it runs (1-A counts its story on the main story's
@@ -291,7 +291,8 @@ What the events need:
   Its roster-backed victory-condition actor kept battle id 0x80 even when no unit had been made, and the stock HP
   comparison treated that empty record as a dead actor. ReMixed's named-actor condition now reports a missing actor
   as absent instead of delegating the zeroed record to the stock comparison. Covered by the offline condition
-  regression; the natural chapter-two route has not yet been played end to end. *small*
+  regression; the natural chapter-two route has not yet been played end to end. This is a different case from the
+  reported early victory (Open, below), whose line comes from the victory's block, not from those HP checks. *small*
 - [x] The chapter-3 branch (0x104 at location 15, where Hirame meets Agrias again) opened the wrong way round: when
   Hirame was lost in 1-A's rescue, not when she was saved (so in release 0.9.0). Read 2026-11-13: ReMixed's own
   start for it wants both its "Hirame lost" flag and its branch flag, and it sets the branch flag (in chapter 3) only
@@ -378,6 +379,36 @@ Everything else ReMixed's gameplay changes is ported or settled (Done), or waits
 or the story port (below). The formulas ReMixed rewrote in place were ported on 2026-11-12 (Done; to see in a
 battle, Testing).
 
+Fixed from a 0.9.7 playthrough on the PC (2026-11-18; Luso's recruitment screen and the 1-A save repair are under Testing and
+side chapter 1-A above):
+
+- [x] Bryn and Lorne's scene: Lorne stood as ReMixed's grave swords with a Squire's face (still so in 0.9.8-0.9.10).
+  The event's fix to his job also changed the look it gives him to a slot that now holds the swords' art; his look is
+  the Bard's again. Seen in the hidden PC game: Lorne job 0x5B, graphic 0x38 (the Bard), Bryn graphic 0x83 (the
+  Dancer).
+- [x] Bryn and Lorne both looked like Dancers in the party screens: the menus drew their locked looks by job and
+  never by ReMixed's rule, so Lorne showed as the Dancer too. The menus now draw a locked look as the battle does
+  (Lorne the Bard, Bryn the Dancer, a locked generic its job's look), and leave the remaster's own characters in its
+  added scenes as they were (which the battle hook had also been changing). Seen in the hidden PC game's Units and
+  status screens (2026-11-18), with Bryn's and Lorne's records set as their scene leaves them. *small*
+- [x] Hovering Bardsong in Lorne's Equipment & Abilities screen crashed the game (fixed 2026-11-18). The job list
+  takes a special character's base job from its sprite set, so Lorne's locked look (0xB4) was asked for job 0xB4,
+  past the end of the job table, and the next step read address 0. Locked looks now start their job list at the
+  Squire, as generics do. Reproduced twice in the hidden PC game (the Units screen opening on Lorne's record), then
+  gone with the fix: the Units screen, his status and the cursor on Bardsong, with Bryn as the Dancer beside him.
+  *small*
+
+Still open from the same playthrough (2026-11-17):
+
+- [ ] Araguay Woods ends as soon as its battle begins: "Damn! We were too slow!" is the start of its victory
+  scene, which plays when every enemy is down and the chocobo was never marked rescued. In the hidden PC game on
+  0.9.10 (2026-11-18, `quick_test.py`, from story progress 0x10) the six goblins, Agrias, Gafgarion and Luso were all
+  there at the battle's opening, so the enemies aren't simply missing at setup. Left: what makes the victory count
+  as met once the battle begins; the harness's formation step couldn't place a unit on Araguay's map, so it stopped
+  there. Not yet played with Luso already in the party, as reported: the test save had neither him nor Boco.
+  *medium*
+
+
 
 ReMixed's in-place patches are all reviewed: BATTLE.BIN, SCUS, WORLD and the EVENT overlays (analysis/
 battle-in-place-review.md, scus-in-place-review.md, world-in-place-review.md, overlays-in-place-review.md, the last
@@ -422,8 +453,8 @@ or new art, none of which the offline check can exercise; the rules behind them 
   no face. The unit-look hook now decodes those sprite sets as ReMixed does, including Bryn's 0xB5 to the female
   Dancer graphic (0x83), Lorne's 0xB4 to the male Bard graphic ReMixed uses (0x38, aliased to the remaster's Bard art),
   and the job-locked generic sets by gender. The port already maps their jobs to the remaster's gendered Bard, Dancer
-  and Dark Knight jobs. Checked offline for a locked male Squire, Lorne and Bryn; seen in the hidden PC runtime on
-  2026-11-17: Lorne was job 0x5B with graphic 0x38 (Bard art), while Bryn was graphic 0x83 (Dancer art).
+  and Dark Knight jobs. Checked offline for a locked male Squire, Lorne and Bryn. Battles only until 2026-11-18,
+  when the menus got the same rule (Open, "Fixed from the same playthrough"); Lorne's scene look is there too.
   *medium*
 - [x] ReMixed's own unit art where the remaster has none (asked 2026-11-12: "for any art not in the remaster, just
   use the psx remix sprites", with a filter to bring them nearer the remaster's art): nine of ReMixed's sprites come

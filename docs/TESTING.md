@@ -228,11 +228,30 @@ python -I tools/quick_test.py --restart tests/quick/araguay-entry.txt
 ```
 
 Each case prints one `PASS` or `FAIL` line per expectation and a final elapsed time. Case files use one small command
-per line: `scenario`, `setvar`, `send`, `advance`, `formation`, `wait unit|entry|log|seconds`, and
-`expect unit|entry|var`.
+per line: `scenario`, `setvar`, `send`, `advance`, `formation`, `key`, `shot`, `wait unit|entry|log|world|seconds`,
+and `expect unit|entry|var`.
+Each `wait log` consumes a matching line logged during the current case, so earlier runs in the same game cannot pass it.
+`wait log PATTERN press=RETURN every=1` confirms through a scene until the line comes. `key K [times=N] [wait=S]`
+posts a key to the game's own window; before each key in a menu, `wait world depth=D state=S` waits for that menu
+(the world map is depth 1, state 0; Esc opens Units at depth 2, state 1), so a key never lands on the wrong screen.
+`shot NAME` saves `work/harness/quick/CASE/NAME.png` at that step, for checking by eye. Set state rather than play to
+it: `send poke` writes a roster record as a scene would leave it (`tests/quick/party-looks.txt`, 17.5 s). Scenes still
+play in real time (`tests/quick/lorne-scene-shots.txt`, about 2 minutes).
 Integer values are decimal or `0x`-prefixed. `entries` exposes each raw 40-byte battle-data record,
 including its unit-selection `flags`; `units` exposes the live job, graphic, palette and battle id. Screenshots are
 still for a final visual review, not a prerequisite for these checks.
+
+To check the Dispatch navigation soft lock, start the disposable Eagrose fixture and run the full catalog check:
+
+```powershell
+python -I tools/harness.py start --world --location 2
+python -I tools/harness.py dispatch all --cycles 10 --settle 0 --timeout 5
+python -I tools/harness.py stop
+```
+
+Each cycle uses Confirm from the main page through Propositions to Salvaging, then Back twice. The check waits for the
+native list and input to be ready at each step. It takes one screenshot after the last cycle and checks that Back closes
+the overlay.
 
 The generated scenario tables cannot be replaced safely inside a running game, and code changes cannot replace .NET
 or installed hooks in process, so both use the fast clean restart rather than a fragile hot reload.

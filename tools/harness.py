@@ -6,6 +6,7 @@
     python -I tools/harness.py shot work/harness/now.png                   # a screenshot of its window
     python -I tools/harness.py dispatch all --file work/harness/dispatch.png # enter the test fixture's Tavern once,
                                                        # assert every catalog row and capture only the final view
+    python -I tools/harness.py dispatch all --cycles 10                    # regression check for the navigation lock
     python -I tools/harness.py log                                         # the mod's log lines since the start
     python -I tools/harness.py stop                                        # ends it and cleans up
 
@@ -945,8 +946,48 @@ def validate_dispatch_info(info: str, kind: str, story: int) -> None:
         raise RuntimeError(f"unexpected or duplicate Dispatch rows (expected {dict(+expected)}, got {dict(actual)}):\n{info}")
 
 
+def wait_dispatch_page(page: str, timeout: float) -> str:
+    """Wait for the native rows, first-row focus, and input gate after changing page."""
+    deadline = time.monotonic() + timeout
+    info = ""
+    heading = re.compile(rf"^{re.escape(page)}, (\d+) row\(s\):")
+    native = re.compile(r"^profit-main: rows (\d+), focus 0, state 4, gate 0, pending -1$", re.MULTILINE)
+    while time.monotonic() < deadline:
+        info = send("dispatchinfo", timeout=min(1.0, timeout))
+        expected = heading.match(info)
+        displayed = native.search(info)
+        if expected and displayed and expected[1] == displayed[1] and int(displayed[1]) > 0:
+            return info
+        nap(0.25)
+    raise RuntimeError(f"Dispatch did not reach {page} within {timeout:g}s:\n{info}")
+
+
+def check_dispatch_navigation(cycles: int, story: int, timeout: float) -> str:
+    """Exercise native Confirm and Back through both levels, keeping the same overlay open."""
+    info = wait_dispatch_page("Main (-)", timeout)
+    for cycle in range(1, cycles + 1):
+        try:
+            send("key RETURN", timeout=1)
+            info = wait_dispatch_page("PropositionKinds (-)", timeout)
+            validate_dispatch_info(info, "propositions", story)
+            send("key RETURN", timeout=1)
+            wait_dispatch_page("Propositions (Salvaging)", timeout)
+            send("key ESCAPE", timeout=1)
+            info = wait_dispatch_page("PropositionKinds (-)", timeout)
+            validate_dispatch_info(info, "propositions", story)
+            send("key ESCAPE", timeout=1)
+            info = wait_dispatch_page("Main (-)", timeout)
+            validate_dispatch_info(info, "all", story)
+        except (RuntimeError, OSError) as error:
+            raise RuntimeError(f"Dispatch navigation cycle {cycle}/{cycles} failed: {error}") from error
+        print(f"PASS Dispatch navigation cycle {cycle}/{cycles}")
+    return info
+
+
 def cmd_dispatch(args: argparse.Namespace) -> None:
     """Enter the fixture Tavern once, then open and verify one native Dispatch catalog directly."""
+    if args.cycles < 0 or (args.cycles and args.kind != "all"):
+        raise RuntimeError("--cycles needs a non-negative count and the full Dispatch catalog (all)")
     opened_pattern = r"dispatch missions: opened the native view with"
     opened_before = count_log(opened_pattern)
     reply = send(f"dispatch {args.kind} {args.story} {args.month}")
@@ -975,6 +1016,8 @@ def cmd_dispatch(args: argparse.Namespace) -> None:
     nap(args.settle)
     info = send("dispatchinfo")
     validate_dispatch_info(info, args.kind, args.story)
+    if args.cycles:
+        info = check_dispatch_navigation(args.cycles, args.story, args.timeout)
     print(info)
     shot(args)
     if not args.leave_open:
@@ -1072,6 +1115,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--settle", type=float, default=4.0,
                    help="seconds for the native Dispatch panels to finish their opening animation")
     p.add_argument("--timeout", type=float, default=20.0)
+    p.add_argument("--cycles", type=int, default=0,
+                   help="repeat full native navigation through Propositions and Back, checking each transition")
     p.add_argument("--leave-open", action="store_true", help="leave the captured native view open for manual inspection")
     p.set_defaults(run=cmd_dispatch)
     p = sub.add_parser("wait", help="wait for a log line")

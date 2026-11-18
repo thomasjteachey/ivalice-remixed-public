@@ -1,0 +1,11 @@
+# Bryn and Lorne's scene (ReMixed's 0x0ED) from a warm world map, framed at the Bard's line, as reported on 0.9.7,
+# then finished so both join (sprite sets 0xB5 and 0xB4 in the roster) for the party-menu case.
+name Bryn and Lorne in their scene
+scenario 0x194
+wait log "loaded event 404" timeout=25
+wait log "event 404's message 39 shown" press=RETURN every=1 timeout=150
+wait seconds 2.5
+shot bard-line
+expect unit battle_id=0x91 job=0x5b graphic=0x38
+expect unit battle_id=0x90 job=0x5c graphic=0x83
+advance world timeout=240
