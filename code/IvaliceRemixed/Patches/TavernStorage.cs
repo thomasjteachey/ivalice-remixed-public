@@ -4,10 +4,10 @@ using System.Text.Json;
 namespace IvaliceRemixed.Patches;
 
 /// <summary>
-/// Gives ReMixed's additive Dispatch Missions posting the remaster's native errand controls. The ordinary Tavern
-/// Rumors, Errands, all 96 native jobs and their history remain unchanged. In the separate view a virtual catalog of
-/// Propositions, repeatable Jobs, Special Training and the current Contest uses the native list, roster picker,
-/// away-unit locks, timers, cancellation/recall and report screens.
+/// ReMixed's Dispatch Missions in the Tavern, in Errands' place (as ReMixed's replaces vanilla's errands), with the
+/// remaster's native errand controls: a virtual catalog of Propositions, repeatable Jobs, Special Training and the
+/// current Contest uses the native list, roster picker, away-unit locks, timers, cancellation/recall and report
+/// screens. The remaster's 96 errands can no longer be started; ones already under way still come back.
 /// </summary>
 internal static unsafe class TavernStorage
 {
@@ -22,6 +22,19 @@ internal static unsafe class TavernStorage
                        DispatchMenuFirst = 211, DispatchMenuLast = 221,
                        DispatchTextLast = DispatchMenuLast, ProfitRowBytes = 0x17;
     internal const int DispatchScenario = 0x355;
+    /// <summary>The Tavern screen's states (its +0x98, set by <see cref="BarStateAt"/>): 0 the farewell, 1 its menu,
+    /// 2 Rumors, 4 Errands, 5 Errands while the story keeps them locked. Each frame the world map's Tavern state
+    /// (0x2D5210) asks the screen for a request (<see cref="BarRequestAt"/>: the first int it fills in) and acts on it:
+    /// 0 leave, 2 open Rumors (0x36EE50, which also pushes the world map's Rumors state), 4 Errands, 5 the locked
+    /// Errands' note; -1 is nothing. Its menu (0x19F498) requests 4 or 5 for its second button, by whether that
+    /// button is enabled, and 2 for any other (seen in the PC game, 2026-11-18). Dispatch Missions replaces Errands
+    /// there (tools/build_mod.py, TAVERN_MENU_ROW), as ReMixed's replaces vanilla's errands.</summary>
+    internal const int MenuState = 1, ErrandsRequest = 4, LockedErrandsRequest = 5, NoRequest = -1;
+    /// <summary>The Tavern menu's setup (0x19F330) asks the unlock table whether Errands are open (0xFF8A4, row
+    /// 0xC94) and builds UIMenuButtonLeft row 3 if so, row 7 (Errands as a locked "???") if not: that call, which
+    /// <see cref="OnTavernUnlock"/> answers with ReMixed's unlock of Dispatch Missions instead.</summary>
+    internal const string TavernUnlockPattern = "BA 94 0C 00 00 E8 ?? ?? ?? ?? 8A C8 C7 44 24 20 17 00 00 00 F6 D9";
+    internal const int TavernUnlockCallAt = 5;
     internal const string CatalogFileName = "dispatch-missions.json";
     private const byte DispatchRecord = 0x80;
     private const int NumericTemplateRow = 89;
@@ -29,7 +42,16 @@ internal static unsafe class TavernStorage
     // (+0x6F8/+0x6FC/+0x700) live at these offsets from the actual ProfitMain object.
     private const int ProfitCostTextOffset = 0x728, ProfitDayStartTextOffset = 0x72C,
                       ProfitDayEndTextOffset = 0x730;
-    private const int EmptyUiText = 0x74C, NotApplicableUiText = 0x752;
+    private const int EmptyUiText = 0x74C;
+    /// <summary>The Errands screen's layout text nodes (vtable-checked, <see cref="LayoutNodeBytes"/> apart, from the
+    /// one at its +0x420): the column heads "Days" and "Finder's Fee", and the "-" each row copies for a job with no
+    /// days, are three of them (seen in the PC game, 2026-11-18, as the 14th, 15th and 8th). A node's UI text is at
+    /// +0xF8, re-read when +0x13C is set; a row's nodes are copied from these as the list is shown (0x3F0E40).</summary>
+    private const int ColumnHeadAnchor = 0x420, LayoutNodeBytes = 0x1C8, LayoutNodesScanned = 24,
+                      NodeTextAt = 0xF8, NodeDirtyAt = 0x13C, DaysHeadText = 0x74F, FeeHeadText = 0x750,
+                      NoDaysText = 0x75A, NoErrandsText = 0x758;
+    private static readonly List<(nint Node, int Text)> ColumnHeads = [];
+    private static nint _emptyListNode;
 
     internal const string DayChangePattern =
         "48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 41 54 41 55 41 56 41 57 48 83 EC 30 BB 2E 00 00 00 8B CB E8";
@@ -56,6 +78,13 @@ internal static unsafe class TavernStorage
         "8B D3 49 8B C8 E8";
     internal const string BarStatePattern =
         "48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 41 56 41 57 48 83 EC 20 8B B1 98 00 00 00 48 8B F9 3B F2";
+    internal const string BarRequestPattern =
+        "48 89 5C 24 08 57 48 83 EC 20 48 8B FA 48 8B D9 8B 91 98 00 00 00 83 FA 0A 0F 8F";
+    /// <summary>A screen's breadcrumb (rcx its object, edx the level, r8d the UI text): the Tavern's state 4 names
+    /// level 2 "Errands" (<see cref="ErrandsCrumb"/>), which the Dispatch view names Dispatch Missions.</summary>
+    internal const string BreadcrumbPattern =
+        "48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 48 8D 99 18 02 00 00 41 8B F0 48 8B CB 8B FA E8";
+    internal const int ErrandsCrumb = 0x732, CrumbLevel = 2;
     internal const string WorkHistoryEventPattern =
         "48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 30 49 8B F0 48 8B DA 48 8B F9 E8 ?? ?? ?? ?? 8B 0E 83 E9 1B";
     internal const string ListCountPattern =
@@ -88,6 +117,9 @@ internal static unsafe class TavernStorage
     internal static nint SendAt { get; private set; }
     internal static nint TableRowAt { get; private set; }
     internal static nint BarStateAt { get; private set; }
+    internal static nint BarRequestAt { get; private set; }
+    internal static nint BreadcrumbAt { get; private set; }
+    internal static nint TavernUnlockAt { get; private set; }
     internal static nint ProfitTableSlot { get; private set; }
     internal static nint ProfitTableLoaderAt { get; private set; }
     internal static nint WorkHistoryEventAt { get; private set; }
@@ -120,6 +152,8 @@ internal static unsafe class TavernStorage
     private static delegate* unmanaged<void> _send;
     private static delegate* unmanaged<int, int, nint> _tableRow;
     private static delegate* unmanaged<nint, int, void> _barState;
+    private static delegate* unmanaged<nint, int*, nint> _barRequest;
+    private static delegate* unmanaged<nint, int, int, nint> _breadcrumb;
     private static delegate* unmanaged<nint, int, nint> _profitTableLoader;
     private static delegate* unmanaged<nint, nint, int*, void> _workHistoryEvent;
     private static delegate* unmanaged<nint, int, void> _listCount;
@@ -153,10 +187,13 @@ internal static unsafe class TavernStorage
     private static nint _listAddon;
     private static nint _listModel;
     private static nint _barScreen;
+    /// <summary>The Tavern screen whose Dispatch Missions button was chosen, until Errands' Prepare opens the view.</summary>
+    private static nint _menuDispatchScreen;
     private static nint _profitMain;
     private static readonly HashSet<nint> ProfitHeaderNodes = [];
     private static int _dispatchTitleText;
     private static int _dispatchPromptText;
+    private static int _dispatchEmptyText;
     private static bool _nativeNumericTextCaptured;
     private static int _nativeCostText;
     private static int _nativeDayStartText;
@@ -192,6 +229,9 @@ internal static unsafe class TavernStorage
         SendAt = image.FindUnique(SendPattern);
         TableRowAt = image.FindUnique(TableRowPattern);
         BarStateAt = image.FindUnique(BarStatePattern);
+        BarRequestAt = image.FindUnique(BarRequestPattern);
+        BreadcrumbAt = image.FindUnique(BreadcrumbPattern);
+        TavernUnlockAt = image.FindUnique(TavernUnlockPattern) + TavernUnlockCallAt;
         ProfitTableSlot = GameImage.Rip(ErrandListAt + 0x14, 3, 7);
         ProfitTableLoaderAt = GameImage.Rip(ErrandListAt + 0x3C, 1, 5);
         _profitTable = (nint*)ProfitTableSlot;
@@ -232,6 +272,11 @@ internal static unsafe class TavernStorage
             TableRowAt, (nint)(delegate* unmanaged<int, int, nint>)&OnTableRow, "the localized table row lookup");
         _barState = (delegate* unmanaged<nint, int, void>)game.Hooks.Hook(
             BarStateAt, (nint)(delegate* unmanaged<nint, int, void>)&OnBarState, "the Tavern screen state");
+        _barRequest = (delegate* unmanaged<nint, int*, nint>)game.Hooks.Hook(
+            BarRequestAt, (nint)(delegate* unmanaged<nint, int*, nint>)&OnBarRequest, "the Tavern screen's request");
+        PatchTavernUnlock();
+        _breadcrumb = (delegate* unmanaged<nint, int, int, nint>)game.Hooks.Hook(
+            BreadcrumbAt, (nint)(delegate* unmanaged<nint, int, int, nint>)&OnBreadcrumb, "a screen's breadcrumb");
         _workHistoryEvent = (delegate* unmanaged<nint, nint, int*, void>)game.Hooks.Hook(
             WorkHistoryEventAt, (nint)(delegate* unmanaged<nint, nint, int*, void>)&OnWorkHistoryEvent,
             "the native Errands list's selection event");
@@ -253,8 +298,8 @@ internal static unsafe class TavernStorage
             "the Tavern Errands catalog's heading");
         _setText = (delegate* unmanaged<nint, int, nint, void>)SetTextAt;
 
-        _log.Info("dispatch missions: native view provides Propositions, Jobs, Special Training, Contests and " +
-                  "recall/reports; ordinary Rumors, Errands and all 96 native jobs remain unchanged");
+        _log.Info("dispatch missions: in the Tavern's menu in place of Errands, with Propositions, Jobs, Special " +
+                  "Training, Contests and recall/reports in the native view");
     }
 
     internal static bool OpenDispatch(nint barScreen)
@@ -279,11 +324,16 @@ internal static unsafe class TavernStorage
             _pendingBackFrame = -1;
             // Prepare is a whole-screen routine which also pushes the Tavern's world-UI state. Run it once with a
             // full carrier pool, then rewrite that native record pool for category changes instead of calling it again.
+            // The rows copy the layout's texts as Prepare makes them, so the category page's blanks go in first.
+            FindColumnHeads();
+            ApplyColumnHeads(IsNavigationPage());
             _buildingPool = true;
             BuildCarrierPool();
             ClearProfitMain();
             ((delegate* unmanaged<void>)PrepareAt)();
             _buildingPool = false;
+            if (ColumnHeads.Count == 0)
+                FindColumnHeads();
             CachePreparedRecords();
             BuildCarrierMap();
             RewriteProfitRecords();
@@ -298,6 +348,8 @@ internal static unsafe class TavernStorage
         {
             _buildingPool = false;
             RestoreProfitNumericText();
+            ApplyColumnHeads(false);
+            SetEmptyListText(false);
             _dispatchView = false;
             _log.Error($"dispatch missions: the native view couldn't open ({e.Message})");
             return false;
@@ -333,23 +385,8 @@ internal static unsafe class TavernStorage
             .Select(group => $"{group.Count()} {group.Key}")) + "\n" + string.Join("\n", entries.Select((e, k) =>
                 $"{k + 1}: {e.Kind} | {e.Category} | {e.Name} | key {e.Key}")) +
                 $"\nprofit-main: rows {profitRows}, focus {profitFocus}, state {profitState}, gate {profitGate}, " +
-                $"pending {profitPending}";
-    }
-
-    internal static bool CloseRumors(nint barScreen)
-    {
-        if (barScreen == 0 || BarStateAt == 0)
-            return false;
-        try
-        {
-            ((delegate* unmanaged<nint, int, void>)BarStateAt)(barScreen, 1);
-            return true;
-        }
-        catch (Exception e)
-        {
-            _log.Error($"dispatch missions: the Rumors list couldn't close ({e.Message})");
-            return false;
-        }
+                $"pending {profitPending}, at 0x{_profitMain:X}, heading nodes " +
+                string.Join(" ", ProfitHeaderNodes.Select(node => $"0x{node:X}"));
     }
 
     /// <summary>The native list add-on is created just after Prepare returns on some Tavern paths. Retry on the next
@@ -404,20 +441,84 @@ internal static unsafe class TavernStorage
     [UnmanagedCallersOnly]
     private static byte OnNewInMenu(nint screen, int kind)
     {
-        if (kind != 6)
-            return _newInMenu(screen, kind);
+        // Kind 6 marked Errands' button for new errands. Dispatch Missions has its place and the remaster's errands
+        // can't be reached, so the mark would only ever point at them.
+        return kind == 6 ? (byte)0 : _newInMenu(screen, kind);
+    }
+
+    /// <summary>The Tavern menu's unlock call (<see cref="TavernUnlockPattern"/>) goes to a stub that jumps to
+    /// <see cref="OnTavernUnlock"/>; it only reads the table, so nothing is lost by not asking it.</summary>
+    private static void PatchTavernUnlock()
+    {
+        if (*(byte*)TavernUnlockAt != 0xE8)
+            throw new InvalidDataException("the Tavern menu's unlock call moved");
+        var stub = GameImage.AllocateCodeNear(TavernUnlockAt, 16);
+        var code = new byte[12];
+        code[0] = 0x48;
+        code[1] = 0xB8; // mov rax, OnTavernUnlock
+        BitConverter.GetBytes((long)(nint)(delegate* unmanaged<nint, int, byte>)&OnTavernUnlock).CopyTo(code, 2);
+        code[10] = 0xFF;
+        code[11] = 0xE0; // jmp rax
+        code.CopyTo(new Span<byte>(stub, code.Length));
+        var call = new byte[5];
+        call[0] = 0xE8;
+        BitConverter.GetBytes((int)((nint)stub - (TavernUnlockAt + 5))).CopyTo(call, 1);
+        GameImage.WriteCode(TavernUnlockAt, call);
+    }
+
+    /// <summary>Whether the Tavern menu's second button, Dispatch Missions, is open: when ReMixed posts it.</summary>
+    [UnmanagedCallersOnly]
+    private static byte OnTavernUnlock(nint table, int row)
+    {
         try
         {
-            for (var row = 0; row < NativeRows; row++)
-                if ((Nemesis.GetVariable(FirstState + row) & 4) != 0)
-                    return 1;
-            return 0;
+            return RemixedScenarios.DispatchUnlocked ? (byte)1 : (byte)0;
         }
         catch (Exception e)
         {
-            _log.Error($"dispatch missions: the native Errands notification couldn't be bounded ({e.Message})");
-            return _newInMenu(screen, kind);
+            _log.Error($"dispatch missions: the Tavern menu's unlock couldn't be read ({e.Message})");
+            return 0;
         }
+    }
+
+    /// <summary>The Tavern menu's Dispatch Missions button, in Errands' place: the world map's Tavern state runs
+    /// Errands' own case for it (closing the Tavernmaster's line, preparing the screen, clearing its world flag 4), and
+    /// the Prepare it calls opens the Dispatch view (<see cref="OnPrepare"/>). Locked, the button does nothing: the
+    /// remaster's note for it speaks of Errands.</summary>
+    [UnmanagedCallersOnly]
+    private static nint OnBarRequest(nint screen, int* request)
+    {
+        var result = _barRequest(screen, request);
+        try
+        {
+            if (!_dispatchView && request != null && *(int*)(screen + 0x98) == MenuState
+                && *request is ErrandsRequest or LockedErrandsRequest)
+            {
+                if (*request == ErrandsRequest && RemixedScenarios.DispatchUnlocked)
+                {
+                    _menuDispatchScreen = screen;
+                    _log.Info("dispatch missions: chosen in the Tavern's menu");
+                }
+                else
+                {
+                    *request = NoRequest;
+                    _log.Info("dispatch missions: chosen in the Tavern's menu before ReMixed unlocks it; nothing opens");
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            _log.Error($"dispatch missions: the Tavern menu's button couldn't be read ({e.Message})");
+        }
+        return result;
+    }
+
+    [UnmanagedCallersOnly]
+    private static nint OnBreadcrumb(nint crumbs, int level, int text)
+    {
+        if (_dispatchView && level == CrumbLevel && text == ErrandsCrumb && _dispatchTitleText > 0)
+            text = _dispatchTitleText;
+        return _breadcrumb(crumbs, level, text);
     }
 
     [UnmanagedCallersOnly]
@@ -430,6 +531,9 @@ internal static unsafe class TavernStorage
                 ApplyProfitHeading(false);
                 ApplyProfitPrompt(false);
                 RestoreProfitNumericText();
+                ApplyColumnHeads(false);
+                ColumnHeads.Clear();
+                SetEmptyListText(false);
                 _dispatchView = false;
                 _harnessKind = null;
                 _listAddon = 0;
@@ -700,6 +804,12 @@ internal static unsafe class TavernStorage
     [UnmanagedCallersOnly]
     private static void OnPrepare()
     {
+        // The Tavern menu's Dispatch Missions button, by Errands' own case: the view prepares the screen itself
+        // (calling Prepare again, which comes back here with no button pending). If it can't, Errands open as usual.
+        var chosen = _menuDispatchScreen;
+        _menuDispatchScreen = 0;
+        if (chosen != 0 && OpenDispatch(chosen))
+            return;
         Span<int> variables = stackalloc int[NativeRows];
         Span<byte> countdowns = stackalloc byte[NativeRows];
         Span<byte> rows = stackalloc byte[NativeRecords];
@@ -1028,6 +1138,8 @@ internal static unsafe class TavernStorage
                 _dispatchTitleText = title.GetInt32();
                 if (dispatch.TryGetProperty("prompt", out var prompt))
                     _dispatchPromptText = prompt.GetInt32();
+                if (dispatch.TryGetProperty("empty", out var empty))
+                    _dispatchEmptyText = empty.GetInt32();
             }
         }
         _log.Info($"dispatch missions: loaded {_catalog.Length} virtual entries from {CatalogFileName}");
@@ -1316,15 +1428,74 @@ internal static unsafe class TavernStorage
         }
         if (IsNavigationPage())
         {
-            // Categories are navigation, not errands. Keep the native columns for mission pages, but show their
-            // cells as not applicable here instead of the misleading "0 - 0" days and zero-gil fee.
-            *(int*)(_profitMain + ProfitCostTextOffset) = NotApplicableUiText;
+            // Categories are navigation, not errands, as in ReMixed's menus: no Days or Finder's Fee columns, their
+            // heads and cells blank. Mission pages keep the native columns.
+            *(int*)(_profitMain + ProfitCostTextOffset) = EmptyUiText;
             *(int*)(_profitMain + ProfitDayStartTextOffset) = EmptyUiText;
             *(int*)(_profitMain + ProfitDayEndTextOffset) = EmptyUiText;
+            ApplyColumnHeads(true);
         }
         else
         {
             RestoreProfitNumericText();
+            ApplyColumnHeads(false);
+        }
+    }
+
+    /// <summary>The Errands screen's two column heads (<see cref="ColumnHeadAnchor"/>), or none if its layout isn't
+    /// as seen: nothing is written to a node that isn't checked to be one of them.</summary>
+    private static void FindColumnHeads()
+    {
+        ColumnHeads.Clear();
+        _emptyListNode = 0;
+        var first = _profitMain == 0 ? 0 : *(nint*)(_profitMain + ColumnHeadAnchor);
+        if (first == 0 || !Harness.Readable(first, LayoutNodeBytes))
+            return;
+        var vtable = *(nint*)first;
+        for (var k = 1; k < LayoutNodesScanned; k++)
+        {
+            var node = first + k * LayoutNodeBytes;
+            if (!Harness.Readable(node, LayoutNodeBytes) || *(nint*)node != vtable)
+                break;
+            var text = *(int*)(node + NodeTextAt);
+            if (text is DaysHeadText or FeeHeadText or NoDaysText)
+                ColumnHeads.Add((node, text));
+            else if (text == NoErrandsText && _dispatchEmptyText > 0)
+                _emptyListNode = node;
+        }
+        SetEmptyListText(true);
+        if (ColumnHeads.Count != 3)
+        {
+            _log.Info($"dispatch missions: the Errands screen's column texts weren't found ({ColumnHeads.Count} of 3); " +
+                      "they stay on the category pages");
+            ColumnHeads.Clear();
+        }
+    }
+
+    /// <summary>The empty list's line, "No errands available.", as the Dispatch view's "No missions available."</summary>
+    private static void SetEmptyListText(bool dispatch)
+    {
+        if (_emptyListNode == 0)
+            return;
+        var want = dispatch ? _dispatchEmptyText : NoErrandsText;
+        if (*(int*)(_emptyListNode + NodeTextAt) != want)
+        {
+            *(int*)(_emptyListNode + NodeTextAt) = want;
+            *(byte*)(_emptyListNode + NodeDirtyAt) = 1;
+        }
+        if (!dispatch)
+            _emptyListNode = 0;
+    }
+
+    private static void ApplyColumnHeads(bool hide)
+    {
+        foreach (var (node, text) in ColumnHeads)
+        {
+            var want = hide ? EmptyUiText : text;
+            if (*(int*)(node + NodeTextAt) == want)
+                continue;
+            *(int*)(node + NodeTextAt) = want;
+            *(byte*)(node + NodeDirtyAt) = 1;
         }
     }
 

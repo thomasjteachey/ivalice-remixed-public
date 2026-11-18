@@ -366,12 +366,15 @@ In the order I'd take them:
    on the PC: with Algus placed that battle begins. Next, the rest of the campaign from there.
 3. **Battles with the test mode on** (see Testing and [TESTING.md](TESTING.md)), then **the display, text and art
    port** (below).
-4. **Dispatch Missions' native-UI redesign** (asked 2026-11-17; needs a Deck run; plan/history in
-   [analysis/dispatch-missions-plan.md](analysis/dispatch-missions-plan.md)): keep native Rumors, Errands, all 96
-   jobs and history. The extra Dispatch Missions rumor opens the nested PSX menu flow using the remaster's own list,
-   roster picker, timers, cancellation and reports: main menu, six Proposition kinds, the current unfinished set,
-   Jobs, Special Training, Contests and Recall. Verify entry, sending, three daily steps,
-   reporting, returning to the Tavern, and then entering ordinary Errands with its content still unchanged.
+4. **Dispatch Missions on the Deck** (native-UI redesign asked 2026-11-17; plan/history in
+   [analysis/dispatch-missions-plan.md](analysis/dispatch-missions-plan.md)). Since 2026-11-18 it replaces the
+   Tavern's Errands, as ReMixed's replaces vanilla's errands: the Tavern menu is Rumors and Dispatch Missions, the
+   button locked ("???") until ReMixed posts Dispatch Missions, and the remaster's 96 errands can't be started. Its
+   PSX menu flow uses the remaster's own list, roster picker, timers, cancellation and reports: main menu, six
+   Proposition kinds, the current unfinished set, Jobs, Special Training, Contests and Recall; its category pages
+   have no Days or Finder's Fee columns. Seen in the hidden PC game (`tests/quick/dispatch-button.txt`): the button,
+   the category pages, an empty mission page and the locked button. Left to verify: sending, three daily steps,
+   reporting and returning to the Tavern.
 
 ## Open
 
@@ -417,6 +420,16 @@ side chapter 1-A above):
   the party is made from its own battle data. The remaster's own battles are as before. Seen in the hidden PC game:
   Hirame loaded from the party and Wright from his data (`tests/quick/roster-loads-hirame.txt`), 1-A's knights from
   theirs (`roster-loads-knights.txt`), Araguay as before (`araguay-battle.txt`). *medium*
+
+Reported by a player:
+
+- [x] The game froze on the line "Rendezvous missions are now posted among the Rumors in taverns." (reported
+  2026-11-17 with a screenshot, Auto-proceed on, most likely on 0.9.5; the report's screenshot and folder of files are
+  kept outside the repo). It's the last line of ReMixed's 0x0A4, Biggs and Wedge's bartender. On 0.9.5 its box's wait
+  never ended (0.9.6 fixed that, NOTICE_MESSAGES); since then the notice waited for a press after ReMixed's 400-frame
+  hold, which Auto-proceed doesn't give. ReMixed's notice is timed, so now it closes when its 400 frames are up
+  (TIMED_NOTICES, 2026-11-18). Seen in the hidden PC game with Auto-proceed on and no key pressed
+  (`tests/quick/biggs-wedge-notice.txt`): the notice for its 400 frames, then the scene's end and flag 0x92. *medium*
 
 
 ReMixed's in-place patches are all reviewed: BATTLE.BIN, SCUS, WORLD and the EVENT overlays (analysis/

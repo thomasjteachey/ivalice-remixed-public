@@ -4,14 +4,14 @@ The mod's page on Nexus Mods: https://www.nexusmods.com/finalfantasytacticstheiv
 (published 2026-11-14 with 0.9.1; the Event Instruction Upgrade has its own page, mod 186). Its text, ready to paste. Nexus's
 description editor takes BBCode. ReMixed's author, Nyzer, gave his permission on 2026-11-12 ("Sure, go nuts", in reply to
 the user on Discord); the credits link ReMixed's thread on FFHacktics.
-Written for release 0.9.13 (2026-11-18); update the "What's in it" and "Not ported yet" lists from
+Written for release 0.9.14 (2026-11-18); update the "What's in it" and "Not ported yet" lists from
 [GAMEPLAY_TODO.md](../GAMEPLAY_TODO.md) for each release.
 
 ## Page fields
 
 - **Name:** Ivalice ReMixed
 - **Category:** Overhauls (or Gameplay)
-- **Version:** 0.9.13
+- **Version:** 0.9.14
 - **Language:** English
 - **Requirements** (Nexus's requirements tab):
   - FFT Mod Loader by Nenkai: https://www.nexusmods.com/finalfantasytacticstheivalicechronicles/mods/4
@@ -46,7 +46,7 @@ All credit for ReMixed's design goes to its authors (see Credits). This port is 
 [*][b]Side chapter 1-A[/b] (Agrias's story): offered at the end of chapter 1, as in ReMixed; declining it, or finishing it, goes on to chapter 2.
 [*][b]Its other characters' stories:[/b] Beowulf and Reis with ReMixed's Bremondt arc, Balthier at Dorter, Luso (met at Mandalia, and again after Araguay Woods), a Lich and his Dark Crusaders, then Ashley, Biggs and Wedge at Gariland, the Nemesis's return, and Zalbag at Eagrose, who can live, as in ReMixed.
 [*][b]ReMixed's own art[/b] for characters and monsters the remaster has none of: the Lich and his Dark Crusaders, Luso, Hirame, Ashley, a dragon, a Lamia and a Tonberry among them, from ReMixed's sprites smoothed to the enhanced sprites' size, with ReMixed's animations and its own portraits in speech boxes and on unit cards.
-[*][b]Dispatch Missions[/b] as an extra tavern Rumor, using the remaster's native controls in the PSX menu flow: Propositions (six kinds and their current set), Jobs, Special Training, monthly Contests and Recall. It keeps Rumors, Errands, all 96 original errands and their history unchanged, and uses the native roster picker, cancellation, timers and reports.
+[*][b]Dispatch Missions[/b] in the Tavern in place of Errands, as in ReMixed: Propositions (six kinds and their current set), Jobs, Special Training, monthly Contests and Recall, with the remaster's native roster picker, cancellation, timers and reports. It opens once ReMixed posts it (Chocobo Defense's unlock).
 [*][b]The Argath campaign[/b], ReMixed's secret campaign (there, you name Ramza Algus or Argath; the remaster doesn't allow that, so it's a setting): chapter 1 played as Argath, the Order of the Northern Sky's side of the story, and a final battle and ending of its own, after which you're back on the world map. Turn on Argath campaign under Configure Mod (Story) and start a new game; turn it off again for a normal one. It's ported to its end, but so far it has been played as far as its battle after Eagrose: expect rough edges after that. As in ReMixed, its battles start once every place on the formation is filled.
 [*][b]The Depths of Murond[/b], ReMixed's post-game hub after its endings: its credits and Completion Points rooms, including upgrades, recruits, Reis's Morph, New Game+, Continue+ and the return to the world map. Its main hub, Spend CP, named unit picker and unit upgrade menus have been tested in game; completing purchases and every ending route still needs a full pass.
 [/list]
@@ -89,10 +89,10 @@ Untick Ivalice ReMixed in Reloaded-II. Its saves stay in their own folder.
 
 ## File (the upload)
 
-- **File:** `mod/release/nexus/IvaliceReMixed-0.9.13.zip`: only ReMixed's folder, cut from
-  `mod/release/IvaliceReMixed-0.9.13.zip` (the upgrade's folder goes up on its own page; never the other zips in
+- **File:** `mod/release/nexus/IvaliceReMixed-0.9.14.zip`: only ReMixed's folder, cut from
+  `mod/release/IvaliceReMixed-0.9.14.zip` (the upgrade's folder goes up on its own page; never the other zips in
   `mod/steam-deck/`, which are other people's mods)
-- **Name:** Ivalice ReMixed 0.9.13
+- **Name:** Ivalice ReMixed 0.9.14
 - **Category:** Main file
 - **Description:** Drag onto Reloaded-II with the Event Instruction Upgrade. Needs the FFT Mod Loader. Enhanced mode.
 

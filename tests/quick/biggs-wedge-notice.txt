@@ -1,0 +1,18 @@
+# Biggs and Wedge's scene at Gariland (ReMixed's 0x0A4, the mod's 0x2FF = event 767) to its end with Auto-proceed on
+# and no presses. Its last line is the notice "Rendezvous missions are now posted among the Rumors in taverns." (message
+# 19); a player saw the game sit on it with Auto-proceed on (reported 2026-11-17). With TIMED_NOTICES the notice closes
+# on its own after ReMixed's 400 frames, so the scene ends and sets flag 0x92 without a key pressed. Run with
+# --restart --location 6 (Gariland). The scene takes about four minutes on Auto-proceed.
+name Biggs and Wedge Rendezvous notice
+wait world depth=1 state=0 timeout=20
+setvar 0x92 0
+scenario 0x2FF
+wait log "loaded event 767" timeout=60
+wait seconds 4
+key SHIFT
+wait seconds 2
+shot auto-proceed-on
+wait event none timeout=330
+expect var 0x92 1
+wait seconds 3
+shot world

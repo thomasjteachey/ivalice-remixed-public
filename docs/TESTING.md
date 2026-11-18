@@ -227,6 +227,9 @@ soon as world-map frames run, instead of spending roughly a minute on four-secon
 python -I tools/quick_test.py --restart tests/quick/araguay-entry.txt
 ```
 
+`--location N` starts the save at world location N instead of its own (a case that needs a tavern uses 2, Eagrose:
+`python -I tools/quick_test.py --restart --location 2 --stop tests/quick/dispatch-button.txt`, about 45 seconds).
+
 Each case prints one `PASS` or `FAIL` line per expectation and a final elapsed time. Case files use one small command
 per line: `scenario`, `setvar`, `send`, `advance`, `formation`, `defeat`, `key`, `shot`,
 `wait unit|entry|log|world|seconds`, and `expect unit|entry|roster|var`.

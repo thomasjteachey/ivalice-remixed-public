@@ -1,0 +1,44 @@
+# Dispatch Missions in the Tavern's menu in Errands' place (asked 2026-11-18). Run with --restart --location 2
+# (Eagrose, which has a tavern). With the story past ReMixed's unlock, the second button is Dispatch Missions and opens
+# the Dispatch view; its category pages have no Days or Finder's Fee and no "-" in their rows; an empty mission page
+# says "No missions available." under the native columns. With the story back before the unlock, the button is the
+# remaster's locked "???" and choosing it does nothing.
+name Dispatch Missions in the Tavern
+wait world depth=1 state=0 timeout=20
+setvar 0x6E 0x10
+key C wait=0.5
+key RETURN
+wait world depth=2 state=4 timeout=10
+key S wait=0.5
+key RETURN
+wait world depth=2 state=5 timeout=10
+wait seconds 2
+key DOWN wait=1
+shot menu
+key RETURN
+wait log dispatch missions: opened the native view timeout=10
+wait seconds 2
+shot categories
+key RETURN wait=3
+shot proposition-kinds
+key RETURN wait=3
+shot empty-mission-page
+key ESCAPE wait=2.5
+key ESCAPE wait=2.5
+key ESCAPE
+wait world depth=2 state=5 timeout=10
+wait seconds 1.5
+key ESCAPE wait=2
+key RETURN
+wait world depth=2 state=4 timeout=10
+setvar 0x6E 4
+setvar 0x1B7 0
+wait seconds 2.5
+key RETURN
+wait world depth=2 state=5 timeout=10
+wait seconds 2
+key DOWN wait=1
+key RETURN
+wait log before ReMixed unlocks it; nothing opens timeout=10
+wait seconds 1.5
+shot locked

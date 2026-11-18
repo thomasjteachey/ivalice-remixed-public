@@ -1,5 +1,10 @@
 # Dispatch Missions: porting ReMixed's tavern (plan, 2026-11-11)
 
+> **2026-11-18: in Errands' place.** The Tavern menu is Rumors and Dispatch Missions: the button replaces Errands,
+> as ReMixed's tavern replaces vanilla's errands (the user's call, for a faithful port). It's locked ("???") until
+> ReMixed posts Dispatch Missions, its category pages have no Days or Finder's Fee columns, and the Rumors posting
+> only points to the button. The remaster's 96 errands can't be started from it.
+
 > **Design changed 2026-11-17 (0.9.6–0.9.7).** The faithful event-menu port below was retired after repeated
 > controller lock-ins, missing focus, and crashes in its picker and Special Training paths. Dispatch Missions now
 > uses the remaster's native dispatch controls for list navigation, roster selection, cancellation, days away,

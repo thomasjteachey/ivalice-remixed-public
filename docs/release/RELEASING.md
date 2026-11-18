@@ -28,8 +28,16 @@ FFT Mod Loader, and players get them from Nexus.
    `ModVersion`). Upload the upgrade's only when it changed.
 4. Install the zip once on a machine that has never had the mod (the Steam Deck will do): drag it onto Reloaded-II,
    enable it with the loader, and start a new game.
-5. Update the page's "What's in it" and "Not ported yet" lists from [GAMEPLAY_TODO.md](../GAMEPLAY_TODO.md), upload
-   the file on Nexus as the new main file, and archive the old one. The pages: Ivalice ReMixed https://www.nexusmods.com/finalfantasytacticstheivalicechronicles/mods/187, Event
+5. Update the page's "What's in it" and "Not ported yet" lists from [GAMEPLAY_TODO.md](../GAMEPLAY_TODO.md).
+6. Commit the release, write its notes (Markdown, a few lines for players), and publish it on the public repo,
+   https://github.com/thomasjteachey/ivalice-remixed-public:
+   ```bash
+   python -I tools/release_public.py <version> notes.md --dry-run
+   python -I tools/release_public.py <version> notes.md
+   ```
+   The public repo's history is one snapshot commit a release: the script puts HEAD's tree on top of its main and
+   pushes only that commit and its tag, refusing a tree that holds the game's files (the disc, `FFT_enhanced.exe`,
+   the ReMixed `.ppf`). It makes the release with the zip from step 3, which starts the Nexus upload below. The pages: Ivalice ReMixed https://www.nexusmods.com/finalfantasytacticstheivalicechronicles/mods/187, Event
    Instruction Upgrade https://www.nexusmods.com/finalfantasytacticstheivalicechronicles/mods/186 ([nexus-page-eiu.md](nexus-page-eiu.md)).
 
 ## Automated Nexus upload
@@ -39,7 +47,8 @@ new non-prerelease GitHub release, or manually for an existing release version. 
 GitHub release asset, validates its two top-level mod folders, and uploads `fftivc.gameplay.ivaliceremixed` to Nexus
 mod 187 and `fftivc.utility.eventinstructionupgrade` to Nexus mod 186.
 
-Configure an Actions secret named `NEXUSMODS_API_KEY` in the repository or its `nexus` environment. Create a personal
+Configure an Actions secret named `NEXUSMODS_API_KEY` in the public repository (or its `nexus` environment); without it
+the workflow fails at "Find Event Instruction Upgrade file". Create a personal
 key on the Nexus Mods API Access page and paste it directly into the GitHub secret; never commit it or put it in a
 release log. The workflow resolves the Event Instruction Upgrade's active file group through the Nexus v3 API and
 uses file-group ID 8389512 for ReMixed. It archives each previous version, makes the new version primary, and updates

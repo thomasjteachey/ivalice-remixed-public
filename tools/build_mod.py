@@ -1562,7 +1562,16 @@ REVEAL_LIKE = 16  # the dialog it copies: "Commence battle?", Yes and No
 DISPATCH_UI_TEXT = {
     "title": "Dispatch Missions",
     "prompt": "Select a dispatch category or mission.",
+    "button": "Send units out on Propositions and Jobs, or to Special Training and Contests.",
+    "empty": "No missions available.",
 }
+# The Tavern's left menu (UIMenuButtonLeft: labels, descriptions, actions): row 3 Rumors and Errands, row 7 the same
+# with Errands locked ("???"). Dispatch Missions replaces Errands, as ReMixed's replaces vanilla's errands: row 3's
+# second button is Dispatch Missions (DISPATCH_UI_TEXT's title and button text), keeping Errands' action, and the
+# code mod picks row 3 or 7 by ReMixed's unlock and opens the Dispatch view from Errands' own case
+# (TavernStorage.OnTavernUnlock, OnBarRequest, OnPrepare). Row 7 stays the remaster's locked button.
+TAVERN_MENU_ROW = 3
+TAVERN_MENU_ACTIONS = [9, 10]
 
 def write_options_page(cfg: dict) -> str:
     """The ReMixed tab's texts (UI-en rows) and category, Reveal Treasures' text and dialog (REVEAL_TEXT), and the code
@@ -1579,6 +1588,7 @@ def write_options_page(cfg: dict) -> str:
         texts[key] = value
         dispatch[name] = key
     listing["dispatch"] = dispatch
+    menu = tavern_menu_rows(cfg, dispatch["title"], dispatch["button"])
     dialogs = nxd_keys(cfg, "uidialog", "UIDialog")
     if dialogs != set(range(max(dialogs) + 1)):
         raise SystemExit("the game's dialogs aren't an unbroken run from 0; Reveal Treasures' would not be found")
@@ -1593,7 +1603,7 @@ def write_options_page(cfg: dict) -> str:
     said = [add_nxd_rows(cfg, "ui.en", "UI-en", {k: {"Unknown0": 0, "Text": v} for k, v in texts.items()},
                          "0004.en.pac"),
             replace_nxd_rows(cfg, "configcategory", "ConfigCategory", {OPTIONS_PAGE_CATEGORY: [category]}),
-            add_nxd_rows(cfg, "uidialog", "UIDialog", {dialog: like})]
+            add_nxd_rows(cfg, "uidialog", "UIDialog", {dialog: like}), menu]
     (MOD_DIR / OPTIONS_PAGE_FILE).write_text(json.dumps(listing, indent=1), encoding="utf-8")
     options = sum(len(g["options"]) for g in listing["groups"])
     return (f"{options} options in {len(listing['groups'])} groups, {len(texts)} texts, Reveal Treasures' dialog "
@@ -2237,6 +2247,25 @@ NEMESIS_SCENE = {0x11D: 0x1B5}
 REMIXED_SCENARIOS |= NEMESIS_SCENE
 REUSED_SCENARIO_NUMBERS |= {0x1B5}
 NEMESIS_TRIGGER = (1, 0x8F, 0)  # the set's one condition (type 1: flag 0x8F = 0), then 0x19 and the event
+
+
+def tavern_menu_rows(cfg: dict, label: int, description: int) -> str:
+    """The Tavern's left-menu row (TAVERN_MENU_ROW) with Dispatch Missions in Errands' place (its UI text keys)."""
+    db = sqlite3.connect(nxd_sqlite(cfg, "uimenubuttonleft"))
+    columns = [c for (_, c, *_) in db.execute('pragma table_info("UIMenuButtonLeft")')]
+    found = db.execute('select * from "UIMenuButtonLeft" where Key = ?', (TAVERN_MENU_ROW,)).fetchone()
+    db.close()
+    row = dict(zip(columns, found)) if found else {}
+    labels, texts, actions = (json.loads(row.get(c) or "null") for c in ("Unknown8", "Unknown10", "Unknown18"))
+    if actions != TAVERN_MENU_ACTIONS or len(labels) != 2 or len(texts) != 2:
+        raise SystemExit(f"UIMenuButtonLeft row {TAVERN_MENU_ROW} isn't the Tavern's Rumors and Errands any more: {row}")
+    row.pop("Key")
+    row["Unknown8"] = json.dumps([labels[0], label], separators=(",", ":"))
+    row["Unknown10"] = json.dumps([texts[0], description], separators=(",", ":"))
+    return (replace_nxd_rows(cfg, "uimenubuttonleft", "UIMenuButtonLeft", {TAVERN_MENU_ROW: [row]})
+            + " (Dispatch Missions in place of the Tavern's Errands)")
+
+
 BATTLE_OPENING = (1, 0x1FD, 1)  # a battle's first set: "var 0x1FD = 1 -> its event", its opening
 # Its speaker is the Nemesis, named by a text value (word 0 = 0x4000 | the unit's battle slot, text code 0xEB): its lines
 # take the remaster's speaker tag with that slot (RemixedText.Reference fills in the unit's name as a line shows), as
@@ -2597,6 +2626,12 @@ WAIT_FOR_MESSAGES = bytes([0xE5, 0x01, 0x00])
 # with the Rendezvous-unlocked notice still open. remaster_message_layout places the private styles in centred speech
 # windows; fitted_boxes can still page the long 1-A prologue in its original box 1. The Treasure Wheel's persistent
 # frameless labels remain unchanged.
+# 0x0A4's notice (message 19, the Rendezvous unlock) is timed in ReMixed: 400 frames (F1 0x190), then a wait for its box
+# (E5 1), then its close (51 3). In the speech window above, that wait needs a press, which Auto-proceed never gives:
+# the scene sat on the notice with Auto-proceed on (a player's report on the private repo, 2026-11-17; seen on the PC
+# 2026-11-18). So its box closes when the 400 frames are up and the wait comes after: the notice shows as long as
+# ReMixed's does, a press during it still closes it, and nothing waits on a press. Event: the three instructions.
+TIMED_NOTICES = {0xA4: (bytes.fromhex("F1 90 01"), bytes.fromhex("E5 01 00"), bytes.fromhex("51 03 FF FF 00 00"))}
 NOTICE_STYLE_PLACE = 0xF0
 NOTICE_MESSAGES = {0xA4: {19}, 0xEC: {26, 28}}
 NOTICE_BOX_PLACE = 0x98
@@ -2711,6 +2746,16 @@ def question_box(code: bytes, lengths: bytes, question: tuple[int, int, int] | N
     if found != {lead, menu}:
         sys.exit("ReMixed's question isn't where the build expects it")
     return bytes(out)
+
+
+def timed_notice(code: bytes, parts: tuple[bytes, bytes, bytes] | None) -> bytes:
+    """A notice's wait, hold and close (TIMED_NOTICES) as wait, close, hold: it closes on its own."""
+    if parts is None:
+        return code
+    wait, hold, close = parts
+    if code.count(wait + hold + close) != 1:
+        sys.exit("a timed notice's wait, hold and close aren't where the build expects them (TIMED_NOTICES)")
+    return code.replace(wait + hold + close, wait + close + hold)
 
 
 def notice_boxes(code: bytes, lengths: bytes, messages: set[int] | None) -> bytes:
@@ -3035,14 +3080,14 @@ MISSION_TITLE = "Mission: {}"  # the posting's title in the rumor list
 # RemixedScenarios.Accepted), as started under the tavern's screens they stayed drawn over its formation.
 MISSION_ACCEPT = ("(Press Start to accept mission.)", "(Press Start to accept mission. It begins as you leave town.)")
 # Entry 1 of ReMixed's list is its dispatch tavern (TAVERN): its posting has no title line (the list names it; the
-# Preparation Menu calls it Dispatch Missions). Start opens its separate native dispatch view in the Tavern at once.
+# Preparation Menu calls it Dispatch Missions). It tells of the Tavern menu's Dispatch Missions button (TAVERN_MENU_ROW),
+# which opens the native dispatch view; Start on it does nothing.
 TAVERN_POSTING = 1
 TAVERN_TITLE = "Dispatch Missions"
 TAVERN_NAME_CHARS = 40  # the tavern's lines this short with no speaker are names that go into others' slots
-TAVERN_ACCEPT = ("(Press Start to go to the tavern.)", "(Press Start to open Dispatch Missions.)")
+TAVERN_ACCEPT = ("(Press Start to go to the tavern.)", "(Choose Dispatch Missions in the Tavern's menu.)")
 # Posted with Chocobo Defense's unlock, as in ReMixed, and last, so the missions' rows stay where earlier builds put
-# them. It remains an extra Rumors posting: Start on it opens the native dispatch UI in a separate catalog view. It
-# does not replace the Tavern's Rumors or Errands entries, or any of the remaster's 96 errands.
+# them, and as the notice that Dispatch Missions is open: the Tavern's button is locked ("???") until it's posted.
 TAVERN_POSTED = True
 if TAVERN_POSTED:
     MISSIONS[TAVERN_POSTING] = (TAVERN_SCENE, 15, 0x1B7)
@@ -5128,6 +5173,7 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
         ps1 = move_block(ps1, lengths, EVENT_CODE_MOVES.get(theirs))
         ps1 = question_box(ps1, lengths, QUESTION_BOXES.get(theirs))
         ps1 = notice_boxes(ps1, lengths, NOTICE_MESSAGES.get(theirs))
+        ps1 = timed_notice(ps1, TIMED_NOTICES.get(theirs))
         ps1 = insert_code(ps1, lengths, EVENT_CODE_INSERTS.get(theirs))
         ps1, made = erase_postbattle_cleanup(ps1, POSTBATTLE_CLEANUP.get(theirs))
         postbattle_erases += made
@@ -6869,7 +6915,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata.
-RELEASE_VERSION = "0.9.13"
+RELEASE_VERSION = "0.9.14"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:

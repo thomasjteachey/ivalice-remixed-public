@@ -162,6 +162,12 @@ internal static unsafe class Harness
                     parts.Length > 2 ? Number(parts[2]) : 16, parts.Length > 3 ? Number(parts[3]) : 1);
             case "dispatchinfo":
                 return Patches.TavernStorage.HarnessSummary();
+            case "bar":
+            {
+                // The Tavern screen the mod last saw and its state (+0x98), for watching its menu.
+                var bar = Patches.RemixedScenarios.BarScreen;
+                return bar == 0 ? "no Tavern screen seen" : $"tavern screen 0x{bar:X}, state {*(int*)(bar + 0x98)}";
+            }
             case "worldpad":
                 // Buttons held in the PS1-style pad words the world map's button function reads (its world word's bits:
                 // 0x08000800 Start), for a few frames: Steam Input fills them only from a controller, which a test run

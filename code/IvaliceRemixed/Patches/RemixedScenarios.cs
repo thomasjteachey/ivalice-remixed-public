@@ -190,6 +190,10 @@ internal static unsafe class RemixedScenarios
     /// <summary>World-map frames seen (the autopilot waits for them).</summary>
     internal static volatile int WorldFrames;
 
+    /// <summary>Whether ReMixed has unlocked Dispatch Missions: its posting is shown (<see cref="Unlocked"/>).</summary>
+    internal static bool DispatchUnlocked =>
+        Postings.Exists(p => p.Scenario == TavernStorage.DispatchScenario && Unlocked(p));
+
     /// <summary>Queue the native Dispatch screen from the stable Tavern menu. It runs in <see cref="Buttons"/> on the
     /// game thread, just like the player-facing posting, without opening and scrolling through Rumors first.</summary>
     internal static string RequestDispatchForHarness(string kind, int story, int month)
@@ -590,18 +594,9 @@ internal static unsafe class RemixedScenarios
             if ((newly & Start) != 0 && state == RumorListState)
             {
                 var at = PostingAt();
+                // The Dispatch Missions posting only tells of it: it opens from the Tavern's menu, below Errands.
                 if (at >= 0 && Postings[at].Scenario == TavernStorage.DispatchScenario)
-                {
-                    Accepted = -1;
-                    if (TavernStorage.CloseRumors(BarScreen))
-                    {
-                        PendingDispatchScreen = BarScreen;
-                        // This is the native state-6 Back transition: its next stable frame pops Rumors and reveals
-                        // the Tavern menu. Opening state 4 before that leaves the Rumors panels layered over Errands.
-                        *_flags |= 4;
-                    }
                     return;
-                }
                 if (at >= 0 && at != Accepted)
                 {
                     Accepted = at;
