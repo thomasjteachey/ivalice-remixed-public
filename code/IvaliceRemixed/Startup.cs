@@ -93,6 +93,15 @@ public class Startup : IMod
             {
                 log.Error($"tall menus: menus past three rows show past their box ({e.Message})");
             }
+            if (Options.Current.FastForward == Options.FastForwardRule.Toggle)
+                try
+                {
+                    Patches.FastForwardToggle.Install(game);
+                }
+                catch (Exception e)
+                {
+                    log.Error($"fast-forward: not a toggle, held as the game has it ({e.Message})");
+                }
             TestRecorder.Install(game);
 #if DEVELOPER_MENU
             // Private builds only: the explicit MSBuild property supplies this symbol, and a marker gates it again.

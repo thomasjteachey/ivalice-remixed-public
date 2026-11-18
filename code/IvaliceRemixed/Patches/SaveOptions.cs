@@ -10,7 +10,7 @@ namespace IvaliceRemixed.Patches;
 /// the mod's settings (Config.json, <see cref="Options.Settings"/>) go in as its own, as ReMixed's options event sets
 /// its defaults the first time it runs; from then on <see cref="Options.Current"/> follows the save in play, checked
 /// on every world-map frame and at each battle's start. The extra options menu changes them in the save. The settings
-/// with no place in a save (the test mode, separate saves, the Argath campaign) stay the mod's.
+/// with no place in a save (the test mode, separate saves, the Argath campaign, fast-forward) stay the mod's.
 /// </summary>
 internal static unsafe class SaveOptions
 {

@@ -33,6 +33,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import fft_text  # noqa: E402
 import remixed_help  # noqa: E402
 import sprites  # noqa: E402
+import title_plaque  # noqa: E402
 from names import Names  # noqa: E402
 from psxdisc import Disc  # noqa: E402
 from remixed import REPORT_DIR, ROOT, WORK, load_config, ppf_path, remixed_bin, vanilla_bin  # noqa: E402
@@ -4696,27 +4697,24 @@ def remaster_fftpack(cfg: dict, name: str, pack: str = "0002.pac") -> bytes:
 # The enhanced build has a modern 1920 x 840 title logo in its UI pack. The older FFTPACK opntitle.tex is the
 # Classic/PS1 title and is not shown by the enhanced title flow. Ship the marked enhanced logo itself so the runtime
 # proof appears on the mode the mod supports, without replacing The Ivalice Chronicles artwork with the PS1 screen.
+# The plaque under the logo says "IVALICE REMIXED" and RELEASE_VERSION, drawn by every build (tools/title_plaque.py),
+# so the title always shows the release it's from.
 TITLE_WIDTH, TITLE_HEIGHT = 1920, 840
 TITLE_TEXTURE = "ui/ffto/title/texture/ui_logo_fft_enhanced_uitx.tex"
-TITLE_SOURCE = ROOT / "data" / "remaster" / "title" / "ui_logo_fft_enhanced_uitx.png"
+TITLE_LABEL = "IVALICE REMIXED {version}"
 
 
 def write_title_screen(cfg: dict) -> str:
-    """Convert and ship the marked enhanced UI logo in the game's .tex container."""
-    if not TITLE_SOURCE.exists():
-        sys.exit(f"missing enhanced title source: {TITLE_SOURCE}")
-    png = TITLE_SOURCE.read_bytes()
-    if png[:8] != b"\x89PNG\r\n\x1a\n" or len(png) < 24:
-        sys.exit(f"the enhanced title source is not a PNG: {TITLE_SOURCE}")
-    size = struct.unpack(">II", png[16:24])
-    if size != (TITLE_WIDTH, TITLE_HEIGHT):
-        sys.exit(f"the enhanced title source is {size[0]} x {size[1]}, not {TITLE_WIDTH} x {TITLE_HEIGHT}")
-
+    """Draw the release's version on the enhanced UI logo's plaque and ship it in the game's .tex container."""
     work = WORK / "remaster" / "build" / "title-logo"
     shutil.rmtree(work, ignore_errors=True)
     work.mkdir(parents=True)
-    source = work / TITLE_SOURCE.name
-    shutil.copy2(TITLE_SOURCE, source)
+    source = work / title_plaque.BASE.name
+    label = TITLE_LABEL.format(version=RELEASE_VERSION)
+    try:
+        title_plaque.draw_title(label, source)
+    except (OSError, ValueError) as error:
+        sys.exit(f"the title screen's plaque: {error}")
     # img-conv is not a game-specific command and rejects the `-g fft` that ff16tools() appends for pack/table work.
     subprocess.run([cfg["tools"]["ff16tools"], "img-conv", "-i", str(source)], check=True, capture_output=True)
     built = source.with_suffix(".tex")
@@ -4725,7 +4723,7 @@ def write_title_screen(cfg: dict) -> str:
     out = MOD_DIR / "FFTIVC" / "data" / "enhanced" / TITLE_TEXTURE
     out.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(built, out)
-    return f"IVALICE REMIXED {RELEASE_VERSION} on enhanced {TITLE_TEXTURE} ({TITLE_WIDTH} x {TITLE_HEIGHT})"
+    return f"{label} on enhanced {TITLE_TEXTURE} ({TITLE_WIDTH} x {TITLE_HEIGHT})"
 
 
 # ReMixed's unit presets (docs/MECHANICS.md, "Unit presets"; code/IvaliceRemixed/Patches/UnitPresets.cs): a battle-data
@@ -6927,8 +6925,8 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
-# build is made from goes after it, as build metadata.
-RELEASE_VERSION = "0.9.15"
+# build is made from goes after it, as build metadata. The title screen's plaque shows it (write_title_screen).
+RELEASE_VERSION = "0.9.16"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:

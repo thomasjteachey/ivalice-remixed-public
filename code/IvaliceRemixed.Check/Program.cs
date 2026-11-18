@@ -120,6 +120,7 @@ try
         problems += SelfTest.TestModeRules(game, log);
         problems += SelfTest.UnlearnInMenu(game, log);
         problems += SelfTest.SeparateSaves(game, log);
+        problems += SelfTest.FastForwardToggleRules(game, log);
         problems += SelfTest.DeployedLevels(game, log);
         problems += SelfTest.EventLogStub(game, log);
         problems += SelfTest.RemixedEventScripts(game, log);
@@ -5098,6 +5099,106 @@ internal static unsafe class SelfTest
         return failures;
     }
 
+    /// <summary>
+    /// Fast-forward as a toggle (FastForwardToggle): the input's frame, fast-forward's mode, GlobalWork and the input
+    /// manager where the game has them; the game's own pressed and held checks reading the bytes the toggle writes; and
+    /// a frame at a time, a press turning a speed on, the other speed's switching to it, and a press of the one on
+    /// turning it off, with the game's bytes left alone where fast-forward can't be on.
+    /// </summary>
+    public static int FastForwardToggleRules(Game game, Log log)
+    {
+        var failures = 0;
+        void Check(string name, bool ok)
+        {
+            if (!ok) failures++;
+            log.Info($"self-test: fast-forward toggle, {name}{(ok ? "" : ": WRONG")}");
+        }
+        long Off(nint at) => at == 0 ? -1 : at - game.Image.ImageStart;
+        if (FastForwardToggle.FrameAt == 0)
+            FastForwardToggle.Install(game);
+        Check($"the input's frame 0x{Off(FastForwardToggle.FrameAt):X}, the mode 0x{Off(FastForwardToggle.ModeAt):X}, " +
+              $"GlobalWork 0x{Off(FastForwardToggle.GlobalWorkAt):X}, the input manager 0x{Off(FastForwardToggle.InputManagerAt):X}",
+              Off(FastForwardToggle.FrameAt) == 0xF17D4 && Off(FastForwardToggle.ModeAt) == 0x1E8A9C
+              && Off(FastForwardToggle.GlobalWorkAt) == 0x3CD9DD0 && Off(FastForwardToggle.InputManagerAt) == 0x3CD9EE8);
+
+        const int Slow = FastForwardToggle.Slow, Fast = FastForwardToggle.Fast;
+        var size = FastForwardToggle.Actions + 0x100 * FastForwardToggle.ActionBytes;
+        var state = (nint)System.Runtime.InteropServices.NativeMemory.AllocZeroed((nuint)size);
+        var work = (nint)System.Runtime.InteropServices.NativeMemory.AllocZeroed(0x100);
+        try
+        {
+            byte* At(int action, int binding, int what) =>
+                (byte*)(state + FastForwardToggle.Actions + action * FastForwardToggle.ActionBytes
+                        + binding * FastForwardToggle.BindingBytes + what);
+            void Clear() => new Span<byte>((void*)state, size).Clear();
+            // The game's pressed and held checks (0x0F0D00, 0x0F0D4C: the UI's, as Autopilot finds them).
+            var pressed = (delegate* unmanaged<nint, int, byte>)game.Image.FindUnique(string.Format(Autopilot.UiActionPattern, 0x52));
+            var held = (delegate* unmanaged<nint, int, byte>)game.Image.FindUnique(string.Format(Autopilot.UiActionPattern, 0x54));
+            *At(Slow, 2, FastForwardToggle.Pressed) = 1;
+            *At(Fast, 1, FastForwardToggle.Held) = 1;
+            Check("the game's checks read the bytes the toggle reads and writes: the third binding's press, the second's hold",
+                  pressed(state, Slow) == 1 && held(state, Slow) == 0 && pressed(state, Fast) == 0 && held(state, Fast) == 1
+                  && FastForwardToggle.IsPressed(state, Slow) && !FastForwardToggle.IsPressed(state, Fast));
+            // The game's mode for a GlobalWork in an event (+0x60 2), with no config loaded on the check's copy.
+            var config = *(nint*)GameImage.Rip(FastForwardToggle.ModeAt, 3, 7);
+            *(int*)(work + 0x60) = 2;
+            if (config == 0)
+                Check("the mode of an event's GlobalWork is 2", ((delegate* unmanaged<nint, int>)FastForwardToggle.ModeAt)(work) == 2);
+
+            // A battle (mode 1): the keyboard's fast-forward (the second binding) pressed and held.
+            Clear();
+            *At(Slow, 1, FastForwardToggle.Pressed) = 1;
+            *At(Slow, 1, FastForwardToggle.Held) = 1;
+            var on = FastForwardToggle.Step(state, true, 1, 0);
+            Check("a press turns fast-forward on, held as the first binding's", on == Slow && held(state, Slow) == 1
+                  && *At(Slow, 0, FastForwardToggle.Held) == 1 && *At(Slow, 1, FastForwardToggle.Held) == 0 && held(state, Fast) == 0);
+            Clear(); // let go: the game's next frame has it neither pressed nor held
+            on = FastForwardToggle.Step(state, true, 1, on);
+            Check("it stays on after the button is let go", on == Slow && held(state, Slow) == 1 && held(state, Fast) == 0);
+            *At(Slow, 0, FastForwardToggle.Pressed) = 1; // a stale press on a frame the game didn't fill
+            on = FastForwardToggle.Step(state, false, 1, on);
+            Check("a frame the game didn't fill toggles nothing", on == Slow && held(state, Slow) == 1);
+            Clear();
+            *At(Fast, 0, FastForwardToggle.Pressed) = 1;
+            *At(Fast, 0, FastForwardToggle.Held) = 1;
+            on = FastForwardToggle.Step(state, true, 1, on);
+            Check("the faster speed's press switches to it", on == Fast && held(state, Fast) == 1 && held(state, Slow) == 0);
+            Clear();
+            *At(Fast, 0, FastForwardToggle.Pressed) = 1;
+            *At(Fast, 0, FastForwardToggle.Held) = 1;
+            on = FastForwardToggle.Step(state, true, 1, on);
+            Check("its press again turns fast-forward off, though the button is still held",
+                  on == 0 && held(state, Fast) == 0 && held(state, Slow) == 0);
+            Clear();
+            *At(Fast, 0, FastForwardToggle.Held) = 1;
+            on = FastForwardToggle.Step(state, true, 1, on);
+            Check("and it stays off while the button stays held", on == 0 && held(state, Fast) == 0);
+
+            // Where fast-forward can't be on (mode 0): no toggle, and the game's bytes as they are.
+            Clear();
+            *At(Slow, 0, FastForwardToggle.Pressed) = 1;
+            *At(Slow, 0, FastForwardToggle.Held) = 1;
+            on = FastForwardToggle.Step(state, true, 0, Fast);
+            Check("where fast-forward can't be on, a press toggles nothing and the bytes stay the game's",
+                  on == Fast && held(state, Slow) == 1 && held(state, Fast) == 0 && pressed(state, Slow) == 1);
+
+            // An event (mode 2) with fast-forward on from before it: pressed every frame, as the event's code needs.
+            Clear();
+            on = FastForwardToggle.Step(state, true, FastForwardToggle.Event, Slow);
+            Check("in an event, the speed on is pressed and held", on == Slow && pressed(state, Slow) == 1
+                  && held(state, Slow) == 1 && pressed(state, Fast) == 0 && held(state, Fast) == 0);
+            Clear();
+            on = FastForwardToggle.Step(state, true, FastForwardToggle.Event, 0);
+            Check("in an event with it off, nothing is pressed", on == 0 && pressed(state, Slow) == 0 && pressed(state, Fast) == 0);
+        }
+        finally
+        {
+            System.Runtime.InteropServices.NativeMemory.Free((void*)state);
+            System.Runtime.InteropServices.NativeMemory.Free((void*)work);
+        }
+        return failures;
+    }
+
     /// <summary>The save folder's name: the storage setup's copy now reads ReMixed's folder name.</summary>
     public static int SeparateSaves(Game game, Log log)
     {
@@ -8127,10 +8228,16 @@ internal static unsafe class SelfTest
         var save = new Dictionary<int, int>();
         int Read(int id) => save.TryGetValue(id, out var v) ? v : 0;
         void Write(int id, int value) => save[id] = value;
-        var settings = new Options { TestMode = Options.TestModeRule.Record, ArgathCampaign = true };
+        var settings = new Options
+        {
+            TestMode = Options.TestModeRule.Record, ArgathCampaign = true, FastForward = Options.FastForwardRule.Toggle,
+        };
         save[SaveOptions.Rates] = 0x1004647D; // ReMixed's defaults, as its options event sets them
         var read = SaveOptions.Decode(Read, settings);
-        var expected = new Options { TestMode = Options.TestModeRule.Record, ArgathCampaign = true };
+        var expected = new Options
+        {
+            TestMode = Options.TestModeRule.Record, ArgathCampaign = true, FastForward = Options.FastForwardRule.Toggle,
+        };
         Check("ReMixed's defaults in a save are the mod's defaults; the settings with no place in a save are the mod's",
               Options.Same(read, expected));
         save.Clear();

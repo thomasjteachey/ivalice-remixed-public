@@ -14,6 +14,8 @@ FFT Mod Loader, and players get them from Nexus.
 ## Each release
 
 1. Raise `RELEASE_VERSION` in `tools/build_mod.py` (0.7.0 was the first; the ReMixed version is added after it).
+   The build writes it on the title screen too ("IVALICE REMIXED 0.9.13" on the plaque under the logo,
+   `tools/title_plaque.py`), so the title always shows the release; check the build's "Title screen" line says it.
 2. Build the package (the game needn't be running):
    ```bash
    python -I tools/build_mod.py --package

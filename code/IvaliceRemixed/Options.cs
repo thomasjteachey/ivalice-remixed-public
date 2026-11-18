@@ -257,6 +257,15 @@ public sealed class Options : IConfigurable
         Allowed,
     }
 
+    /// <summary>How the game's fast-forward buttons work (the mod's, not ReMixed's).</summary>
+    public enum FastForwardRule
+    {
+        /// <summary>Fast-forward lasts while its button is held, as the game has it.</summary>
+        Hold,
+        /// <summary>Fast-forward's button turns it on, and again off.</summary>
+        Toggle,
+    }
+
     public const int MaxRate = 255; // ReMixed keeps each rate in a byte
 
     [Category("Permadeath"), DisplayName("Player deaths")]
@@ -316,6 +325,15 @@ public sealed class Options : IConfigurable
                  "the modded game uses the plain game's saves. Not part of ReMixed; takes effect the next time the game starts.")]
     [DefaultValue(true)]
     public bool SeparateSaves { get; set; } = true;
+
+    [Category("Controls"), DisplayName("Fast-forward")]
+    [Description("Hold (the game's way): fast-forward lasts while its button is held. Toggle: holding the button until " +
+                 "fast-forward starts turns it on, and it stays on after you let go, until you hold the button that " +
+                 "long again; holding the faster speed's button (×5 to the first's ×3) switches to it. Works wherever " +
+                 "the game's own Fast-forward option allows it. Not part of ReMixed; takes effect the next time the game " +
+                 "starts.")]
+    [DefaultValue(FastForwardRule.Hold)]
+    public FastForwardRule FastForward { get; set; } = FastForwardRule.Hold;
 
     [Category("Story"), DisplayName("Argath campaign")]
     [Description("ReMixed's secret campaign, played as Argath: its own retelling of chapter 1, the Order of the " +
@@ -578,6 +596,7 @@ public sealed class Options : IConfigurable
         if (!Enum.IsDefined(options.EnemyLevelBoost)) options.EnemyLevelBoost = default;
         if (!Enum.IsDefined(options.VictoryBonus)) options.VictoryBonus = default;
         if (!Enum.IsDefined(options.TestMode)) options.TestMode = default;
+        if (!Enum.IsDefined(options.FastForward)) options.FastForward = default;
         options.FilePath = path;
         return options;
     }
@@ -606,7 +625,7 @@ public sealed class Options : IConfigurable
     }
 
     public override string ToString() =>
-        $"player deaths {PlayerDeaths}, bodies {Bodies}, JP {JpGain}%, spillover 1/{SpilloverJp}, JP refund {JpRefund}, EXP {ExpGain}%, victory bonus {VictoryBonus}, nemesis {NemesisSystem}, test mode {TestMode}, separate saves {SeparateSaves}, argath campaign {ArgathCampaign}, " +
+        $"player deaths {PlayerDeaths}, bodies {Bodies}, JP {JpGain}%, spillover 1/{SpilloverJp}, JP refund {JpRefund}, EXP {ExpGain}%, victory bonus {VictoryBonus}, nemesis {NemesisSystem}, test mode {TestMode}, separate saves {SeparateSaves}, argath campaign {ArgathCampaign}, fast-forward {FastForward}, " +
         $"back attacks {BackAttacks}, " +
         $"bravery {Bravery}, knockback {Knockback}, weapon range {WeaponRange}, poaching {PoachingOdds}, guests {GuestControl}, zodiac {ZodiacStrength}, sexuality {Sexuality}, " +
         $"job stats {JobStats}, job levels {JobLevels}, enemy jobs {EnemyJobs}, rare equipment {RareEquipment}, " +

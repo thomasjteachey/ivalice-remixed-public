@@ -1029,6 +1029,14 @@ In order:
   still paid (on the PC, 2026-11-12, a second Chocobo Defense after the first was won asked again, its gil back as
   before paying: the battle's start put the payment back; the fix that keeps it was seen working on the PC in the
   regression pass the same day).
+- [ ] Fast-forward as a toggle (asked 2026-11-18; built and self-tested offline): with the mod's Fast-forward setting
+  at Toggle, in a battle hold the fast-forward button until the game speeds up, let go, and it should stay fast until
+  the button is held that long again; the faster speed's button should switch to it. Seen on the PC the same day
+  (Araguay's battle, the hidden harness): Ctrl turned it on (×3, the speed level 1) in the battle's opening scene, it
+  stayed on after the key was let go, into the battle, and Ctrl again turned it off. Still to see: one turned on in a
+  battle going on fast into the scene after it, the faster speed, and the controller (the harness's LT and RT held
+  didn't start it, so the pad's fast-forward buttons, 35 and 36 in UIKeyDefine, are others). The game's own
+  Fast-forward option at Off should still turn it off.
 - [ ] Random battles field one unit a tile (asked from the Deck, 2026-11-11: two monsters on one tile at Mandalia
   Plains): ReMixed's random-battle event took the unit flags an earlier battle had left set, and added the units
   of that battle's slots onto tiles the game had filled (analysis/remixed-event-opcodes.md, "Flags 0xC0–0xCF").
