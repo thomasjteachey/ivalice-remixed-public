@@ -1,10 +1,42 @@
 # Your local paths
 local.toml
 
-# Proprietary game inputs (local reference files only; never publish)
+# Proprietary game inputs (local reference files only; never publish), anywhere in the tree
 /Final Fantasy Tactics.7z
 /FFT_enhanced.exe
 /FFT ReMixed-v1.2.64.23.ppf
+# Disc images
+*.iso
+*.bin
+*.cue
+*.img
+*.chd
+*.ecm
+*.pbp
+*.mdf
+*.mds
+*.ccd
+*.sub
+# Patches for them
+*.ppf
+*.xdelta
+*.ips
+*.bps
+# Archives and executables (the game's, other people's mods, release zips)
+*.7z
+*.zip
+*.rar
+*.exe
+*.dll
+# The remaster's own packed files
+*.pac
+# Saves copied off the PC or Deck (the harness keeps its own under work/)
+enhanced.png
+autoenhanced.png
+system.png
+
+# Scratch space (release staging)
+.tmp/
 
 # Build output: disc images, extracted game files, full reports
 work/
