@@ -66,7 +66,8 @@ short:
    the Event Instruction Upgrade are pulled in as dependencies.
 3. Optionally set ReMixed's Extra Options under **Configure Mod** for Ivalice ReMixed, as on the PC: they're what a
    new save starts with. In the game each save keeps its own, changed on the **ReMixed** tab of Settings (Y for the
-   party menu, its Options tab, Settings, then RB to the last tab).
+   party menu, its Options tab, Settings, then RB to the last tab). That tab's last group, **Controls**, has the mod's
+   Fast-forward (while the button is held, or a press to turn it on and another to turn it off), kept for every save.
 4. The package is for enhanced only (`--only classic` builds for classic; README, step 6). If you add `FFT_classic.exe`,
    give it the launch argument `/language en` (README, step 8) and, with the enhanced package, only the mod loader, as
    on the PC.

@@ -1523,7 +1523,17 @@ OPTIONS_PAGE = [
          "battle.\nThe Nemesis' strength depends on the current chapter you're in.",
          [(True, "On"), (False, "Off (Vanilla)")]),
     ]),
+    # The mod's own, not ReMixed's (asked 2026-11-18): kept in the mod's settings for every save (OPTIONS_PAGE_MOD).
+    ("Controls", [
+        ("FastForward", "Fast-forward",
+         "The fast-forward button speeds the game up while it's held, or from one press to the next (the faster "
+         "speed's button switches to it).\nFor every save: kept in the mod's settings.",
+         [("Hold", "While held"), ("Toggle", "Press on, press off")]),
+    ]),
 ]
+# Options the mod keeps in its settings (Config.json) for every save rather than in the save, which the page changes
+# there.
+OPTIONS_PAGE_MOD = {"FastForward"}
 
 
 def options_page(first_text: int) -> tuple[dict[int, str], dict, dict]:
@@ -1546,7 +1556,8 @@ def options_page(first_text: int) -> tuple[dict[int, str], dict, dict]:
         listed = []
         for setting, name, description, choices in options:
             listed.append({"setting": setting, "name": text(name), "description": text(description),
-                           "choices": [{"value": value, "text": text(label)} for value, label in choices]})
+                           "choices": [{"value": value, "text": text(label)} for value, label in choices]}
+                          | ({"mod": True} if setting in OPTIONS_PAGE_MOD else {}))
         groups.append({"name": text(group), "options": listed})
     category = {"DLCFlags": 0, "ConfigItemIds": "[" + ",".join(map(str, OPTIONS_PAGE_SLOTS)) + "]", "NameUIId": tab}
     listing = {"category": OPTIONS_PAGE_CATEGORY, "slots": OPTIONS_PAGE_SLOTS, "menu": menu, "other": other,
@@ -6926,7 +6937,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata. The title screen's plaque shows it (write_title_screen).
-RELEASE_VERSION = "0.9.16"
+RELEASE_VERSION = "0.9.17"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:

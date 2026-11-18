@@ -5146,50 +5146,69 @@ internal static unsafe class SelfTest
                 Check("the mode of an event's GlobalWork is 2", ((delegate* unmanaged<nint, int>)FastForwardToggle.ModeAt)(work) == 2);
 
             // A battle (mode 1): the keyboard's fast-forward (the second binding) pressed and held.
+            var latch = new FastForwardToggle.Latch();
+            void Step(bool filled, int mode) => FastForwardToggle.Step(state, filled, mode, ref latch);
             Clear();
             *At(Slow, 1, FastForwardToggle.Pressed) = 1;
             *At(Slow, 1, FastForwardToggle.Held) = 1;
-            var on = FastForwardToggle.Step(state, true, 1, 0);
-            Check("a press turns fast-forward on, held as the first binding's", on == Slow && held(state, Slow) == 1
+            Step(true, 1);
+            Check("a press turns fast-forward on, held as the first binding's", latch.On == Slow && held(state, Slow) == 1
                   && *At(Slow, 0, FastForwardToggle.Held) == 1 && *At(Slow, 1, FastForwardToggle.Held) == 0 && held(state, Fast) == 0);
             Clear(); // let go: the game's next frame has it neither pressed nor held
-            on = FastForwardToggle.Step(state, true, 1, on);
-            Check("it stays on after the button is let go", on == Slow && held(state, Slow) == 1 && held(state, Fast) == 0);
+            Step(true, 1);
+            Check("it stays on after the button is let go", latch.On == Slow && held(state, Slow) == 1 && held(state, Fast) == 0);
             *At(Slow, 0, FastForwardToggle.Pressed) = 1; // a stale press on a frame the game didn't fill
-            on = FastForwardToggle.Step(state, false, 1, on);
-            Check("a frame the game didn't fill toggles nothing", on == Slow && held(state, Slow) == 1);
+            Step(false, 1);
+            Check("a frame the game didn't fill toggles nothing", latch.On == Slow && held(state, Slow) == 1);
             Clear();
             *At(Fast, 0, FastForwardToggle.Pressed) = 1;
             *At(Fast, 0, FastForwardToggle.Held) = 1;
-            on = FastForwardToggle.Step(state, true, 1, on);
-            Check("the faster speed's press switches to it", on == Fast && held(state, Fast) == 1 && held(state, Slow) == 0);
+            Step(true, 1);
+            Check("the faster speed's press switches to it", latch.On == Fast && held(state, Fast) == 1 && held(state, Slow) == 0);
             Clear();
             *At(Fast, 0, FastForwardToggle.Pressed) = 1;
             *At(Fast, 0, FastForwardToggle.Held) = 1;
-            on = FastForwardToggle.Step(state, true, 1, on);
+            Step(true, 1);
             Check("its press again turns fast-forward off, though the button is still held",
-                  on == 0 && held(state, Fast) == 0 && held(state, Slow) == 0);
+                  latch.On == 0 && held(state, Fast) == 0 && held(state, Slow) == 0);
             Clear();
             *At(Fast, 0, FastForwardToggle.Held) = 1;
-            on = FastForwardToggle.Step(state, true, 1, on);
-            Check("and it stays off while the button stays held", on == 0 && held(state, Fast) == 0);
+            Step(true, 1);
+            Check("and it stays off while the button stays held", latch.On == 0 && held(state, Fast) == 0);
 
-            // Where fast-forward can't be on (mode 0): no toggle, and the game's bytes as they are.
+            // Where fast-forward can't be on (mode 0): the game's bytes as they are, and a press waits for a while.
+            latch = new FastForwardToggle.Latch { On = Fast };
             Clear();
             *At(Slow, 0, FastForwardToggle.Pressed) = 1;
             *At(Slow, 0, FastForwardToggle.Held) = 1;
-            on = FastForwardToggle.Step(state, true, 0, Fast);
-            Check("where fast-forward can't be on, a press toggles nothing and the bytes stay the game's",
-                  on == Fast && held(state, Slow) == 1 && held(state, Fast) == 0 && pressed(state, Slow) == 1);
+            Step(true, 0);
+            Check("where fast-forward can't be on, a press changes nothing yet and the bytes stay the game's",
+                  latch.On == Fast && held(state, Slow) == 1 && held(state, Fast) == 0 && pressed(state, Slow) == 1);
+            Clear();
+            for (var k = 0; k < FastForwardToggle.PendingFrames - 2; k++)
+                Step(true, 0);
+            Step(true, 1);
+            Check("and it's taken when fast-forward can be on again a moment later (a battle between two states)",
+                  latch.On == Slow && latch.Pending == 0 && held(state, Slow) == 1 && held(state, Fast) == 0);
+            Clear();
+            *At(Slow, 0, FastForwardToggle.Pressed) = 1;
+            Step(true, 0);
+            Clear();
+            for (var k = 0; k < FastForwardToggle.PendingFrames; k++)
+                Step(true, 0);
+            Step(true, 1);
+            Check("but not after longer (a press in a menu)", latch.On == Slow && latch.Pending == 0 && held(state, Slow) == 1);
 
             // An event (mode 2) with fast-forward on from before it: pressed every frame, as the event's code needs.
             Clear();
-            on = FastForwardToggle.Step(state, true, FastForwardToggle.Event, Slow);
-            Check("in an event, the speed on is pressed and held", on == Slow && pressed(state, Slow) == 1
+            latch = new FastForwardToggle.Latch { On = Slow };
+            Step(true, FastForwardToggle.Event);
+            Check("in an event, the speed on is pressed and held", latch.On == Slow && pressed(state, Slow) == 1
                   && held(state, Slow) == 1 && pressed(state, Fast) == 0 && held(state, Fast) == 0);
             Clear();
-            on = FastForwardToggle.Step(state, true, FastForwardToggle.Event, 0);
-            Check("in an event with it off, nothing is pressed", on == 0 && pressed(state, Slow) == 0 && pressed(state, Fast) == 0);
+            latch = new FastForwardToggle.Latch();
+            Step(true, FastForwardToggle.Event);
+            Check("in an event with it off, nothing is pressed", latch.On == 0 && pressed(state, Slow) == 0 && pressed(state, Fast) == 0);
         }
         finally
         {
@@ -8319,6 +8338,44 @@ internal static unsafe class SelfTest
         var custom = new Options { JpGain = 37 };
         Check("a setting none of the choices has (set in the mod's settings) has no index",
               OptionsPage.Current(options.First(o => o.Setting.Name == nameof(Options.JpGain)), custom) == -1);
+        Check("only Controls → Fast-forward is kept for every save (in the mod's settings), not in the save",
+              options.Where(o => o.Mod).Select(o => o.Setting.Name).SequenceEqual(
+                  options.Any(o => o.Setting.Name == nameof(Options.FastForward))
+                      ? new[] { nameof(Options.FastForward) } : Array.Empty<string>()));
+        var fastForward = options.FirstOrDefault(o => o.Setting.Name == nameof(Options.FastForward));
+        if (fastForward == null)
+            log.Info("self-test: options page, this list has no Controls group (one from before it; a full build adds it)");
+        else
+            Check("Controls → Fast-forward's choices are Hold and Toggle", fastForward.Choices.Select(c => c.Value)
+                      .SequenceEqual(new object[] { Options.FastForwardRule.Hold, Options.FastForwardRule.Toggle }));
+        // A change kept for every save, with a Config.json of its own: the mod's settings and the file get it, the
+        // options in play get it with the save's own as they were.
+        var kept = fastForward ?? new OptionsPage.Option(typeof(Options).GetProperty(nameof(Options.FastForward))!, 0, 0,
+            [new(Options.FastForwardRule.Hold, 0), new(Options.FastForwardRule.Toggle, 0)], true);
+        var (settings, current) = (Options.Settings, Options.Current);
+        var config = Path.GetTempFileName();
+        try
+        {
+            var mine = settings.Copy();
+            mine.FilePath = config;
+            mine.JpGain = 150;
+            Options.Settings = mine;
+            OptionsPage.Keep(kept, Options.FastForwardRule.Toggle);
+            var written = Options.Read(config, out var problem);
+            var back = Options.Current.Copy();
+            back.FastForward = current.FastForward;
+            Check("Fast-forward set on the page goes into the mod's settings and their Config.json, and into the options " +
+                  "in play, the save's own left as they were",
+                  Options.Settings.FastForward == Options.FastForwardRule.Toggle && Options.Settings.JpGain == 150
+                  && problem == null && written.FastForward == Options.FastForwardRule.Toggle && written.JpGain == 150
+                  && Options.Current.FastForward == Options.FastForwardRule.Toggle && Options.Same(back, current));
+        }
+        finally
+        {
+            Options.Settings = settings;
+            Options.Use(current);
+            File.Delete(config);
+        }
         var table = (nint)System.Runtime.InteropServices.NativeMemory.AllocZeroed((nuint)OptionsPage.ChoicesBytes);
         var texts = new List<int> { 20005, 20006, 20007 };
         OptionsPage.FillChoices(table, texts);

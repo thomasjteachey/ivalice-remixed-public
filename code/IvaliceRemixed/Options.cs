@@ -327,11 +327,12 @@ public sealed class Options : IConfigurable
     public bool SeparateSaves { get; set; } = true;
 
     [Category("Controls"), DisplayName("Fast-forward")]
-    [Description("Hold (the game's way): fast-forward lasts while its button is held. Toggle: holding the button until " +
-                 "fast-forward starts turns it on, and it stays on after you let go, until you hold the button that " +
-                 "long again; holding the faster speed's button (×5 to the first's ×3) switches to it. Works wherever " +
-                 "the game's own Fast-forward option allows it. Not part of ReMixed; takes effect the next time the game " +
-                 "starts.")]
+    [Description("Hold (the game's way): fast-forward lasts while its button is held. Toggle: a press of the button " +
+                 "(Ctrl on the keyboard) turns fast-forward on and it stays on after you let go, until you press it " +
+                 "again; the faster speed's button (5 on the keyboard: ×5 to the first's ×3) switches to it. Works " +
+                 "wherever the game's own Fast-forward option allows it. Also on the ReMixed tab of the game's Settings " +
+                 "(Controls), where a change applies at once and is saved here; changed here, it applies the next time " +
+                 "the game starts. Not part of ReMixed.")]
     [DefaultValue(FastForwardRule.Hold)]
     public FastForwardRule FastForward { get; set; } = FastForwardRule.Hold;
 

@@ -9,8 +9,9 @@ namespace IvaliceRemixed.Patches;
 /// ReMixed's Extra Options menu). Its first row, "Extra Options", picks one of ReMixed's groups (Unit Levels, Stats &amp;
 /// Equipment; Permadeath; JP and EXP; Spellcasting; Combat Adjustments; Nemesis System) and the rows below it are that
 /// group's options, each a list of its choices; a change goes into the save in play (<see cref="SaveOptions"/>) at once.
-/// tools/build_mod.py (OPTIONS_PAGE) adds the tab's category and texts to the game's tables and lists the groups in
-/// options-page.json beside the DLL.
+/// A last group, Controls, has the mod's own Fast-forward (asked 2026-11-18), kept in the mod's settings (Config.json)
+/// for every save instead (<see cref="Keep"/>). tools/build_mod.py (OPTIONS_PAGE) adds the tab's category and texts to
+/// the game's tables and lists the groups in options-page.json beside the DLL.
 /// </summary>
 /// <remarks>
 /// The screen (docs/REMASTER.md, "The Options screen") lists its tabs as ConfigCategory ids (+0x5C, the count at
@@ -81,7 +82,9 @@ internal static unsafe class OptionsPage
     private static int _failed;
 
     internal sealed record Choice(object? Value, int Text);
-    internal sealed record Option(PropertyInfo Setting, int Name, int Description, Choice[] Choices);
+    /// <summary>An option of the page; <see cref="Mod"/>: kept in the mod's settings (Config.json) for every save, not
+    /// in the save (Controls → Fast-forward).</summary>
+    internal sealed record Option(PropertyInfo Setting, int Name, int Description, Choice[] Choices, bool Mod = false);
     internal sealed record Group(int Name, Option[] Options);
     internal sealed record Page(int Category, int[] Slots, int MenuName, int MenuDescription, int Other, Group[] Groups);
 
@@ -135,7 +138,9 @@ internal static unsafe class OptionsPage
                     .ToArray();
                 if (choices.Length is 0 or > MaxChoices - 1)
                     throw new InvalidDataException($"the options page's {name} has {choices.Length} choices");
-                options.Add(new Option(setting, o.GetProperty("name").GetInt32(), o.GetProperty("description").GetInt32(), choices));
+                var mod = o.TryGetProperty("mod", out var kept) && kept.GetBoolean();
+                options.Add(new Option(setting, o.GetProperty("name").GetInt32(), o.GetProperty("description").GetInt32(),
+                                       choices, mod));
             }
             groups.Add(new Group(g.GetProperty("name").GetInt32(), options.ToArray()));
         }
@@ -162,11 +167,32 @@ internal static unsafe class OptionsPage
     }
 
     /// <summary><paramref name="options"/> with <paramref name="option"/> at its choice <paramref name="index"/>.</summary>
-    internal static Options With(Option option, int index, Options options)
+    internal static Options With(Option option, int index, Options options) => With(option, option.Choices[index].Value, options);
+
+    private static Options With(Option option, object? value, Options options)
     {
         var next = options.Copy();
-        option.Setting.SetValue(next, option.Choices[index].Value);
+        option.Setting.SetValue(next, value);
         return next;
+    }
+
+    /// <summary>An option the mod keeps for every save (<see cref="Option.Mod"/>) at <paramref name="value"/>: in the
+    /// mod's settings, written to their Config.json when they came from one, and in the options in play.</summary>
+    internal static void Keep(Option option, object? value)
+    {
+        var settings = With(option, value, Options.Settings);
+        Options.Settings = settings;
+        if (settings.FilePath != null)
+            try
+            {
+                settings.Write(settings.FilePath);
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                _log?.Error($"options page: {option.Setting.Name} not written to {settings.FilePath} ({e.Message}); " +
+                            "it lasts until the game is closed");
+            }
+        SaveOptions.Save(With(option, value, Options.Current)); // a save's options keep the mod's settings for it
     }
 
     // --- the screen
@@ -254,6 +280,17 @@ internal static unsafe class OptionsPage
             if (at == 0 || at > group.Options.Length || screen == 0 || !Shown(screen))
                 return; // the menu row, or not from the tab
             var option = group.Options[at - 1];
+            if (option.Mod)
+            {
+                // kept for every save: back to its default (DefaultValue), the mod's settings with it
+                var standard = option.Setting.GetCustomAttribute<System.ComponentModel.DefaultValueAttribute>()?.Value;
+                if (!Equals(option.Setting.GetValue(Options.Current), standard))
+                {
+                    Keep(option, standard);
+                    _log.Info($"options page: {option.Setting.Name} back to its default, {standard}, for every save");
+                }
+                return;
+            }
             var value = option.Setting.GetValue(Options.Settings);
             if (Equals(option.Setting.GetValue(Options.Current), value))
                 return;
@@ -337,6 +374,11 @@ internal static unsafe class OptionsPage
             Layout();
             _buildTab(screen, *(int*)(screen + Tab)); // the group's rows, as a tab switch builds them
             _log.Info($"options page: showing group {_group + 1} of {_page.Groups.Length}");
+        }
+        else if (picked < option.Choices.Length && option.Mod)
+        {
+            Keep(option, option.Choices[picked].Value);
+            _log.Info($"options page: {option.Setting.Name} set to {option.Choices[picked].Value}, for every save");
         }
         else if (picked < option.Choices.Length)
         {
