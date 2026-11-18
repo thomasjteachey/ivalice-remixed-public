@@ -20,10 +20,16 @@ namespace IvaliceRemixed.Patches;
 /// "search guest slots 50–53 by sprite set" only. For the one player-team Algus record, slot 0 is copied temporarily
 /// into guest slot 50 while the game's unit maker runs; the resulting battle unit is then relinked from 50 to 0 and
 /// the guest slot restored. Thus his menu, earned EXP/JP, and battle-end write-back belong to the roster leader.</para>
-/// <para>An old or constructed save can also reach Araguay Woods without the chapter-two Agrias and Gaffgarion
-/// guest records. ReMixed's 0x01D entry asks to load both from those slots; the remaster otherwise leaves empty
-/// actors, so their sprites and speech portraits become generic stand-ins. At story progress 0x10 only, a missing
-/// 0x17 or 0x1E guest is made from its complete entry data. A normal chapter-two save still uses its roster guest.</para>
+/// <para>ReMixed's battle data asks for a unit from the roster (flag 0x08) wherever the character may be in the party:
+/// guests, its own recruits, the 1-A knights, Araguay's chocobo. The remaster's lookup for that flag searches only the
+/// guest slots (0x2766C8), so anyone else came out an empty unit with Max HP 0 (Araguay's Boco ended its battle at
+/// once in 0.9.7 and crashed the HP display later). In ReMixed's own scenarios, as their units are made
+/// (<see cref="LoadFromRoster"/>): a character in a guest slot loads as before; a unique one (its own sprite set) in the
+/// rest of the roster is copied into a free guest slot for the making and its unit linked back to its own slot, as the
+/// Argath campaign's Algus is; a generic or a monster (sprite sets shared, so the guest lookup can't tell them apart)
+/// or anyone not in the roster is made from its record's own data, with the flag cleared for the making, which is how
+/// the remaster makes a unit that doesn't load (ReMixed's records for these are complete). The remaster's own battles
+/// are left as they are.</para>
 /// Data: [[old sprite set, new sprite set, new job, name id, progress from which it's left], ...].
 /// </summary>
 internal static unsafe class OldGuests
@@ -43,13 +49,15 @@ internal static unsafe class OldGuests
     internal const byte Monster = 0x82, BocoName = 0x76;
     internal const int EntryName = 2;
     internal const int Lorne = 0x6A, Whitney = 0x6C, Lavian = 0x78, Alicia = 0x79;
-    internal const int StoryProgress = 0x6E, AraguayProgress = 0x10;
+    internal const int StoryProgress = 0x6E, ScenarioVar = 0x27, RosterSlots = 0x32;
     // The guest lookup (0x2766C8): test byte [rdx+1], 8; mov rbx, rdx; movzx ecx, byte [rdx]; je; lea eax, [r9+0x33];
     // lea r8, [the first guest slot] (roster slot 0x32). Read here rather than through UnitTables.Find, whose
     // roster walk the level scaling rewrites.
     internal const string GuestLookupPattern = "F6 42 01 08 48 8B DA 0F B6 0A 74 2A 41 8D 41 33 4C 8D 05 ?? ?? ?? ??";
 
     internal readonly record struct Guest(byte Old, byte Sprites, byte Job, int Name, int Until);
+    /// <summary>A roster slot lent to a guest slot for one making: the entry record, the guest slot, the real slot.</summary>
+    internal readonly record struct Borrowed(int Record, int Guest, int Slot, byte Sprites);
 
     internal static nint At;
     internal static Guest[] Guests = [];
@@ -88,7 +96,9 @@ internal static unsafe class OldGuests
     {
         Span<byte> savedGuest = stackalloc byte[UnitTables.RosterSize];
         Span<byte> madeFromData = stackalloc byte[EntryUnits];
+        Span<byte> savedGuests = stackalloc byte[GuestSlots * UnitTables.RosterSize];
         madeFromData.Clear();
+        var borrowed = new List<Borrowed>(GuestSlots);
         var guestCopied = false;
         var leader = LeaderRecord((byte*)records) >= 0 && _roster[0] == Algus && _roster[1] != 0xFF;
         try
@@ -98,15 +108,22 @@ internal static unsafe class OldGuests
                 if (_noted++ < 8)
                     _log.Info($"old guests: roster slot {slot} (name id 0x{guest.Name:X}) moved from sprite set "
                               + $"0x{guest.Old:X2} to 0x{guest.Sprites:X2} at story progress 0x{progress:X}");
-            var missing = MissingAraguayGuests((byte*)records, _roster, progress, madeFromData);
-            if (missing != 0 && _noted++ < 8)
-                _log.Info($"old guests: Araguay made {missing} missing story guest(s) from their entry data");
             if (leader)
             {
                 var guest = _roster + FirstGuestSlot * UnitTables.RosterSize;
                 new Span<byte>(guest, UnitTables.RosterSize).CopyTo(savedGuest);
                 new Span<byte>(_roster, UnitTables.RosterSize).CopyTo(new Span<byte>(guest, UnitTables.RosterSize));
                 guestCopied = true;
+            }
+            var scenario = _getVariable(ScenarioVar);
+            if (RemixedScenarios.Presets.ContainsKey(scenario))
+            {
+                var fromData = LoadFromRoster((byte*)records, _roster, madeFromData, borrowed, savedGuests);
+                if ((fromData != 0 || borrowed.Count != 0) && _noted++ < 8)
+                    _log.Info($"old guests: scenario 0x{scenario:X}: "
+                              + string.Join(", ", borrowed.Select(x => $"roster slot {x.Slot} through guest slot {x.Guest}"))
+                              + (borrowed.Count != 0 && fromData != 0 ? "; " : "")
+                              + (fromData != 0 ? $"{fromData} unit(s) made from their battle data" : ""));
             }
         }
         catch (Exception e)
@@ -122,6 +139,7 @@ internal static unsafe class OldGuests
         finally
         {
             RestoreLoads((byte*)records, madeFromData);
+            ReturnBorrowed(_roster, _units, borrowed, savedGuests);
             if (guestCopied)
                 savedGuest.CopyTo(new Span<byte>(_roster + FirstGuestSlot * UnitTables.RosterSize, UnitTables.RosterSize));
         }
@@ -130,43 +148,98 @@ internal static unsafe class OldGuests
         return result;
     }
 
-    /// <summary>At Araguay, make a missing Agrias, Gaffgarion or Boco from its entry instead of an absent guest slot.
-    /// Boco is never there: the remaster looks for a record's roster unit only in the guest slots (0x2766C8), and ReMixed's
-    /// chocobo is no guest, so its battle left an empty unit holding his battle id (0x80) and Max HP 0. Its HP conditions
-    /// read that as a dead chocobo (0.9.7's early end), and the HP display divided by it (exe+0x38A844, seen in the hidden
-    /// PC game, 2026-11-18). On the PS1 the record's own data makes him, as here.</summary>
-        internal static int MissingAraguayGuests(byte* records, byte* roster, int progress, Span<byte> changed)
+    /// <summary>
+    /// The entry <paramref name="records"/> that load a unit from the roster, readied for the remaster's guest-slot lookup
+    /// (see the class's remarks): a unique character outside the guest slots is copied into a free one
+    /// (<paramref name="borrowed"/>, the slot's bytes kept in <paramref name="saved"/>), a generic, a monster or anyone not
+    /// in the roster has the flag cleared (<paramref name="changed"/>). How many are made from data.
+    /// </summary>
+    internal static int LoadFromRoster(byte* records, byte* roster, Span<byte> changed, List<Borrowed> borrowed,
+                                       Span<byte> saved)
     {
         changed.Clear();
-        if (records == null || roster == null || progress != AraguayProgress || changed.Length < EntryUnits)
+        borrowed.Clear();
+        if (records == null || roster == null || changed.Length < EntryUnits
+            || saved.Length < GuestSlots * UnitTables.RosterSize)
             return 0;
-        var count = 0;
+        var fromData = 0;
         for (var k = 0; k < EntryUnits; k++)
         {
             var record = records + k * EntryUnitSize;
-            var boco = record[0] == Monster && record[EntryName] == BocoName;
-            if (record[0] is not (Gaffgarion or Agrias) && !boco || (record[EntryFlags] & LoadsRoster) == 0)
+            if (record[0] == 0 || (record[EntryFlags] & LoadsRoster) == 0 || InGuestSlot(roster, record[0]))
                 continue;
-            var found = false;
-            for (var slot = FirstGuestSlot; slot < FirstGuestSlot + GuestSlots; slot++)
+            var slot = record[0] is >= 0x80 and <= Monster ? -1 : UniqueSlot(roster, record[0]);
+            var guest = slot >= 0 ? FreeGuestSlot(roster, borrowed) : -1;
+            if (guest >= 0)
             {
-                var guest = roster + slot * UnitTables.RosterSize;
-                if (guest[1] != 0xFF && guest[0] == record[0])
-                {
-                    found = true;
-                    break;
-                }
-            }
-            if (found)
+                var into = roster + guest * UnitTables.RosterSize;
+                var at = (guest - FirstGuestSlot) * UnitTables.RosterSize;
+                new Span<byte>(into, UnitTables.RosterSize).CopyTo(saved[at..]);
+                new Span<byte>(roster + slot * UnitTables.RosterSize, UnitTables.RosterSize)
+                    .CopyTo(new Span<byte>(into, UnitTables.RosterSize));
+                borrowed.Add(new Borrowed(k, guest, slot, record[0]));
                 continue;
+            }
             record[EntryFlags] &= unchecked((byte)~LoadsRoster);
             changed[k] = 1;
-            count++;
+            fromData++;
         }
-        return count;
+        return fromData;
     }
 
-    /// <summary>Put back entry load bits temporarily suppressed by <see cref="MissingAraguayGuests"/>.</summary>
+    /// <summary>Whether a guest slot holds a unit of sprite set <paramref name="sprites"/> (what the lookup finds).</summary>
+    internal static bool InGuestSlot(byte* roster, byte sprites)
+    {
+        for (var slot = FirstGuestSlot; slot < FirstGuestSlot + GuestSlots; slot++)
+        {
+            var guest = roster + slot * UnitTables.RosterSize;
+            if (guest[1] != 0xFF && guest[0] == sprites)
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>The party's roster slot (under the guest slots) of the unique character of sprite set
+    /// <paramref name="sprites"/>, or -1.</summary>
+    internal static int UniqueSlot(byte* roster, byte sprites)
+    {
+        for (var slot = 0; slot < RosterSlots; slot++)
+        {
+            var unit = roster + slot * UnitTables.RosterSize;
+            if (unit[1] != 0xFF && unit[0] == sprites)
+                return slot;
+        }
+        return -1;
+    }
+
+    /// <summary>An empty guest slot not yet lent, or -1.</summary>
+    internal static int FreeGuestSlot(byte* roster, List<Borrowed> borrowed)
+    {
+        for (var slot = FirstGuestSlot; slot < FirstGuestSlot + GuestSlots; slot++)
+            if (roster[slot * UnitTables.RosterSize + 1] == 0xFF && borrowed.All(b => b.Guest != slot))
+                return slot;
+        return -1;
+    }
+
+    /// <summary>After the making: each unit made from a lent guest slot written back to its own roster slot (+2), and
+    /// the guest slots as they were.</summary>
+    internal static void ReturnBorrowed(byte* roster, byte* units, List<Borrowed> borrowed, ReadOnlySpan<byte> saved)
+    {
+        foreach (var lent in borrowed)
+        {
+            for (var k = 0; units != null && k < Battle.UnitCount; k++)
+            {
+                var unit = units + k * Battle.UnitSize;
+                if (unit[0] == lent.Sprites && unit[2] == lent.Guest)
+                    unit[2] = (byte)lent.Slot;
+            }
+            saved.Slice((lent.Guest - FirstGuestSlot) * UnitTables.RosterSize, UnitTables.RosterSize)
+                .CopyTo(new Span<byte>(roster + lent.Guest * UnitTables.RosterSize, UnitTables.RosterSize));
+        }
+        borrowed.Clear();
+    }
+
+    /// <summary>Put back entry load bits temporarily cleared by <see cref="LoadFromRoster"/>.</summary>
     internal static void RestoreLoads(byte* records, ReadOnlySpan<byte> changed)
     {
         if (records == null)

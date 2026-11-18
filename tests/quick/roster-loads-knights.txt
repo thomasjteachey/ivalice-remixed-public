@@ -1,0 +1,10 @@
+# Side chapter 1-A's end at Orbonne (ReMixed's 0x0FC): its three Lionsguard knights load from the roster by a sprite
+# set every female generic shares, so they're made from their battle data (OldGuests.LoadFromRoster), never empty
+# (with Agrias too when the save has her nowhere).
+name Roster loads at the end of 1-A
+wait world depth=1 state=0 timeout=20
+scenario 0x7E
+wait log "old guests: scenario 0x7E: [34] unit\(s\) made from their battle data" timeout=30
+wait unit battle_id=0x84 sprites=0x81 timeout=20
+expect unit battle_id=0x90 sprites=0x81
+expect unit battle_id=0x91 sprites=0x81

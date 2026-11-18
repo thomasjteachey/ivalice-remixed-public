@@ -5659,40 +5659,85 @@ internal static unsafe class SelfTest
         var relinked = OldGuests.RelinkLeader(units, OldGuests.FirstGuestSlot);
         Check($"the made campaign leader is relinked to roster slot {algusUnit[2]}", relinked && algusUnit[2] == 0);
 
-        for (var slot = OldGuests.FirstGuestSlot; slot < OldGuests.FirstGuestSlot + OldGuests.GuestSlots; slot++)
+        // ReMixed's records that load a unit from the roster (LoadFromRoster), on the roster as the remaster keeps it.
+        for (var slot = 0; slot < UnitTables.RosterSlots; slot++)
             roster[slot * UnitTables.RosterSize + 1] = 0xFF;
         var gaffgarionRecord = records + 7 * OldGuests.EntryUnitSize;
         var agriasRecord = records + 8 * OldGuests.EntryUnitSize;
         gaffgarionRecord[0] = OldGuests.Gaffgarion;
         agriasRecord[0] = OldGuests.Agrias;
         gaffgarionRecord[OldGuests.EntryFlags] = agriasRecord[OldGuests.EntryFlags] = OldGuests.LoadsRoster;
+        algusRecord[0] = 0;
         Span<byte> changed = stackalloc byte[OldGuests.EntryUnits];
-        var missing = OldGuests.MissingAraguayGuests(records, roster, OldGuests.AraguayProgress, changed);
-        Check($"Araguay without its saved guests makes both from data ({missing})",
-              missing == 2 && (gaffgarionRecord[OldGuests.EntryFlags] & OldGuests.LoadsRoster) == 0
-                           && (agriasRecord[OldGuests.EntryFlags] & OldGuests.LoadsRoster) == 0);
+        Span<byte> savedGuests = stackalloc byte[OldGuests.GuestSlots * UnitTables.RosterSize];
+        var borrowed = new List<OldGuests.Borrowed>();
+        var fromData = OldGuests.LoadFromRoster(records, roster, changed, borrowed, savedGuests);
+        Check($"guests in no slot of the roster are made from their data ({fromData})",
+              fromData == 2 && borrowed.Count == 0 && (gaffgarionRecord[OldGuests.EntryFlags] & OldGuests.LoadsRoster) == 0
+              && (agriasRecord[OldGuests.EntryFlags] & OldGuests.LoadsRoster) == 0);
         OldGuests.RestoreLoads(records, changed);
+        Check("and their records' roster bit is put back after",
+              gaffgarionRecord[OldGuests.EntryFlags] == OldGuests.LoadsRoster && agriasRecord[OldGuests.EntryFlags] == OldGuests.LoadsRoster);
         var savedAgrias = roster + OldGuests.FirstGuestSlot * UnitTables.RosterSize;
         savedAgrias[0] = OldGuests.Agrias;
         savedAgrias[1] = 0;
-        missing = OldGuests.MissingAraguayGuests(records, roster, OldGuests.AraguayProgress, changed);
-        Check($"Araguay keeps a saved Agrias and makes only missing Gaffgarion from data ({missing})",
-              missing == 1 && (gaffgarionRecord[OldGuests.EntryFlags] & OldGuests.LoadsRoster) == 0
-                           && (agriasRecord[OldGuests.EntryFlags] & OldGuests.LoadsRoster) != 0);
+        fromData = OldGuests.LoadFromRoster(records, roster, changed, borrowed, savedGuests);
+        Check($"a guest in its guest slot loads as the game does; only the missing one is made from data ({fromData})",
+              fromData == 1 && (agriasRecord[OldGuests.EntryFlags] & OldGuests.LoadsRoster) != 0 && changed[7] == 1);
         OldGuests.RestoreLoads(records, changed);
-        var bocoRecord = records + 0 * OldGuests.EntryUnitSize;
+
+        var monster = roster + 3 * UnitTables.RosterSize;
+        monster[0] = OldGuests.Monster;
+        monster[1] = 3;
+        var bocoRecord = records;
         bocoRecord[0] = OldGuests.Monster;
         bocoRecord[OldGuests.EntryName] = OldGuests.BocoName;
         bocoRecord[OldGuests.EntryFlags] = 0x38;
-        missing = OldGuests.MissingAraguayGuests(records, roster, OldGuests.AraguayProgress, changed);
-        Check($"Araguay makes its chocobo Boco from data too, with the missing Gaffgarion ({missing})",
-              missing == 2 && changed[0] == 1 && (bocoRecord[OldGuests.EntryFlags] & OldGuests.LoadsRoster) == 0
-                           && (bocoRecord[OldGuests.EntryFlags] & 0x30) == 0x30);
+        var knightRecord = records + 6 * OldGuests.EntryUnitSize;
+        knightRecord[0] = 0x81;
+        knightRecord[OldGuests.EntryName] = (byte)OldGuests.Whitney;
+        knightRecord[OldGuests.EntryFlags] = 0x48;
+        var knight = roster + 2 * UnitTables.RosterSize;
+        knight[0] = 0x81;
+        knight[1] = 2;
+        fromData = OldGuests.LoadFromRoster(records, roster, changed, borrowed, savedGuests);
+        Check($"Boco and a 1-A knight (sprite sets others share) are made from data, not from another chocobo or woman "
+              + $"({fromData}, borrowed {borrowed.Count})",
+              fromData == 3 && borrowed.Count == 0 && changed[0] == 1 && changed[6] == 1
+              && (bocoRecord[OldGuests.EntryFlags] & 0x30) == 0x30);
         OldGuests.RestoreLoads(records, changed);
-        Check("and puts his record's roster bit back after", bocoRecord[OldGuests.EntryFlags] == 0x38);
-        bocoRecord[OldGuests.EntryName] = 0x77;
-        missing = OldGuests.MissingAraguayGuests(records, roster, OldGuests.AraguayProgress, changed);
-        Check($"another monster's record is left to the game ({missing} made: Gaffgarion)", missing == 1 && changed[0] == 0);
+        Check("and the chocobo's and knight's records are put back", bocoRecord[OldGuests.EntryFlags] == 0x38
+              && knightRecord[OldGuests.EntryFlags] == 0x48);
+        bocoRecord[0] = knightRecord[0] = gaffgarionRecord[0] = 0;
+
+        var hirame = roster + 4 * UnitTables.RosterSize;
+        hirame[0] = 0x35;
+        hirame[1] = 4;
+        hirame[0x1E] = 77;
+        var hirameRecord = records + 9 * OldGuests.EntryUnitSize;
+        hirameRecord[0] = 0x35;
+        hirameRecord[OldGuests.EntryFlags] = 0x49;
+        fromData = OldGuests.LoadFromRoster(records, roster, changed, borrowed, savedGuests);
+        var lent = roster + (OldGuests.FirstGuestSlot + 1) * UnitTables.RosterSize;
+        Check($"a party member outside the guest slots (Hirame, slot 4) is lent the first free guest slot "
+              + $"({string.Join(",", borrowed.Select(x => $"{x.Slot}->{x.Guest}"))}), not made from data ({fromData})",
+              fromData == 0 && borrowed.Count == 1 && borrowed[0].Guest == OldGuests.FirstGuestSlot + 1 && borrowed[0].Slot == 4
+              && lent[0] == 0x35 && lent[0x1E] == 77 && (hirameRecord[OldGuests.EntryFlags] & OldGuests.LoadsRoster) != 0);
+        var made = units + 7 * Battle.UnitSize;
+        made[0] = 0x35;
+        made[1] = 7;
+        made[2] = (byte)(OldGuests.FirstGuestSlot + 1);
+        OldGuests.ReturnBorrowed(roster, units, borrowed, savedGuests);
+        Check($"after the making her unit writes back to slot {made[2]} and the guest slot is as it was "
+              + $"(0x{lent[0]:X2} 0x{lent[1]:X2})", made[2] == 4 && lent[1] == 0xFF && lent[0] != 0x35 && borrowed.Count == 0);
+        for (var slot = OldGuests.FirstGuestSlot + 1; slot < OldGuests.FirstGuestSlot + OldGuests.GuestSlots; slot++)
+        {
+            roster[slot * UnitTables.RosterSize] = (byte)(0x40 + slot);
+            roster[slot * UnitTables.RosterSize + 1] = (byte)slot;
+        }
+        fromData = OldGuests.LoadFromRoster(records, roster, changed, borrowed, savedGuests);
+        Check($"with every guest slot taken (Agrias in the first) she's made from her data instead ({fromData})",
+              fromData == 1 && borrowed.Count == 0 && changed[9] == 1);
         OldGuests.RestoreLoads(records, changed);
         System.Runtime.InteropServices.NativeMemory.Free(units);
         System.Runtime.InteropServices.NativeMemory.Free(records);

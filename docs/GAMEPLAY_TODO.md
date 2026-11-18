@@ -5,7 +5,7 @@ is, and what it waits on. The technical details (what ReMixed's code does, where
 [MECHANICS.md](MECHANICS.md) and [REMASTER.md](REMASTER.md); data held back is in
 [the build report](generated/mod-build.md).
 
-**Progress: 99% of gameplay** (107 done, 1 open: 0 small, 1 medium, 0 large). Worked out from this list by
+**Progress: 100% of gameplay** (107 done, 0 open: 0 small, 0 medium, 0 large). Worked out from this list by
 `python -I tools/todo_progress.py`, open items weighted by size (small 1, medium 3, large 15) and done ones at 2 each,
 and updated with every change to the list. Everything outside the story and display ports is ported or settled
 (the formulas ReMixed rewrote in place were the last, 2026-11-12; ReMixed's own battles writing their units back,
@@ -409,15 +409,14 @@ side chapter 1-A above):
   so it did nothing to most units and changed an unrelated byte of others (fixed 2026-11-18). It now does what
   ReMixed's does: the gender, a generic's sprite set with it (its look), and a Bard becomes a Dancer and back.
   Self-tested offline. *small*
-
-Still open, found auditing for the same kinds of bug (2026-11-18):
-
-- [ ] Other battles load units from the roster that the remaster looks for only in its guest slots, as Araguay's Boco
-  was: side chapter 1-A's end at Orbonne (its three Lionsguard knights, scenes 126 and 127), Hirame and Wright's
-  scene (0x375), Ashley in one battle (0x1FD), Mustadio's two (0x373, 0x374), Rafa's (0x369) and one more (0x1D4,
-  sprite set 0x1F). Each may get an empty unit in place of the character, as Boco did. The fix is the Argath
-  campaign's: copy the character's roster record into a free guest slot while the battle's units are made, then link
-  the unit back to its own slot. Each needs a quick-test case. *medium*
+- [x] Other battles' units loaded from the roster came out empty too, as Araguay's Boco did (found auditing,
+  fixed 2026-11-18): side chapter 1-A's end at Orbonne (its three knights), Hirame and Wright's scene, one of Ashley's
+  battles, Mustadio's two, Rafa's and one more, wherever the character wasn't in one of the 4 guest slots. In ReMixed's
+  own battles, a unique character in the party is now lent a free guest slot while the battle's units are made and
+  writes back to its own slot after (as the Argath campaign's Algus already did); a generic, a monster or anyone not in
+  the party is made from its own battle data. The remaster's own battles are as before. Seen in the hidden PC game:
+  Hirame loaded from the party and Wright from his data (`tests/quick/roster-loads-hirame.txt`), 1-A's knights from
+  theirs (`roster-loads-knights.txt`), Araguay as before (`araguay-battle.txt`). *medium*
 
 
 ReMixed's in-place patches are all reviewed: BATTLE.BIN, SCUS, WORLD and the EVENT overlays (analysis/

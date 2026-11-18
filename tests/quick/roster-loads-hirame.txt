@@ -1,0 +1,12 @@
+# ReMixed's units loaded from the roster outside the guest slots (OldGuests.LoadFromRoster), in the chapter-3 branch
+# where Hirame meets Agrias again (ReMixed's 0x104): Hirame in the party (on the save's David, slot 7: sprite set 0x35,
+# her name 0x36) is lent a guest slot and loads as herself; Wright, not in the party, is made from his battle data.
+# Neither may be an empty unit.
+name Roster loads at Hirame and Wright
+wait world depth=1 state=0 timeout=20
+send poke +0x11A8D78 35
+send poke +0x11A8FA8 36 00
+scenario 0x375
+wait log "old guests: scenario 0x375: roster slot 7 through guest slot 5[0-3]; 1 unit\(s\) made from their battle data" timeout=30
+wait unit battle_id=0x90 sprites=0x35 timeout=20
+expect unit battle_id=0x91 sprites=0x36
