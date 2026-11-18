@@ -1,0 +1,3 @@
+[submodule "code/eiu"]
+	path = code/eiu
+	url = https://github.com/thomasjteachey/eiu-ivalice-chronicles.git

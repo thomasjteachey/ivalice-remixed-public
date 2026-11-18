@@ -1,0 +1,1761 @@
+file,address,kind,vanilla,remixed,goes to
+SCUS_942.21,0x8001D78C,patched code,mflo t7,j 0x8001D7B8,vanilla code
+SCUS_942.21,0x80027074,patched code,jal 0x800275C0,j 0x8013F500,new code in WORLD/WORLD.BIN (0x8013F500)
+SCUS_942.21,0x8002707C,patched code,"addu a2, v0, zero",j 0x80152000,new code in BATTLE.BIN (0x80151C00+0x400)
+SCUS_942.21,0x800270D8,patched code,"sh v1, 66(s0)",j 0x8013F430,new code in WORLD/WORLD.BIN (0x8013F430)
+SCUS_942.21,0x800270E0,patched code,"lhu v0, 114(s0)",j 0x801502C4,new code in BATTLE.BIN (0x801502C0+0x4)
+SCUS_942.21,0x80027148,patched code,"sll v0, v0, 3",j 0x8005CBEC,vanilla code
+SCUS_942.21,0x80027188,patched code,"lhu v1, 0(v1)",jal 0x80059AF0,vanilla code
+SCUS_942.21,0x80027214,patched code,nop,j 0x8005C904,vanilla code
+SCUS_942.21,0x80027230,patched code,"sll v0, v0, 3",jal 0x80059F94,vanilla code
+SCUS_942.21,0x80027278,patched code,"sll v0, v0, 3",j 0x8005CB04,vanilla code
+SCUS_942.21,0x80027280,patched code,"sh v1, 48(s0)",j 0x8005CB0C,vanilla code
+SCUS_942.21,0x800272DC,patched code,"sll v0, v0, 3",j 0x800272F0,vanilla code
+SCUS_942.21,0x800272E8,patched code,"lhu v1, 4(v0)",jal 0x8005E254,vanilla code
+SCUS_942.21,0x80028660,patched code,"lhu v0, 40(s0)",j 0x8015511C,new code in BATTLE.BIN (0x80155000+0x11C)
+SCUS_942.21,0x80028668,patched code,"sh v0, 108(s1)",j 0x8005B984,vanilla code
+SCUS_942.21,0x80028684,patched code,"lbu v0, 21(s0)",j 0x80155184,new code in BATTLE.BIN (0x80155000+0x184)
+SCUS_942.21,0x8002868C,patched code,"sb v0, 5(s1)",j 0x8005C5E8,vanilla code
+SCUS_942.21,0x8002D0E8,new code,.word 0xFCE10FB0,j 0x8002D120,new code in SCUS_942.21 (0x8002D000+0x120)
+SCUS_942.21,0x8002D100,new code,.word 0xFCBC0FA8,j 0x8002D120,new code in SCUS_942.21 (0x8002D000+0x120)
+SCUS_942.21,0x8002D118,new code,.word 0xFC970FA1,j 0x8002D120,new code in SCUS_942.21 (0x8002D000+0x120)
+SCUS_942.21,0x8002D324,new code,.word 0xF98A0EA1,j 0x8002D338,new code in SCUS_942.21 (0x8002D200+0x138)
+SCUS_942.21,0x8002D330,new code,.word 0xF9790E99,jal 0x8005E254,vanilla code
+SCUS_942.21,0x8002D430,new code,.word 0xF8120DE3,jal 0x8002D500,new code in SCUS_942.21 (0x8002D400+0x100)
+SCUS_942.21,0x8002D474,new code,.word 0xF7B60DAC,jal 0x8002D500,new code in SCUS_942.21 (0x8002D400+0x100)
+SCUS_942.21,0x8002D4C0,new code,.word 0xF7510D6D,j 0x8005D390,vanilla code
+SCUS_942.21,0x8002D4C8,new code,.word 0xF7460D66,j 0x8005D108,vanilla code
+SCUS_942.21,0x8002D5AC,new code,.word 0xF6230C95,j 0x8002D608,new code in SCUS_942.21 (0x8002D400+0x208)
+SCUS_942.21,0x8002D6A8,new code,.word 0xF4F80B92,j 0x8005D390,vanilla code
+SCUS_942.21,0x8002D6B0,new code,.word 0xF4EF0B89,j 0x8005D114,vanilla code
+SCUS_942.21,0x8003220C,patched code,nop,j 0x800E4C0C,vanilla code
+SCUS_942.21,0x80032214,patched code,"sll zero, at, 0",j 0x800E4C1C,vanilla code
+SCUS_942.21,0x8003224C,patched code,"sll v0, s1, 0",j 0x800E4CC8,vanilla code
+SCUS_942.21,0x80032254,patched code,"sll zero, s0, 0",j 0x800E4CD8,vanilla code
+SCUS_942.21,0x80040C1C,patched code,"ori v0, zero, 0x80",jal 0x800222FC,vanilla code
+SCUS_942.21,0x80040C54,patched code,"addiu t0, s0, 40",jal 0x80023C68,vanilla code
+SCUS_942.21,0x80040C7C,patched code,"lw v1, 4(a2)",jal 0x80040D70,vanilla code
+SCUS_942.21,0x80040CB8,patched code,"slti v0, t1, 7",jal 0x80040CF8,vanilla code
+SCUS_942.21,0x80040CCC,patched code,"addiu a3, v0, 280",jal 0x80022D78,vanilla code
+SCUS_942.21,0x80040D04,patched code,"sh a0, -10440(at)",jal 0x80040D2C,vanilla code
+SCUS_942.21,0x80040D14,patched code,"lui at, 0x8005",jal 0x80040D70,vanilla code
+SCUS_942.21,0x80040D88,patched code,"sw v0, 0(a3)",j 0x80040D70,vanilla code
+SCUS_942.21,0x80040DAC,patched code,"sw v0, 0(a3)",jal 0x80040DEC,vanilla code
+SCUS_942.21,0x80040DC0,patched code,"addu a2, v0, zero",jal 0x80022D78,vanilla code
+SCUS_942.21,0x80040DF8,patched code,"ori a0, zero, 0xE4",jal 0x80040E20,vanilla code
+SCUS_942.21,0x80040E08,patched code,"sh v0, -10390(at)",jal 0x80040E64,vanilla code
+SCUS_942.21,0x80040E7C,patched code,"sw v1, 4(a3)",j 0x80040E64,vanilla code
+SCUS_942.21,0x800428B8,patched code,nop,jal 0x800446C8,vanilla code
+SCUS_942.21,0x800428EC,patched code,"slti v0, v1, 384",jal 0x8005E254,vanilla code
+SCUS_942.21,0x80042B14,patched code,jr ra,j 0x80143004,new code in WORLD/WORLD.BIN (0x80143004)
+SCUS_942.21,0x80059C1C,patched code,"addiu a1, sp, 16",jal 0x80059FE0,vanilla code
+SCUS_942.21,0x80059C34,patched code,nop,jal 0x80059D5C,vanilla code
+SCUS_942.21,0x80059C48,patched code,"addu a0, v1, zero",jal 0x80059AF0,vanilla code
+SCUS_942.21,0x80059C90,patched code,"sb v0, 3(s0)",jal 0x8005E254,vanilla code
+SCUS_942.21,0x80059CB0,patched code,nop,jal 0x8005E254,vanilla code
+SCUS_942.21,0x80059CC8,patched code,"lhu v1, 8(s2)",jal 0x8005E254,vanilla code
+SCUS_942.21,0x80059CD4,patched code,"andi v0, v0, 0xF000",j 0x8005DB40,vanilla code
+SCUS_942.21,0x80059DA8,patched code,"ori a1, zero, 0x14",j 0x80059DB8,vanilla code
+SCUS_942.21,0x80059F24,patched code,"lw v1, 0(a0)",jal 0x80027084,vanilla code
+SCUS_942.21,0x8005A440,patched code,jr ra,j 0x8005A448,vanilla code
+SCUS_942.21,0x8005A910,patched code,"lbu v1, 1(s1)",jal 0x80027150,vanilla code
+SCUS_942.21,0x8005A9EC,patched code,"addu a0, s0, zero",jal 0x8005AC1C,vanilla code
+SCUS_942.21,0x8005AA38,patched code,"beq v0, zero, 0x8005AAE4",jal 0x8005B5DC,vanilla code
+SCUS_942.21,0x8005AA40,patched code,jal 0x8005B2B4,j 0x8005AA64,vanilla code
+SCUS_942.21,0x8005AA48,patched code,"addu a0, s0, zero",jal 0x8005B2B4,vanilla code
+SCUS_942.21,0x8005AA54,patched code,jal 0x8005B7A0,jal 0x8005BA70,vanilla code
+SCUS_942.21,0x8005AA5C,patched code,jal 0x8005A400,jal 0x8005B7A0,vanilla code
+SCUS_942.21,0x8005AA64,patched code,jal 0x8005A520,jal 0x8005A400,vanilla code
+SCUS_942.21,0x8005AA6C,patched code,"lbu v1, 2(s0)",jal 0x8002D200,new code in SCUS_942.21 (0x8002D200)
+SCUS_942.21,0x8005AA8C,patched code,"lbu v1, 2(s0)",jal 0x8005B880,vanilla code
+SCUS_942.21,0x8005AAA8,patched code,"ori v0, zero, 0x82",jal 0x8005C27C,vanilla code
+SCUS_942.21,0x8005AC70,patched code,"beq v0, zero, 0x8005AC88",jal 0x8005B038,vanilla code
+SCUS_942.21,0x8005ACA4,patched code,"bne v0, zero, 0x8005AD90",jal 0x80059AF0,vanilla code
+SCUS_942.21,0x8005AD24,patched code,nop,jal 0x8005B038,vanilla code
+SCUS_942.21,0x8005AD90,patched code,"lui v0, 0x8006",j 0x8005B004,vanilla code
+SCUS_942.21,0x8005AE20,patched code,"sra v0, v0, 15",j 0x8005AE58,vanilla code
+SCUS_942.21,0x8005AE34,patched code,"lui v0, 0x8006",j 0x8005AE58,vanilla code
+SCUS_942.21,0x8005B154,patched code,"lbu v0, 6(s0)",jal 0x8005E254,vanilla code
+SCUS_942.21,0x8005B164,patched code,"lhu v0, 8(s1)",jal 0x8005E254,vanilla code
+SCUS_942.21,0x8005B18C,patched code,"sh v0, 8(s1)",jal 0x8005E254,vanilla code
+SCUS_942.21,0x8005B1A8,patched code,"addu v1, v1, v0",jal 0x8005E644,vanilla code
+SCUS_942.21,0x8005B1F8,patched code,"addiu a1, s1, 114",jal 0x80151A00,new code in BATTLE.BIN (0x80151840+0x1C0)
+SCUS_942.21,0x8005B234,patched code,"bne v0, zero, 0x8005B220",jal 0x8005B4B0,vanilla code
+SCUS_942.21,0x8005B274,patched code,jal 0x8005E254,jal 0x8005B4B0,vanilla code
+SCUS_942.21,0x8005B2AC,patched code,jr ra,j 0x800173F4,vanilla code
+SCUS_942.21,0x8005B304,patched code,nop,jal 0x8005E644,vanilla code
+SCUS_942.21,0x8005B314,patched code,"bne v0, zero, 0x8005B420",jal 0x8005B5DC,vanilla code
+SCUS_942.21,0x8005B320,patched code,nop,jal 0x8005DED8,vanilla code
+SCUS_942.21,0x8005B330,patched code,nop,j 0x8005B4A8,vanilla code
+SCUS_942.21,0x8005B354,patched code,"addu v0, s0, v0",jal 0x8005B5DC,vanilla code
+SCUS_942.21,0x8005B39C,patched code,"addu a3, s0, a2",j 0x8005B3F4,vanilla code
+SCUS_942.21,0x8005B418,patched code,"addu a1, t2, zero",jal 0x8005B1C4,vanilla code
+SCUS_942.21,0x8005B42C,patched code,"addu a0, s0, zero",jal 0x8005DC14,vanilla code
+SCUS_942.21,0x8005B438,patched code,"lbu a2, 29(s1)",jal 0x8005DED8,vanilla code
+SCUS_942.21,0x8005B44C,patched code,"beq v1, zero, 0x8005B45C",jal 0x8005B500,vanilla code
+SCUS_942.21,0x8005B4A0,patched code,"sll v0, v1, 1",jal 0x8005B1C4,vanilla code
+SCUS_942.21,0x8005B4A8,patched code,"lui v1, 0x8006",j 0x8001231C,vanilla code
+SCUS_942.21,0x8005B50C,patched code,"sw s0, 40(sp)",jal 0x8002230C,vanilla code
+SCUS_942.21,0x8005B534,patched code,"addu v0, v0, v1",jal 0x80151A60,new code in BATTLE.BIN (0x80151A60)
+SCUS_942.21,0x8005B66C,patched code,"addiu a0, s1, 13",jal 0x8002D200,new code in SCUS_942.21 (0x8002D200)
+SCUS_942.21,0x8005B820,patched code,"addiu sp, sp, 32",j 0x8002D000,new code in SCUS_942.21 (0x8002D000)
+SCUS_942.21,0x8005B97C,patched code,nop,j 0x80028650,vanilla code
+SCUS_942.21,0x8005BF8C,patched code,"addu a0, s0, zero",jal 0x8005CC98,vanilla code
+SCUS_942.21,0x8005C09C,patched code,jal 0x8005CC98,jal 0x8005CE4C,vanilla code
+SCUS_942.21,0x8005C2CC,patched code,nop,j 0x8005C2F0,vanilla code
+SCUS_942.21,0x8005C2DC,patched code,"beq v0, zero, 0x8005C2F8",j 0x8005C2F0,vanilla code
+SCUS_942.21,0x8005C5E0,patched code,"addiu s2, s1, 51",j 0x80028670,vanilla code
+SCUS_942.21,0x8005C76C,patched code,"sb v0, 0(a2)",jal 0x800271D0,vanilla code
+SCUS_942.21,0x8005C8FC,patched code,"sh v0, 40(a0)",j 0x800271F4,vanilla code
+SCUS_942.21,0x8005CAFC,patched code,"bne v0, zero, 0x8005CAC8",j 0x80027270,vanilla code
+SCUS_942.21,0x8005CBE8,patched code,"ori s2, zero, 0xFF",j 0x80027124,vanilla code
+SCUS_942.21,0x8005CCF4,patched code,"ori t2, zero, 0x80",j 0x8005CDF4,vanilla code
+SCUS_942.21,0x8005CDFC,patched code,"addu t1, zero, zero",jal 0x8002230C,vanilla code
+SCUS_942.21,0x8005CE64,patched code,"lw s0, 144(sp)",j 0x8005CC98,vanilla code
+SCUS_942.21,0x8005D100,patched code,j 0x8005D390,j 0x8002D400,new code in SCUS_942.21 (0x8002D400)
+SCUS_942.21,0x8005D10C,patched code,nop,j 0x8002D680,new code in SCUS_942.21 (0x8002D680)
+SCUS_942.21,0x8005D1DC,patched code,"addu v0, v0, v1",jal 0x8005D290,vanilla code
+SCUS_942.21,0x8005D288,patched code,"lw t1, 1004(sp)",j 0x8005D2D4,vanilla code
+SCUS_942.21,0x8005D590,patched code,"addiu s0, s0, 1",jal 0x8005DB70,vanilla code
+SCUS_942.21,0x8005DCA0,patched code,"addu t1, zero, zero",j 0x8005DCB8,vanilla code
+SCUS_942.21,0x8005DCE0,patched code,"ori t1, zero, 0x1",j 0x8002705C,vanilla code
+SCUS_942.21,0x8005DCF4,patched code,"bne t1, zero, 0x8005DD00",j 0x800270C0,vanilla code
+SCUS_942.21,0x8005DDA8,patched code,"lbu v1, 2(s1)",j 0x8013FD80,new code in WORLD/WORLD.BIN (0x8013FD80)
+SCUS_942.21,0x8005E124,patched code,"lbu a2, 3(a0)",j 0x80157000,new code in BATTLE.BIN (0x80157000)
+BATTLE.BIN,0x80068430,patched code,"ori v0, zero, 0x5",jal 0x8015DFE0,new code in BATTLE.BIN (0x8015DF24+0xBC)
+BATTLE.BIN,0x80068444,patched code,"lw v1, 308(a1)",j 0x8015EB74,new code in BATTLE.BIN (0x8015E820+0x354)
+BATTLE.BIN,0x8006846C,patched code,nop,j 0x80068484,vanilla code
+BATTLE.BIN,0x80068594,patched code,j 0x800685FC,jal 0x80152620,new code in BATTLE.BIN (0x80152620)
+BATTLE.BIN,0x8006859C,patched code,"lbu a3, 4(a2)",j 0x800685B4,vanilla code
+BATTLE.BIN,0x800685EC,patched code,"sw zero, 20(sp)",jal 0x8008F710,vanilla code
+BATTLE.BIN,0x8006DDCC,patched code,"lbu v0, 426(a0)",jal 0x8006DC8C,vanilla code
+BATTLE.BIN,0x8006E664,patched code,"beq s0, zero, 0x8006E684",jal 0x80153240,new code in BATTLE.BIN (0x80153220+0x20)
+BATTLE.BIN,0x8006E680,patched code,nop,j 0x8006E694,vanilla code
+BATTLE.BIN,0x80071610,patched code,"lbu a1, 124(v0)",jal 0x80150550,new code in BATTLE.BIN (0x80150500+0x50)
+BATTLE.BIN,0x80071E18,patched code,"ori a1, zero, 0x183F",jal 0x8015E100,new code in BATTLE.BIN (0x8015E0B0+0x50)
+BATTLE.BIN,0x80072170,patched code,"lw v1, 0(v0)",j 0x801521DC,new code in BATTLE.BIN (0x801521CC+0x10)
+BATTLE.BIN,0x80072214,patched code,"lw v1, 308(s0)",j 0x801521CC,new code in BATTLE.BIN (0x801521CC)
+BATTLE.BIN,0x8007241C,patched code,"lui at, 0x8009",j 0x80153D58,new code in BATTLE.BIN (0x80153BCC+0x18C)
+BATTLE.BIN,0x80072C14,patched code,"addu s1, v0, zero",jal 0x8007A1D4,vanilla code
+BATTLE.BIN,0x80072C28,patched code,"beq s0, zero, 0x80072C38",jal 0x80068418,vanilla code
+BATTLE.BIN,0x80072C58,patched code,"addiu v0, s0, -406",jal 0x801A1854,vanilla code
+BATTLE.BIN,0x80072C68,patched code,jal 0x801A1854,jal 0x801609C0,new code in BATTLE.BIN (0x80160890+0x130)
+BATTLE.BIN,0x80072C90,patched code,"beq v0, zero, 0x80072CAC",jal 0x801A1880,vanilla code
+BATTLE.BIN,0x80072C98,patched code,"lhu v0, 476(s1)",jal 0x80044128,vanilla code
+BATTLE.BIN,0x80072CA4,patched code,"bne v0, v1, 0x80072CB4",jal 0x800683D4,vanilla code
+BATTLE.BIN,0x80073360,patched code,j 0x800734A4,j 0x80073384,vanilla code
+BATTLE.BIN,0x800733EC,patched code,"addu v0, v0, v1",jal 0x80159D00,new code in BATTLE.BIN (0x80159D00)
+BATTLE.BIN,0x80073978,patched code,"sll v1, v1, 1",jal 0x80159D00,new code in BATTLE.BIN (0x80159D00)
+BATTLE.BIN,0x80073980,patched code,"addu at, at, v1",j 0x80159DB8,new code in BATTLE.BIN (0x80159D00+0xB8)
+BATTLE.BIN,0x80074014,patched code,"sll v0, v1, 1",jal 0x80159D00,new code in BATTLE.BIN (0x80159D00)
+BATTLE.BIN,0x800741B0,patched code,"sll v0, v1, 1",jal 0x80159D00,new code in BATTLE.BIN (0x80159D00)
+BATTLE.BIN,0x80074D14,patched code,jal 0x80068794,j 0x80153E40,new code in BATTLE.BIN (0x80153BCC+0x274)
+BATTLE.BIN,0x800751C0,patched code,jal 0x80183BA8,j 0x80150AA0,new code in BATTLE.BIN (0x801509C4+0xDC)
+BATTLE.BIN,0x800751C8,patched code,jal 0x80071C8C,j 0x80151330,new code in BATTLE.BIN (0x80151000+0x330)
+BATTLE.BIN,0x80076C98,patched code,nop,j 0x80153100,new code in BATTLE.BIN (0x80153100)
+BATTLE.BIN,0x80077604,patched code,"addu v1, v1, v0",jal 0x80159D00,new code in BATTLE.BIN (0x80159D00)
+BATTLE.BIN,0x8007781C,patched code,"lw v1, 0(v0)",jal 0x8015DD00,new code in BATTLE.BIN (0x8015DD00)
+BATTLE.BIN,0x8007784C,patched code,jal 0x8007A1D4,jal 0x8015E0B0,new code in BATTLE.BIN (0x8015E0B0)
+BATTLE.BIN,0x80077854,patched code,"lui v1, 0x800A",j 0x80151220,new code in BATTLE.BIN (0x80151000+0x220)
+BATTLE.BIN,0x8007A88C,patched code,"addu at, at, v1",jal 0x80159D00,new code in BATTLE.BIN (0x80159D00)
+BATTLE.BIN,0x8007AC84,patched code,"sb v0, 2(a0)",j 0x801550D0,new code in BATTLE.BIN (0x80155000+0xD0)
+BATTLE.BIN,0x8007B0D4,patched code,"lbu s2, 6(s0)",j 0x80155040,new code in BATTLE.BIN (0x80155000+0x40)
+BATTLE.BIN,0x800803EC,patched code,"sw ra, 16(sp)",j 0x80160920,new code in BATTLE.BIN (0x80160890+0x90)
+BATTLE.BIN,0x8008200C,patched code,nop,j 0x8008209C,vanilla code
+BATTLE.BIN,0x80082180,patched code,j 0x80082248,j 0x80082298,vanilla code
+BATTLE.BIN,0x800823D4,patched code,"andi v0, v1, 0x2000",jal 0x80082110,vanilla code
+BATTLE.BIN,0x800823DC,patched code,"ori a2, zero, 0x3",j 0x800823EC,vanilla code
+BATTLE.BIN,0x800823E4,patched code,"addiu v0, zero, -8",jal 0x80081D54,vanilla code
+BATTLE.BIN,0x80082B34,patched code,"addu v1, v1, v0",jal 0x80159D00,new code in BATTLE.BIN (0x80159D00)
+BATTLE.BIN,0x80082BA0,patched code,"addu v1, v1, v0",jal 0x80159D00,new code in BATTLE.BIN (0x80159D00)
+BATTLE.BIN,0x80082C1C,patched code,"lbu v0, 6(a2)",j 0x8015EC80,new code in BATTLE.BIN (0x8015EC80)
+BATTLE.BIN,0x80082C68,patched code,"lui at, 0x8009",jal 0x80159D00,new code in BATTLE.BIN (0x80159D00)
+BATTLE.BIN,0x800832E8,patched code,"beq v0, zero, 0x800832FC",jal 0x80151B30,vanilla code
+BATTLE.BIN,0x8008399C,patched code,"lhu v0, 476(s1)",jal 0x801524E0,new code in BATTLE.BIN (0x80152480+0x60)
+BATTLE.BIN,0x80087E4C,patched code,"lw v0, 516(s2)",j 0x80155000,new code in BATTLE.BIN (0x80155000)
+BATTLE.BIN,0x8008DD34,patched code,"sb a2, 22(sp)",j 0x8008DD80,vanilla code
+BATTLE.BIN,0x8008DD5C,patched code,"lhu v0, 4(a2)",j 0x8008DD80,vanilla code
+BATTLE.BIN,0x800DA3EC,new code,nop,jal 0x80159D00,new code in BATTLE.BIN (0x80159D00)
+BATTLE.BIN,0x800DA978,new code,nop,jal 0x80159D00,new code in BATTLE.BIN (0x80159D00)
+BATTLE.BIN,0x800DA980,new code,nop,j 0x80159DB8,new code in BATTLE.BIN (0x80159D00+0xB8)
+BATTLE.BIN,0x800DB014,new code,nop,jal 0x80159D00,new code in BATTLE.BIN (0x80159D00)
+BATTLE.BIN,0x800DB1B0,new code,nop,jal 0x80159D00,new code in BATTLE.BIN (0x80159D00)
+BATTLE.BIN,0x800DE604,new code,nop,jal 0x80159D00,new code in BATTLE.BIN (0x80159D00)
+BATTLE.BIN,0x800E188C,new code,nop,jal 0x80159D00,new code in BATTLE.BIN (0x80159D00)
+BATTLE.BIN,0x800E9B34,patched code,"lui at, 0x8011",jal 0x80159D00,new code in BATTLE.BIN (0x80159D00)
+BATTLE.BIN,0x800E9BA0,patched code,"addu at, at, v1",jal 0x80159D00,new code in BATTLE.BIN (0x80159D00)
+BATTLE.BIN,0x800E9C68,patched code,"addiu s0, s0, 23532",jal 0x80159D00,new code in BATTLE.BIN (0x80159D00)
+BATTLE.BIN,0x800EAE6C,patched code,"lui v1, 0x800F",jal 0x8015C300,new code in BATTLE.BIN (0x8015C300)
+BATTLE.BIN,0x800EB094,patched code,"lui v1, 0x800F",jal 0x8015C300,new code in BATTLE.BIN (0x8015C300)
+BATTLE.BIN,0x800EC8C4,patched code,"lui v1, 0x800F",jal 0x8015C300,new code in BATTLE.BIN (0x8015C300)
+BATTLE.BIN,0x800ECA64,patched code,"lui v1, 0x800F",jal 0x8015C300,new code in BATTLE.BIN (0x8015C300)
+BATTLE.BIN,0x800F3658,patched code,jal 0x80183F60,jal 0x8015C100,new code in BATTLE.BIN (0x8015C100)
+BATTLE.BIN,0x8012FBC8,patched code,"lui v0, 0x8016",j 0x80150A78,new code in BATTLE.BIN (0x801509C4+0xB4)
+BATTLE.BIN,0x8012FCE8,patched code,"lui at, 0x8016",jal 0x80153300,new code in BATTLE.BIN (0x80153300)
+BATTLE.BIN,0x801301B8,patched code,jal 0x80059AF0,jal 0x80027220,vanilla code
+BATTLE.BIN,0x8013133C,patched code,"lw a3, 100(t1)",j 0x80150A14,new code in BATTLE.BIN (0x801509C4+0x50)
+BATTLE.BIN,0x801314E0,patched code,"ori t0, zero, 0x3",j 0x801532B0,new code in BATTLE.BIN (0x80153220+0x90)
+BATTLE.BIN,0x801316CC,patched code,nop,j 0x801509FC,new code in BATTLE.BIN (0x801509C4+0x38)
+BATTLE.BIN,0x80131E68,patched code,"lui at, 0x8016",jal 0x8015A580,new code in BATTLE.BIN (0x8015A560+0x20)
+BATTLE.BIN,0x80131E90,patched code,"addu s2, v1, zero",j 0x8015A560,new code in BATTLE.BIN (0x8015A560)
+BATTLE.BIN,0x80131F80,patched code,"ori t0, zero, 0x3",j 0x80131FA0,vanilla code
+BATTLE.BIN,0x801323F8,patched code,"lui s4, 0x8017",j 0x801314D4,vanilla code
+BATTLE.BIN,0x8013247C,patched code,"addiu a0, sp, 120",j 0x80154E40,new code in BATTLE.BIN (0x80154810+0x630)
+BATTLE.BIN,0x8013248C,patched code,"addu s4, v0, zero",j 0x80154E70,new code in BATTLE.BIN (0x80154810+0x660)
+BATTLE.BIN,0x801326F0,patched code,"lhu t0, 168(sp)",j 0x80150A38,new code in BATTLE.BIN (0x801509C4+0x74)
+BATTLE.BIN,0x80132838,patched code,"lui at, 0x8017",j 0x80159C5C,new code in BATTLE.BIN (0x80158840+0x141C)
+BATTLE.BIN,0x8013527C,patched code,"ori v0, zero, 0x7D7C",jal 0x8015C540,new code in BATTLE.BIN (0x8015C530+0x10)
+BATTLE.BIN,0x80135370,patched code,"lhu t1, 20(t1)",jal 0x801529F0,new code in BATTLE.BIN (0x801529C0+0x30)
+BATTLE.BIN,0x801359C4,patched code,jal 0x8014BF54,j 0x8015C7C0,new code in BATTLE.BIN (0x8015C7C0)
+BATTLE.BIN,0x80136268,patched code,"beq v0, zero, 0x80136284",j 0x80136284,vanilla code
+BATTLE.BIN,0x80138F10,patched code,"sw v1, 272(sp)",j 0x801509C4,new code in BATTLE.BIN (0x801509C4)
+BATTLE.BIN,0x80139314,patched code,"sb v0, 0(s0)",j 0x80160DB0,new code in BATTLE.BIN (0x80160CE0+0xD0)
+BATTLE.BIN,0x8013E968,patched code,"lbu v1, 0(s2)",j 0x80159C90,new code in BATTLE.BIN (0x80158840+0x1450)
+BATTLE.BIN,0x8013ECD0,patched code,"lbu v1, 0(s2)",j 0x80159868,new code in BATTLE.BIN (0x80158840+0x1028)
+BATTLE.BIN,0x8013FAB8,patched code,"lui at, 0x8016",jal 0x8012DF40,vanilla code
+BATTLE.BIN,0x8013FC34,patched code,"addiu a1, a1, 574",jal 0x801822CC,vanilla code
+BATTLE.BIN,0x8013FC64,patched code,"addu a0, s2, zero",jal 0x801817C0,vanilla code
+BATTLE.BIN,0x8013FC7C,patched code,"ori v0, zero, 0x3",jal 0x8014BF54,vanilla code
+BATTLE.BIN,0x8013FC8C,patched code,"addu a0, s2, zero",jal 0x80181B70,vanilla code
+BATTLE.BIN,0x8013FC9C,patched code,"addu a1, s0, zero",jal 0x80181CB8,vanilla code
+BATTLE.BIN,0x8013FCB8,patched code,"bne s5, zero, 0x8013FCD8",jal 0x80181EF0,vanilla code
+BATTLE.BIN,0x8013FCD0,patched code,"addu a1, s0, zero",jal 0x80181F14,vanilla code
+BATTLE.BIN,0x8013FCE8,patched code,"lui a2, 0x8017",jal 0x80182068,vanilla code
+BATTLE.BIN,0x8013FCFC,patched code,"sw v0, 16(sp)",jal 0x80182664,vanilla code
+BATTLE.BIN,0x8013FD18,patched code,"addu a1, s0, zero",jal 0x801827B4,vanilla code
+BATTLE.BIN,0x8013FD30,patched code,"addu a0, s2, zero",jal 0x8014BF54,vanilla code
+BATTLE.BIN,0x8014009C,patched code,"lhu v0, 44(s6)",jal 0x80151430,new code in BATTLE.BIN (0x80151380+0xB0)
+BATTLE.BIN,0x80140B88,patched code,"lbu v1, 88(a0)",jal 0x8015F0E0,new code in BATTLE.BIN (0x8015F020+0xC0)
+BATTLE.BIN,0x80140F28,patched code,"ori v0, zero, 0xFF",jal 0x8015D6C0,new code in BATTLE.BIN (0x8015D6C0)
+BATTLE.BIN,0x80140F6C,patched code,"subu v0, v0, s3",jal 0x8015D6E0,new code in BATTLE.BIN (0x8015D6C0+0x20)
+BATTLE.BIN,0x801410F4,patched code,"bne s0, v0, 0x80141110",jal 0x80151400,new code in BATTLE.BIN (0x80151380+0x80)
+BATTLE.BIN,0x80141C48,patched code,jal 0x80183374,j 0x80159C38,new code in BATTLE.BIN (0x80158840+0x13F8)
+BATTLE.BIN,0x80142B14,patched code,j 0x80142B30,j 0x8015996C,new code in BATTLE.BIN (0x80158840+0x112C)
+BATTLE.BIN,0x80142B24,patched code,jal 0x8013B644,j 0x80159BE8,new code in BATTLE.BIN (0x80158840+0x13A8)
+BATTLE.BIN,0x80143D3C,patched code,"addu s3, v0, zero",j 0x801588BC,new code in BATTLE.BIN (0x80158840+0x7C)
+BATTLE.BIN,0x80143E18,patched code,jal 0x8013B590,jal 0x80042A10,vanilla code
+BATTLE.BIN,0x80143E2C,patched code,jal 0x80042A10,jal 0x80134180,vanilla code
+BATTLE.BIN,0x80144970,patched code,jal 0x8013F0C0,j 0x8015A080,new code in BATTLE.BIN (0x8015A000+0x80)
+BATTLE.BIN,0x80144AE4,patched code,"lui at, 0x8017",jal 0x80133158,vanilla code
+BATTLE.BIN,0x8014540C,patched code,j 0x80145F24,j 0x8015A650,new code in BATTLE.BIN (0x8015A600+0x50)
+BATTLE.BIN,0x8014554C,patched code,"beq s4, v0, 0x80145F24",j 0x80154800,new code in BATTLE.BIN (0x80154800)
+BATTLE.BIN,0x801455C8,patched code,j 0x80145F24,j 0x801583C0,new code in BATTLE.BIN (0x80158300+0xC0)
+BATTLE.BIN,0x80147730,patched code,"sra a0, a0, 16",jal 0x80147318,vanilla code
+BATTLE.BIN,0x8014773C,patched code,"sra a1, a1, 16",jal 0x80146094,vanilla code
+BATTLE.BIN,0x80147744,patched code,"sll v0, v0, 16",j 0x8015A500,new code in BATTLE.BIN (0x8015A500)
+BATTLE.BIN,0x801486A0,patched code,"sb v1, 882(v0)",jal 0x80150420,new code in BATTLE.BIN (0x801503C0+0x60)
+BATTLE.BIN,0x801486BC,patched code,"lbu v0, 5(s2)",jal 0x80150480,new code in BATTLE.BIN (0x80150440+0x40)
+BATTLE.BIN,0x80148744,patched code,"beq v0, zero, 0x80148764",j 0x80148764,vanilla code
+BATTLE.BIN,0x80148FB8,patched code,"bne s2, v0, 0x80149024",j 0x801597F8,new code in BATTLE.BIN (0x80158840+0xFB8)
+BATTLE.BIN,0x801491F4,patched code,"sw s0, 40(sp)",jal 0x80146078,vanilla code
+BATTLE.BIN,0x80149200,patched code,"addu s0, v0, zero",jal 0x80146078,vanilla code
+BATTLE.BIN,0x80149210,patched code,"sh v0, 16(sp)",jal 0x80147928,vanilla code
+BATTLE.BIN,0x80149228,patched code,"addiu a1, sp, 24",jal 0x801479AC,vanilla code
+BATTLE.BIN,0x80149238,patched code,nop,jal 0x8008CDD0,vanilla code
+BATTLE.BIN,0x8014924C,patched code,"addiu v0, zero, -1",jal 0x80180AFC,vanilla code
+BATTLE.BIN,0x80149258,patched code,jal 0x80180AFC,jal 0x80180C90,vanilla code
+BATTLE.BIN,0x80149300,patched code,"ori a2, zero, 0x64",jal 0x8012DF68,vanilla code
+BATTLE.BIN,0x80149340,patched code,"sw v0, 32(sp)",j 0x801492F4,vanilla code
+BATTLE.BIN,0x8014938C,patched code,"addiu sp, sp, 56",j 0x80159CD0,new code in BATTLE.BIN (0x80158840+0x1490)
+BATTLE.BIN,0x8014A0A0,patched code,"ori a0, zero, 0x1",jal 0x80158710,new code in BATTLE.BIN (0x80158400+0x310)
+BATTLE.BIN,0x8014A0E8,patched code,"ori a0, zero, 0x1",jal 0x80158710,new code in BATTLE.BIN (0x80158400+0x310)
+BATTLE.BIN,0x8014A110,patched code,"bne s2, v0, 0x8014A120",j 0x801597C0,new code in BATTLE.BIN (0x80158840+0xF80)
+BATTLE.BIN,0x8014A1CC,patched code,"bne v0, zero, 0x8014A1F8",j 0x80158764,new code in BATTLE.BIN (0x80158400+0x364)
+BATTLE.BIN,0x8014A288,patched code,"ori a0, zero, 0x1",jal 0x80158710,new code in BATTLE.BIN (0x80158400+0x310)
+BATTLE.BIN,0x8014A37C,patched code,jal 0x8014C958,j 0x80158600,new code in BATTLE.BIN (0x80158400+0x200)
+BATTLE.BIN,0x8014A3C8,patched code,"beq v0, zero, 0x8014A3D8",j 0x801586AC,new code in BATTLE.BIN (0x80158400+0x2AC)
+BATTLE.BIN,0x8014A3D0,patched code,j 0x8014A3E0,jal 0x8014C958,vanilla code
+BATTLE.BIN,0x8014CF68,patched code,j 0x8049C2D8,j 0x804949F4,vanilla code
+BATTLE.BIN,0x8014CF6C,patched code,j 0x80697628,j 0x806990EC,vanilla code
+BATTLE.BIN,0x8014CF70,patched code,j 0x8871A908,j 0x88714904,vanilla code
+BATTLE.BIN,0x8014CF74,patched code,j 0x8057C100,j 0x8055236C,vanilla code
+BATTLE.BIN,0x8014CF78,patched code,j 0x80894900,j 0x80897070,vanilla code
+BATTLE.BIN,0x8014CF7C,patched code,j 0x80994988,j 0x80999000,vanilla code
+BATTLE.BIN,0x8014CF80,patched code,j 0x806969C0,j 0x806BA760,vanilla code
+BATTLE.BIN,0x8014CF84,patched code,j 0x80A18980,j 0x80A1C1A8,vanilla code
+BATTLE.BIN,0x8014CF88,patched code,j 0x8029C258,j 0x802B992C,vanilla code
+BATTLE.BIN,0x8014CF8C,patched code,j 0x805556A0,j 0x80559098,vanilla code
+BATTLE.BIN,0x8014CF90,patched code,j 0x80698800,j 0x8071B138,vanilla code
+BATTLE.BIN,0x8014CF94,patched code,j 0x80B9A800,j 0x88B94800,vanilla code
+BATTLE.BIN,0x8014CF98,patched code,j 0x80795628,j 0x80797160,vanilla code
+BATTLE.BIN,0x8014CF9C,patched code,j 0x80694800,j 0x806970F8,vanilla code
+BATTLE.BIN,0x8014CFA0,patched code,j 0x8859A978,j 0x885B3270,vanilla code
+BATTLE.BIN,0x8014CFA4,patched code,j 0x807DA258,j 0x807D91C0,vanilla code
+BATTLE.BIN,0x8014CFA8,patched code,j 0x80496800,j 0x804B32C8,vanilla code
+BATTLE.BIN,0x8014CFAC,patched code,j 0x80596848,j 0x8059823C,vanilla code
+BATTLE.BIN,0x8014CFB0,patched code,j 0x804D68A0,j 0x804D8294,vanilla code
+BATTLE.BIN,0x8014CFB4,patched code,j 0x804DA8B8,j 0x884D48B8,vanilla code
+BATTLE.BIN,0x8014CFB8,patched code,j 0x804D68F0,j 0x804DB09C,vanilla code
+BATTLE.BIN,0x8014CFBC,patched code,j 0x8081693C,j 0x808162E4,vanilla code
+BATTLE.BIN,0x8014CFC0,patched code,j 0x80618870,j 0x8063C100,vanilla code
+BATTLE.BIN,0x8014CFC4,patched code,j 0x88517690,j 0x8851B0E8,vanilla code
+BATTLE.BIN,0x8014CFC8,patched code,j 0x80A188E0,j 0x80A1A23C,vanilla code
+BATTLE.BIN,0x8014CFD0,patched code,j 0x80773270,j 0x80717000,vanilla code
+BATTLE.BIN,0x8014CFD4,patched code,jal 0x8889A9D0,jal 0x8889AADC,vanilla code
+BATTLE.BIN,0x8014CFD8,patched code,j 0x80654870,j 0x806571D8,vanilla code
+BATTLE.BIN,0x8014CFDC,patched code,j 0x806F32E0,j 0x806D9154,vanilla code
+BATTLE.BIN,0x8014CFE4,patched code,nop,j 0x88814974,vanilla code
+BATTLE.BIN,0x8014CFE8,patched code,nop,j 0x806AA2F0,vanilla code
+BATTLE.BIN,0x8014CFEC,patched code,nop,j 0x88A9563C,vanilla code
+BATTLE.BIN,0x8014CFF4,patched code,nop,j 0x8042C314,vanilla code
+BATTLE.BIN,0x8014CFF8,patched code,j 0x80534910,j 0x84534910,vanilla code
+BATTLE.BIN,0x8014CFFC,patched code,j 0x843482A4,j 0x803482A4,vanilla code
+BATTLE.BIN,0x8014D000,patched code,j 0x843482E0,j 0x803482E0,vanilla code
+BATTLE.BIN,0x8014D008,patched code,j 0x846642C4,j 0x806642C4,vanilla code
+BATTLE.BIN,0x8014D010,patched code,j 0x88544060,j 0x80544060,vanilla code
+BATTLE.BIN,0x80150320,new code,.word 0x7CDCF00D,j 0x8005DCFC,vanilla code
+BATTLE.BIN,0x80150334,new code,nop,j 0x8005DCFC,vanilla code
+BATTLE.BIN,0x801503A8,new code,.word 0x051C00C0,j 0x801873C4,vanilla code
+BATTLE.BIN,0x801503CC,new code,.word 0xFD0F6055,jal 0x8017C158,vanilla code
+BATTLE.BIN,0x801503D8,new code,.word 0x5B009F03,jal 0x80180AFC,vanilla code
+BATTLE.BIN,0x80150418,new code,.word 0x7D731F07,j 0x80180AFC,vanilla code
+BATTLE.BIN,0x80150450,new code,.word 0xFF015625,jal 0x80157E00,new code in BATTLE.BIN (0x80157E00)
+BATTLE.BIN,0x80150498,new code,"bgtz a2, 0x801500A0",j 0x801504A4,new code in BATTLE.BIN (0x80150440+0x64)
+BATTLE.BIN,0x80150508,new code,.word 0xC055151C,jal 0x80180AFC,vanilla code
+BATTLE.BIN,0x801509D0,new code,.word 0x002B007C,j 0x80138F18,vanilla code
+BATTLE.BIN,0x801509E4,new code,"sll zero, a0, 0",j 0x80138F18,vanilla code
+BATTLE.BIN,0x80150A0C,new code,.word 0x7F3F5055,j 0x801316D4,vanilla code
+BATTLE.BIN,0x80150A30,new code,"bltz t0, 0x80152634",j 0x80131344,vanilla code
+BATTLE.BIN,0x80150A40,new code,.word 0xC1011C1F,j 0x801326F8,vanilla code
+BATTLE.BIN,0x80150A98,new code,.word 0x70000004,j 0x8012FBD0,vanilla code
+BATTLE.BIN,0x80150B58,new code,"bltz t8, 0x8016CB5C",j 0x80150EB0,new code in BATTLE.BIN (0x80150DF0+0xC0)
+BATTLE.BIN,0x80150CCC,new code,.word 0xF7585509,jal 0x8005E288,vanilla code
+BATTLE.BIN,0x80150EF4,new code,"bltz t0, 0x80150EF8",j 0x800751C8,vanilla code
+BATTLE.BIN,0x80150F34,new code,"andi zero, zero, 0x7",jal 0x8018D384,vanilla code
+BATTLE.BIN,0x80150F9C,new code,"andi t4, v1, 0x25C7",j 0x80150FB4,new code in BATTLE.BIN (0x80150DF0+0x1C4)
+BATTLE.BIN,0x80150FC4,new code,nop,j 0x8017E780,vanilla code
+BATTLE.BIN,0x80151098,new code,"sll zero, zero, 0",jal 0x8013B590,vanilla code
+BATTLE.BIN,0x801510B4,new code,"lui s4, 0x5505",jal 0x8005E644,vanilla code
+BATTLE.BIN,0x801510CC,new code,.word 0xB07200C7,jal 0x8008E7B8,vanilla code
+BATTLE.BIN,0x80151128,new code,.word 0x702B0074,jal 0x80148580,vanilla code
+BATTLE.BIN,0x801511C8,new code,"bgtz a0, 0x80142590",jal 0x80180DB0,vanilla code
+BATTLE.BIN,0x80151208,new code,"slti s0, fp, 28672",jal 0x8005E22C,vanilla code
+BATTLE.BIN,0x80151218,new code,.word 0x55950000,j 0x8017C498,vanilla code
+BATTLE.BIN,0x801512E0,new code,.word 0xFD03DC56,jal 0x8005E22C,vanilla code
+BATTLE.BIN,0x801512F0,new code,"sll a1, s0, 12",jal 0x8005E778,vanilla code
+BATTLE.BIN,0x80151300,new code,.word 0xC701701C,j 0x8007785C,vanilla code
+BATTLE.BIN,0x80151320,new code,.word 0x7F705505,jal 0x8005E6CC,vanilla code
+BATTLE.BIN,0x80151328,new code,.word 0x55090070,j 0x801512F8,new code in BATTLE.BIN (0x80151000+0x2F8)
+BATTLE.BIN,0x80151348,new code,"lhu zero, -16137(t0)",jal 0x8005E6CC,vanilla code
+BATTLE.BIN,0x80151350,new code,nop,jal 0x80082EEC,vanilla code
+BATTLE.BIN,0x80151358,new code,.word 0x55050070,jal 0x80085C0C,vanilla code
+BATTLE.BIN,0x80151360,new code,.word 0x00C70070,jal 0x80071C8C,vanilla code
+BATTLE.BIN,0x80151368,new code,.word 0x007000FF,j 0x800752F8,vanilla code
+BATTLE.BIN,0x801513E8,new code,"sra k1, ra, 29",j 0x8017D6D8,vanilla code
+BATTLE.BIN,0x80151498,new code,.word 0xF11F1C5B,jal 0x80188510,vanilla code
+BATTLE.BIN,0x801514A8,new code,.word 0xC171001C,jal 0x80189828,vanilla code
+BATTLE.BIN,0x801514B0,new code,"sll zero, zero, 3",jal 0x80188B14,vanilla code
+BATTLE.BIN,0x801514C0,new code,.word 0xC21D101C,jal 0x80186744,vanilla code
+BATTLE.BIN,0x801514C8,new code,"sll t6, gp, 31",j 0x80151564,new code in BATTLE.BIN (0x80151488+0xDC)
+BATTLE.BIN,0x801514D0,new code,.word 0xC0FF006C,jal 0x80150DF0,new code in BATTLE.BIN (0x80150DF0)
+BATTLE.BIN,0x801514E4,new code,.word 0xC056051C,jal 0x80188510,vanilla code
+BATTLE.BIN,0x801514F4,new code,.word 0x00000030,jal 0x80185588,vanilla code
+BATTLE.BIN,0x80151520,new code,cop0 0x1555500,jal 0x80186744,vanilla code
+BATTLE.BIN,0x80151528,new code,"bltz k0, 0x80166930",jal 0x80188638,vanilla code
+BATTLE.BIN,0x80151538,new code,.word 0x033F94BC,jal 0x80187EB4,vanilla code
+BATTLE.BIN,0x801515AC,new code,.word 0xC1FD1F60,jal 0x8017C158,vanilla code
+BATTLE.BIN,0x801515B4,new code,"bne t0, gp, 0x801418BC",jal 0x80151618,new code in BATTLE.BIN (0x80151580+0x98)
+BATTLE.BIN,0x801515BC,new code,.word 0xC0C1011C,jal 0x80182508,vanilla code
+BATTLE.BIN,0x801515C4,new code,.word 0xFF0F6C55,jal 0x80151618,new code in BATTLE.BIN (0x80151580+0x98)
+BATTLE.BIN,0x801515CC,new code,.word 0xDC7F0056,jal 0x80182508,vanilla code
+BATTLE.BIN,0x801515D4,new code,.word 0xC0FD075C,jal 0x80151618,new code in BATTLE.BIN (0x80151580+0x98)
+BATTLE.BIN,0x801515DC,new code,.word 0x07DC7FC0,jal 0x80182508,vanilla code
+BATTLE.BIN,0x801515E4,new code,.word 0xC1C1011F,jal 0x80151618,new code in BATTLE.BIN (0x80151580+0x98)
+BATTLE.BIN,0x801515EC,new code,"mfc0 zero, $0",jal 0x80182508,vanilla code
+BATTLE.BIN,0x801515F4,new code,.word 0xFFF74355,j 0x80151600,new code in BATTLE.BIN (0x80151580+0x80)
+BATTLE.BIN,0x80151700,new code,"andi s0, at, 0x7",jal 0x8018EEA0,vanilla code
+BATTLE.BIN,0x801517DC,new code,.word 0xF1DF1F54,j 0x8017E3DC,vanilla code
+BATTLE.BIN,0x801518D0,new code,"bne t1, t1, 0x80148A94",jal 0x80150DF0,new code in BATTLE.BIN (0x80150DF0)
+BATTLE.BIN,0x80151978,new code,.word 0x000030F0,j 0x80189748,vanilla code
+BATTLE.BIN,0x8015205C,new code,"bgez t0, 0x8016E060",j 0x8005DCE8,vanilla code
+BATTLE.BIN,0x80152070,new code,.word 0x00F0FF3F,j 0x8005DCE8,vanilla code
+BATTLE.BIN,0x80152120,new code,.word 0x0000F0FF,j 0x801C86B4,vanilla code
+BATTLE.BIN,0x8015212C,new code,.word 0xF7375455,j 0x801C86B4,vanilla code
+BATTLE.BIN,0x801521A0,new code,.word 0x777070F7,j 0x801C8760,vanilla code
+BATTLE.BIN,0x801521B0,new code,.word 0xF7875595,j 0x801C8760,vanilla code
+BATTLE.BIN,0x801521D4,new code,"sll zero, a3, 1",j 0x8007221C,vanilla code
+BATTLE.BIN,0x801521E8,new code,.word 0xFFF7B355,j 0x80072178,vanilla code
+BATTLE.BIN,0x80152220,new code,.word 0x7F505505,j 0x801C87D8,vanilla code
+BATTLE.BIN,0x8015222C,new code,.word 0xC7FD7F5C,j 0x801C87D8,vanilla code
+BATTLE.BIN,0x801522A0,new code,.word 0x00F0003C,j 0x801C81FC,vanilla code
+BATTLE.BIN,0x801522AC,new code,"bltz t8, 0x8013D670",j 0x801C81FC,vanilla code
+BATTLE.BIN,0x80152320,new code,"bgtz zero, 0x80142428",j 0x801C82A8,vanilla code
+BATTLE.BIN,0x8015232C,new code,.word 0x00C00030,j 0x801C82A8,vanilla code
+BATTLE.BIN,0x80152390,new code,"lhu a3, -15452(t6)",j 0x8005E12C,vanilla code
+BATTLE.BIN,0x801523AC,new code,.word 0x7D775075,j 0x8005E12C,vanilla code
+BATTLE.BIN,0x801523B8,new code,.word 0x00C03F30,j 0x8005E12C,vanilla code
+BATTLE.BIN,0x8015240C,new code,.word 0xC57D0350,j 0x8017D5D8,vanilla code
+BATTLE.BIN,0x80152414,new code,"bne t0, gp, 0x801543D8",j 0x8017D6EC,vanilla code
+BATTLE.BIN,0x8015244C,new code,.word 0x702BFF77,jal 0x80188510,vanilla code
+BATTLE.BIN,0x80152470,new code,.word 0x06F62700,jal 0x80185A9C,vanilla code
+BATTLE.BIN,0x80152478,new code,"bne t7, s0, 0x8016243C",jal 0x80185FA4,vanilla code
+BATTLE.BIN,0x8015248C,new code,"bltz zero, 0x80152790",jal 0x8018BD74,vanilla code
+BATTLE.BIN,0x801524A8,new code,.word 0xC1011C1C,jal 0x8018BD74,vanilla code
+BATTLE.BIN,0x801524C4,new code,.word 0x55050007,jal 0x8015241C,new code in BATTLE.BIN (0x80152400+0x1C)
+BATTLE.BIN,0x80152534,new code,.word 0xF276DC27,j 0x80152554,new code in BATTLE.BIN (0x80152500+0x54)
+BATTLE.BIN,0x80152554,new code,"addiu a0, fp, -21248",jal 0x801E0390,vanilla code
+BATTLE.BIN,0x801525D0,new code,.word 0x77DC71F4,j 0x8017EA30,vanilla code
+BATTLE.BIN,0x801525E4,new code,.word 0x5B1C77C0,j 0x801525D0,new code in BATTLE.BIN (0x801525A0+0x30)
+BATTLE.BIN,0x801525F8,new code,.word 0x07677570,j 0x801525D0,new code in BATTLE.BIN (0x801525A0+0x30)
+BATTLE.BIN,0x801526A0,new code,.word 0xC771771C,j 0x801526B4,new code in BATTLE.BIN (0x80152620+0x94)
+BATTLE.BIN,0x801526E0,new code,"mfc0 zero, $0",jal 0x8014BF54,vanilla code
+BATTLE.BIN,0x801526F0,new code,.word 0x015625FF,j 0x801C07D8,vanilla code
+BATTLE.BIN,0x80152770,new code,.word 0x70F7FF87,j 0x801818F4,vanilla code
+BATTLE.BIN,0x801527AC,new code,"lui k1, 0x5579",j 0x80181954,vanilla code
+BATTLE.BIN,0x801527E8,new code,.word 0x777F7F8A,j 0x80181954,vanilla code
+BATTLE.BIN,0x80152894,new code,.word 0x057C00F0,j 0x801749E0,vanilla code
+BATTLE.BIN,0x801528C0,new code,.word 0x07077070,j 0x80183CE0,vanilla code
+BATTLE.BIN,0x801528DC,new code,.word 0x7F7F4355,jal 0x80152960,new code in BATTLE.BIN (0x80152920+0x40)
+BATTLE.BIN,0x80152908,new code,"bne s0, zero, 0x8014990C",j 0x8018DEF4,vanilla code
+BATTLE.BIN,0x80152910,new code,"sll zero, a0, 0",jal 0x80180134,vanilla code
+BATTLE.BIN,0x80152918,new code,.word 0xFCFD0155,j 0x8018DD98,vanilla code
+BATTLE.BIN,0x80152938,new code,.word 0x5555C701,jal 0x80152960,new code in BATTLE.BIN (0x80152920+0x40)
+BATTLE.BIN,0x801529C8,new code,"swl s7, -127(t7)",jal 0x8018AD58,vanilla code
+BATTLE.BIN,0x80152A38,new code,.word 0xC11700AC,jal 0x8018A420,vanilla code
+BATTLE.BIN,0x80152A40,new code,.word 0x7D70F70A,jal 0x801843EC,vanilla code
+BATTLE.BIN,0x80152A80,new code,.word 0x700406F7,jal 0x8002230C,vanilla code
+BATTLE.BIN,0x80152ADC,new code,"beq zero, gp, 0x80152ADC",j 0x80152AF0,new code in BATTLE.BIN (0x80152A30+0xC0)
+BATTLE.BIN,0x80152B24,new code,.word 0xF7835595,j 0x80152B34,new code in BATTLE.BIN (0x80152A30+0x104)
+BATTLE.BIN,0x80152B2C,new code,.word 0x7F0F5055,j 0x8017D784,vanilla code
+BATTLE.BIN,0x80152B68,new code,.word 0x07077F7F,j 0x8017D7C0,vanilla code
+BATTLE.BIN,0x80152B7C,new code,.word 0xF75B7F65,j 0x8017D784,vanilla code
+BATTLE.BIN,0x80152B88,new code,.word 0x55094000,j 0x80152B4C,new code in BATTLE.BIN (0x80152A30+0x11C)
+BATTLE.BIN,0x80152BD4,new code,.word 0x60490304,j 0x801895B4,vanilla code
+BATTLE.BIN,0x80152BDC,new code,syscall 0x5C000,j 0x801895AC,vanilla code
+BATTLE.BIN,0x80152C18,new code,j 0x85C0AF00,jal 0x8018AD58,vanilla code
+BATTLE.BIN,0x80152CC4,new code,.word 0xFFDD4355,jal 0x80187CA0,vanilla code
+BATTLE.BIN,0x80152D80,new code,.word 0x415519F0,j 0x80152D4C,new code in BATTLE.BIN (0x80152D00+0x4C)
+BATTLE.BIN,0x80152DCC,new code,.word 0xD547D496,jal 0x80188510,vanilla code
+BATTLE.BIN,0x80152DF8,new code,"sra zero, gp, 15",jal 0x80185A9C,vanilla code
+BATTLE.BIN,0x80152E00,new code,"addiu zero, t0, 7168",j 0x80152E14,new code in BATTLE.BIN (0x80152DC0+0x54)
+BATTLE.BIN,0x80152E14,new code,.word 0xD5C0C9C1,jal 0x80185FA4,vanilla code
+BATTLE.BIN,0x80152E1C,new code,.word 0x00F0033C,jal 0x801886A4,vanilla code
+BATTLE.BIN,0x80152E24,new code,.word 0x717CDCC7,jal 0x80186FD0,vanilla code
+BATTLE.BIN,0x80152E48,new code,.word 0x71597DD4,jal 0x801870FC,vanilla code
+BATTLE.BIN,0x80152E68,new code,.word 0x58550940,jal 0x80186CA4,vanilla code
+BATTLE.BIN,0x80152F04,new code,"bgtz k1, 0x80168F10",j 0x80152EEC,new code in BATTLE.BIN (0x80152EC0+0x2C)
+BATTLE.BIN,0x80152F20,new code,.word 0xDD015625,j 0x80152F2C,new code in BATTLE.BIN (0x80152EC0+0x6C)
+BATTLE.BIN,0x80152F3C,new code,.word 0x5529C07D,j 0x801C310C,vanilla code
+BATTLE.BIN,0x80152FF0,new code,.word 0xC79D70DC,j 0x801C316C,vanilla code
+BATTLE.BIN,0x80153028,new code,.word 0xF03F0C5B,jal 0x80188510,vanilla code
+BATTLE.BIN,0x80153054,new code,"ori a3, s1, 0x1D",jal 0x80185A9C,vanilla code
+BATTLE.BIN,0x8015305C,new code,.word 0xF037F054,jal 0x801535A0,new code in BATTLE.BIN (0x801535A0)
+BATTLE.BIN,0x80153064,new code,.word 0xF17F3F54,jal 0x80185FA4,vanilla code
+BATTLE.BIN,0x8015306C,new code,"andi a3, zero, 0xD747",jal 0x801886A4,vanilla code
+BATTLE.BIN,0x80153074,new code,.word 0xC7019610,jal 0x80186FD0,vanilla code
+BATTLE.BIN,0x80153098,new code,.word 0xF05B0094,jal 0x801870FC,vanilla code
+BATTLE.BIN,0x801530A8,new code,.word 0x55407000,jal 0x80187EB4,vanilla code
+BATTLE.BIN,0x801530B0,new code,.word 0xF0010607,j 0x801530D0,new code in BATTLE.BIN (0x801530C0+0x10)
+BATTLE.BIN,0x801530C8,new code,.word 0x415501F0,jal 0x80188C34,vanilla code
+BATTLE.BIN,0x801530D0,new code,.word 0x7CDBC17A,jal 0x8015241C,new code in BATTLE.BIN (0x80152400+0x1C)
+BATTLE.BIN,0x80153114,new code,"bgtz v1, 0x80150E0C",j 0x80076CA0,vanilla code
+BATTLE.BIN,0x80153138,new code,.word 0xC71C77DC,jal 0x8017D850,vanilla code
+BATTLE.BIN,0x8015319C,new code,jal 0x8FDD03FC,jal 0x8007A724,vanilla code
+BATTLE.BIN,0x801531A8,new code,jal 0x8C3DB2F4,jal 0x8014C940,vanilla code
+BATTLE.BIN,0x801531B0,new code,.word 0x771C8005,jal 0x8014C940,vanilla code
+BATTLE.BIN,0x801531C0,new code,"slti s7, k1, 31856",jal 0x8005E644,vanilla code
+BATTLE.BIN,0x801531C8,new code,.word 0xFFC0D716,jal 0x8006E634,vanilla code
+BATTLE.BIN,0x801531E0,new code,.word 0x71B71577,j 0x80076D50,vanilla code
+BATTLE.BIN,0x80153260,new code,"bgtz a2, 0x80152E68",jal 0x8013B590,vanilla code
+BATTLE.BIN,0x80153278,new code,"lui a3, 0x437E",jal 0x8013B590,vanilla code
+BATTLE.BIN,0x80153280,new code,"bltz t2, 0x80153284",j 0x801C9EE4,vanilla code
+BATTLE.BIN,0x801532EC,new code,.word 0x557C7500,j 0x801314E8,vanilla code
+BATTLE.BIN,0x801532F4,new code,.word 0xD507C7AD,j 0x8013276C,vanilla code
+BATTLE.BIN,0x80153330,new code,.word 0x70000104,jal 0x8007A1D4,vanilla code
+BATTLE.BIN,0x80153350,new code,j 0x84000300,j 0x801533D8,new code in BATTLE.BIN (0x80153300+0xD8)
+BATTLE.BIN,0x80153514,new code,"andi zero, zero, 0xF04",j 0x801892AC,vanilla code
+BATTLE.BIN,0x80153524,new code,.word 0xC701541F,jal 0x80185C94,vanilla code
+BATTLE.BIN,0x8015352C,new code,.word 0x775F7047,jal 0x80185FFC,vanilla code
+BATTLE.BIN,0x80153534,new code,"lwr ra, 30391(fp)",jal 0x80188858,vanilla code
+BATTLE.BIN,0x8015353C,new code,"sll v0, s5, 0",jal 0x80187150,vanilla code
+BATTLE.BIN,0x80153544,new code,"bgtz k1, 0x8016545C",jal 0x80187350,vanilla code
+BATTLE.BIN,0x80153664,new code,.word 0xF7435555,j 0x8017D6EC,vanilla code
+BATTLE.BIN,0x80153698,new code,"bgtz zero, 0x80153A5C",j 0x8017D6EC,vanilla code
+BATTLE.BIN,0x80153C6C,new code,.word 0x007C0370,j 0x8019A9DC,vanilla code
+BATTLE.BIN,0x80153C84,new code,.word 0x0070F7FF,j 0x8019A938,vanilla code
+BATTLE.BIN,0x80153D30,new code,.word 0x65057758,j 0x80181B1C,vanilla code
+BATTLE.BIN,0x80153D48,new code,.word 0xF0FF0C54,j 0x80181A34,vanilla code
+BATTLE.BIN,0x80153D6C,new code,syscall 0xC,jal 0x8007A218,vanilla code
+BATTLE.BIN,0x80153D90,new code,.word 0x0000C030,jal 0x8017DCA8,vanilla code
+BATTLE.BIN,0x80153DA4,new code,"bgtz v0, 0x8014439C",jal 0x8007A218,vanilla code
+BATTLE.BIN,0x80153DBC,new code,.word 0x5C05F71D,jal 0x80154000,vanilla code
+BATTLE.BIN,0x80153DC8,new code,.word 0x5D705CC1,jal 0x80154000,vanilla code
+BATTLE.BIN,0x80153DD4,new code,"andi gp, a3, 0x3C07",jal 0x80154000,vanilla code
+BATTLE.BIN,0x80153DE0,new code,.word 0xDC5F0556,jal 0x80154000,vanilla code
+BATTLE.BIN,0x80153DEC,new code,.word 0x765FDC47,jal 0x80154000,vanilla code
+BATTLE.BIN,0x80153DF8,new code,.word 0x00F03F3C,jal 0x80154000,vanilla code
+BATTLE.BIN,0x80153E04,new code,"bgtz a2, 0x8015270C",jal 0x80154000,vanilla code
+BATTLE.BIN,0x80153E10,new code,.word 0xC7C7ADAC,jal 0x80154000,vanilla code
+BATTLE.BIN,0x80153E28,new code,.word 0xE626F026,j 0x80072424,vanilla code
+BATTLE.BIN,0x80153E40,new code,"addiu zero, t0, 0",jal 0x8007A218,vanilla code
+BATTLE.BIN,0x80153E80,new code,.word 0x6C95C0FD,j 0x801561C0,new code in BATTLE.BIN (0x801561C0)
+BATTLE.BIN,0x80153EC8,new code,"andi zero, zero, 0x1707",jal 0x80154000,vanilla code
+BATTLE.BIN,0x80153ED4,new code,.word 0xFF815525,jal 0x80154000,vanilla code
+BATTLE.BIN,0x80153EE0,new code,"bgtz t2, 0x801495E8",jal 0x80154000,vanilla code
+BATTLE.BIN,0x80153EEC,new code,.word 0xC0C3306C,jal 0x80154000,vanilla code
+BATTLE.BIN,0x80153EF8,new code,.word 0xDB5D71DC,jal 0x80154000,vanilla code
+BATTLE.BIN,0x80153F04,new code,.word 0xDADD775D,jal 0x80154000,vanilla code
+BATTLE.BIN,0x80153F10,new code,.word 0x00303333,jal 0x80154000,vanilla code
+BATTLE.BIN,0x80153F18,new code,.word 0x711CDCF7,jal 0x8007D0A0,vanilla code
+BATTLE.BIN,0x80153F54,new code,"andi gp, at, 0x24F7",j 0x80156100,new code in BATTLE.BIN (0x80156100)
+BATTLE.BIN,0x80153F5C,new code,.word 0xC0710010,jal 0x80075F10,vanilla code
+BATTLE.BIN,0x80153F64,new code,.word 0xC2DD05DF,jal 0x80075F10,vanilla code
+BATTLE.BIN,0x80153FA4,new code,.word 0x7F1C5005,jal 0x800683E4,vanilla code
+BATTLE.BIN,0x80153FAC,new code,.word 0xDF774355,jal 0x80071008,vanilla code
+BATTLE.BIN,0x80153FBC,new code,jal 0x8F01BC04,j 0x80074C98,vanilla code
+BATTLE.BIN,0x80153FC4,new code,.word 0x55014000,jal 0x80068794,vanilla code
+BATTLE.BIN,0x80153FCC,new code,.word 0x5555F0F7,j 0x80074D1C,vanilla code
+BATTLE.BIN,0x80153FD4,new code,.word 0x5455C57D,j 0x80153FC0,new code in BATTLE.BIN (0x80153BCC+0x3F4)
+BATTLE.BIN,0x80154808,new code,.word 0x03C3737C,j 0x80145554,vanilla code
+BATTLE.BIN,0x80154864,new code,.word 0x5515DCFF,jal 0x8014BF54,vanilla code
+BATTLE.BIN,0x80154970,new code,.word 0x6C25C7C1,j 0x801549B0,new code in BATTLE.BIN (0x80154810+0x1A0)
+BATTLE.BIN,0x801549DC,new code,"andi t4, a2, 0x30C7",j 0x80154CFC,new code in BATTLE.BIN (0x80154810+0x4EC)
+BATTLE.BIN,0x80154A3C,new code,.word 0xDC43C66D,j 0x80154CFC,new code in BATTLE.BIN (0x80154810+0x4EC)
+BATTLE.BIN,0x80154BA8,new code,.word 0x05040400,j 0x80154B74,new code in BATTLE.BIN (0x80154810+0x364)
+BATTLE.BIN,0x80154CF4,new code,.word 0x6C55C27D,jal 0x8014BF54,vanilla code
+BATTLE.BIN,0x80154D28,new code,.word 0x55550000,jal 0x8005A9B4,vanilla code
+BATTLE.BIN,0x80154D3C,new code,.word 0x5C75C771,jal 0x8005E088,vanilla code
+BATTLE.BIN,0x80154D48,new code,.word 0x00F0FF3F,jal 0x8005DFD4,vanilla code
+BATTLE.BIN,0x80154E24,new code,.word 0x55057C0F,jal 0x8014BF54,vanilla code
+BATTLE.BIN,0x80154E2C,new code,.word 0x726F6077,j 0x80145F24,vanilla code
+BATTLE.BIN,0x80154E48,new code,"andi s7, at, 0xF0F7",jal 0x801307D4,vanilla code
+BATTLE.BIN,0x80154E60,new code,.word 0x00F0333C,j 0x801324A4,vanilla code
+BATTLE.BIN,0x80154EB8,new code,"sll v1, s0, 16",j 0x801324E0,vanilla code
+BATTLE.BIN,0x80155038,new code,.word 0x5C545509,j 0x80087E54,vanilla code
+BATTLE.BIN,0x801550C8,new code,.word 0x5C55C1FD,j 0x8007B0DC,vanilla code
+BATTLE.BIN,0x80155114,new code,.word 0x6FFC4D01,j 0x8007AC8C,vanilla code
+BATTLE.BIN,0x8015517C,new code,.word 0xDC77C35D,j 0x80028668,vanilla code
+BATTLE.BIN,0x801551B8,new code,.word 0xB05501F7,jal 0x8002230C,vanilla code
+BATTLE.BIN,0x801551CC,new code,.word 0x0000C0F3,j 0x801551E0,new code in BATTLE.BIN (0x80155000+0x1E0)
+BATTLE.BIN,0x801553D0,new code,.word 0x71DCDDB7,j 0x8002868C,vanilla code
+BATTLE.BIN,0x80155750,new code,"bgtz t1, 0x8014D548",jal 0x8005E22C,vanilla code
+BATTLE.BIN,0x80155968,new code,.word 0x00D601FC,j 0x801AFFA0,vanilla code
+BATTLE.BIN,0x80155A70,new code,.word 0x551DC001,j 0x80155A50,new code in BATTLE.BIN (0x80155A40+0x10)
+BATTLE.BIN,0x80155B10,new code,.word 0x6D25DCFD,jal 0x80188510,vanilla code
+BATTLE.BIN,0x80155B38,new code,"lui t4, 0x5BC9",jal 0x80155D20,new code in BATTLE.BIN (0x80155D20)
+BATTLE.BIN,0x80155B40,new code,.word 0x7C770001,jal 0x80185FFC,vanilla code
+BATTLE.BIN,0x80155B48,new code,.word 0xC15515DC,jal 0x801885F8,vanilla code
+BATTLE.BIN,0x80155B50,new code,.word 0x55FCF7C0,jal 0x8018877C,vanilla code
+BATTLE.BIN,0x80155B60,new code,.word 0x41100000,jal 0x80152450,new code in BATTLE.BIN (0x80152444+0xC)
+BATTLE.BIN,0x80155BA4,new code,.word 0x0000303F,jal 0x801870FC,vanilla code
+BATTLE.BIN,0x80155BAC,new code,j 0x85541FF0,jal 0x80187EB4,vanilla code
+BATTLE.BIN,0x80155BD4,new code,.word 0x7D572977,jal 0x80188510,vanilla code
+BATTLE.BIN,0x80155BE4,new code,.word 0xFCF1F71E,jal 0x80185E5C,vanilla code
+BATTLE.BIN,0x80155BEC,new code,"lhu a0, 0(s0)",jal 0x80155D20,new code in BATTLE.BIN (0x80155D20)
+BATTLE.BIN,0x80155BF4,new code,.word 0xDCC7C755,jal 0x80155DA0,new code in BATTLE.BIN (0x80155D20+0x80)
+BATTLE.BIN,0x80155BFC,new code,.word 0xF5FD9C54,jal 0x80185FA4,vanilla code
+BATTLE.BIN,0x80155C04,new code,"bgtz zero, 0x8014CFCC",jal 0x801886A4,vanilla code
+BATTLE.BIN,0x80155C0C,new code,syscall 0x3003C,jal 0x80186FD0,vanilla code
+BATTLE.BIN,0x80155C30,new code,.word 0x000030FF,jal 0x80152450,new code in BATTLE.BIN (0x80152444+0xC)
+BATTLE.BIN,0x80155C64,new code,.word 0xDF1454D5,jal 0x801870FC,vanilla code
+BATTLE.BIN,0x80155C6C,new code,"bgtz a2, 0x80152264",jal 0x80187EB4,vanilla code
+BATTLE.BIN,0x80155C98,new code,.word 0x0030CC3C,j 0x801877F4,vanilla code
+BATTLE.BIN,0x80155D28,new code,"sll zero, a2, 16",jal 0x80155CF4,new code in BATTLE.BIN (0x80155CF4)
+BATTLE.BIN,0x80155D60,new code,.word 0xDFC1765D,j 0x80155D70,new code in BATTLE.BIN (0x80155D20+0x50)
+BATTLE.BIN,0x80155E04,new code,.word 0xC70CA8DF,j 0x80155DF0,new code in BATTLE.BIN (0x80155D20+0xD0)
+BATTLE.BIN,0x80155ED0,new code,.word 0xF70D5455,jal 0x80181720,vanilla code
+BATTLE.BIN,0x80155F20,new code,.word 0xBC7DDCC9,j 0x80181B28,vanilla code
+BATTLE.BIN,0x80155F40,new code,.word 0x75777057,jal 0x80181720,vanilla code
+BATTLE.BIN,0x80155F5C,new code,"bgtz t0, 0x80173D58",j 0x80181AF4,vanilla code
+BATTLE.BIN,0x80155F64,new code,.word 0x7C7DF341,j 0x80181ABC,vanilla code
+BATTLE.BIN,0x80155F7C,new code,.word 0x55014000,j 0x80181B1C,vanilla code
+BATTLE.BIN,0x80155F84,new code,.word 0x56255455,j 0x80181AF0,vanilla code
+BATTLE.BIN,0x80155FDC,new code,.word 0x547503C7,jal 0x80181720,vanilla code
+BATTLE.BIN,0x80156038,new code,.word 0x55553FC7,jal 0x80154000,vanilla code
+BATTLE.BIN,0x80156044,new code,.word 0x6FC1463D,jal 0x80154000,vanilla code
+BATTLE.BIN,0x80156050,new code,.word 0x5570F000,jal 0x80154000,vanilla code
+BATTLE.BIN,0x8015605C,new code,.word 0x73079658,jal 0x80154000,vanilla code
+BATTLE.BIN,0x80156068,new code,.word 0xDB6D79DC,jal 0x80154000,vanilla code
+BATTLE.BIN,0x80156074,new code,cop0 0x1555070,jal 0x80154000,vanilla code
+BATTLE.BIN,0x80156080,new code,.word 0x9CF1F715,jal 0x8007A724,vanilla code
+BATTLE.BIN,0x80156090,new code,.word 0x0000300F,jal 0x80154000,vanilla code
+BATTLE.BIN,0x80156130,new code,.word 0x5C55C17D,jal 0x80154000,vanilla code
+BATTLE.BIN,0x8015613C,new code,.word 0x003C24F0,jal 0x80154000,vanilla code
+BATTLE.BIN,0x80156148,new code,.word 0xF7C15515,jal 0x80154000,vanilla code
+BATTLE.BIN,0x80156154,new code,jal 0x8D415704,jal 0x80154000,vanilla code
+BATTLE.BIN,0x80156160,new code,"andi t4, a2, 0x30C7",jal 0x80154000,vanilla code
+BATTLE.BIN,0x8015616C,new code,.word 0x47B5C6F1,jal 0x80154000,vanilla code
+BATTLE.BIN,0x8015617C,new code,.word 0x7E80BAC5,jal 0x80154000,vanilla code
+BATTLE.BIN,0x8015619C,new code,"xori s7, s1, 0x15C7",j 0x80153F64,new code in BATTLE.BIN (0x80153BCC+0x398)
+BATTLE.BIN,0x801561D4,new code,.word 0x7DC5F11D,jal 0x80180178,vanilla code
+BATTLE.BIN,0x801561DC,new code,.word 0x5519FCFD,jal 0x80068E58,vanilla code
+BATTLE.BIN,0x801561E4,new code,.word 0xDCDF0156,j 0x80153FA4,new code in BATTLE.BIN (0x80153BCC+0x3D8)
+BATTLE.BIN,0x8015637C,new code,.word 0xF5FF9D54,j 0x801564CC,new code in BATTLE.BIN (0x80156300+0x1CC)
+BATTLE.BIN,0x8015640C,new code,.word 0x5E95A07E,j 0x80156440,new code in BATTLE.BIN (0x80156300+0x140)
+BATTLE.BIN,0x801564C4,new code,.word 0x77F77D8A,j 0x801564D8,new code in BATTLE.BIN (0x80156300+0x1D8)
+BATTLE.BIN,0x8015702C,new code,jal 0x85FF7D04,j 0x8005E12C,vanilla code
+BATTLE.BIN,0x80157034,new code,.word 0xD7705511,j 0x80152380,new code in BATTLE.BIN (0x80152380)
+BATTLE.BIN,0x80157070,new code,.word 0xD5014140,j 0x801C86C4,vanilla code
+BATTLE.BIN,0x80157078,new code,.word 0xFF1D5415,j 0x801C86B4,vanilla code
+BATTLE.BIN,0x801570B4,new code,"beq v0, zero, 0x801570B8",j 0x801C8208,vanilla code
+BATTLE.BIN,0x801570BC,new code,"bgtz t9, 0x801744BC",j 0x801C81F8,vanilla code
+BATTLE.BIN,0x801570F0,new code,"swl t6, -12067(s5)",j 0x801C5564,vanilla code
+BATTLE.BIN,0x801570F8,new code,.word 0x00003033,j 0x801C5554,vanilla code
+BATTLE.BIN,0x80157E44,new code,"addiu s4, t3, -10441",j 0x80157E60,new code in BATTLE.BIN (0x80157E00+0x60)
+BATTLE.BIN,0x80157E64,new code,"ori s4, k0, 0x5505",jal 0x8005DA10,vanilla code
+BATTLE.BIN,0x80157E80,new code,.word 0x00F0FF3F,jal 0x8005C5C8,vanilla code
+BATTLE.BIN,0x80157FE8,new code,.word 0x5DF9EE1D,j 0x801845F4,vanilla code
+BATTLE.BIN,0x80157FF0,new code,"lhu sp, 32607(t0)",j 0x80184570,vanilla code
+BATTLE.BIN,0x8015802C,new code,.word 0x55D57777,j 0x80158048,new code in BATTLE.BIN (0x80158000+0x48)
+BATTLE.BIN,0x8015804C,new code,.word 0x72070495,jal 0x8005DA10,vanilla code
+BATTLE.BIN,0x80158064,new code,.word 0x46DF275C,jal 0x8005C5C8,vanilla code
+BATTLE.BIN,0x801580A8,new code,"ori s7, sp, 0x5675",jal 0x80157F80,new code in BATTLE.BIN (0x80157F80)
+BATTLE.BIN,0x80158144,new code,.word 0x7F5D58A1,jal 0x80157F80,new code in BATTLE.BIN (0x80157F80)
+BATTLE.BIN,0x80158164,new code,.word 0x75000004,j 0x8015818C,new code in BATTLE.BIN (0x80158130+0x5C)
+BATTLE.BIN,0x801581A0,new code,.word 0xC1C51F1C,jal 0x80157F80,new code in BATTLE.BIN (0x80157F80)
+BATTLE.BIN,0x801581C4,new code,.word 0x6C95C0FD,j 0x8018AEFC,vanilla code
+BATTLE.BIN,0x801581CC,new code,j 0x84440000,j 0x8018AE98,vanilla code
+BATTLE.BIN,0x801581E8,new code,"sra k1, a0, 31",jal 0x8002230C,vanilla code
+BATTLE.BIN,0x80158264,new code,.word 0xFF5F4155,j 0x80158298,new code in BATTLE.BIN (0x80158130+0x168)
+BATTLE.BIN,0x80158288,new code,.word 0x075C55C1,j 0x801582C4,new code in BATTLE.BIN (0x80158130+0x194)
+BATTLE.BIN,0x80158290,new code,.word 0x65C67D07,j 0x80183180,vanilla code
+BATTLE.BIN,0x801582B4,new code,.word 0xD869F6DD,j 0x801831C0,vanilla code
+BATTLE.BIN,0x801582C8,new code,.word 0x575D75DA,jal 0x80157EC0,new code in BATTLE.BIN (0x80157E00+0xC0)
+BATTLE.BIN,0x801582D0,new code,.word 0x75557F77,j 0x801832B4,vanilla code
+BATTLE.BIN,0x801582D8,new code,.word 0x5677DF77,j 0x801832B4,vanilla code
+BATTLE.BIN,0x80158374,new code,.word 0x5595B79D,j 0x80186588,vanilla code
+BATTLE.BIN,0x8015837C,new code,.word 0x547502DD,j 0x80186588,vanilla code
+BATTLE.BIN,0x801583B8,new code,.word 0x54F50011,j 0x80148A24,vanilla code
+BATTLE.BIN,0x801583C8,new code,"lhu s4, -3597(s2)",jal 0x801488A8,vanilla code
+BATTLE.BIN,0x801583DC,new code,"bgtz t3, 0x8014E9F8",jal 0x8017FD80,vanilla code
+BATTLE.BIN,0x801583E4,new code,.word 0x55F1776E,j 0x80145F24,vanilla code
+BATTLE.BIN,0x80158444,new code,.word 0xD0410010,jal 0x801585B8,new code in BATTLE.BIN (0x80158400+0x1B8)
+BATTLE.BIN,0x801584CC,new code,"lhu zero, 240(t0)",jal 0x8005A9B4,vanilla code
+BATTLE.BIN,0x801584D4,new code,.word 0x57B57677,jal 0x8005E088,vanilla code
+BATTLE.BIN,0x80158594,new code,"lui s4, 0x95F5",jal 0x80199EC8,vanilla code
+BATTLE.BIN,0x801585EC,new code,.word 0xDFB15515,j 0x801585F8,new code in BATTLE.BIN (0x80158400+0x1F8)
+BATTLE.BIN,0x8015862C,new code,"sll zero, s5, 4",j 0x8014A384,vanilla code
+BATTLE.BIN,0x80158650,new code,.word 0x75010409,j 0x8014A384,vanilla code
+BATTLE.BIN,0x80158674,new code,.word 0x54550A44,j 0x8014A384,vanilla code
+BATTLE.BIN,0x80158694,new code,.word 0x04960000,j 0x8014A384,vanilla code
+BATTLE.BIN,0x8015869C,new code,.word 0x6819F7F5,jal 0x8014C958,vanilla code
+BATTLE.BIN,0x801586A4,new code,.word 0xB095077F,j 0x8014A384,vanilla code
+BATTLE.BIN,0x801586B8,new code,"bltzal t0, 0x801596BC",j 0x8014A3E0,vanilla code
+BATTLE.BIN,0x801586CC,new code,.word 0x05DC3770,j 0x8014A3E0,vanilla code
+BATTLE.BIN,0x801586DC,new code,"bgez t8, 0x8013DEE0",j 0x8014A3E0,vanilla code
+BATTLE.BIN,0x801586F0,new code,.word 0x750755A9,j 0x8014A3E0,vanilla code
+BATTLE.BIN,0x80158700,new code,.word 0xDC710011,j 0x8014A3E0,vanilla code
+BATTLE.BIN,0x80158708,new code,.word 0x00561EFC,j 0x8014A3D0,vanilla code
+BATTLE.BIN,0x80158774,new code,.word 0xDF07B179,j 0x8014A1D4,vanilla code
+BATTLE.BIN,0x8015877C,new code,"lb k0, 988(v1)",j 0x8014A1F8,vanilla code
+BATTLE.BIN,0x80158798,new code,.word 0x55177077,j 0x801587A4,new code in BATTLE.BIN (0x80158400+0x3A4)
+BATTLE.BIN,0x801587FC,new code,.word 0xFD5F6CA5,j 0x80143D0C,vanilla code
+BATTLE.BIN,0x80158804,new code,.word 0x6C65C7FD,j 0x801587C0,new code in BATTLE.BIN (0x80158400+0x3C0)
+BATTLE.BIN,0x80158818,new code,.word 0xC7C1411C,jal 0x80158840,new code in BATTLE.BIN (0x80158840)
+BATTLE.BIN,0x801588A4,new code,.word 0x6FC54102,j 0x80158854,new code in BATTLE.BIN (0x80158840+0x14)
+BATTLE.BIN,0x801588DC,new code,.word 0x5B1F5040,j 0x80145F24,vanilla code
+BATTLE.BIN,0x80158900,new code,.word 0x7517BF95,j 0x80158928,new code in BATTLE.BIN (0x80158840+0xE8)
+BATTLE.BIN,0x80158930,new code,.word 0xFC430555,jal 0x8015880C,new code in BATTLE.BIN (0x8015880C)
+BATTLE.BIN,0x80158954,new code,.word 0x75075987,j 0x80158964,new code in BATTLE.BIN (0x80158840+0x124)
+BATTLE.BIN,0x80158964,new code,.word 0xF7775455,j 0x80158930,new code in BATTLE.BIN (0x80158840+0xF0)
+BATTLE.BIN,0x8015898C,new code,.word 0x7F079B77,j 0x80158930,new code in BATTLE.BIN (0x80158840+0xF0)
+BATTLE.BIN,0x801589BC,new code,.word 0x70700004,j 0x80158930,new code in BATTLE.BIN (0x80158840+0xF0)
+BATTLE.BIN,0x801589E0,new code,.word 0x77746405,j 0x80145F24,vanilla code
+BATTLE.BIN,0x801589F4,new code,"lui s0, 0x5BF5",j 0x80158A08,new code in BATTLE.BIN (0x80158840+0x1C8)
+BATTLE.BIN,0x80158A0C,new code,.word 0x7077F05F,jal 0x8015880C,new code in BATTLE.BIN (0x8015880C)
+BATTLE.BIN,0x80158A38,new code,.word 0xFD719C15,j 0x80145F24,vanilla code
+BATTLE.BIN,0x80158A5C,new code,.word 0xF7DD7AD5,j 0x801587B8,new code in BATTLE.BIN (0x80158400+0x3B8)
+BATTLE.BIN,0x80158A6C,new code,"sll t6, s0, 4",jal 0x80158784,new code in BATTLE.BIN (0x80158400+0x384)
+BATTLE.BIN,0x80158A74,new code,.word 0xC7C07A1C,j 0x80143D0C,vanilla code
+BATTLE.BIN,0x80158A84,new code,.word 0x5FCE479C,jal 0x80158784,new code in BATTLE.BIN (0x80158400+0x384)
+BATTLE.BIN,0x80158A9C,new code,.word 0xD7C55799,j 0x801587B8,new code in BATTLE.BIN (0x80158400+0x3B8)
+BATTLE.BIN,0x80158AB4,new code,.word 0xC11116D0,j 0x801587B8,new code in BATTLE.BIN (0x80158400+0x3B8)
+BATTLE.BIN,0x80158ACC,new code,.word 0xCF305B1E,jal 0x8002230C,vanilla code
+BATTLE.BIN,0x80158AF8,new code,"bgtz k0, 0x8015DF24",j 0x80145F24,vanilla code
+BATTLE.BIN,0x80158B20,new code,"lhu s0, 30704(t6)",j 0x801587B8,new code in BATTLE.BIN (0x80158400+0x3B8)
+BATTLE.BIN,0x80158B34,new code,"sll t2, t4, 23",j 0x80145F24,vanilla code
+BATTLE.BIN,0x80158B50,new code,"lwr a1, 26078(k0)",jal 0x801585B8,new code in BATTLE.BIN (0x80158400+0x1B8)
+BATTLE.BIN,0x80158B5C,new code,"bne t0, zero, 0x80158F20",j 0x80145F24,vanilla code
+BATTLE.BIN,0x80158B78,new code,.word 0xC0C6F627,j 0x80145F24,vanilla code
+BATTLE.BIN,0x80158BC4,new code,.word 0x0000F03F,j 0x80158BDC,new code in BATTLE.BIN (0x80158840+0x39C)
+BATTLE.BIN,0x80158BE0,new code,.word 0xC0DD07DC,j 0x80145F24,vanilla code
+BATTLE.BIN,0x80158BF0,new code,.word 0x5F47559A,j 0x80158C04,new code in BATTLE.BIN (0x80158840+0x3C4)
+BATTLE.BIN,0x80158C48,new code,.word 0xC16A10DF,j 0x80145F24,vanilla code
+BATTLE.BIN,0x80158C54,new code,.word 0x5B029503,j 0x80145F24,vanilla code
+BATTLE.BIN,0x80158C78,new code,.word 0x70900104,jal 0x8013D278,vanilla code
+BATTLE.BIN,0x80158C80,new code,.word 0x03C71570,j 0x80145F24,vanilla code
+BATTLE.BIN,0x80158CD4,new code,.word 0x7270DCF7,jal 0x80044954,vanilla code
+BATTLE.BIN,0x80158CEC,new code,.word 0x5ADCD9C1,jal 0x80044954,vanilla code
+BATTLE.BIN,0x80158D20,new code,"andi zero, zero, 0xF07",jal 0x80158400,new code in BATTLE.BIN (0x80158400)
+BATTLE.BIN,0x80158D38,new code,.word 0xBF0FBFB5,j 0x80145F24,vanilla code
+BATTLE.BIN,0x80158D54,new code,"sw fp, -15779(a1)",jal 0x80158400,new code in BATTLE.BIN (0x80158400)
+BATTLE.BIN,0x80158D5C,new code,.word 0x015A1970,j 0x80145F24,vanilla code
+BATTLE.BIN,0x80158D9C,new code,.word 0x570D9467,j 0x80145F24,vanilla code
+BATTLE.BIN,0x80158DB0,new code,"sll zero, a0, 0",j 0x80145F24,vanilla code
+BATTLE.BIN,0x80158E28,new code,"lhu s6, 28784(t0)",j 0x80145F24,vanilla code
+BATTLE.BIN,0x80158E3C,new code,.word 0x04040000,j 0x80145F24,vanilla code
+BATTLE.BIN,0x80158E70,new code,"bgtz fp, 0x80152678",j 0x80158F0C,new code in BATTLE.BIN (0x80158840+0x6CC)
+BATTLE.BIN,0x80158EBC,new code,.word 0x58B7F5F7,j 0x80158ECC,new code in BATTLE.BIN (0x80158840+0x68C)
+BATTLE.BIN,0x80158F44,new code,jal 0x8D5D55C4,j 0x80158F58,new code in BATTLE.BIN (0x80158840+0x718)
+BATTLE.BIN,0x80158F5C,new code,.word 0x54FD031C,j 0x80145F24,vanilla code
+BATTLE.BIN,0x80158F84,new code,"bgtz a2, 0x8014977C",j 0x80158FF0,new code in BATTLE.BIN (0x80158840+0x7B0)
+BATTLE.BIN,0x80158F94,new code,"lui s4, 0xBF05",j 0x80158FBC,new code in BATTLE.BIN (0x80158840+0x77C)
+BATTLE.BIN,0x80158FA8,new code,"lui s4, 0x5505",j 0x80158FF0,new code in BATTLE.BIN (0x80158840+0x7B0)
+BATTLE.BIN,0x80158FC8,new code,.word 0x0777577F,j 0x80145F24,vanilla code
+BATTLE.BIN,0x80158FD8,new code,.word 0x7747DEAB,j 0x80145F24,vanilla code
+BATTLE.BIN,0x80159010,new code,.word 0x5C55C1A9,j 0x80145F24,vanilla code
+BATTLE.BIN,0x80159068,new code,.word 0xC0030C6C,j 0x80145F24,vanilla code
+BATTLE.BIN,0x801590AC,new code,"lui s4, 0xB5F5",j 0x80145F24,vanilla code
+BATTLE.BIN,0x8015912C,new code,.word 0x5BC97777,j 0x80145F24,vanilla code
+BATTLE.BIN,0x80159160,new code,"bltz zero, 0x80159524",j 0x80145F24,vanilla code
+BATTLE.BIN,0x801591B8,new code,.word 0x557A7016,j 0x80159224,new code in BATTLE.BIN (0x80158840+0x9E4)
+BATTLE.BIN,0x80159214,new code,jal 0x85609404,j 0x80159224,new code in BATTLE.BIN (0x80158840+0x9E4)
+BATTLE.BIN,0x80159234,new code,nop,j 0x80145F24,vanilla code
+BATTLE.BIN,0x80159260,new code,"sw t5, -10019(a1)",j 0x80145F24,vanilla code
+BATTLE.BIN,0x80159298,new code,.word 0xF003039B,j 0x801592B4,new code in BATTLE.BIN (0x80158840+0xA74)
+BATTLE.BIN,0x80159328,new code,.word 0x55550000,j 0x8015935C,new code in BATTLE.BIN (0x80158840+0xB1C)
+BATTLE.BIN,0x801593C4,new code,.word 0xC1FD1F5C,j 0x80159364,new code in BATTLE.BIN (0x80158840+0xB24)
+BATTLE.BIN,0x801594DC,new code,.word 0xC001071C,j 0x80145F24,vanilla code
+BATTLE.BIN,0x8015959C,new code,.word 0x0000F030,j 0x801595A8,new code in BATTLE.BIN (0x80158840+0xD68)
+BATTLE.BIN,0x801595AC,new code,.word 0x5DFCFD80,j 0x80145F24,vanilla code
+BATTLE.BIN,0x801595E4,new code,"lhu a0, 0(s0)",j 0x80145F24,vanilla code
+BATTLE.BIN,0x8015960C,new code,.word 0x55757F77,jal 0x80044954,vanilla code
+BATTLE.BIN,0x80159670,new code,.word 0x55250000,j 0x80145F24,vanilla code
+BATTLE.BIN,0x80159690,new code,.word 0x0030CC30,jal 0x80044954,vanilla code
+BATTLE.BIN,0x80159698,new code,"lhu a1, 24439(t2)",j 0x80145F24,vanilla code
+BATTLE.BIN,0x801596C4,new code,"lhu s7, 22901(s2)",j 0x80145F24,vanilla code
+BATTLE.BIN,0x80159780,new code,"blez k0, 0x80173540",j 0x80145F24,vanilla code
+BATTLE.BIN,0x801597B0,new code,"lhu s5, -783(t2)",j 0x80145F24,vanilla code
+BATTLE.BIN,0x801597B8,new code,.word 0x54F5C31D,j 0x8015A600,new code in BATTLE.BIN (0x8015A600)
+BATTLE.BIN,0x801597C8,new code,"lui t4, 0x69C9",j 0x8014A1B8,vanilla code
+BATTLE.BIN,0x801597D8,new code,.word 0xC19D60E5,j 0x8014A1B8,vanilla code
+BATTLE.BIN,0x801597E8,new code,.word 0x011C1CFC,j 0x8014A1B8,vanilla code
+BATTLE.BIN,0x801597F0,new code,"addiu zero, t0, 0",j 0x8014A120,vanilla code
+BATTLE.BIN,0x80159804,new code,"bgtz v0, 0x8016EF0C",j 0x80148FC0,vanilla code
+BATTLE.BIN,0x80159820,new code,.word 0x65879957,j 0x80148FF8,vanilla code
+BATTLE.BIN,0x80159858,new code,.word 0x000000FF,j 0x80148FC0,vanilla code
+BATTLE.BIN,0x80159860,new code,.word 0x07955570,j 0x80149024,vanilla code
+BATTLE.BIN,0x801598BC,new code,"lhu k1, 411(a2)",j 0x8013ED80,vanilla code
+BATTLE.BIN,0x801598F0,new code,.word 0x7676F7F7,j 0x8013ED80,vanilla code
+BATTLE.BIN,0x8015992C,new code,"mfc0 zero, $0",j 0x8013ED9C,vanilla code
+BATTLE.BIN,0x80159940,new code,"sh s7, -28553(k0)",j 0x8013ED9C,vanilla code
+BATTLE.BIN,0x80159948,new code,"lhu gp, 487(a1)",j 0x8013ECD8,vanilla code
+BATTLE.BIN,0x8015997C,new code,.word 0x77270C64,jal 0x8014A018,vanilla code
+BATTLE.BIN,0x80159990,new code,"lui v1, 0x6C79",jal 0x8014A018,vanilla code
+BATTLE.BIN,0x80159998,new code,.word 0x54D50711,j 0x80142B30,new code in WORLD/WORLD.BIN (0x80142980+0x1B0)
+BATTLE.BIN,0x801599B4,new code,.word 0xF0F03017,jal 0x801585B8,new code in BATTLE.BIN (0x80158400+0x1B8)
+BATTLE.BIN,0x801599C8,new code,.word 0xC39D55DC,j 0x801599DC,new code in BATTLE.BIN (0x80158840+0x119C)
+BATTLE.BIN,0x80159A74,new code,.word 0xDCF7C17D,j 0x80159BE0,new code in BATTLE.BIN (0x80158840+0x13A0)
+BATTLE.BIN,0x80159A88,new code,.word 0x0000C0FF,jal 0x801585B8,new code in BATTLE.BIN (0x80158400+0x1B8)
+BATTLE.BIN,0x80159A9C,new code,.word 0x6CE5C111,jal 0x801585B8,new code in BATTLE.BIN (0x80158400+0x1B8)
+BATTLE.BIN,0x80159AF4,new code,"sll zero, gp, 16",j 0x80159BE0,new code in BATTLE.BIN (0x80158840+0x13A0)
+BATTLE.BIN,0x80159B08,new code,.word 0x7A5C1557,jal 0x801585B8,new code in BATTLE.BIN (0x80158400+0x1B8)
+BATTLE.BIN,0x80159B34,new code,"lui gp, 0x5BC9",j 0x80159BE0,new code in BATTLE.BIN (0x80158840+0x13A0)
+BATTLE.BIN,0x80159B48,new code,.word 0x5D261B75,jal 0x801585B8,new code in BATTLE.BIN (0x80158400+0x1B8)
+BATTLE.BIN,0x80159B94,new code,.word 0x479A457C,j 0x80159BAC,new code in BATTLE.BIN (0x80158840+0x136C)
+BATTLE.BIN,0x80159BC0,new code,.word 0xF033045B,j 0x80159BE0,new code in BATTLE.BIN (0x80158840+0x13A0)
+BATTLE.BIN,0x80159BD0,new code,.word 0x75D59DC7,jal 0x80183374,vanilla code
+BATTLE.BIN,0x80159BD8,new code,"bgtz t7, 0x801511A0",j 0x80159BE0,new code in BATTLE.BIN (0x80158840+0x13A0)
+BATTLE.BIN,0x80159BE0,new code,.word 0xC5F1F91C,j 0x80142B30,new code in WORLD/WORLD.BIN (0x80142980+0x1B0)
+BATTLE.BIN,0x80159BF0,new code,"lhu gp, -2597(a1)",jal 0x8013B644,vanilla code
+BATTLE.BIN,0x80159BFC,new code,.word 0xFC034055,j 0x80142B2C,new code in WORLD/WORLD.BIN (0x80142980+0x1AC)
+BATTLE.BIN,0x80159C30,new code,.word 0xF1001014,j 0x80183CA4,vanilla code
+BATTLE.BIN,0x80159C4C,new code,.word 0xC33F706C,jal 0x80183374,vanilla code
+BATTLE.BIN,0x80159C54,new code,.word 0x58F10000,j 0x80141C50,vanilla code
+BATTLE.BIN,0x80159C88,new code,.word 0xDD1D5CD5,j 0x80132840,vanilla code
+BATTLE.BIN,0x80159CB8,new code,"sra fp, zero, 0",j 0x8013ED80,vanilla code
+BATTLE.BIN,0x80159CC0,new code,.word 0xC301551C,j 0x8013E970,new code in WORLD/WORLD.BIN (0x8013E898+0xD8)
+BATTLE.BIN,0x80159CC8,new code,"lhu gp, -2829(s0)",jal 0x8013F0C0,vanilla code
+BATTLE.BIN,0x80159CEC,new code,.word 0x55251CC7,jal 0x80157E00,new code in BATTLE.BIN (0x80157E00)
+BATTLE.BIN,0x80159CF4,new code,.word 0x5455051C,j 0x80149348,vanilla code
+BATTLE.BIN,0x80159D24,new code,"sll zero, zero, 16",j 0x80159DA0,new code in BATTLE.BIN (0x80159D00+0xA0)
+BATTLE.BIN,0x80159D90,new code,"bne a2, gp, 0x8014B998",j 0x80159D74,new code in BATTLE.BIN (0x80159D00+0x74)
+BATTLE.BIN,0x80159DC4,new code,.word 0xC7FDA760,j 0x80073988,vanilla code
+BATTLE.BIN,0x8015A00C,new code,.word 0xDD96A3F2,j 0x8018E7F0,vanilla code
+BATTLE.BIN,0x8015A058,new code,.word 0xF1FFDC55,j 0x8018E7A0,vanilla code
+BATTLE.BIN,0x8015A060,new code,"bgtz zero, 0x8014B228",j 0x8018E868,vanilla code
+BATTLE.BIN,0x8015A074,new code,"bgtz a3, 0x8015963C",j 0x8018E8D0,vanilla code
+BATTLE.BIN,0x8015A0A8,new code,.word 0xB59A1D74,jal 0x8014C858,vanilla code
+BATTLE.BIN,0x8015A0B0,new code,j 0x84000300,jal 0x8013F0C0,vanilla code
+BATTLE.BIN,0x8015A0BC,new code,.word 0xF15625D4,jal 0x8013B644,vanilla code
+BATTLE.BIN,0x8015A0C8,new code,.word 0xDCFFC155,jal 0x8013B644,vanilla code
+BATTLE.BIN,0x8015A0D4,new code,.word 0x44340000,jal 0x80148CD8,vanilla code
+BATTLE.BIN,0x8015A0DC,new code,.word 0x543537B7,j 0x80144978,vanilla code
+BATTLE.BIN,0x8015A130,new code,.word 0xDD09EA1D,j 0x8018149C,vanilla code
+BATTLE.BIN,0x8015A1C0,new code,.word 0xC5DF0D5C,j 0x801814D8,vanilla code
+BATTLE.BIN,0x8015A1C8,new code,.word 0x000000F0,j 0x801814F0,vanilla code
+BATTLE.BIN,0x8015A244,new code,.word 0x77477155,j 0x8015A26C,new code in BATTLE.BIN (0x8015A100+0x16C)
+BATTLE.BIN,0x8015A50C,new code,"lui zero, 0x5B39",jal 0x8013B590,vanilla code
+BATTLE.BIN,0x8015A518,new code,.word 0x7AC15B45,jal 0x80146094,vanilla code
+BATTLE.BIN,0x8015A52C,new code,.word 0x6EF56F3E,jal 0x8013B590,vanilla code
+BATTLE.BIN,0x8015A538,new code,"bgtz k1, 0x8016F540",jal 0x80146094,vanilla code
+BATTLE.BIN,0x8015A540,new code,.word 0xD071C71D,j 0x8014774C,vanilla code
+BATTLE.BIN,0x8015A578,new code,.word 0x0000F0FC,j 0x80131E98,vanilla code
+BATTLE.BIN,0x8015A62C,new code,.word 0xC0010A10,j 0x80158AAC,new code in BATTLE.BIN (0x80158840+0x26C)
+BATTLE.BIN,0x8015A634,new code,j 0x8B7107F0,j 0x80145F24,vanilla code
+BATTLE.BIN,0x8015A63C,new code,"beq zero, s0, 0x80151A00",j 0x80143D44,vanilla code
+BATTLE.BIN,0x8015A670,new code,"sll v0, zero, 0",jal 0x8014CA80,vanilla code
+BATTLE.BIN,0x8015A678,new code,"bgtz t0, 0x80151A40",j 0x80145F24,vanilla code
+BATTLE.BIN,0x8015B114,new code,"lui s0, 0xC306",jal 0x801C6000,vanilla code
+BATTLE.BIN,0x8015B12C,new code,.word 0xD75895C1,jal 0x8015B4D4,new code in BATTLE.BIN (0x8015B4D4)
+BATTLE.BIN,0x8015B178,new code,.word 0x711C5C55,jal 0x8015B51C,new code in BATTLE.BIN (0x8015B51C)
+BATTLE.BIN,0x8015B180,new code,.word 0x0000C0FF,jal 0x8015B1E0,new code in BATTLE.BIN (0x8015B1E0)
+BATTLE.BIN,0x8015B188,new code,"lh s5, 7616(t2)",j 0x8015B198,new code in BATTLE.BIN (0x8015B154+0x44)
+BATTLE.BIN,0x8015B190,new code,"bgtz v0, 0x8014B598",jal 0x80059BB0,vanilla code
+BATTLE.BIN,0x8015B1B4,new code,.word 0x471F50C5,jal 0x80059AF0,vanilla code
+BATTLE.BIN,0x8015B1BC,new code,.word 0x5091C9C7,jal 0x8015B20C,new code in BATTLE.BIN (0x8015B20C)
+BATTLE.BIN,0x8015B1C4,new code,.word 0xF0FF3F54,jal 0x80059FE0,vanilla code
+BATTLE.BIN,0x8015B1EC,new code,.word 0x41101000,jal 0x8015B244,new code in BATTLE.BIN (0x8015B244)
+BATTLE.BIN,0x8015B1F4,new code,"bgtz t3, 0x8017490C",jal 0x8015B20C,new code in BATTLE.BIN (0x8015B20C)
+BATTLE.BIN,0x8015B218,new code,.word 0x5555C711,jal 0x8015B4D4,new code in BATTLE.BIN (0x8015B4D4)
+BATTLE.BIN,0x8015B228,new code,.word 0x01271C6F,jal 0x8015B268,new code in BATTLE.BIN (0x8015B268)
+BATTLE.BIN,0x8015B260,new code,.word 0xF7875595,j 0x80059C60,vanilla code
+BATTLE.BIN,0x8015B33C,new code,.word 0xC7F17F3F,jal 0x8005E254,vanilla code
+BATTLE.BIN,0x8015B368,new code,.word 0xC0F30C9F,jal 0x8005E254,vanilla code
+BATTLE.BIN,0x8015B370,new code,.word 0x07BF7545,j 0x8015B488,new code in BATTLE.BIN (0x8015B268+0x220)
+BATTLE.BIN,0x8015B4E4,new code,.word 0x470E77BC,jal 0x8015B49C,new code in BATTLE.BIN (0x8015B268+0x234)
+BATTLE.BIN,0x8015B540,new code,.word 0xC3017354,jal 0x8015B570,new code in BATTLE.BIN (0x8015B570)
+BATTLE.BIN,0x8015B590,new code,.word 0xC041F7DF,jal 0x8005E288,vanilla code
+BATTLE.BIN,0x8015B5BC,new code,syscall 0x303FC,j 0x8015B5F0,new code in BATTLE.BIN (0x8015B570+0x80)
+BATTLE.BIN,0x8015B5E0,new code,.word 0x0000F0FF,jal 0x8018EA98,vanilla code
+BATTLE.BIN,0x8015C01C,new code,.word 0x5C55C101,jal 0x8CA4A4A4,vanilla code
+BATTLE.BIN,0x8015C020,new code,.word 0x00C0FF0F,jal 0x8C000000,vanilla code
+BATTLE.BIN,0x8015C028,new code,.word 0xC71D58DF,jal 0x8C3C3C3C,vanilla code
+BATTLE.BIN,0x8015C03C,new code,.word 0xF71C5BD6,jal 0x8C00A4A4,vanilla code
+BATTLE.BIN,0x8015C050,new code,.word 0x55151070,jal 0x8CA47C3C,vanilla code
+BATTLE.BIN,0x8015C054,new code,"lui k1, 0x6D45",jal 0x8CA4003C,vanilla code
+BATTLE.BIN,0x8015C118,new code,.word 0x46100000,jal 0x80183F60,vanilla code
+BATTLE.BIN,0x8015C120,new code,.word 0x5455CCDC,jal 0x8013B590,vanilla code
+BATTLE.BIN,0x8015C22C,new code,.word 0xF03F035B,j 0x8015C244,new code in BATTLE.BIN (0x8015C200+0x44)
+BATTLE.BIN,0x8015C388,new code,"lui k1, 0xF049",j 0x8015C438,new code in BATTLE.BIN (0x8015C300+0x138)
+BATTLE.BIN,0x8015C390,new code,"sh at, 9(s0)",jal 0x80181114,vanilla code
+BATTLE.BIN,0x8015C3EC,new code,.word 0x77DC5D01,j 0x8015C460,new code in BATTLE.BIN (0x8015C300+0x160)
+BATTLE.BIN,0x8015C3FC,new code,.word 0x55553700,j 0x8015C460,new code in BATTLE.BIN (0x8015C300+0x160)
+BATTLE.BIN,0x8015C420,new code,.word 0xC01F1F50,j 0x8015C460,new code in BATTLE.BIN (0x8015C300+0x160)
+BATTLE.BIN,0x8015C430,new code,.word 0xC7CA7410,j 0x8015C460,new code in BATTLE.BIN (0x8015C300+0x160)
+BATTLE.BIN,0x8015C448,new code,.word 0x043377DC,j 0x8015C460,new code in BATTLE.BIN (0x8015C300+0x160)
+BATTLE.BIN,0x8015C458,new code,.word 0x79777047,j 0x8015C460,new code in BATTLE.BIN (0x8015C300+0x160)
+BATTLE.BIN,0x8015C580,new code,.word 0xC71D77DC,jal 0x8014BF54,vanilla code
+BATTLE.BIN,0x8015C6A4,new code,.word 0x0777AC72,jal 0x8014A834,vanilla code
+BATTLE.BIN,0x8015C758,new code,.word 0x7407FCD5,j 0x8015C760,new code in BATTLE.BIN (0x8015C700+0x60)
+BATTLE.BIN,0x8015C774,new code,.word 0x7CFE0055,jal 0x8005E0CC,vanilla code
+BATTLE.BIN,0x8015C784,new code,"sll zero, zero, 0",jal 0x8018430C,vanilla code
+BATTLE.BIN,0x8015C78C,new code,.word 0x5507091B,j 0x80188268,vanilla code
+BATTLE.BIN,0x8015C794,new code,.word 0x562570FE,j 0x80187F44,vanilla code
+BATTLE.BIN,0x8015C7F8,new code,.word 0x560E4063,jal 0x8017D850,vanilla code
+BATTLE.BIN,0x8015C82C,new code,.word 0x55757041,jal 0x8014BF54,vanilla code
+BATTLE.BIN,0x8015C834,new code,"sll zero, s0, 0",j 0x801359CC,vanilla code
+BATTLE.BIN,0x8015C850,new code,.word 0xBF0540F9,j 0x801392B8,vanilla code
+BATTLE.BIN,0x8015C870,new code,.word 0x701B0767,j 0x801C15FC,vanilla code
+BATTLE.BIN,0x8015D230,new code,"sll v0, s0, 0",j 0x80189B20,vanilla code
+BATTLE.BIN,0x8015D238,new code,.word 0x555055F5,jal 0x801885B8,vanilla code
+BATTLE.BIN,0x8015D248,new code,"lwr ra, 21589(t8)",jal 0x8015D570,new code in BATTLE.BIN (0x8015D570)
+BATTLE.BIN,0x8015D250,new code,.word 0x0000C0F3,jal 0x80185FA4,vanilla code
+BATTLE.BIN,0x8015D258,new code,.word 0x03075570,jal 0x80188744,vanilla code
+BATTLE.BIN,0x8015D260,new code,"bne t3, ra, 0x8017D064",jal 0x80186568,vanilla code
+BATTLE.BIN,0x8015D268,new code,.word 0x7000F737,jal 0x8015241C,new code in BATTLE.BIN (0x80152400+0x1C)
+BATTLE.BIN,0x8015D270,new code,"lui v1, 0x5475",jal 0x80186FD0,vanilla code
+BATTLE.BIN,0x8015D294,new code,.word 0xF0FF0F54,jal 0x801870FC,vanilla code
+BATTLE.BIN,0x8015D29C,new code,.word 0x47DC7707,jal 0x80187EB4,vanilla code
+BATTLE.BIN,0x8015D2D8,new code,.word 0x005B1F73,j 0x8018C990,vanilla code
+BATTLE.BIN,0x8015D31C,new code,"bne s6, a3, 0x80166910",j 0x8015D330,new code in BATTLE.BIN (0x8015D300+0x30)
+BATTLE.BIN,0x8015D330,new code,.word 0xC1F1DF7F,j 0x8018A8DC,vanilla code
+BATTLE.BIN,0x8015D354,new code,.word 0x70700057,j 0x8121E810,vanilla code
+BATTLE.BIN,0x8015D394,new code,.word 0x5D75551D,jal 0x8007A218,vanilla code
+BATTLE.BIN,0x8015D39C,new code,.word 0xDD6DF45D,jal 0x80068418,vanilla code
+BATTLE.BIN,0x8015D3B4,new code,.word 0x77557907,jal 0x80183FB4,vanilla code
+BATTLE.BIN,0x8015D3C0,new code,.word 0x775F7755,j 0x8015D3E4,new code in BATTLE.BIN (0x8015D374+0x70)
+BATTLE.BIN,0x8015D3CC,new code,.word 0xDB7D77DC,jal 0x801810A0,vanilla code
+BATTLE.BIN,0x8015D454,new code,"beq t6, gp, 0x8015485C",jal 0x8005E254,vanilla code
+BATTLE.BIN,0x8015D460,new code,"sll zero, a0, 28",j 0x80185D40,vanilla code
+BATTLE.BIN,0x8015D4C8,new code,.word 0x04150000,j 0x8015D4B4,new code in BATTLE.BIN (0x8015D480+0x34)
+BATTLE.BIN,0x8015D4D4,new code,"bgtz t7, 0x8015F22C",j 0x80181A74,vanilla code
+BATTLE.BIN,0x8015D534,new code,.word 0x54550540,jal 0x80185328,vanilla code
+BATTLE.BIN,0x8015D74C,new code,"bne s0, ra, 0x80179C58",jal 0x80188510,vanilla code
+BATTLE.BIN,0x8015D75C,new code,.word 0xC003C777,jal 0x8015D5C0,new code in BATTLE.BIN (0x8015D5C0)
+BATTLE.BIN,0x8015D764,new code,.word 0x54550540,jal 0x8015D580,new code in BATTLE.BIN (0x8015D570+0x10)
+BATTLE.BIN,0x8015D76C,new code,.word 0xC0FF0D53,jal 0x80188744,vanilla code
+BATTLE.BIN,0x8015D774,new code,"xori s4, t2, 0x5505",jal 0x8018877C,vanilla code
+BATTLE.BIN,0x8015D784,new code,jal 0x88100000,jal 0x801870FC,vanilla code
+BATTLE.BIN,0x8015D7D8,new code,.word 0x77DF7747,jal 0x80187EB4,vanilla code
+BATTLE.BIN,0x8015D7E0,new code,.word 0x5BC95177,j 0x8015D88C,new code in BATTLE.BIN (0x8015D730+0x15C)
+BATTLE.BIN,0x8015D7E8,new code,jal 0x8C01B004,jal 0x80187248,vanilla code
+BATTLE.BIN,0x8015D7F0,new code,.word 0x54250104,j 0x8015D88C,new code in BATTLE.BIN (0x8015D730+0x15C)
+BATTLE.BIN,0x8015D7F8,new code,j 0x8A545400,jal 0x8018746C,vanilla code
+BATTLE.BIN,0x8015D800,new code,"blez t2, 0x80172C14",j 0x8015D88C,new code in BATTLE.BIN (0x8015D730+0x15C)
+BATTLE.BIN,0x8015D808,new code,.word 0x77C7D176,jal 0x80187350,vanilla code
+BATTLE.BIN,0x8015D810,new code,"sll zero, s0, 0",j 0x8015D7D8,new code in BATTLE.BIN (0x8015D730+0xA8)
+BATTLE.BIN,0x8015D818,new code,.word 0xC051F51F,j 0x80189B94,vanilla code
+BATTLE.BIN,0x8015D820,new code,.word 0x445577C0,j 0x80152DC0,new code in BATTLE.BIN (0x80152DC0)
+BATTLE.BIN,0x8015D840,new code,.word 0x7FCF4555,j 0x8015D88C,new code in BATTLE.BIN (0x8015D730+0x15C)
+BATTLE.BIN,0x8015D860,new code,.word 0xC155DC5F,j 0x8015D88C,new code in BATTLE.BIN (0x8015D730+0x15C)
+BATTLE.BIN,0x8015D884,new code,"bgezal t2, 0x80144C84",j 0x8015D88C,new code in BATTLE.BIN (0x8015D730+0x15C)
+BATTLE.BIN,0x8015D8F0,new code,"bne s6, t8, 0x801650B8",j 0x8015D8DC,new code in BATTLE.BIN (0x8015D730+0x1AC)
+BATTLE.BIN,0x8015D908,new code,.word 0xFCF70355,j 0x8017C870,vanilla code
+BATTLE.BIN,0x8015DA08,new code,"bgtz v1, 0x8014E8D0",j 0x80181AC4,vanilla code
+BATTLE.BIN,0x8015DA20,new code,"bgtz a3, 0x8015DE28",j 0x80181B1C,vanilla code
+BATTLE.BIN,0x8015DA28,new code,.word 0xC11D2BDC,j 0x801819D8,vanilla code
+BATTLE.BIN,0x8015DA54,new code,.word 0xFD1F5C55,j 0x8017C7A4,vanilla code
+BATTLE.BIN,0x8015DB60,new code,.word 0x5849F33F,j 0x8015DB94,new code in BATTLE.BIN (0x8015D940+0x254)
+BATTLE.BIN,0x8015DC18,new code,.word 0xC4F1375C,j 0x8015DC2C,new code in BATTLE.BIN (0x8015D940+0x2EC)
+BATTLE.BIN,0x8015DC7C,new code,.word 0xD5C1FD9D,j 0x8015DCE0,new code in BATTLE.BIN (0x8015D940+0x3A0)
+BATTLE.BIN,0x8015DD34,new code,"lwc2 $23, 5456(s3)",jal 0x8015E3D0,new code in BATTLE.BIN (0x8015E1A0+0x230)
+BATTLE.BIN,0x8015DD58,new code,"lhu s0, 1847(s1)",jal 0x8005E254,vanilla code
+BATTLE.BIN,0x8015DDA0,new code,"bgtz a1, 0x80155768",jal 0x8015DDB0,new code in BATTLE.BIN (0x8015DDA0+0x10)
+BATTLE.BIN,0x8015DDA8,new code,.word 0x00F0CC0F,j 0x8018361C,vanilla code
+BATTLE.BIN,0x8015DE0C,new code,.word 0xDF76772B,jal 0x8015DE40,new code in BATTLE.BIN (0x8015DE40)
+BATTLE.BIN,0x8015DE14,new code,.word 0x58410000,jal 0x80156300,new code in BATTLE.BIN (0x80156300)
+BATTLE.BIN,0x8015DE28,new code,.word 0x7A1C74C7,jal 0x8005E22C,vanilla code
+BATTLE.BIN,0x8015DE88,new code,"andi s7, t3, 0x3734",jal 0x8015E3D0,new code in BATTLE.BIN (0x8015E1A0+0x230)
+BATTLE.BIN,0x8015DE9C,new code,"sll zero, s0, 0",jal 0x8005E254,vanilla code
+BATTLE.BIN,0x8015DEAC,new code,.word 0x7DC59105,jal 0x8015EE80,new code in BATTLE.BIN (0x8015ED80+0x100)
+BATTLE.BIN,0x8015DF48,new code,.word 0x6CE5C1C1,j 0x8015DF80,new code in BATTLE.BIN (0x8015DF24+0x5C)
+BATTLE.BIN,0x8015DF78,new code,.word 0x04FD3FFC,jal 0x8015A280,new code in BATTLE.BIN (0x8015A100+0x180)
+BATTLE.BIN,0x8015DF94,new code,.word 0x000000F0,j 0x8015DF80,new code in BATTLE.BIN (0x8015DF24+0x5C)
+BATTLE.BIN,0x8015E000,new code,.word 0xC5010410,jal 0x8015A280,new code in BATTLE.BIN (0x8015A100+0x180)
+BATTLE.BIN,0x8015E0A4,new code,.word 0xF73FAB54,j 0x80182B6C,vanilla code
+BATTLE.BIN,0x8015E0B8,new code,.word 0x75070758,jal 0x8007A1D4,vanilla code
+BATTLE.BIN,0x8015E0C4,new code,.word 0xB7F67977,jal 0x8015EEC8,new code in BATTLE.BIN (0x8015EEC8)
+BATTLE.BIN,0x8015E0F8,new code,.word 0xDF7D5855,j 0x8018D68C,vanilla code
+BATTLE.BIN,0x8015E1AC,new code,.word 0xDF775455,jal 0x8015A280,new code in BATTLE.BIN (0x8015A100+0x180)
+BATTLE.BIN,0x8015E2A0,new code,.word 0x55DF7140,jal 0x8015E2B4,new code in BATTLE.BIN (0x8015E1A0+0x114)
+BATTLE.BIN,0x8015E2AC,new code,.word 0x47557D70,j 0x801836DC,vanilla code
+BATTLE.BIN,0x8015E340,new code,"lui a0, 0xF006",j 0x8015E350,new code in BATTLE.BIN (0x8015E1A0+0x1B0)
+BATTLE.BIN,0x8015E55C,new code,"bne t7, s7, 0x8015E364",j 0x8015E604,new code in BATTLE.BIN (0x8015E3F0+0x214)
+BATTLE.BIN,0x8015E5BC,new code,"mfc0 zero, $0",j 0x8015E62C,new code in BATTLE.BIN (0x8015E3F0+0x23C)
+BATTLE.BIN,0x8015E608,new code,"lui s5, 0x27C7",j 0x8015E62C,new code in BATTLE.BIN (0x8015E3F0+0x23C)
+BATTLE.BIN,0x8015E630,new code,.word 0x71C01DF7,jal 0x8015A280,new code in BATTLE.BIN (0x8015A100+0x180)
+BATTLE.BIN,0x8015E6AC,new code,"andi gp, at, 0xC7C7",jal 0x8005E22C,vanilla code
+BATTLE.BIN,0x8015E790,new code,.word 0x77177A57,jal 0x801529A0,new code in BATTLE.BIN (0x80152920+0x80)
+BATTLE.BIN,0x8015E8E8,new code,"ori zero, fp, 0x7A07",j 0x8019A9C8,vanilla code
+BATTLE.BIN,0x8015E8F0,new code,.word 0x5515DCFF,j 0x8019A9A0,vanilla code
+BATTLE.BIN,0x8015EA90,new code,.word 0x05775480,jal 0x8015EEC0,new code in BATTLE.BIN (0x8015ED80+0x140)
+BATTLE.BIN,0x8015EA98,new code,"bgtz k1, 0x8017C6B0",j 0x80073BE0,vanilla code
+BATTLE.BIN,0x8015EAC0,new code,.word 0x7D5455CA,jal 0x8015EEC0,new code in BATTLE.BIN (0x8015ED80+0x140)
+BATTLE.BIN,0x8015EAC8,new code,.word 0x00C0C330,j 0x8017D328,vanilla code
+BATTLE.BIN,0x8015EB04,new code,.word 0x55071070,jal 0x80183ACC,vanilla code
+BATTLE.BIN,0x8015EB0C,new code,.word 0xFF3F5455,j 0x80183888,vanilla code
+BATTLE.BIN,0x8015EB3C,new code,.word 0xC77783AE,j 0x80183B60,vanilla code
+BATTLE.BIN,0x8015EBAC,new code,.word 0x7755A046,j 0x80068474,vanilla code
+BATTLE.BIN,0x8015EBC0,new code,"bne t4, s5, 0x8015EBC4",j 0x80068460,vanilla code
+BATTLE.BIN,0x8015EBC8,new code,.word 0x7C7CC71A,j 0x8006844C,vanilla code
+BATTLE.BIN,0x8015EC54,new code,.word 0x60550200,j 0x8017C818,vanilla code
+BATTLE.BIN,0x8015EC5C,new code,.word 0xC056251C,jal 0x8005E22C,vanilla code
+BATTLE.BIN,0x8015EC68,new code,.word 0x5455C507,j 0x8017C880,vanilla code
+BATTLE.BIN,0x8015ECA0,new code,jal 0x8D6D5DC4,j 0x80082C80,vanilla code
+BATTLE.BIN,0x8015ECA8,new code,.word 0x5575F70D,j 0x80082C24,vanilla code
+BATTLE.BIN,0x8015ECCC,new code,.word 0x7090F0F7,j 0x801C739C,vanilla code
+BATTLE.BIN,0x8015ECEC,new code,.word 0x6A55DC7D,j 0x801C73C0,vanilla code
+BATTLE.BIN,0x8015ED54,new code,.word 0x775F7747,j 0x8015ED60,new code in BATTLE.BIN (0x8015EC80+0xE0)
+BATTLE.BIN,0x8015EDD0,new code,.word 0x50150910,j 0x801817A4,vanilla code
+BATTLE.BIN,0x8015EDD8,new code,cop1 0x55456C,j 0x8018179C,vanilla code
+BATTLE.BIN,0x8015EDE0,new code,"beq t6, gp, 0x80156CE4",j 0x8018178C,vanilla code
+BATTLE.BIN,0x8015EE34,new code,.word 0x000030F0,jal 0x80180210,vanilla code
+BATTLE.BIN,0x8015EE5C,new code,.word 0x54550504,j 0x800751AC,vanilla code
+BATTLE.BIN,0x8015EF44,new code,.word 0x7D37DC56,jal 0x8015EA40,new code in BATTLE.BIN (0x8015E820+0x220)
+BATTLE.BIN,0x8015EF4C,new code,"sll t8, zero, 0",jal 0x8015EAB0,new code in BATTLE.BIN (0x8015E820+0x290)
+BATTLE.BIN,0x8015EFA8,new code,.word 0x7F0FDBB6,jal 0x8019A5F8,vanilla code
+BATTLE.BIN,0x8015EFDC,new code,.word 0xC40D0411,jal 0x8019A5F8,vanilla code
+BATTLE.BIN,0x8015F000,new code,"ctc0 a3, $0",jal 0x8019A5F8,vanilla code
+BATTLE.BIN,0x8015F00C,new code,.word 0xFD1C6CD5,j 0x8019A4A4,vanilla code
+BATTLE.BIN,0x8015F08C,new code,.word 0x50700A04,j 0x8019A8A0,vanilla code
+BATTLE.BIN,0x8015F0A0,new code,.word 0x5775737F,j 0x8019A9DC,vanilla code
+BATTLE.BIN,0x8015F0C8,new code,.word 0x70B0F1F7,j 0x8019A61C,vanilla code
+BATTLE.BIN,0x8015F148,new code,.word 0x70650977,j 0x8015F188,new code in BATTLE.BIN (0x8015F100+0x88)
+BATTLE.BIN,0x8015F26C,new code,"lhu a1, -16329(zero)",jal 0x8015A280,new code in BATTLE.BIN (0x8015A100+0x180)
+BATTLE.BIN,0x8015F2A0,new code,.word 0x56255B79,j 0x8015F2BC,new code in BATTLE.BIN (0x8015F100+0x1BC)
+BATTLE.BIN,0x8015F340,new code,"sll t5, zero, 16",j 0x8015F35C,new code in BATTLE.BIN (0x8015F300+0x5C)
+BATTLE.BIN,0x8015F3F0,new code,.word 0xF0FF0F74,j 0x80186594,vanilla code
+BATTLE.BIN,0x8015F45C,new code,"sll zero, zero, 3",jal 0x8015E3D0,new code in BATTLE.BIN (0x8015E1A0+0x230)
+BATTLE.BIN,0x8015F4CC,new code,.word 0xF0F73754,jal 0x8005E7A8,vanilla code
+BATTLE.BIN,0x8015F504,new code,.word 0xDF769715,jal 0x8017C45C,vanilla code
+BATTLE.BIN,0x8015F50C,new code,.word 0x55440000,jal 0x8015E2B4,new code in BATTLE.BIN (0x8015E1A0+0x114)
+BATTLE.BIN,0x8015F5BC,new code,"sll zero, zero, 0",j 0x80185F98,vanilla code
+BATTLE.BIN,0x80160458,new code,.word 0x00033370,jal 0x8018EEA0,vanilla code
+BATTLE.BIN,0x80160480,new code,.word 0x05040400,jal 0x80150DF0,new code in BATTLE.BIN (0x80150DF0)
+BATTLE.BIN,0x801604D4,new code,.word 0x5555B055,jal 0x801843EC,vanilla code
+BATTLE.BIN,0x80160548,new code,.word 0xF5373C5B,j 0x80160554,new code in BATTLE.BIN (0x80160440+0x114)
+BATTLE.BIN,0x801605A4,new code,.word 0xDFC74595,j 0x8017D6D8,vanilla code
+BATTLE.BIN,0x801605D4,new code,.word 0xD1DD019C,j 0x801605EC,new code in BATTLE.BIN (0x801605B0+0x3C)
+BATTLE.BIN,0x801605E4,new code,.word 0xFCF33D55,jal 0x80179424,vanilla code
+BATTLE.BIN,0x80160690,new code,jal 0x8D402404,jal 0x8C7C03FC,vanilla code
+BATTLE.BIN,0x80160710,new code,"lhu a3, 16295(t6)",jal 0x8013B590,vanilla code
+BATTLE.BIN,0x80160780,new code,.word 0x000000F0,jal 0x80059F94,vanilla code
+BATTLE.BIN,0x801608A4,new code,.word 0xC5DD3FDC,jal 0x801C7288,vanilla code
+BATTLE.BIN,0x801608AC,new code,"lui gp, 0x5DC5",jal 0x80160800,new code in BATTLE.BIN (0x801606DC+0x124)
+BATTLE.BIN,0x801608C4,new code,.word 0x5C77F776,jal 0x8014BF54,vanilla code
+BATTLE.BIN,0x80160914,new code,.word 0xDCFFC155,j 0x801B02B4,vanilla code
+BATTLE.BIN,0x80160934,new code,.word 0x9D37707C,j 0x800808B0,vanilla code
+BATTLE.BIN,0x80160940,new code,.word 0xC5C771DD,j 0x800803F4,vanilla code
+BATTLE.BIN,0x8016094C,new code,.word 0x5670F700,jal 0x8007A1D4,vanilla code
+BATTLE.BIN,0x80160980,new code,.word 0x455576D0,jal 0x801A1880,vanilla code
+BATTLE.BIN,0x80160998,new code,.word 0x5577DC77,j 0x801B14B4,vanilla code
+BATTLE.BIN,0x80160A58,new code,.word 0x57C7DD7D,jal 0x801609A0,new code in BATTLE.BIN (0x80160890+0x110)
+BATTLE.BIN,0x80160A88,new code,.word 0x55397CC4,j 0x80160AA0,new code in BATTLE.BIN (0x80160890+0x210)
+BATTLE.BIN,0x80160ACC,new code,.word 0xF7DF4155,jal 0x8007A724,vanilla code
+BATTLE.BIN,0x80160AE8,new code,.word 0xF0FF3C57,jal 0x80183FB4,vanilla code
+BATTLE.BIN,0x80160B3C,new code,.word 0x5567F757,jal 0x80081B88,vanilla code
+BATTLE.BIN,0x80160B44,new code,.word 0xDFDD7755,jal 0x80082550,vanilla code
+BATTLE.BIN,0x80160B4C,new code,.word 0xD3AD7DDC,jal 0x80082508,vanilla code
+BATTLE.BIN,0x80160B6C,new code,.word 0xDDDD5695,j 0x80160B80,new code in BATTLE.BIN (0x80160AB0+0xD0)
+BATTLE.BIN,0x80160B84,new code,.word 0x55C7DF57,jal 0x80082468,vanilla code
+BATTLE.BIN,0x80160B98,new code,.word 0x00C0FF33,jal 0x80083570,vanilla code
+BATTLE.BIN,0x80160BA0,new code,.word 0x4515DFDF,jal 0x8008258C,vanilla code
+BATTLE.BIN,0x80160C18,new code,.word 0x6C02F0D9,jal 0x80070D18,vanilla code
+BATTLE.BIN,0x80160C40,new code,.word 0x4D6B7977,jal 0x8013B590,vanilla code
+BATTLE.BIN,0x80160C64,new code,.word 0x757F2557,j 0x80160D80,new code in BATTLE.BIN (0x80160CE0+0xA0)
+BATTLE.BIN,0x80160C6C,new code,.word 0x000000F0,j 0x8017F3F4,vanilla code
+BATTLE.BIN,0x80160C80,new code,.word 0x77A76947,jal 0x8013B590,vanilla code
+BATTLE.BIN,0x80160CA4,new code,"bgtz k1, 0x8017FE80",j 0x8017F584,vanilla code
+BATTLE.BIN,0x80160CB4,new code,j 0x84104000,jal 0x8013B644,vanilla code
+BATTLE.BIN,0x80160CBC,new code,"beq a2, t4, 0x8016D08C",j 0x801C3A88,vanilla code
+BATTLE.BIN,0x80160D2C,new code,.word 0x406E376C,j 0x80160D5C,new code in BATTLE.BIN (0x80160CE0+0x7C)
+BATTLE.BIN,0x80160D48,new code,.word 0x55DF7940,j 0x80160D5C,new code in BATTLE.BIN (0x80160CE0+0x7C)
+BATTLE.BIN,0x80160D9C,new code,"bgtz v1, 0x801511A4",jal 0x8005E644,vanilla code
+BATTLE.BIN,0x80160DA4,new code,.word 0xC0033F6C,j 0x80160C6C,new code in BATTLE.BIN (0x80160C00+0x6C)
+BATTLE.BIN,0x80160DE0,new code,"lb k0, 7644(t6)",j 0x801392B8,vanilla code
+BATTLE.BIN,0x80160DE8,new code,jal 0x83C77684,j 0x801C15FC,vanilla code
+BATTLE.BIN,0x80160DF0,new code,.word 0x55054000,j 0x801C15FC,vanilla code
+BATTLE.BIN,0x80160ED0,new code,.word 0x705F1557,j 0x80187C98,vanilla code
+BATTLE.BIN,0x80160ED8,new code,.word 0x7D57557A,j 0x80187C88,vanilla code
+BATTLE.BIN,0x80160F0C,new code,.word 0x41D51DDC,jal 0x8005E22C,vanilla code
+BATTLE.BIN,0x80160FF4,new code,.word 0x73CC71F7,jal 0x8018430C,vanilla code
+BATTLE.BIN,0x80160FFC,new code,"sll zero, s0, 16",j 0x8016100C,new code in BATTLE.BIN (0x80160F04+0x108)
+BATTLE.BIN,0x801610BC,new code,.word 0xFF754195,jal 0x801843EC,vanilla code
+BATTLE.BIN,0x8017433C,patched code,"lb t8, -19672(zero)",j 0x8018B340,vanilla code
+BATTLE.BIN,0x80174860,patched code,"lbu s0, 58(s1)",jal 0x80151800,new code in BATTLE.BIN (0x80151580+0x280)
+BATTLE.BIN,0x801749C8,patched code,nop,jal 0x8015A2D0,new code in BATTLE.BIN (0x8015A100+0x1D0)
+BATTLE.BIN,0x801749D4,patched code,"beq v0, zero, 0x801749E0",j 0x80152860,new code in BATTLE.BIN (0x80152860)
+BATTLE.BIN,0x80176984,patched code,"lui at, 0x8019",j 0x80176BD8,vanilla code
+BATTLE.BIN,0x80179934,patched code,"slti v0, t2, 3",jal 0x801605B0,new code in BATTLE.BIN (0x801605B0)
+BATTLE.BIN,0x80179B1C,patched code,jal 0x80179424,jal 0x801605B0,new code in BATTLE.BIN (0x801605B0)
+BATTLE.BIN,0x8017A31C,patched code,"lbu v0, 6(v0)",j 0x8017C000,vanilla code
+BATTLE.BIN,0x8017A45C,patched code,jal 0x8017A7BC,jal 0x8017BE68,vanilla code
+BATTLE.BIN,0x8017A7D8,patched code,"ori t3, zero, 0x1",jal 0x8005E22C,vanilla code
+BATTLE.BIN,0x8017A828,patched code,"sb t3, 1(v0)",j 0x8017A848,vanilla code
+BATTLE.BIN,0x8017A888,patched code,"beq v0, zero, 0x8017A8A8",jal 0x8017BEA8,vanilla code
+BATTLE.BIN,0x8017AB14,patched code,"lbu v1, 16(sp)",jal 0x8015EBD0,new code in BATTLE.BIN (0x8015E820+0x3B0)
+BATTLE.BIN,0x8017AD00,patched code,"addu at, at, v0",jal 0x8015D620,new code in BATTLE.BIN (0x8015D600+0x20)
+BATTLE.BIN,0x8017B2A0,patched code,jal 0x8017C158,jal 0x801503C0,new code in BATTLE.BIN (0x801503C0)
+BATTLE.BIN,0x8017B910,patched code,j 0x8017B964,j 0x8017C030,vanilla code
+BATTLE.BIN,0x8017BB40,patched code,"andi s0, s1, 0xC0",jal 0x8017A7BC,vanilla code
+BATTLE.BIN,0x8017BF7C,patched code,"slt v0, s4, s0",j 0x8017BF9C,vanilla code
+BATTLE.BIN,0x8017BF94,patched code,"addu a1, s1, zero",j 0x8017BFA0,vanilla code
+BATTLE.BIN,0x8017BFD8,patched code,"addu a0, zero, zero",j 0x8017BEA8,vanilla code
+BATTLE.BIN,0x8017C014,patched code,"slti v0, a0, 512",j 0x8017A324,vanilla code
+BATTLE.BIN,0x8017C030,patched code,"lw s1, 44(sp)",j 0x8017B964,vanilla code
+BATTLE.BIN,0x8017C358,patched code,nop,j 0x8017C370,vanilla code
+BATTLE.BIN,0x8017C3CC,patched code,"lw ra, 16(sp)",jal 0x8015DDB0,new code in BATTLE.BIN (0x8015DDA0+0x10)
+BATTLE.BIN,0x8017C3D4,patched code,jr ra,j 0x8015F500,new code in BATTLE.BIN (0x8015F400+0x100)
+BATTLE.BIN,0x8017C494,patched code,"lbu v1, 16(sp)",j 0x80151200,new code in BATTLE.BIN (0x80151000+0x200)
+BATTLE.BIN,0x8017C7B4,patched code,jal 0x8005E22C,jal 0x8015DE00,new code in BATTLE.BIN (0x8015DE00)
+BATTLE.BIN,0x8017C820,patched code,jal 0x8005E22C,jal 0x8015DE00,new code in BATTLE.BIN (0x8015DE00)
+BATTLE.BIN,0x8017C868,patched code,"addiu v0, s2, 1",j 0x8015D8B0,new code in BATTLE.BIN (0x8015D730+0x180)
+BATTLE.BIN,0x8017C878,patched code,nop,jal 0x8015E370,new code in BATTLE.BIN (0x8015E1A0+0x1D0)
+BATTLE.BIN,0x8017C888,patched code,"beq v0, zero, 0x8017C8D4",jal 0x8015E300,new code in BATTLE.BIN (0x8015E1A0+0x160)
+BATTLE.BIN,0x8017C8A8,patched code,"sb v0, 392(s3)",jal 0x8015E3F0,new code in BATTLE.BIN (0x8015E3F0)
+BATTLE.BIN,0x8017CABC,patched code,"lw s0, 16(sp)",jal 0x8015EEC0,new code in BATTLE.BIN (0x8015ED80+0x140)
+BATTLE.BIN,0x8017CAC4,patched code,jr ra,j 0x8015EF70,new code in BATTLE.BIN (0x8015EEC8+0xA8)
+BATTLE.BIN,0x8017CD4C,patched code,"addu s1, zero, zero",jal 0x8015D624,new code in BATTLE.BIN (0x8015D600+0x24)
+BATTLE.BIN,0x8017D120,patched code,jal 0x8017D410,jal 0x80187910,vanilla code
+BATTLE.BIN,0x8017D1B8,patched code,"ori v0, zero, 0x1",j 0x8017D328,vanilla code
+BATTLE.BIN,0x8017D1C0,patched code,"sb v0, 24(s1)",j 0x8017D328,vanilla code
+BATTLE.BIN,0x8017D450,patched code,"andi v0, v1, 0x8",jal 0x8017C954,vanilla code
+BATTLE.BIN,0x8017D4B8,patched code,"lui at, 0x8019",jal 0x8015DC40,new code in BATTLE.BIN (0x8015D940+0x300)
+BATTLE.BIN,0x8017D5D0,patched code,"lbu a1, 8(v0)",j 0x80152400,new code in BATTLE.BIN (0x80152400)
+BATTLE.BIN,0x8017D620,patched code,"addiu v0, v0, 1",j 0x8017D6EC,vanilla code
+BATTLE.BIN,0x8017D630,patched code,j 0x8017D6EC,j 0x80153680,new code in BATTLE.BIN (0x80153680)
+BATTLE.BIN,0x8017D6D0,patched code,"lbu v0, 14533(v0)",j 0x80151380,new code in BATTLE.BIN (0x80151380)
+BATTLE.BIN,0x8017D77C,patched code,jal 0x8002230C,j 0x80152A60,new code in BATTLE.BIN (0x80152A30+0x30)
+BATTLE.BIN,0x8017D788,patched code,mflo v1,jal 0x8002230C,vanilla code
+BATTLE.BIN,0x8017DA64,patched code,jal 0x8005E7A8,jal 0x8015F400,new code in BATTLE.BIN (0x8015F400)
+BATTLE.BIN,0x8017DB00,patched code,"addu a0, v1, v0",jal 0x8015D600,new code in BATTLE.BIN (0x8015D600)
+BATTLE.BIN,0x8017E360,patched code,jal 0x8017E780,jal 0x80150FC0,new code in BATTLE.BIN (0x80150DF0+0x1D0)
+BATTLE.BIN,0x8017E86C,patched code,"lbu v0, 88(s2)",jal 0x8015E150,new code in BATTLE.BIN (0x8015E0B0+0xA0)
+BATTLE.BIN,0x8017E954,patched code,"lbu v0, 5(s2)",jal 0x801516C8,new code in BATTLE.BIN (0x80151580+0x148)
+BATTLE.BIN,0x8017E998,patched code,"lbu v0, 144(s2)",jal 0x8017EA80,vanilla code
+BATTLE.BIN,0x8017EA28,patched code,"addiu v0, a1, -75",j 0x801525A0,new code in BATTLE.BIN (0x801525A0)
+BATTLE.BIN,0x8017EBB8,patched code,j 0x8017EBD0,j 0x8017EBCC,vanilla code
+BATTLE.BIN,0x8017F064,patched code,"andi v0, a1, 0x2",j 0x8017F078,vanilla code
+BATTLE.BIN,0x8017F3EC,patched code,"ori t0, zero, 0x10",j 0x80160C40,new code in BATTLE.BIN (0x80160C00+0x40)
+BATTLE.BIN,0x8017F57C,patched code,"addiu s2, s2, 1",j 0x80160C80,new code in BATTLE.BIN (0x80160C00+0x80)
+BATTLE.BIN,0x8017FE60,patched code,"lui v1, 0x800E",jal 0x8015A1D0,new code in BATTLE.BIN (0x8015A100+0xD0)
+BATTLE.BIN,0x8017FEE4,patched code,"addu at, at, v0",jal 0x8015DF20,new code in BATTLE.BIN (0x8015DE40+0xE0)
+BATTLE.BIN,0x8017FF00,patched code,"subu v0, v0, v1",jal 0x80156000,new code in BATTLE.BIN (0x80156000)
+BATTLE.BIN,0x8017FF0C,patched code,"lui at, 0x8019",jal 0x8015F300,new code in BATTLE.BIN (0x8015F300)
+BATTLE.BIN,0x801800A4,patched code,"lhu a2, 72(s2)",jal 0x8005E0CC,vanilla code
+BATTLE.BIN,0x801800B0,patched code,jal 0x801802C8,j 0x801804C4,vanilla code
+BATTLE.BIN,0x80180170,patched code,jr ra,j 0x80152920,new code in BATTLE.BIN (0x80152920)
+BATTLE.BIN,0x80180254,patched code,"srl a2, a2, 15",jal 0x801802C8,vanilla code
+BATTLE.BIN,0x80180264,patched code,"addu s1, v0, zero",jal 0x8013B590,vanilla code
+BATTLE.BIN,0x80180278,patched code,"lbu v0, 2(s1)",jal 0x8015C200,new code in BATTLE.BIN (0x8015C200)
+BATTLE.BIN,0x801803E0,patched code,jal 0x801804C4,jal 0x801804F0,vanilla code
+BATTLE.BIN,0x801804D8,patched code,"addu a0, a0, a1",jal 0x801802C8,vanilla code
+BATTLE.BIN,0x801804E4,patched code,"srav a0, v0, a0",j 0x801800B8,vanilla code
+BATTLE.BIN,0x80181174,patched code,nop,jal 0x8015DFA0,new code in BATTLE.BIN (0x8015DF24+0x7C)
+BATTLE.BIN,0x80181494,patched code,"ori v0, zero, 0x1",j 0x8015A100,new code in BATTLE.BIN (0x8015A100)
+BATTLE.BIN,0x801814B0,patched code,"sb a3, 0(s0)",jal 0x8015E260,new code in BATTLE.BIN (0x8015E1A0+0xC0)
+BATTLE.BIN,0x801814C0,patched code,"sb a1, 0(s0)",jal 0x8015E260,new code in BATTLE.BIN (0x8015E1A0+0xC0)
+BATTLE.BIN,0x801814D0,patched code,"sb v0, 0(s0)",j 0x8015A140,new code in BATTLE.BIN (0x8015A100+0x40)
+BATTLE.BIN,0x801814F0,patched code,"ori v0, zero, 0xFF",jal 0x8015A200,new code in BATTLE.BIN (0x8015A100+0x100)
+BATTLE.BIN,0x80181784,patched code,"bne t1, zero, 0x8018179C",j 0x8015ED80,new code in BATTLE.BIN (0x8015ED80)
+BATTLE.BIN,0x801818EC,patched code,"addiu v0, t1, -5",j 0x80152750,new code in BATTLE.BIN (0x80152750)
+BATTLE.BIN,0x80181900,patched code,"lbu v0, 184(sp)",j 0x8018193C,vanilla code
+BATTLE.BIN,0x8018199C,patched code,"lw t1, 256(sp)",jal 0x80150E20,new code in BATTLE.BIN (0x80150DF0+0x30)
+BATTLE.BIN,0x801819D0,patched code,"andi v0, v0, 0xFFFF",j 0x8015D9F8,new code in BATTLE.BIN (0x8015D940+0xB8)
+BATTLE.BIN,0x80181A18,patched code,"andi v0, v1, 0x4",jal 0x8015E1D0,new code in BATTLE.BIN (0x8015E1A0+0x30)
+BATTLE.BIN,0x80181A28,patched code,nop,j 0x80153C8C,new code in BATTLE.BIN (0x80153BCC+0xC0)
+BATTLE.BIN,0x80181A48,patched code,"lbu v0, 12(a0)",jal 0x8015D640,new code in BATTLE.BIN (0x8015D600+0x40)
+BATTLE.BIN,0x80181A6C,patched code,"lw t1, 240(sp)",j 0x8015D480,new code in BATTLE.BIN (0x8015D480)
+BATTLE.BIN,0x80181A8C,patched code,"addu a1, s0, zero",jal 0x8015E3B0,new code in BATTLE.BIN (0x8015E1A0+0x210)
+BATTLE.BIN,0x80181AA4,patched code,"sb s1, 0(s4)",jal 0x8015E820,new code in BATTLE.BIN (0x8015E820)
+BATTLE.BIN,0x80181AAC,patched code,j 0x80181AF0,j 0x80155F6C,new code in BATTLE.BIN (0x80155F00+0x6C)
+BATTLE.BIN,0x80181AB4,patched code,"addiu v0, a0, -406",j 0x80155F00,new code in BATTLE.BIN (0x80155F00)
+BATTLE.BIN,0x80182308,patched code,"beq a0, zero, 0x80182408",jal 0x801810D4,vanilla code
+BATTLE.BIN,0x80182318,patched code,"andi v0, v0, 0x2",jal 0x8018370C,vanilla code
+BATTLE.BIN,0x80182348,patched code,"addu v0, zero, zero",j 0x801823FC,vanilla code
+BATTLE.BIN,0x80182364,patched code,"beq v0, zero, 0x80182370",jal 0x80182430,vanilla code
+BATTLE.BIN,0x80182374,patched code,"andi a0, s5, 0xFF",jal 0x8005A568,vanilla code
+BATTLE.BIN,0x801823D4,patched code,nop,jal 0x80155E80,new code in BATTLE.BIN (0x80155E80)
+BATTLE.BIN,0x8018248C,patched code,"addu a3, s2, zero",jal 0x8018C968,vanilla code
+BATTLE.BIN,0x801824C4,patched code,"addu a0, s3, zero",j 0x801516A8,new code in BATTLE.BIN (0x80151580+0x128)
+BATTLE.BIN,0x801824DC,patched code,"addu v0, s0, v0",j 0x80182458,vanilla code
+BATTLE.BIN,0x801824E4,patched code,"lw ra, 44(sp)",j 0x80151680,new code in BATTLE.BIN (0x80151580+0x100)
+BATTLE.BIN,0x801825C0,patched code,jal 0x8018C968,jal 0x8005E1B0,vanilla code
+BATTLE.BIN,0x80182B64,patched code,"sb zero, 391(s1)",j 0x8015E018,new code in BATTLE.BIN (0x8015DF24+0xF4)
+BATTLE.BIN,0x80182BBC,patched code,"andi v0, v0, 0xF",jal 0x801832CC,vanilla code
+BATTLE.BIN,0x80182BD8,patched code,nop,jal 0x8015EA00,new code in BATTLE.BIN (0x8015E820+0x1E0)
+BATTLE.BIN,0x80182C18,patched code,"addu a0, s1, zero",jal 0x801832CC,vanilla code
+BATTLE.BIN,0x80182C40,patched code,"andi v0, v0, 0x1",jal 0x8005E778,vanilla code
+BATTLE.BIN,0x80182C4C,patched code,jal 0x8005E778,j 0x80182C60,vanilla code
+BATTLE.BIN,0x80182C6C,patched code,"sw v0, -2792(at)",j 0x80183044,vanilla code
+BATTLE.BIN,0x80183160,patched code,"beq v1, v0, 0x80183170",j 0x801582C4,new code in BATTLE.BIN (0x80158130+0x194)
+BATTLE.BIN,0x80183170,patched code,"andi v0, a1, 0x10",j 0x801581D8,new code in BATTLE.BIN (0x80158130+0xA8)
+BATTLE.BIN,0x801831FC,patched code,j 0x801832B4,j 0x801582C8,new code in BATTLE.BIN (0x80158130+0x198)
+BATTLE.BIN,0x80183568,patched code,"lbu a0, 16(v0)",jal 0x8015DEE0,new code in BATTLE.BIN (0x8015DE40+0xA0)
+BATTLE.BIN,0x801835A0,patched code,jr ra,j 0x8015EB50,new code in BATTLE.BIN (0x8015E820+0x330)
+BATTLE.BIN,0x80183614,patched code,"sw s6, 64(sp)",j 0x8015DDA0,new code in BATTLE.BIN (0x8015DDA0)
+BATTLE.BIN,0x80183694,patched code,"lbu a0, 394(s1)",jal 0x8015ED00,new code in BATTLE.BIN (0x8015EC80+0x80)
+BATTLE.BIN,0x801836D4,patched code,"addu v0, s0, zero",j 0x8015E2A0,new code in BATTLE.BIN (0x8015E1A0+0x100)
+BATTLE.BIN,0x80183878,patched code,"sll a2, s2, 8",jal 0x80183ACC,vanilla code
+BATTLE.BIN,0x80183880,patched code,jal 0x80183ACC,j 0x8015EAD0,new code in BATTLE.BIN (0x8015E820+0x2B0)
+BATTLE.BIN,0x8018389C,patched code,jal 0x8005E778,jal 0x80155700,new code in BATTLE.BIN (0x80155700)
+BATTLE.BIN,0x80183B5C,patched code,"addu v1, t5, zero",j 0x8015EB20,new code in BATTLE.BIN (0x8015E820+0x300)
+BATTLE.BIN,0x80183B78,patched code,"bne v0, zero, 0x80183B84",j 0x80183B9C,vanilla code
+BATTLE.BIN,0x80183C2C,patched code,"ori v0, zero, 0x1",jal 0x8015F100,new code in BATTLE.BIN (0x8015F100)
+BATTLE.BIN,0x80183C9C,patched code,"lbu v0, 390(a3)",j 0x80159C04,new code in BATTLE.BIN (0x80158840+0x13C4)
+BATTLE.BIN,0x80183CD4,patched code,"bne a1, zero, 0x80183CE0",j 0x801528A0,new code in BATTLE.BIN (0x80152860+0x40)
+BATTLE.BIN,0x80183D1C,patched code,jal 0x8018130C,j 0x80151B80,vanilla code
+BATTLE.BIN,0x80183DE8,patched code,jal 0x8005E7A8,jal 0x8015F400,new code in BATTLE.BIN (0x8015F400)
+BATTLE.BIN,0x801844D4,patched code,"addu a0, zero, zero",j 0x80184500,vanilla code
+BATTLE.BIN,0x801844E0,patched code,jal 0x80184610,j 0x80184500,vanilla code
+BATTLE.BIN,0x801844F0,patched code,nop,j 0x80184500,vanilla code
+BATTLE.BIN,0x80184504,patched code,"sll v0, s2, 8",jal 0x80184610,vanilla code
+BATTLE.BIN,0x801845A0,patched code,nop,jal 0x8017F020,vanilla code
+BATTLE.BIN,0x80184A10,patched code,"andi v0, a1, 0xC0",j 0x80184A20,vanilla code
+BATTLE.BIN,0x801852EC,patched code,"addiu sp, sp, -24",jal 0x80155E1C,new code in BATTLE.BIN (0x80155D20+0xFC)
+BATTLE.BIN,0x801852F4,patched code,"lbu v0, 144(v0)",jal 0x80155E40,new code in BATTLE.BIN (0x80155D20+0x120)
+BATTLE.BIN,0x8018543C,patched code,"lbu v0, 88(a1)",j 0x80185460,vanilla code
+BATTLE.BIN,0x80185504,patched code,"lui a0, 0x8019",jal 0x80185588,vanilla code
+BATTLE.BIN,0x8018553C,patched code,"addu v0, a3, zero",j 0x80185570,vanilla code
+BATTLE.BIN,0x8018556C,patched code,"bne v1, v0, 0x8018557C",j 0x80185578,vanilla code
+BATTLE.BIN,0x801855E4,patched code,"bne v1, zero, 0x801855F4",j 0x80185600,vanilla code
+BATTLE.BIN,0x80185654,patched code,nop,j 0x80185618,vanilla code
+BATTLE.BIN,0x80185664,patched code,"lw v0, 11672(v0)",j 0x8018571C,vanilla code
+BATTLE.BIN,0x80185700,patched code,"beq v0, zero, 0x80185710",j 0x8018571C,vanilla code
+BATTLE.BIN,0x80185830,patched code,"lui v0, 0x8019",jal 0x8015D680,new code in BATTLE.BIN (0x8015D680)
+BATTLE.BIN,0x80185B3C,patched code,"lui at, 0x8019",j 0x80185C3C,vanilla code
+BATTLE.BIN,0x80185B44,patched code,"ori v0, zero, 0x3",j 0x80185C38,vanilla code
+BATTLE.BIN,0x80185B4C,patched code,"ori v0, zero, 0xB",j 0x80185C38,vanilla code
+BATTLE.BIN,0x80185B54,patched code,"ori v0, zero, 0x7",j 0x80185C38,vanilla code
+BATTLE.BIN,0x80185B5C,patched code,"ori v0, zero, 0xF",j 0x80185C30,vanilla code
+BATTLE.BIN,0x80185B64,patched code,"addiu v0, a0, -1",j 0x80185C30,vanilla code
+BATTLE.BIN,0x80185B6C,patched code,"sh s0, 14542(at)",jal 0x8018EEA0,vanilla code
+BATTLE.BIN,0x80185B98,patched code,"lw v0, 11668(v0)",j 0x80185C34,vanilla code
+BATTLE.BIN,0x80185BAC,patched code,"sltiu v0, v0, 2",j 0x80185B38,vanilla code
+BATTLE.BIN,0x80185BC4,patched code,"mult v1, v0",j 0x80185C34,vanilla code
+BATTLE.BIN,0x80185BD4,patched code,"subu v1, v0, v1",j 0x80185C34,vanilla code
+BATTLE.BIN,0x80185C04,patched code,"ori v0, zero, 0x6",j 0x80185C34,vanilla code
+BATTLE.BIN,0x80185C28,patched code,"bne v1, v0, 0x80185C58",j 0x80185C34,vanilla code
+BATTLE.BIN,0x80185D78,patched code,jr ra,j 0x80152DA0,vanilla code
+BATTLE.BIN,0x80185F38,patched code,"lui a0, 0x8019",j 0x80185F48,vanilla code
+BATTLE.BIN,0x80185F48,patched code,"sra v0, v0, 5",jal 0x80186054,vanilla code
+BATTLE.BIN,0x80185F68,patched code,"lui v0, 0x8019",j 0x8018B824,vanilla code
+BATTLE.BIN,0x80185F90,patched code,"lhu a0, 0(v0)",j 0x8015F540,new code in BATTLE.BIN (0x8015F540)
+BATTLE.BIN,0x801862E4,patched code,"beq v0, zero, 0x80186314",jal 0x80151580,new code in BATTLE.BIN (0x80151580)
+BATTLE.BIN,0x80186300,patched code,"mult v1, v0",jal 0x80151640,new code in BATTLE.BIN (0x80151580+0xC0)
+BATTLE.BIN,0x80186334,patched code,"beq v0, zero, 0x80186364",jal 0x80151580,new code in BATTLE.BIN (0x80151580)
+BATTLE.BIN,0x80186350,patched code,"mult v1, v0",jal 0x80151640,new code in BATTLE.BIN (0x80151580+0xC0)
+BATTLE.BIN,0x80186510,patched code,"ori v1, zero, 0x1",jal 0x8018EED8,vanilla code
+BATTLE.BIN,0x80186520,patched code,"sb v1, 1(v0)",jal 0x80151840,new code in BATTLE.BIN (0x80151840)
+BATTLE.BIN,0x80186528,patched code,"addiu a0, a0, 14542",j 0x80160440,new code in BATTLE.BIN (0x80160440)
+BATTLE.BIN,0x80186530,patched code,nop,j 0x80160440,new code in BATTLE.BIN (0x80160440)
+BATTLE.BIN,0x80186580,patched code,"lui v1, 0x8019",j 0x80158300,new code in BATTLE.BIN (0x80158300)
+BATTLE.BIN,0x8018658C,patched code,"sb v0, 37(v1)",j 0x8015F380,new code in BATTLE.BIN (0x8015F380)
+BATTLE.BIN,0x80186594,patched code,jr ra,j 0x80160E00,new code in BATTLE.BIN (0x80160CE0+0x120)
+BATTLE.BIN,0x80186960,patched code,"lui a0, 0x8019",jal 0x80186568,vanilla code
+BATTLE.BIN,0x8018697C,patched code,"bne v1, zero, 0x801869DC",jal 0x8018EEA0,vanilla code
+BATTLE.BIN,0x801869B8,patched code,"lw v0, 11672(v0)",jal 0x8018EED8,vanilla code
+BATTLE.BIN,0x801869CC,patched code,"bne v0, zero, 0x801869DC",jal 0x801843EC,vanilla code
+BATTLE.BIN,0x80186A68,patched code,"addu v0, v0, v1",jal 0x80186CA4,vanilla code
+BATTLE.BIN,0x80186A70,patched code,"ori v0, zero, 0x40",j 0x80186AF4,vanilla code
+BATTLE.BIN,0x80186A78,patched code,"sb v0, 37(a0)",jal 0x80186568,vanilla code
+BATTLE.BIN,0x80186AE4,patched code,"sb v0, 37(v1)",j 0x80186AF4,vanilla code
+BATTLE.BIN,0x80186AEC,patched code,"addiu sp, sp, 24",jal 0x80187F24,vanilla code
+BATTLE.BIN,0x80186B74,patched code,"addu v0, v0, v1",jal 0x80186CA4,vanilla code
+BATTLE.BIN,0x80186B7C,patched code,"ori v0, zero, 0x80",jal 0x80186568,vanilla code
+BATTLE.BIN,0x80186BE8,patched code,"lw v1, 11664(v1)",j 0x80186BF8,vanilla code
+BATTLE.BIN,0x80186BF0,patched code,"sb v0, 37(v1)",jal 0x80187F24,vanilla code
+BATTLE.BIN,0x80186C28,patched code,"addu at, at, v0",jal 0x80186CA4,vanilla code
+BATTLE.BIN,0x80186C30,patched code,nop,j 0x80186C64,vanilla code
+BATTLE.BIN,0x80186C40,patched code,nop,jal 0x80186744,vanilla code
+BATTLE.BIN,0x80186C54,patched code,"ori v0, zero, 0x7F",j 0x80186C64,vanilla code
+BATTLE.BIN,0x80186C5C,patched code,"sb v0, 19(v1)",jal 0x80187F24,vanilla code
+BATTLE.BIN,0x80186CD0,patched code,jal 0x80187F24,j 0x80186CF8,vanilla code
+BATTLE.BIN,0x80186D8C,patched code,"lw v0, 11664(v0)",jal 0x8015E7D0,new code in BATTLE.BIN (0x8015E780+0x50)
+BATTLE.BIN,0x80186D94,patched code,"sb v1, 21(v0)",j 0x80186DAC,vanilla code
+BATTLE.BIN,0x80186DB4,patched code,jr ra,j 0x8018BAF8,vanilla code
+BATTLE.BIN,0x80186E10,patched code,"lh v0, 4(v0)",j 0x80187EB4,vanilla code
+BATTLE.BIN,0x801873BC,patched code,"sh v0, 6(v1)",j 0x80150340,new code in BATTLE.BIN (0x801502C0+0x80)
+BATTLE.BIN,0x801877EC,patched code,"lui a1, 0x8019",j 0x80155C90,new code in BATTLE.BIN (0x80155BCC+0xC4)
+BATTLE.BIN,0x8018787C,patched code,"lui v0, 0x8019",jal 0x801869EC,vanilla code
+BATTLE.BIN,0x80187884,patched code,"lui v1, 0x8019",j 0x8018788C,vanilla code
+BATTLE.BIN,0x801878A8,patched code,"lui v0, 0x8019",j 0x801878BC,vanilla code
+BATTLE.BIN,0x80187970,patched code,"lw v0, -2564(v0)",jal 0x8005E0CC,vanilla code
+BATTLE.BIN,0x80187988,patched code,jal 0x8005E0CC,j 0x80187998,vanilla code
+BATTLE.BIN,0x80187990,patched code,"beq v0, zero, 0x801879A8",jal 0x8017D410,vanilla code
+BATTLE.BIN,0x80187C80,patched code,j 0x80187C98,j 0x80160E80,new code in BATTLE.BIN (0x80160CE0+0x1A0)
+BATTLE.BIN,0x80187F3C,patched code,"sw s1, 180(sp)",j 0x8015C700,new code in BATTLE.BIN (0x8015C700)
+BATTLE.BIN,0x80188318,patched code,"lui a1, 0x8019",jal 0x8018CE88,vanilla code
+BATTLE.BIN,0x80188338,patched code,"lbu v1, 36(a1)",jal 0x80152800,new code in BATTLE.BIN (0x80152750+0xB0)
+BATTLE.BIN,0x80188374,patched code,"lui v0, 0x8019",j 0x8018B218,vanilla code
+BATTLE.BIN,0x8018837C,patched code,nop,j 0x8018B204,vanilla code
+BATTLE.BIN,0x80188528,patched code,jal 0x80185328,jal 0x8015D500,new code in BATTLE.BIN (0x8015D500)
+BATTLE.BIN,0x80188BC4,patched code,"bne v0, zero, 0x80188BD4",jal 0x801884C0,vanilla code
+BATTLE.BIN,0x80188BD4,patched code,"lw ra, 16(sp)",jal 0x801876E4,vanilla code
+BATTLE.BIN,0x80188BDC,patched code,jr ra,j 0x8015C530,new code in BATTLE.BIN (0x8015C530)
+BATTLE.BIN,0x80188BE8,patched code,"lbu v0, 14594(v0)",jal 0x80185588,vanilla code
+BATTLE.BIN,0x80188C00,patched code,"sh v0, 14544(at)",jal 0x80185F80,vanilla code
+BATTLE.BIN,0x80188C08,patched code,nop,jal 0x801886A4,vanilla code
+BATTLE.BIN,0x80188CA8,patched code,nop,jal 0x8005E22C,vanilla code
+BATTLE.BIN,0x80188CB0,patched code,nop,jal 0x8015E780,new code in BATTLE.BIN (0x8015E780)
+BATTLE.BIN,0x80188CC0,patched code,nop,jal 0x80161080,new code in BATTLE.BIN (0x80161080)
+BATTLE.BIN,0x80188CC8,patched code,nop,jal 0x801529A0,new code in BATTLE.BIN (0x80152920+0x80)
+BATTLE.BIN,0x80188CD8,patched code,nop,jal 0x80187EB4,vanilla code
+BATTLE.BIN,0x80189124,patched code,jr ra,j 0x80152DC0,new code in BATTLE.BIN (0x80152DC0)
+BATTLE.BIN,0x801891E8,patched code,"lw v1, 11664(v1)",jal 0x80187638,vanilla code
+BATTLE.BIN,0x8018929C,patched code,jr ra,j 0x80152A30,new code in BATTLE.BIN (0x80152A30)
+BATTLE.BIN,0x801892C4,patched code,jal 0x80185C94,jal 0x80185D80,vanilla code
+BATTLE.BIN,0x80189334,patched code,jr ra,j 0x8018BAE8,vanilla code
+BATTLE.BIN,0x801893D0,patched code,jr ra,j 0x8018BAE8,vanilla code
+BATTLE.BIN,0x80189414,patched code,jal 0x80185A9C,jal 0x80185E04,vanilla code
+BATTLE.BIN,0x8018941C,patched code,jal 0x80186AF8,jal 0x801869EC,vanilla code
+BATTLE.BIN,0x8018942C,patched code,jr ra,j 0x8018BAE8,vanilla code
+BATTLE.BIN,0x80189454,patched code,"lw ra, 16(sp)",j 0x80152B90,new code in BATTLE.BIN (0x80152A30+0x160)
+BATTLE.BIN,0x8018945C,patched code,jr ra,j 0x801895AC,vanilla code
+BATTLE.BIN,0x80189614,patched code,"lui v1, 0x8019",jal 0x80186568,vanilla code
+BATTLE.BIN,0x801896CC,patched code,jal 0x80185D40,jal 0x8015D374,new code in BATTLE.BIN (0x8015D374)
+BATTLE.BIN,0x801896F8,patched code,nop,jal 0x801879C8,vanilla code
+BATTLE.BIN,0x80189710,patched code,nop,jal 0x8018AD58,vanilla code
+BATTLE.BIN,0x80189718,patched code,nop,j 0x80189784,vanilla code
+BATTLE.BIN,0x80189720,patched code,"sb zero, 14569(at)",jal 0x80188510,vanilla code
+BATTLE.BIN,0x80189730,patched code,nop,jal 0x80185E5C,vanilla code
+BATTLE.BIN,0x80189738,patched code,nop,jal 0x80150DF0,new code in BATTLE.BIN (0x80150DF0)
+BATTLE.BIN,0x80189740,patched code,nop,j 0x80151940,new code in BATTLE.BIN (0x80151840+0x100)
+BATTLE.BIN,0x80189748,patched code,nop,jal 0x801886D4,vanilla code
+BATTLE.BIN,0x80189758,patched code,"sh zero, 16(v0)",j 0x80189784,vanilla code
+BATTLE.BIN,0x80189760,patched code,nop,jal 0x80187638,vanilla code
+BATTLE.BIN,0x8018977C,patched code,"ori v0, zero, 0x4",jal 0x801843EC,vanilla code
+BATTLE.BIN,0x8018978C,patched code,jr ra,j 0x8018BAF8,vanilla code
+BATTLE.BIN,0x801897D8,patched code,jal 0x80185E30,jal 0x80189828,vanilla code
+BATTLE.BIN,0x80189820,patched code,jr ra,j 0x8018BAF8,vanilla code
+BATTLE.BIN,0x80189888,patched code,jal 0x80185E30,jal 0x80189828,vanilla code
+BATTLE.BIN,0x80189A88,patched code,jr ra,j 0x8018BAE8,vanilla code
+BATTLE.BIN,0x80189AA8,patched code,jal 0x80185E04,jal 0x80185DAC,vanilla code
+BATTLE.BIN,0x80189AC0,patched code,jal 0x80187860,jal 0x80186C04,vanilla code
+BATTLE.BIN,0x80189AD0,patched code,jr ra,j 0x8018BAE8,vanilla code
+BATTLE.BIN,0x80189AE0,patched code,jal 0x80188510,jal 0x801529C0,new code in BATTLE.BIN (0x801529C0)
+BATTLE.BIN,0x80189B20,patched code,"addiu sp, sp, -24",jal 0x80188510,vanilla code
+BATTLE.BIN,0x80189B30,patched code,"bne v0, zero, 0x80189B84",jal 0x80185E5C,vanilla code
+BATTLE.BIN,0x80189B38,patched code,jal 0x80185E5C,jal 0x80185FA4,vanilla code
+BATTLE.BIN,0x80189B40,patched code,jal 0x80185FA4,jal 0x801886A4,vanilla code
+BATTLE.BIN,0x80189B48,patched code,jal 0x801886A4,jal 0x80186FD0,vanilla code
+BATTLE.BIN,0x80189B6C,patched code,"beq v0, zero, 0x80189B84",jal 0x801870FC,vanilla code
+BATTLE.BIN,0x80189B74,patched code,jal 0x801870FC,jal 0x80187EB4,vanilla code
+BATTLE.BIN,0x80189B7C,patched code,jal 0x80187EB4,j 0x8015D2A4,new code in BATTLE.BIN (0x8015D200+0xA4)
+BATTLE.BIN,0x80189BE0,patched code,"lui v1, 0x8019",j 0x80189BF8,vanilla code
+BATTLE.BIN,0x80189C48,patched code,jr ra,j 0x8018BAF8,vanilla code
+BATTLE.BIN,0x80189DEC,patched code,"lw a0, 11664(a0)",jal 0x80186568,vanilla code
+BATTLE.BIN,0x8018A0DC,patched code,nop,jal 0x80155A40,new code in BATTLE.BIN (0x80155A40)
+BATTLE.BIN,0x8018A194,patched code,"lui v1, 0x8019",jal 0x80186568,vanilla code
+BATTLE.BIN,0x8018A1F4,patched code,"sb v1, 37(v0)",jal 0x80187EB4,vanilla code
+BATTLE.BIN,0x8018A258,patched code,"addiu sp, sp, -24",jal 0x80188288,vanilla code
+BATTLE.BIN,0x8018A260,patched code,"sll v0, v1, 1",jal 0x80187350,vanilla code
+BATTLE.BIN,0x8018A280,patched code,"lui v1, 0x8019",jal 0x80188288,vanilla code
+BATTLE.BIN,0x8018A32C,patched code,"lhu v0, 40(a0)",jal 0x8018EEA0,vanilla code
+BATTLE.BIN,0x8018A36C,patched code,"lw v1, 11664(v1)",jal 0x80187350,vanilla code
+BATTLE.BIN,0x8018A6A0,patched code,jal 0x801885B8,jal 0x80188510,vanilla code
+BATTLE.BIN,0x8018A82C,patched code,jal 0x80185D80,jal 0x801885B8,vanilla code
+BATTLE.BIN,0x8018A83C,patched code,jal 0x80186204,jal 0x80185D80,vanilla code
+BATTLE.BIN,0x8018A844,patched code,jal 0x80184964,jal 0x80185FFC,vanilla code
+BATTLE.BIN,0x8018A84C,patched code,jal 0x8018659C,jal 0x80186204,vanilla code
+BATTLE.BIN,0x8018A854,patched code,jal 0x80187510,jal 0x80184964,vanilla code
+BATTLE.BIN,0x8018A85C,patched code,"lui a0, 0x8019",jal 0x8018659C,vanilla code
+BATTLE.BIN,0x8018A864,patched code,nop,jal 0x80187510,vanilla code
+BATTLE.BIN,0x8018A880,patched code,nop,j 0x8015D300,new code in BATTLE.BIN (0x8015D300)
+BATTLE.BIN,0x8018A8CC,patched code,"addiu v0, v0, 126",j 0x8018A8DC,vanilla code
+BATTLE.BIN,0x8018A8D4,patched code,"sltiu v0, v0, 3",jal 0x8018430C,vanilla code
+BATTLE.BIN,0x8018AD98,patched code,"lhu s0, 368(v1)",jal 0x8018B34C,vanilla code
+BATTLE.BIN,0x8018AE94,patched code,"lbu v1, 0(a2)",j 0x801581A0,new code in BATTLE.BIN (0x80158130+0x70)
+BATTLE.BIN,0x8018AEF4,patched code,nop,jal 0x801580A0,new code in BATTLE.BIN (0x801580A0)
+BATTLE.BIN,0x8018AFB8,patched code,"beq v0, zero, 0x8018B204",j 0x80188360,vanilla code
+BATTLE.BIN,0x8018B2A4,patched code,"lui at, 0x8006",j 0x8018B340,vanilla code
+BATTLE.BIN,0x8018B2BC,patched code,"sll v0, v1, 2",j 0x8018B2F4,vanilla code
+BATTLE.BIN,0x8018B2C4,patched code,"addu at, at, v0",j 0x8018B2F4,vanilla code
+BATTLE.BIN,0x8018B2EC,patched code,"subu v0, v0, a0",j 0x8018B2C4,vanilla code
+BATTLE.BIN,0x8018B304,patched code,"andi v0, v0, 0x24",j 0x8018B344,vanilla code
+BATTLE.BIN,0x8018B338,patched code,"addu a1, zero, zero",j 0x80174304,vanilla code
+BATTLE.BIN,0x8018B46C,patched code,"andi v0, v0, 0x3F",jal 0x80152D00,new code in BATTLE.BIN (0x80152D00)
+BATTLE.BIN,0x8018B7DC,patched code,j 0x8018B8BC,j 0x80185F60,vanilla code
+BATTLE.BIN,0x8018B814,patched code,"sb v0, 14564(at)",jal 0x8015E660,new code in BATTLE.BIN (0x8015E3F0+0x270)
+BATTLE.BIN,0x8018B928,patched code,jal 0x8018B9F8,jal 0x8015C500,vanilla code
+BATTLE.BIN,0x8018B974,patched code,jalr v0,jal 0x80160F00,new code in BATTLE.BIN (0x80160F00)
+BATTLE.BIN,0x8018BAB8,patched code,"andi v0, v0, 0x80",j 0x8018BB60,vanilla code
+BATTLE.BIN,0x8018BB24,patched code,jal 0x8018ADF4,jal 0x80152480,new code in BATTLE.BIN (0x80152480)
+BATTLE.BIN,0x8018BB80,patched code,"lui v1, 0x8019",j 0x8018BB98,vanilla code
+BATTLE.BIN,0x8018C324,patched code,nop,jal 0x80158130,new code in BATTLE.BIN (0x80158130)
+BATTLE.BIN,0x8018C700,patched code,"addu at, at, v0",jal 0x8005E0CC,vanilla code
+BATTLE.BIN,0x8018C984,patched code,j 0x8018C990,j 0x8015D2C0,new code in BATTLE.BIN (0x8015D200+0xC0)
+BATTLE.BIN,0x8018CA10,patched code,"lw a0, 11672(a0)",jal 0x8018C9A0,vanilla code
+BATTLE.BIN,0x8018CBF0,patched code,"ori a0, zero, 0x1B6",j 0x8018CC1C,vanilla code
+BATTLE.BIN,0x8018CDF4,patched code,"lw ra, 16(sp)",j 0x80188320,vanilla code
+BATTLE.BIN,0x8018CDFC,patched code,jr ra,j 0x801882F8,vanilla code
+BATTLE.BIN,0x8018CE50,patched code,nop,jal 0x8018D384,vanilla code
+BATTLE.BIN,0x8018CF88,patched code,"sw s0, 16(sp)",j 0x80150F00,new code in BATTLE.BIN (0x80150DF0+0x110)
+BATTLE.BIN,0x8018CFB0,patched code,nop,jal 0x8018D384,vanilla code
+BATTLE.BIN,0x8018D074,patched code,"lbu v1, 36(a0)",jal 0x80152800,new code in BATTLE.BIN (0x80152750+0xB0)
+BATTLE.BIN,0x8018D138,patched code,"lui a0, 0x8019",jal 0x80152800,new code in BATTLE.BIN (0x80152750+0xB0)
+BATTLE.BIN,0x8018D39C,patched code,jal 0x8005E0CC,jal 0x80152800,new code in BATTLE.BIN (0x80152750+0xB0)
+BATTLE.BIN,0x8018D3A8,patched code,nop,jal 0x8005E0CC,vanilla code
+BATTLE.BIN,0x8018D498,patched code,"addiu s0, s0, 1",j 0x8018D4A8,vanilla code
+BATTLE.BIN,0x8018D4CC,patched code,jal 0x8005D5E0,jal 0x8018E9E8,vanilla code
+BATTLE.BIN,0x8018D500,patched code,nop,jal 0x8005D5E0,vanilla code
+BATTLE.BIN,0x8018D550,patched code,"addu v0, zero, zero",j 0x8018D55C,vanilla code
+BATTLE.BIN,0x8018D564,patched code,"addiu sp, sp, 32",j 0x80150CA0,new code in BATTLE.BIN (0x80150B9C+0x104)
+BATTLE.BIN,0x8018D81C,patched code,"andi v0, v1, 0x40",j 0x8018D834,vanilla code
+BATTLE.BIN,0x8018D850,patched code,"lbu v0, 37(v0)",j 0x80150E48,new code in BATTLE.BIN (0x80150DF0+0x58)
+BATTLE.BIN,0x8018D858,patched code,"lw s0, 16(sp)",j 0x80150E6C,new code in BATTLE.BIN (0x80150DF0+0x7C)
+BATTLE.BIN,0x8018DD90,patched code,jal 0x80180134,jal 0x8005E1B0,vanilla code
+BATTLE.BIN,0x8018DDA0,patched code,"beq v0, zero, 0x8018DDDC",jal 0x80180134,vanilla code
+BATTLE.BIN,0x8018DDB4,patched code,"addiu v0, v0, 9",jal 0x80152960,new code in BATTLE.BIN (0x80152920+0x40)
+BATTLE.BIN,0x8018DE4C,patched code,"lbu v0, 144(v0)",jal 0x8017F0EC,vanilla code
+BATTLE.BIN,0x8018DEA0,patched code,nop,jal 0x8017F0EC,vanilla code
+BATTLE.BIN,0x8018E164,patched code,"sb v0, 349(v1)",jal 0x8015E9C0,new code in BATTLE.BIN (0x8015E820+0x1A0)
+BATTLE.BIN,0x8018E860,patched code,"bne v0, zero, 0x8018E7F0",j 0x8015A004,new code in BATTLE.BIN (0x8015A000+0x4)
+BATTLE.BIN,0x8018E8C8,patched code,"lbu a2, 3(a0)",j 0x8015A068,new code in BATTLE.BIN (0x8015A000+0x68)
+BATTLE.BIN,0x80195CD0,patched code,"lbu v0, 6008(v0)",j 0x80195CE8,vanilla code
+BATTLE.BIN,0x80196D64,patched code,"beq v0, zero, 0x80196DA4",j 0x80196DA4,vanilla code
+BATTLE.BIN,0x8019A490,patched code,"addu a0, s3, zero",j 0x8015EFA0,new code in BATTLE.BIN (0x8015EEC8+0xD8)
+BATTLE.BIN,0x8019A614,patched code,"sw ra, 68(sp)",j 0x8015F0B0,new code in BATTLE.BIN (0x8015F020+0x90)
+BATTLE.BIN,0x8019A890,patched code,"lbu v0, 144(s5)",j 0x8015F020,new code in BATTLE.BIN (0x8015F020)
+BATTLE.BIN,0x8019A900,patched code,"andi v0, v1, 0x8",j 0x80153BCC,new code in BATTLE.BIN (0x80153BCC)
+BATTLE.BIN,0x8019A998,patched code,"slti v0, s2, 399",j 0x8015E8DC,new code in BATTLE.BIN (0x8015E820+0xBC)
+BATTLE.BIN,0x8019AA88,patched code,nop,j 0x8019AAC0,vanilla code
+BATTLE.BIN,0x8019AAAC,patched code,"beq a1, v0, 0x8019AAC0",j 0x8019AAC0,vanilla code
+BATTLE.BIN,0x8019B610,patched code,"lbu v1, 71(s0)",j 0x8019B68C,vanilla code
+BATTLE.BIN,0x801AF8CC,patched code,"addu s3, a2, zero",jal 0x80150408,new code in BATTLE.BIN (0x801503C0+0x48)
+BATTLE.BIN,0x801AFA98,patched code,"lw a0, 196(a3)",jal 0x80155A90,new code in BATTLE.BIN (0x80155A40+0x50)
+BATTLE.BIN,0x801AFF94,patched code,j 0x801AFFA0,j 0x80155900,new code in BATTLE.BIN (0x80155900)
+BATTLE.BIN,0x801B02AC,patched code,"andi v1, v1, 0x30",j 0x80160900,new code in BATTLE.BIN (0x80160890+0x70)
+BATTLE.BIN,0x801B14AC,patched code,"lui v1, 0x801C",j 0x8016094C,new code in BATTLE.BIN (0x80160890+0xBC)
+EVENT/OPTION.OUT,0x801C1658,patched code,"sb v0, 0(s0)",j 0x80160DB0,new code in BATTLE.BIN (0x80160CE0+0xD0)
+EVENT/REQUIRE.OUT,0x801C2CF4,patched code,"lbu v1, 15033(at)",jal 0x80150D54,new code in BATTLE.BIN (0x80150D50+0x4)
+EVENT/REQUIRE.OUT,0x801C4468,patched code,"beq a1, zero, 0x801C470C",jal 0x8015C880,new code in BATTLE.BIN (0x8015C7C8+0xB8)
+EVENT/REQUIRE.OUT,0x801C48A0,patched code,"lbu a0, 2(s0)",j 0x801C48C4,vanilla code
+EVENT/REQUIRE.OUT,0x801C554C,patched code,"addu s0, v0, zero",j 0x801570C4,new code in BATTLE.BIN (0x80157000+0xC4)
+EVENT/REQUIRE.OUT,0x801C5564,patched code,"ori v0, zero, 0x80",jal 0x8005A8A4,vanilla code
+EVENT/REQUIRE.OUT,0x801C559C,patched code,"lbu v0, 2(s0)",j 0x801C5608,vanilla code
+EVENT/REQUIRE.OUT,0x801C5D7C,patched code,"lbu v1, 15033(at)",jal 0x80150D54,new code in BATTLE.BIN (0x80150D50+0x4)
+EVENT/REQUIRE.OUT,0x801C6834,patched code,jal 0x80059FE0,jal 0x8015B1A8,new code in BATTLE.BIN (0x8015B1A8)
+EVENT/REQUIRE.OUT,0x801C6E40,patched code,jal 0x801C6000,jal 0x8015B100,new code in BATTLE.BIN (0x8015B100)
+EVENT/REQUIRE.OUT,0x801C7014,patched code,jal 0x80059BB0,jal 0x8015B154,new code in BATTLE.BIN (0x8015B154)
+EVENT/REQUIRE.OUT,0x801C7354,patched code,jr ra,j 0x80150CB8,new code in BATTLE.BIN (0x80150CB8)
+EVENT/JOBSTTS.OUT,0x801DF5F4,patched code,jal 0x801E0390,jal 0x80152500,new code in BATTLE.BIN (0x80152500)
+EVENT/JOBSTTS.OUT,0x801DF660,patched code,jal 0x801E0390,jal 0x80152500,new code in BATTLE.BIN (0x80152500)
+EVENT/JOBSTTS.OUT,0x801DF6AC,patched code,jal 0x801E0390,jal 0x80152500,new code in BATTLE.BIN (0x80152500)
+EVENT/JOBSTTS.OUT,0x801DF6F8,patched code,jal 0x801E0390,jal 0x80152500,new code in BATTLE.BIN (0x80152500)
+EVENT/JOBSTTS.OUT,0x801E0298,patched code,"bne s0, v0, 0x801E02BC",j 0x801E02B8,vanilla code
+EVENT/JOBSTTS.OUT,0x801E03FC,patched code,jal 0x801E0390,jal 0x80152500,new code in BATTLE.BIN (0x80152500)
+EVENT/ATTACK.OUT,0x801C3104,patched code,"lbu v1, 1(a0)",j 0x80152EC0,new code in BATTLE.BIN (0x80152EC0)
+EVENT/ATTACK.OUT,0x801C3140,patched code,"sb zero, 0(s2)",j 0x80152FF0,new code in BATTLE.BIN (0x80152EC0+0x130)
+EVENT/ATTACK.OUT,0x801C3A84,patched code,"lw a1, 16(sp)",j 0x80160CB0,new code in BATTLE.BIN (0x80160C00+0xB0)
+EVENT/ATTACK.OUT,0x801C401C,patched code,"addiu v1, v1, -2572",jal 0x801606DC,new code in BATTLE.BIN (0x801606DC)
+EVENT/ATTACK.OUT,0x801C4090,patched code,"lui a0, 0x801E",jal 0x8013B590,vanilla code
+EVENT/ATTACK.OUT,0x801C40E0,patched code,j 0x801C4110,jal 0x80160890,new code in BATTLE.BIN (0x80160890)
+EVENT/ATTACK.OUT,0x801C4100,patched code,"addiu s1, s1, 1",jal 0x801C7288,vanilla code
+EVENT/ATTACK.OUT,0x801C4108,patched code,"bne v0, zero, 0x801C40C4",jal 0x80160800,new code in BATTLE.BIN (0x801606DC+0x124)
+EVENT/ATTACK.OUT,0x801C4F64,patched code,jal 0x8013B590,jal 0x80160A70,new code in BATTLE.BIN (0x80160890+0x1E0)
+EVENT/ATTACK.OUT,0x801C5AA8,patched code,"addu s0, v0, zero",jal 0x8014CA1C,vanilla code
+EVENT/ATTACK.OUT,0x801C5AB8,patched code,"beq v0, zero, 0x801C5AF4",jal 0x8014A578,vanilla code
+EVENT/ATTACK.OUT,0x801C5AD8,patched code,"lui at, 0x801D",j 0x801C5AF0,vanilla code
+EVENT/ATTACK.OUT,0x801C5B04,patched code,nop,jal 0x8014C8A0,vanilla code
+EVENT/ATTACK.OUT,0x801C7FEC,patched code,jal 0x801C8598,j 0x801C8598,vanilla code
+EVENT/ATTACK.OUT,0x801C81F0,patched code,"addu s0, v0, zero",j 0x80157080,new code in BATTLE.BIN (0x80157000+0x80)
+EVENT/ATTACK.OUT,0x801C8208,patched code,"ori v0, zero, 0x80",jal 0x8005A8A4,vanilla code
+EVENT/ATTACK.OUT,0x801C8240,patched code,"lbu v0, 2(s0)",j 0x801C82AC,vanilla code
+EVENT/ATTACK.OUT,0x801C85BC,patched code,"sw s0, 40(sp)",jal 0x80044414,vanilla code
+EVENT/ATTACK.OUT,0x801C86A8,patched code,"addu s0, v0, zero",j 0x8015703C,new code in BATTLE.BIN (0x80157000+0x3C)
+EVENT/ATTACK.OUT,0x801C86C4,patched code,"bne v1, v0, 0x801C86F0",jal 0x8005A8A4,vanilla code
+EVENT/ATTACK.OUT,0x801C86F8,patched code,"lbu v0, 2(s0)",j 0x801C8730,vanilla code
+EVENT/ATTACK.OUT,0x801C8718,patched code,"addiu a1, a0, 95",j 0x801C8730,vanilla code
+EVENT/ATTACK.OUT,0x801C88C0,patched code,"bgez a0, 0x801C88B8",jal 0x800248FC,vanilla code
+EVENT/ATTACK.OUT,0x801C88FC,patched code,"mult s1, s4",j 0x801C896C,vanilla code
+EVENT/ATTACK.OUT,0x801C89EC,patched code,"sll v0, a3, 2",jal 0x800248FC,vanilla code
+EVENT/ATTACK.OUT,0x801C8A08,patched code,"ori a1, zero, 0x8",jal 0x8014CA80,vanilla code
+EVENT/ATTACK.OUT,0x801C8A10,patched code,"ori t0, zero, 0xC0",j 0x801C8A28,vanilla code
+EVENT/ATTACK.OUT,0x801C8A18,patched code,"sh v0, 4(s3)",jal 0x800246D4,vanilla code
+EVENT/ATTACK.OUT,0x801C8A30,patched code,"subu a0, a0, v0",jal 0x800449CC,vanilla code
+EVENT/ATTACK.OUT,0x801C9EDC,patched code,jal 0x8013B590,j 0x80153260,new code in BATTLE.BIN (0x80153220+0x40)
+EVENT/ETC.OUT,0x801BF044,patched code,"lui a1, 0x2",jal 0x800444DC,vanilla code
+EVENT/ETC.OUT,0x801BF060,patched code,nop,jal 0x8014CA80,vanilla code
+EVENT/ETC.OUT,0x801BF084,patched code,nop,jal 0x800235AC,vanilla code
+EVENT/ETC.OUT,0x801BF08C,patched code,nop,j 0x801BF03C,vanilla code
+EVENT/ETC.OUT,0x801BF09C,patched code,nop,jal 0x8014CA80,vanilla code
+EVENT/ETC.OUT,0x801BF0BC,patched code,"sw s3, 15528(at)",j 0x801BF0F8,vanilla code
+EVENT/ETC.OUT,0x801BF0F0,patched code,"bne v0, zero, 0x801BF0D8",j 0x801BF0F8,vanilla code
+EVENT/ETC.OUT,0x801BF100,patched code,"addu at, at, s0",jal 0x8014CEB4,vanilla code
+EVENT/ETC.OUT,0x801BF118,patched code,"lui at, 0x801C",jal 0x8014CA80,vanilla code
+EVENT/ETC.OUT,0x801BF128,patched code,"addu a1, s2, zero",jal 0x8014CEB4,vanilla code
+EVENT/ETC.OUT,0x801BF16C,patched code,"lui at, 0x8016",jal 0x800248FC,vanilla code
+EVENT/ETC.OUT,0x801BF1A4,patched code,"lui at, 0x8016",jal 0x800248FC,vanilla code
+EVENT/ETC.OUT,0x801BF1AC,patched code,"blez v0, 0x801BF18C",j 0x801BF380,vanilla code
+EVENT/ETC.OUT,0x801BF1D4,patched code,nop,jal 0x8014CA80,vanilla code
+EVENT/ETC.OUT,0x801BF1FC,patched code,"ori v0, zero, 0xA",j 0x801BF234,vanilla code
+EVENT/ETC.OUT,0x801BF20C,patched code,"addiu s0, s0, 1",jal 0x8014CA80,vanilla code
+EVENT/ETC.OUT,0x801BF2A4,patched code,"lw v0, 16440(v0)",jal 0x8014CA80,vanilla code
+EVENT/ETC.OUT,0x801BF30C,patched code,j 0x801BF2DC,j 0x801BF2A4,vanilla code
+EVENT/ETC.OUT,0x801BF328,patched code,"lui v1, 0x8016",jal 0x8014CA80,vanilla code
+EVENT/ETC.OUT,0x801BF330,patched code,"sll v0, v0, 10",jal 0x8014CA80,vanilla code
+EVENT/ETC.OUT,0x801BF380,patched code,"ori v0, zero, 0xFF",jal 0x800246D4,vanilla code
+EVENT/ETC.OUT,0x801BF388,patched code,"sw v0, 24636(at)",jal 0x80044600,vanilla code
+EVENT/EQUIP.OUT,0x801C5EF4,patched code,"lbu v0, 15033(at)",jal 0x80150D50,new code in BATTLE.BIN (0x80150D50)
+EVENT/EQUIP.OUT,0x801C68EC,patched code,"lbu v1, 15033(at)",jal 0x80150D54,new code in BATTLE.BIN (0x80150D50+0x4)
+EVENT/EQUIP.OUT,0x801C84AC,patched code,"lbu v0, 15033(at)",jal 0x80150D54,new code in BATTLE.BIN (0x80150D50+0x4)
+EVENT/EQUIP.OUT,0x801C8510,patched code,"lbu v0, 15033(at)",jal 0x80150D54,new code in BATTLE.BIN (0x80150D50+0x4)
+EVENT/CARD.OUT,0x801C046C,patched code,"addiu v0, v1, 5636",jal 0x8005E254,vanilla code
+EVENT/CARD.OUT,0x801C0480,patched code,jal 0x800222DC,jal 0x8005E254,vanilla code
+EVENT/CARD.OUT,0x801C8DAC,new code,"ori s6, s1, 0x2419",j 0x8FF8D8D8,vanilla code
+EVENT/CARD.OUT,0x801C8E4C,patched code,"ori s6, s1, 0x2826",jal 0x87FBF8C4,vanilla code
+EVENT/CARD.OUT,0x801C8E74,patched code,"sltiu s2, t9, 4606",jal 0x83FBF8D4,vanilla code
+EVENT/CARD.OUT,0x801C8E90,patched code,"andi s4, t0, 0xFA2F",jal 0x87F8D4A0,vanilla code
+EVENT/CARD.OUT,0x801C8EB4,patched code,"andi t4, t1, 0x2A31",j 0x8BF8DCAC,vanilla code
+EVENT/CARD.OUT,0x801C8EF4,patched code,"slti t5, zero, -457",j 0x8BF8DCAC,vanilla code
+EVENT/CARD.OUT,0x801C8F20,patched code,"slti t4, s1, 12564",j 0x8FE8DCAC,vanilla code
+EVENT/CARD.OUT,0x801C8F58,patched code,"slti t4, s1, 12564",jal 0x8BF8DCAC,vanilla code
+EVENT/CARD.OUT,0x801C8F68,patched code,"ori t3, t9, 0x2A2C",j 0x8BF898B0,vanilla code
+EVENT/CARD.OUT,0x801C8FD4,patched code,"sltiu s1, at, 5370",jal 0x83E8B8D4,vanilla code
+EVENT/CARD.OUT,0x801C9000,patched code,"andi s1, s0, 0xFE37",j 0x8BFBF8B8,vanilla code
+EVENT/CARD.OUT,0x801C903C,patched code,"slti s1, s1, 2814",jal 0x8FE8A4C8,vanilla code
+EVENT/CARD.OUT,0x801C9048,patched code,.word 0xFE2B3724,jal 0x87E8F0BC,vanilla code
+EVENT/CARD.OUT,0x801C9054,patched code,"sltiu t8, t9, 10792",j 0x8BE8AC98,vanilla code
+EVENT/CARD.OUT,0x801C9070,patched code,"ori t8, t1, 0x3330",j 0x8BF8DCAC,vanilla code
+EVENT/CARD.OUT,0x801C9138,patched code,"ori s2, t1, 0x3724",j 0x8FF8B898,vanilla code
+EVENT/CARD.OUT,0x801C91C8,patched code,"andi s2, t1, 0x3028",j 0x8BF8BCBC,vanilla code
+EVENT/CARD.OUT,0x801C921C,patched code,"sltiu t7, t9, 9253",j 0x8FF8E0B4,vanilla code
+EVENT/CARD.OUT,0x801C9260,patched code,"andi s2, s1, 0x20FE",j 0x8FE8A8C4,vanilla code
+EVENT/CARD.OUT,0x801C92B0,patched code,.word 0xFE2B3732,j 0x8FFBF89C,vanilla code
+EVENT/CARD.OUT,0x801C92C8,patched code,"andi t0, at, 0x2B28",jal 0x87E8B8D4,vanilla code
+EVENT/BUNIT.OUT,0x801C07D0,patched code,"lh a0, 2(t0)",j 0x801526C0,new code in BATTLE.BIN (0x80152620+0xA0)
+EVENT/BUNIT.OUT,0x801C07D8,patched code,jal 0x8014B2F0,jal 0x8014B350,vanilla code
+EVENT/BUNIT.OUT,0x801C39A8,patched code,"beq v0, zero, 0x801C39C0",j 0x801C39C0,vanilla code
+EVENT/BUNIT.OUT,0x801C7294,patched code,"andi a1, a1, 0xC0",jal 0x8005DC14,vanilla code
+EVENT/BUNIT.OUT,0x801C7394,patched code,"andi v0, v0, 0x40",j 0x8015ECC0,new code in BATTLE.BIN (0x8015EC80+0x40)
+EVENT/BUNIT.OUT,0x801C73B8,patched code,"andi v0, v0, 0x80",j 0x8015ECE0,new code in BATTLE.BIN (0x8015EC80+0x60)
+WORLD/WLDCORE.BIN,0x800685B4,patched code,"ori v1, v1, 0xFFFF",jal 0x80106660,vanilla code
+WORLD/WLDCORE.BIN,0x800685BC,patched code,"lui at, 0x8005",jal 0x8012F0F8,vanilla code
+WORLD/WLDCORE.BIN,0x80083220,patched code,"addiu a0, a0, -4360",jal 0x800903E4,vanilla code
+WORLD/WLDCORE.BIN,0x80083230,patched code,nop,jal 0x800EF25C,vanilla code
+WORLD/WLDCORE.BIN,0x80083238,patched code,"ori a0, zero, 0x2",jal 0x80090D30,vanilla code
+WORLD/WLDCORE.BIN,0x8008E658,patched code,jal 0x800EF25C,j 0x8013DE40,new code in WORLD/WORLD.BIN (0x8013DC80+0x1C0)
+WORLD/WLDCORE.BIN,0x8008F1A8,patched code,"slt v0, s0, v1",j 0x8013E100,new code in WORLD/WORLD.BIN (0x8013E100)
+WORLD/WLDCORE.BIN,0x800915B4,patched code,"sh v1, 0(a1)",jal 0x80069E38,vanilla code
+WORLD/WORLD.BIN,0x800E41AC,patched code,"bne v0, zero, 0x800E41CC",jal 0x8013ED00,new code in WORLD/WORLD.BIN (0x8013ED00)
+WORLD/WORLD.BIN,0x800E4BB8,patched code,jal 0x800FE774,jal 0x80142C78,new code in WORLD/WORLD.BIN (0x80142B40+0x138)
+WORLD/WORLD.BIN,0x800E4C04,patched code,"addiu v0, v0, -1",j 0x800321F0,vanilla code
+WORLD/WORLD.BIN,0x800E4CC0,patched code,"addiu v0, v0, -1",j 0x80032230,vanilla code
+WORLD/WORLD.BIN,0x800E4FE4,patched code,"lbu v1, 0(s0)",jal 0x8013EA80,new code in WORLD/WORLD.BIN (0x8013E898+0x1E8)
+WORLD/WORLD.BIN,0x800E4FFC,patched code,"bne v1, v0, 0x800E5028",jal 0x8005A8A4,vanilla code
+WORLD/WORLD.BIN,0x800E5030,patched code,"lbu v0, 2(s0)",j 0x800E5098,vanilla code
+WORLD/WORLD.BIN,0x800E50E8,patched code,jal 0x800E6EDC,jal 0x80142C68,new code in WORLD/WORLD.BIN (0x80142B40+0x128)
+WORLD/WORLD.BIN,0x800E5B54,patched code,jal 0x800E3B8C,j 0x8013EE50,new code in WORLD/WORLD.BIN (0x8013EE50)
+WORLD/WORLD.BIN,0x800E6CB0,patched code,"lhu v0, 48(sp)",jal 0x80032048,vanilla code
+WORLD/WORLD.BIN,0x800E8238,patched code,"lbu v1, 15033(at)",jal 0x801498C4,new code in WORLD/WORLD.BIN (0x801498C0+0x4)
+WORLD/WORLD.BIN,0x800ECFD0,patched code,jal 0x800FE774,jal 0x80142C78,new code in WORLD/WORLD.BIN (0x80142B40+0x138)
+WORLD/WORLD.BIN,0x800FE854,patched code,jal 0x80059AF0,jal 0x80027220,vanilla code
+WORLD/WORLD.BIN,0x80108958,patched code,"lbu v1, 1(a0)",jal 0x8013F310,new code in WORLD/WORLD.BIN (0x8013F300+0x10)
+WORLD/WORLD.BIN,0x801090E0,patched code,"lbu v1, 0(s0)",jal 0x8005A8A4,vanilla code
+WORLD/WORLD.BIN,0x8010912C,patched code,"lbu v0, 2(s0)",j 0x80109178,vanilla code
+WORLD/WORLD.BIN,0x80109260,patched code,"lbu v1, 0(s0)",j 0x8013F6A0,new code in WORLD/WORLD.BIN (0x8013F6A0)
+WORLD/WORLD.BIN,0x8010CAE4,patched code,"ori v0, zero, 0x80",j 0x8013E994,new code in WORLD/WORLD.BIN (0x8013E898+0xFC)
+WORLD/WORLD.BIN,0x8010CB18,patched code,nop,j 0x8010CB80,vanilla code
+WORLD/WORLD.BIN,0x8010CBA0,patched code,nop,jal 0x800EAA50,vanilla code
+WORLD/WORLD.BIN,0x8010DB28,patched code,"ori v0, zero, 0x2",jal 0x8014824C,new code in WORLD/WORLD.BIN (0x80148200+0x4C)
+WORLD/WORLD.BIN,0x80112520,patched code,jal 0x800FE774,jal 0x80142C78,new code in WORLD/WORLD.BIN (0x80142B40+0x138)
+WORLD/WORLD.BIN,0x801140D0,patched code,"lui v0, 0x8019",jal 0x80142D60,new code in WORLD/WORLD.BIN (0x80142C90+0xD0)
+WORLD/WORLD.BIN,0x80114344,patched code,"lui v0, 0x801D",jal 0x80142D94,new code in WORLD/WORLD.BIN (0x80142D94)
+WORLD/WORLD.BIN,0x80116A8C,patched code,"lw v0, 0(v0)",jal 0x8013E4A0,new code in WORLD/WORLD.BIN (0x8013E4A0)
+WORLD/WORLD.BIN,0x80117F24,patched code,"lw v0, -10772(at)",jal 0x8013EA00,new code in WORLD/WORLD.BIN (0x8013E898+0x168)
+WORLD/WORLD.BIN,0x80117F80,patched code,"lw v0, -10772(at)",jal 0x8013EA00,new code in WORLD/WORLD.BIN (0x8013E898+0x168)
+WORLD/WORLD.BIN,0x80117F88,patched code,"lbu v1, 287(v0)",jal 0x8013EA50,new code in WORLD/WORLD.BIN (0x8013E898+0x1B8)
+WORLD/WORLD.BIN,0x80118E34,patched code,"addu at, at, v0",j 0x8013FE00,new code in WORLD/WORLD.BIN (0x8013FE00)
+WORLD/WORLD.BIN,0x80119768,patched code,"lw v0, -10648(v0)",j 0x8013E850,new code in WORLD/WORLD.BIN (0x8013E4F4+0x35C)
+WORLD/WORLD.BIN,0x8011ACD8,patched code,jal 0x80125540,jal 0x8013F300,new code in WORLD/WORLD.BIN (0x8013F300)
+WORLD/WORLD.BIN,0x8011AD60,patched code,jal 0x80125540,jal 0x8013F300,new code in WORLD/WORLD.BIN (0x8013F300)
+WORLD/WORLD.BIN,0x8011B008,patched code,jal 0x80125540,jal 0x8013F300,new code in WORLD/WORLD.BIN (0x8013F300)
+WORLD/WORLD.BIN,0x8011B8FC,patched code,jal 0x80125540,jal 0x8013F300,new code in WORLD/WORLD.BIN (0x8013F300)
+WORLD/WORLD.BIN,0x8011D5CC,patched code,"lbu v0, 15033(at)",jal 0x801498C0,new code in WORLD/WORLD.BIN (0x801498C0)
+WORLD/WORLD.BIN,0x8011DE14,patched code,jal 0x80125540,jal 0x8013F308,new code in WORLD/WORLD.BIN (0x8013F300+0x8)
+WORLD/WORLD.BIN,0x8011DEFC,patched code,jal 0x80125540,jal 0x8013F308,new code in WORLD/WORLD.BIN (0x8013F300+0x8)
+WORLD/WORLD.BIN,0x8011E1A4,patched code,jal 0x80125540,jal 0x8013F308,new code in WORLD/WORLD.BIN (0x8013F300+0x8)
+WORLD/WORLD.BIN,0x8011E298,patched code,jal 0x80122F0C,jal 0x80122E88,vanilla code
+WORLD/WORLD.BIN,0x8011E474,patched code,jal 0x80122F0C,jal 0x80122E88,vanilla code
+WORLD/WORLD.BIN,0x8011E73C,patched code,jal 0x80125540,jal 0x8013F308,new code in WORLD/WORLD.BIN (0x8013F300+0x8)
+WORLD/WORLD.BIN,0x8011EBA8,patched code,jal 0x80122F0C,jal 0x80122E88,vanilla code
+WORLD/WORLD.BIN,0x8011F16C,patched code,"addu at, at, v0",j 0x801401B0,new code in WORLD/WORLD.BIN (0x801401B0)
+WORLD/WORLD.BIN,0x8011F1C8,patched code,"beq v0, zero, 0x8011F1E4",j 0x8011F1E4,vanilla code
+WORLD/WORLD.BIN,0x8011F1F8,patched code,"lhu v0, 0(v0)",j 0x80140040,new code in WORLD/WORLD.BIN (0x80140040)
+WORLD/WORLD.BIN,0x8011F8D0,patched code,"ori a0, zero, 0x4",j 0x8011F94C,vanilla code
+WORLD/WORLD.BIN,0x8011FACC,patched code,"lhu v0, 190(a1)",jal 0x8013DFF0,new code in WORLD/WORLD.BIN (0x8013DFF0)
+WORLD/WORLD.BIN,0x8011FE78,patched code,"addu a3, zero, zero",j 0x8013FF80,new code in WORLD/WORLD.BIN (0x8013FF80)
+WORLD/WORLD.BIN,0x80120634,patched code,"lui v1, 0x8019",jal 0x8013DC80,new code in WORLD/WORLD.BIN (0x8013DC80)
+WORLD/WORLD.BIN,0x80120704,patched code,j 0x80120714,j 0x8013DD40,new code in WORLD/WORLD.BIN (0x8013DC80+0xC0)
+WORLD/WORLD.BIN,0x80120B58,patched code,"lbu v1, 15033(at)",jal 0x801498C4,new code in WORLD/WORLD.BIN (0x801498C0+0x4)
+WORLD/WORLD.BIN,0x80120E68,patched code,j 0x80120F68,j 0x80120E84,vanilla code
+WORLD/WORLD.BIN,0x8012152C,patched code,"lui v0, 0x801D",j 0x8013E200,new code in WORLD/WORLD.BIN (0x8013E200)
+WORLD/WORLD.BIN,0x801224E4,patched code,jal 0x8012B354,jal 0x8013F800,new code in WORLD/WORLD.BIN (0x8013F7C0+0x40)
+WORLD/WORLD.BIN,0x80122550,patched code,"andi a1, a1, 0xC0",jal 0x8005DC14,vanilla code
+WORLD/WORLD.BIN,0x8012267C,patched code,"ori v0, zero, 0x5B",j 0x8013F5A0,vanilla code
+WORLD/WORLD.BIN,0x801226A4,patched code,"bne s0, v0, 0x801226C8",j 0x801226C0,vanilla code
+WORLD/WORLD.BIN,0x801227D4,patched code,nop,jal 0x8013E300,new code in WORLD/WORLD.BIN (0x8013E300)
+WORLD/WORLD.BIN,0x80122824,patched code,jal 0x8012276C,j 0x8013FC00,new code in WORLD/WORLD.BIN (0x8013FC00)
+WORLD/WORLD.BIN,0x80122950,patched code,"sll s0, a1, 16",j 0x8013F700,new code in WORLD/WORLD.BIN (0x8013F700)
+WORLD/WORLD.BIN,0x80122970,patched code,jal 0x801223E4,j 0x8013F7C0,new code in WORLD/WORLD.BIN (0x8013F7C0)
+WORLD/WORLD.BIN,0x80122BB4,patched code,"bne v1, zero, 0x80122BC4",j 0x8013E400,new code in WORLD/WORLD.BIN (0x8013E400)
+WORLD/WORLD.BIN,0x80122DB4,patched code,"ori a2, zero, 0x41D9",j 0x80122DD0,vanilla code
+WORLD/WORLD.BIN,0x80122EC8,patched code,"sh v0, 0(s1)",jal 0x80122E40,vanilla code
+WORLD/WORLD.BIN,0x80123BF8,patched code,"lbu v0, 15033(at)",jal 0x801498F8,new code in WORLD/WORLD.BIN (0x801498C0+0x38)
+WORLD/WORLD.BIN,0x801241CC,patched code,"lbu v0, 15033(at)",jal 0x801498C4,new code in WORLD/WORLD.BIN (0x801498C0+0x4)
+WORLD/WORLD.BIN,0x80124654,patched code,jal 0x80125540,jal 0x8013F300,new code in WORLD/WORLD.BIN (0x8013F300)
+WORLD/WORLD.BIN,0x801246C8,patched code,"lbu v0, 15033(at)",jal 0x801498C4,new code in WORLD/WORLD.BIN (0x801498C0+0x4)
+WORLD/WORLD.BIN,0x8012472C,patched code,"lbu v0, 15033(at)",jal 0x801498C4,new code in WORLD/WORLD.BIN (0x801498C0+0x4)
+WORLD/WORLD.BIN,0x80124824,patched code,nop,j 0x8013DE00,new code in WORLD/WORLD.BIN (0x8013DC80+0x180)
+WORLD/WORLD.BIN,0x80124A94,patched code,"beq v0, zero, 0x80124AE0",j 0x8014992C,new code in WORLD/WORLD.BIN (0x801498C0+0x6C)
+WORLD/WORLD.BIN,0x80124B94,patched code,"lh v1, 36(a0)",j 0x80124BF8,vanilla code
+WORLD/WORLD.BIN,0x80125410,patched code,jal 0x80125540,jal 0x8013F308,new code in WORLD/WORLD.BIN (0x8013F300+0x8)
+WORLD/WORLD.BIN,0x80125574,patched code,"lh v0, 62(v1)",jal 0x80120B90,vanilla code
+WORLD/WORLD.BIN,0x80125614,patched code,jal 0x801223B8,j 0x80140100,new code in WORLD/WORLD.BIN (0x80140100)
+WORLD/WORLD.BIN,0x8012572C,patched code,"ori v0, zero, 0x4F",j 0x8013E978,new code in WORLD/WORLD.BIN (0x8013E898+0xE0)
+WORLD/WORLD.BIN,0x80125738,patched code,"ori v0, zero, 0x51",j 0x80125754,vanilla code
+WORLD/WORLD.BIN,0x80125774,patched code,"beq v0, zero, 0x80125790",jal 0x800222DC,vanilla code
+WORLD/WORLD.BIN,0x80125780,patched code,"addu at, at, a0",jal 0x80059AF0,vanilla code
+WORLD/WORLD.BIN,0x801257A0,patched code,j 0x8012582C,jal 0x8005A8A4,vanilla code
+WORLD/WORLD.BIN,0x801257D8,patched code,"addu at, at, v0",j 0x80125800,vanilla code
+WORLD/WORLD.BIN,0x8012581C,patched code,"sra a0, a0, 16",jal 0x80023A54,vanilla code
+WORLD/WORLD.BIN,0x801258C8,patched code,j 0x8012591C,j 0x801258F0,vanilla code
+WORLD/WORLD.BIN,0x8012590C,patched code,"beq v0, zero, 0x8012591C",jal 0x800222DC,vanilla code
+WORLD/WORLD.BIN,0x8012895C,patched code,"addiu sp, sp, -128",j 0x8013FF40,new code in WORLD/WORLD.BIN (0x8013FF40)
+WORLD/WORLD.BIN,0x80128BE8,patched code,"lhu v0, 0(v0)",j 0x8013FE80,new code in WORLD/WORLD.BIN (0x8013FE80)
+WORLD/WORLD.BIN,0x80128F48,patched code,"addu v0, v0, v1",j 0x8013FCC0,new code in WORLD/WORLD.BIN (0x8013FCC0)
+WORLD/WORLD.BIN,0x8012BCC8,patched code,"addiu t0, t0, 1",j 0x80148200,new code in WORLD/WORLD.BIN (0x80148200)
+WORLD/WORLD.BIN,0x8012BCE8,patched code,"addiu t0, t0, -1",j 0x80148200,new code in WORLD/WORLD.BIN (0x80148200)
+WORLD/WORLD.BIN,0x8012D984,patched code,"lw v0, 24(fp)",jal 0x8012D8B0,vanilla code
+WORLD/WORLD.BIN,0x8012D99C,patched code,"addiu a1, a1, -22680",jal 0x80130898,vanilla code
+WORLD/WORLD.BIN,0x8012D9A4,patched code,nop,jal 0x8012FDD8,vanilla code
+WORLD/WORLD.BIN,0x8012D9C0,patched code,"lui at, 0x801D",jal 0x8005E254,vanilla code
+WORLD/WORLD.BIN,0x8012D9C8,patched code,jal 0x80130898,j 0x8012D9DC,vanilla code
+WORLD/WORLD.BIN,0x8012DCF0,patched code,"beq v0, zero, 0x8012DD9C",jal 0x8012D5BC,vanilla code
+WORLD/WORLD.BIN,0x8012DD0C,patched code,"sb zero, -7028(at)",jal 0x800449CC,vanilla code
+WORLD/WORLD.BIN,0x8012DD1C,patched code,nop,jal 0x800449CC,vanilla code
+WORLD/WORLD.BIN,0x8012DD30,patched code,"lui a0, 0x801D",jal 0x800222DC,vanilla code
+WORLD/WORLD.BIN,0x8012DD48,patched code,nop,jal 0x8005E254,vanilla code
+WORLD/WORLD.BIN,0x8012F1D0,patched code,"lui at, 0x801D",j 0x8012F210,vanilla code
+WORLD/WORLD.BIN,0x8012FFBC,patched code,"lw a1, -11796(a1)",jal 0x8005E254,vanilla code
+WORLD/WORLD.BIN,0x8012FFD0,patched code,"addiu a0, a0, -27500",jal 0x8005E254,vanilla code
+WORLD/WORLD.BIN,0x8012FFE4,patched code,"addiu a1, a1, 5892",jal 0x8005E254,vanilla code
+WORLD/WORLD.BIN,0x8012FFF8,patched code,"ori a2, zero, 0x80",jal 0x8005E254,vanilla code
+WORLD/WORLD.BIN,0x801305C4,patched code,"addiu v0, zero, -1",jal 0x8005E254,vanilla code
+WORLD/WORLD.BIN,0x801305D8,patched code,"lui a1, 0x8005",jal 0x8005E254,vanilla code
+WORLD/WORLD.BIN,0x801305EC,patched code,jal 0x800222DC,jal 0x8005E254,vanilla code
+WORLD/WORLD.BIN,0x8013DCC4,new code,.word 0xC0FF3F6C,jal 0x801228CC,vanilla code
+WORLD/WORLD.BIN,0x8013DCF4,new code,"sll zero, zero, 31",j 0x8013DD18,new code in WORLD/WORLD.BIN (0x8013DC80+0x98)
+WORLD/WORLD.BIN,0x8013DD40,new code,.word 0x7C00F006,jal 0x800EF1A8,vanilla code
+WORLD/WORLD.BIN,0x8013DD64,new code,.word 0x71551DF7,jal 0x8005E0CC,vanilla code
+WORLD/WORLD.BIN,0x8013DDEC,new code,.word 0xDCC0C101,j 0x80120714,vanilla code
+WORLD/WORLD.BIN,0x8013DE38,new code,.word 0x0007F07F,j 0x8012482C,vanilla code
+WORLD/WORLD.BIN,0x8013DE40,new code,"sll zero, s0, 0",jal 0x800EF1A8,vanilla code
+WORLD/WORLD.BIN,0x8013DE4C,new code,.word 0x58550100,jal 0x800EF25C,vanilla code
+WORLD/WORLD.BIN,0x8013DE58,new code,.word 0x79008005,jal 0x800EF25C,vanilla code
+WORLD/WORLD.BIN,0x8013DE60,new code,.word 0x00070070,j 0x8008E660,vanilla code
+WORLD/WORLD.BIN,0x8013E050,new code,"lui s7, 0xDB76",j 0x8013E0D0,new code in WORLD/WORLD.BIN (0x8013DFF0+0xE0)
+WORLD/WORLD.BIN,0x8013E128,new code,"bltz zero, 0x8013E12C",j 0x8008F1B4,vanilla code
+WORLD/WORLD.BIN,0x8013E130,new code,.word 0x54550507,jal 0x8002230C,vanilla code
+WORLD/WORLD.BIN,0x8013E15C,new code,.word 0xF781722B,j 0x8008F1B4,vanilla code
+WORLD/WORLD.BIN,0x8013E164,new code,.word 0x70000307,j 0x8008F260,vanilla code
+WORLD/WORLD.BIN,0x8013E224,new code,.word 0x55C00100,jal 0x800222DC,vanilla code
+WORLD/WORLD.BIN,0x8013E230,new code,jal 0x8373FC04,j 0x80121534,vanilla code
+WORLD/WORLD.BIN,0x8013E41C,new code,.word 0x01771C70,j 0x80122BC4,vanilla code
+WORLD/WORLD.BIN,0x8013E424,new code,jal 0x826F7104,j 0x80122BBC,vanilla code
+WORLD/WORLD.BIN,0x8013E54C,new code,.word 0x6B707710,jal 0x800FFEEC,vanilla code
+WORLD/WORLD.BIN,0x8013E598,new code,.word 0x0054150F,jal 0x800EF1A8,vanilla code
+WORLD/WORLD.BIN,0x8013E5A4,new code,.word 0xB0F101C7,j 0x8013E840,new code in WORLD/WORLD.BIN (0x8013E4F4+0x34C)
+WORLD/WORLD.BIN,0x8013E5F8,new code,.word 0x00C7FF7F,jal 0x800EF25C,vanilla code
+WORLD/WORLD.BIN,0x8013E618,new code,.word 0x7D545509,jal 0x80069400,vanilla code
+WORLD/WORLD.BIN,0x8013E62C,new code,"lhu zero, -16137(t0)",jal 0x800FFF08,vanilla code
+WORLD/WORLD.BIN,0x8013E634,new code,nop,j 0x8013E840,new code in WORLD/WORLD.BIN (0x8013E4F4+0x34C)
+WORLD/WORLD.BIN,0x8013E640,new code,"bgtz ra, 0x8012C24C",jal 0x800903E4,vanilla code
+WORLD/WORLD.BIN,0x8013E650,new code,.word 0x70000007,jal 0x80090D30,vanilla code
+WORLD/WORLD.BIN,0x8013E838,new code,"lb t6, 144(a1)",jal 0x80092208,vanilla code
+WORLD/WORLD.BIN,0x8013E864,new code,"sll zero, zero, 12",jal 0x800FFD70,vanilla code
+WORLD/WORLD.BIN,0x8013E878,new code,"sw zero, -767(a2)",jal 0x800FFF08,vanilla code
+WORLD/WORLD.BIN,0x8013E890,new code,.word 0xC1FD1F60,j 0x80119770,vanilla code
+WORLD/WORLD.BIN,0x8013E8D0,new code,"mfc0 zero, $0",jal 0x80059AF0,vanilla code
+WORLD/WORLD.BIN,0x8013E8F8,new code,.word 0x00070070,jal 0x80100090,vanilla code
+WORLD/WORLD.BIN,0x8013E954,new code,.word 0xBE755C19,jal 0x80043FF8,vanilla code
+WORLD/WORLD.BIN,0x8013E95C,new code,"lhu zero, 0(zero)",jal 0x800FFE28,vanilla code
+WORLD/WORLD.BIN,0x8013E98C,new code,.word 0xC015005F,j 0x80125730,vanilla code
+WORLD/WORLD.BIN,0x8013E9C4,new code,.word 0x000000F0,jal 0x8005A8A4,vanilla code
+WORLD/WORLD.BIN,0x8013E9CC,new code,.word 0x77007407,j 0x8010CAEC,vanilla code
+WORLD/WORLD.BIN,0x8013E9EC,new code,"bgtz sp, 0x8012A9F8",j 0x84344914,vanilla code
+WORLD/WORLD.BIN,0x8013E9F8,new code,.word 0x00AC02F0,j 0x803849AC,vanilla code
+WORLD/WORLD.BIN,0x8013EA9C,new code,.word 0x561D5051,j 0x8013EAA8,new code in WORLD/WORLD.BIN (0x8013E898+0x210)
+WORLD/WORLD.BIN,0x8013EE70,new code,.word 0x55150007,jal 0x80012518,vanilla code
+WORLD/WORLD.BIN,0x8013EE78,new code,.word 0x00070070,jal 0x800E3B8C,vanilla code
+WORLD/WORLD.BIN,0x8013EE80,new code,.word 0x00C401FC,j 0x800E5B5C,vanilla code
+WORLD/WORLD.BIN,0x8013F300,new code,.word 0x0015C07F,j 0x80125540,vanilla code
+WORLD/WORLD.BIN,0x8013F308,new code,cop0 0x1726F60,j 0x80125540,vanilla code
+WORLD/WORLD.BIN,0x8013F48C,new code,"lui k1, 0x5579",j 0x8005DCFC,vanilla code
+WORLD/WORLD.BIN,0x8013F4A0,new code,.word 0x70070777,j 0x8005DCFC,vanilla code
+WORLD/WORLD.BIN,0x8013F55C,new code,.word 0x55C2011C,j 0x8005DCE8,vanilla code
+WORLD/WORLD.BIN,0x8013F570,new code,.word 0x0703707C,j 0x8005DCE8,vanilla code
+WORLD/WORLD.BIN,0x8013F634,new code,.word 0x0000F0FF,j 0x8010CAD8,vanilla code
+WORLD/WORLD.BIN,0x8013F658,new code,"mfc0 zero, $0",j 0x8010CAD8,vanilla code
+WORLD/WORLD.BIN,0x8013F6B4,new code,"lwc2 $29, 7647(s5)",j 0x80109268,vanilla code
+WORLD/WORLD.BIN,0x8013F6D8,new code,.word 0x55777777,j 0x80109268,vanilla code
+WORLD/WORLD.BIN,0x8013F73C,new code,"swc2 $1, 27356(fp)",j 0x8013F75C,new code in WORLD/WORLD.BIN (0x8013F700+0x5C)
+WORLD/WORLD.BIN,0x8013F760,new code,.word 0xFCDF0055,j 0x80122958,vanilla code
+WORLD/WORLD.BIN,0x8013F7CC,new code,"sll v1, sp, 19",j 0x8013F7E0,new code in WORLD/WORLD.BIN (0x8013F7C0+0x20)
+WORLD/WORLD.BIN,0x8013F7E0,new code,.word 0xC07A3410,jal 0x801223E4,vanilla code
+WORLD/WORLD.BIN,0x8013F7E8,new code,"lui s4, 0x5505",j 0x80122978,vanilla code
+WORLD/WORLD.BIN,0x8013F830,new code,cop0 0x1555500,j 0x8012B354,vanilla code
+WORLD/WORLD.BIN,0x8013F838,new code,"addiu a0, fp, -21248",j 0x8012B354,vanilla code
+WORLD/WORLD.BIN,0x8013F850,new code,.word 0x70DDC0D7,j 0x801224F4,vanilla code
+WORLD/WORLD.BIN,0x8013F860,new code,"lui k1, 0xF276",j 0x8012B354,vanilla code
+WORLD/WORLD.BIN,0x8013F868,new code,.word 0x70000404,j 0x8012B354,vanilla code
+WORLD/WORLD.BIN,0x8013FC44,new code,.word 0x70037077,j 0x8013FC68,new code in WORLD/WORLD.BIN (0x8013FC00+0x68)
+WORLD/WORLD.BIN,0x8013FC68,new code,.word 0x019D15FC,jal 0x8012276C,vanilla code
+WORLD/WORLD.BIN,0x8013FC70,new code,.word 0xDD74C7C1,j 0x8012282C,vanilla code
+WORLD/WORLD.BIN,0x8013FCD0,new code,.word 0xFD1F5C55,j 0x80128F50,vanilla code
+WORLD/WORLD.BIN,0x8013FD24,new code,.word 0x7D70F70A,j 0x8013FD44,new code in WORLD/WORLD.BIN (0x8013FCC0+0x84)
+WORLD/WORLD.BIN,0x8013FD44,new code,"sll t7, gp, 11",j 0x80128F50,vanilla code
+WORLD/WORLD.BIN,0x8013FDA4,new code,"lh v0, 1808(t0)",j 0x8005DDB0,vanilla code
+WORLD/WORLD.BIN,0x8013FDB8,new code,syscall 0xC,j 0x8013FDA0,new code in WORLD/WORLD.BIN (0x8013FD80+0x20)
+WORLD/WORLD.BIN,0x8013FDCC,new code,.word 0xC1C11C1F,j 0x8013FDA0,new code in WORLD/WORLD.BIN (0x8013FD80+0x20)
+WORLD/WORLD.BIN,0x8013FE10,new code,.word 0x7F0F5055,j 0x80118E3C,vanilla code
+WORLD/WORLD.BIN,0x8013FE24,new code,"bne t2, s5, 0x8013FE28",j 0x80118E3C,vanilla code
+WORLD/WORLD.BIN,0x8013FE2C,new code,.word 0x471C71C0,j 0x80118E3C,vanilla code
+WORLD/WORLD.BIN,0x8013FEAC,new code,.word 0xC0FF0F5B,j 0x80128BF0,vanilla code
+WORLD/WORLD.BIN,0x8013FEF8,new code,.word 0x4D035005,j 0x80128BF0,vanilla code
+WORLD/WORLD.BIN,0x8013FF14,new code,.word 0xFF0F5B55,j 0x80128BF0,vanilla code
+WORLD/WORLD.BIN,0x8013FF64,new code,"sra fp, s0, 3",j 0x80128964,vanilla code
+WORLD/WORLD.BIN,0x8013FFCC,new code,"slti zero, fp, 28931",j 0x8013FFF0,new code in WORLD/WORLD.BIN (0x8013FF80+0x70)
+WORLD/WORLD.BIN,0x8013FFFC,new code,.word 0xF5C3F794,j 0x8011FE80,vanilla code
+WORLD/WORLD.BIN,0x8014004C,new code,.word 0x7780AE37,jal 0x801223B8,vanilla code
+WORLD/WORLD.BIN,0x801400A0,new code,.word 0xC31D5550,j 0x801400C4,new code in WORLD/WORLD.BIN (0x80140040+0x84)
+WORLD/WORLD.BIN,0x801400C4,new code,.word 0xF7005515,j 0x8011F200,vanilla code
+WORLD/WORLD.BIN,0x8014015C,new code,jal 0x8E01B404,j 0x8012561C,vanilla code
+WORLD/WORLD.BIN,0x80140178,new code,.word 0xF1B3A694,j 0x8012561C,vanilla code
+WORLD/WORLD.BIN,0x80140180,new code,.word 0xF79654F5,jal 0x801223B8,vanilla code
+WORLD/WORLD.BIN,0x80140188,new code,.word 0x706C09C7,j 0x8012561C,vanilla code
+WORLD/WORLD.BIN,0x80140208,new code,.word 0xC1DD1DDC,j 0x8011F174,vanilla code
+WORLD/WORLD.BIN,0x80140228,new code,"bgtz a3, 0x80141630",j 0x8011F174,vanilla code
+WORLD/WORLD.BIN,0x80140238,new code,jal 0x81525404,j 0x80122664,vanilla code
+WORLD/WORLD.BIN,0x80140240,new code,.word 0x55030004,j 0x80122664,vanilla code
+WORLD/WORLD.BIN,0x8014024C,new code,"bgtz t2, 0x80138164",j 0x80122714,vanilla code
+WORLD/WORLD.BIN,0x80142028,new code,.word 0x5B55791C,jal 0x80142844,new code in WORLD/WORLD.BIN (0x80142450+0x3F4)
+WORLD/WORLD.BIN,0x80142048,new code,.word 0x7F3F5455,jal 0x80059AF0,vanilla code
+WORLD/WORLD.BIN,0x80142060,new code,j 0x87FFFD0C,jal 0x80142F28,new code in WORLD/WORLD.BIN (0x80142F28)
+WORLD/WORLD.BIN,0x80142070,new code,.word 0xFF03B095,jal 0x80142178,new code in WORLD/WORLD.BIN (0x80142178)
+WORLD/WORLD.BIN,0x80142078,new code,.word 0xDCFF0156,jal 0x80108920,vanilla code
+WORLD/WORLD.BIN,0x80142080,new code,.word 0xC1711FDC,j 0x801420A4,new code in WORLD/WORLD.BIN (0x80142000+0xA4)
+WORLD/WORLD.BIN,0x8014208C,new code,.word 0x5CC7CA7D,jal 0x8014221C,new code in WORLD/WORLD.BIN (0x8014221C)
+WORLD/WORLD.BIN,0x80142094,new code,"andi s3, a3, 0x3377",jal 0x80120930,vanilla code
+WORLD/WORLD.BIN,0x8014209C,new code,j 0x8543FC00,jal 0x801421E4,new code in WORLD/WORLD.BIN (0x80142178+0x6C)
+WORLD/WORLD.BIN,0x801420DC,new code,"sra fp, zero, 0",jal 0x80142844,new code in WORLD/WORLD.BIN (0x80142450+0x3F4)
+WORLD/WORLD.BIN,0x80142100,new code,"sll zero, zero, 3",jal 0x8014287C,new code in WORLD/WORLD.BIN (0x80142450+0x42C)
+WORLD/WORLD.BIN,0x80142118,new code,.word 0x5C55C1FD,jal 0x80059AF0,vanilla code
+WORLD/WORLD.BIN,0x80142124,new code,.word 0x04040000,jal 0x80142F28,new code in WORLD/WORLD.BIN (0x80142F28)
+WORLD/WORLD.BIN,0x80142134,new code,.word 0x005509FF,jal 0x80142178,new code in WORLD/WORLD.BIN (0x80142178)
+WORLD/WORLD.BIN,0x8014213C,new code,"slti s0, k1, 30464",j 0x80142154,new code in WORLD/WORLD.BIN (0x801420BC+0x98)
+WORLD/WORLD.BIN,0x80142148,new code,"lb s5, 9472(t2)",jal 0x80142450,new code in WORLD/WORLD.BIN (0x80142450)
+WORLD/WORLD.BIN,0x80142154,new code,.word 0xFFF74155,jal 0x80108920,vanilla code
+WORLD/WORLD.BIN,0x80142198,new code,.word 0xC701701C,jal 0x8014221C,new code in WORLD/WORLD.BIN (0x8014221C)
+WORLD/WORLD.BIN,0x801421AC,new code,.word 0xC0FF3F6C,jal 0x80142450,new code in WORLD/WORLD.BIN (0x80142450)
+WORLD/WORLD.BIN,0x801421BC,new code,.word 0xD5011CA0,jal 0x8005E254,vanilla code
+WORLD/WORLD.BIN,0x801421C4,new code,.word 0x5515C001,jal 0x801421E4,new code in WORLD/WORLD.BIN (0x80142178+0x6C)
+WORLD/WORLD.BIN,0x801422F0,new code,.word 0xB42AF777,jal 0x8005E254,vanilla code
+WORLD/WORLD.BIN,0x8014231C,new code,.word 0x5C545509,jal 0x8005E254,vanilla code
+WORLD/WORLD.BIN,0x80142324,new code,.word 0xDCC1FD1D,j 0x8014243C,new code in WORLD/WORLD.BIN (0x8014221C+0x220)
+WORLD/WORLD.BIN,0x8014250C,new code,.word 0x7737B795,jal 0x8005E5D8,vanilla code
+WORLD/WORLD.BIN,0x80142584,new code,"lwr s4, 0(v0)",jal 0x8005E254,vanilla code
+WORLD/WORLD.BIN,0x801425B0,new code,"bgtz k1, 0x80157D7C",jal 0x8005E254,vanilla code
+WORLD/WORLD.BIN,0x801425B8,new code,.word 0x55C27D1F,j 0x8014282C,new code in WORLD/WORLD.BIN (0x80142450+0x3DC)
+WORLD/WORLD.BIN,0x80142818,new code,"andi v1, zero, 0xE476",jal 0x8005DC14,vanilla code
+WORLD/WORLD.BIN,0x80142824,new code,j 0x84DCDC0C,jal 0x8005DED8,vanilla code
+WORLD/WORLD.BIN,0x801428E4,new code,"ori gp, fp, 0x71C7",jal 0x80142844,new code in WORLD/WORLD.BIN (0x80142450+0x3F4)
+WORLD/WORLD.BIN,0x801429D8,new code,.word 0xDC7AC7DD,jal 0x80142844,new code in WORLD/WORLD.BIN (0x80142450+0x3F4)
+WORLD/WORLD.BIN,0x80142A18,new code,.word 0x6EF0BF3D,jal 0x80142B18,new code in WORLD/WORLD.BIN (0x80142980+0x198)
+WORLD/WORLD.BIN,0x80142A20,new code,.word 0x77075C55,jal 0x800E6EDC,vanilla code
+WORLD/WORLD.BIN,0x80142B60,new code,.word 0x03301B30,jal 0x80142E68,new code in WORLD/WORLD.BIN (0x80142E68)
+WORLD/WORLD.BIN,0x80142B68,new code,.word 0x577D0710,j 0x80142C58,new code in WORLD/WORLD.BIN (0x80142B40+0x118)
+WORLD/WORLD.BIN,0x80142B78,new code,.word 0x77777777,jal 0x8012AB78,vanilla code
+WORLD/WORLD.BIN,0x80142BC4,new code,.word 0xF77D68B7,j 0x80142C58,new code in WORLD/WORLD.BIN (0x80142B40+0x118)
+WORLD/WORLD.BIN,0x80142BE4,new code,"swl k0, 7185(v1)",jal 0x80142000,new code in WORLD/WORLD.BIN (0x80142000)
+WORLD/WORLD.BIN,0x80142BEC,new code,.word 0x03005B33,j 0x80142C58,new code in WORLD/WORLD.BIN (0x80142B40+0x118)
+WORLD/WORLD.BIN,0x80142C18,new code,"lui s4, 0x5505",j 0x80142C58,new code in WORLD/WORLD.BIN (0x80142B40+0x118)
+WORLD/WORLD.BIN,0x80142C44,new code,.word 0xDCF7C159,jal 0x80142844,new code in WORLD/WORLD.BIN (0x80142450+0x3F4)
+WORLD/WORLD.BIN,0x80142C50,new code,.word 0xDC27DCAD,jal 0x80142980,new code in WORLD/WORLD.BIN (0x80142980)
+WORLD/WORLD.BIN,0x80142C70,new code,.word 0x55C27D1F,j 0x80142C90,new code in WORLD/WORLD.BIN (0x80142C90)
+WORLD/WORLD.BIN,0x80142C88,new code,"lui s7, 0x1677",j 0x80142C90,new code in WORLD/WORLD.BIN (0x80142C90)
+WORLD/WORLD.BIN,0x80142CD0,new code,.word 0xDCDFC155,j 0x80142CD8,new code in WORLD/WORLD.BIN (0x80142C90+0x48)
+WORLD/WORLD.BIN,0x80142CE0,new code,"andi v1, a2, 0x3577",j 0x80142D50,new code in WORLD/WORLD.BIN (0x80142C90+0xC0)
+WORLD/WORLD.BIN,0x80142CEC,new code,"lh s5, -27392(k0)",j 0x80142D30,new code in WORLD/WORLD.BIN (0x80142C90+0xA0)
+WORLD/WORLD.BIN,0x80142CF8,new code,.word 0x541500F0,j 0x80142D30,new code in WORLD/WORLD.BIN (0x80142C90+0xA0)
+WORLD/WORLD.BIN,0x80142D04,new code,.word 0xFF005B25,j 0x80142D30,new code in WORLD/WORLD.BIN (0x80142C90+0xA0)
+WORLD/WORLD.BIN,0x80142D10,new code,.word 0xD5011D37,j 0x80142D30,new code in WORLD/WORLD.BIN (0x80142C90+0xA0)
+WORLD/WORLD.BIN,0x80142D1C,new code,"swl zero, 30148(k0)",j 0x80142D30,new code in WORLD/WORLD.BIN (0x80142C90+0xA0)
+WORLD/WORLD.BIN,0x80142D28,new code,.word 0xF0FF3354,j 0x80142D30,new code in WORLD/WORLD.BIN (0x80142C90+0xA0)
+WORLD/WORLD.BIN,0x80142D48,new code,"addiu t7, v1, 1910",jal 0x800FE7D4,vanilla code
+WORLD/WORLD.BIN,0x80142D74,new code,.word 0x66430004,jal 0x80142B40,new code in WORLD/WORLD.BIN (0x80142B40)
+WORLD/WORLD.BIN,0x80142DC8,new code,.word 0x73B79577,jal 0x8014287C,new code in WORLD/WORLD.BIN (0x80142450+0x42C)
+WORLD/WORLD.BIN,0x80142DFC,new code,"sra t8, zero, 0",jal 0x80059AF0,vanilla code
+WORLD/WORLD.BIN,0x80142E04,new code,.word 0x77FF7F58,jal 0x80142918,new code in WORLD/WORLD.BIN (0x801428D4+0x44)
+WORLD/WORLD.BIN,0x80142E18,new code,.word 0x71701CF7,j 0x80142E50,new code in WORLD/WORLD.BIN (0x80142D94+0xBC)
+WORLD/WORLD.BIN,0x80142E38,new code,.word 0xFFD54355,jal 0x8012A598,vanilla code
+WORLD/WORLD.BIN,0x80142E40,new code,.word 0xF0303C24,jal 0x8012A598,vanilla code
+WORLD/WORLD.BIN,0x80142E48,new code,"lhu gp, 30464(t3)",jal 0x80142980,new code in WORLD/WORLD.BIN (0x80142980)
+WORLD/WORLD.BIN,0x80142E7C,new code,.word 0xF0370757,jal 0x8012AB78,vanilla code
+WORLD/WORLD.BIN,0x80142EDC,new code,"lhu v0, -27084(t6)",jal 0x801420BC,new code in WORLD/WORLD.BIN (0x801420BC)
+WORLD/WORLD.BIN,0x80142EE4,new code,.word 0xFD1C54D5,j 0x80142F18,new code in WORLD/WORLD.BIN (0x80142E68+0xB0)
+WORLD/WORLD.BIN,0x80142EF4,new code,cop0 0x1555500,jal 0x80142844,new code in WORLD/WORLD.BIN (0x80142450+0x3F4)
+WORLD/WORLD.BIN,0x80142F10,new code,"andi s7, a1, 0xE587",jal 0x80142980,new code in WORLD/WORLD.BIN (0x80142980)
+WORLD/WORLD.BIN,0x80142F4C,new code,"bgtz v0, 0x80138724",jal 0x80142F7C,new code in WORLD/WORLD.BIN (0x80142F7C)
+WORLD/WORLD.BIN,0x80142F9C,new code,"lui k1, 0xE576",jal 0x8005E288,vanilla code
+WORLD/WORLD.BIN,0x80142FC8,new code,.word 0x6F71470E,j 0x80142FF0,new code in WORLD/WORLD.BIN (0x80142F7C+0x74)
+WORLD/WORLD.BIN,0x80142FE8,new code,"beq zero, s0, 0x80142FEC",jal 0x801207BC,vanilla code
+WORLD/WORLD.BIN,0x80143014,new code,"bgtz a2, 0x8014271C",jal 0x80142844,new code in WORLD/WORLD.BIN (0x80142450+0x3F4)
+WORLD/WORLD.BIN,0x80148210,new code,.word 0x00F00030,jal 0x80148278,new code in WORLD/WORLD.BIN (0x80148278)
+WORLD/WORLD.BIN,0x80148224,new code,.word 0x79F7DF77,jal 0x801140BC,vanilla code
+WORLD/WORLD.BIN,0x8014822C,new code,.word 0x772477F7,jal 0x80108920,vanilla code
+WORLD/WORLD.BIN,0x80148244,new code,j 0x89F37300,j 0x8012BCF8,vanilla code
+WORLD/WORLD.BIN,0x80148264,new code,"sra a0, s6, 21",j 0x80148270,new code in WORLD/WORLD.BIN (0x80148200+0x70)
+WORLD/WORLD.BIN,0x80148324,new code,.word 0xE4C6C5E6,jal 0x80148340,new code in WORLD/WORLD.BIN (0x80148340)
+WORLD/WORLD.BIN,0x80148380,new code,.word 0xDD37E855,jal 0x801483F0,new code in WORLD/WORLD.BIN (0x80148340+0xB0)
+WORLD/WORLD.BIN,0x801483A0,new code,.word 0xFF4D5525,jal 0x8014841C,new code in WORLD/WORLD.BIN (0x80148340+0xDC)
+WORLD/WORLD.BIN,0x8014840C,new code,.word 0xD3105C1C,j 0x801483F0,new code in WORLD/WORLD.BIN (0x80148340+0xB0)
+WORLD/WORLD.BIN,0x8014846C,new code,"lh s5, 7616(t2)",j 0x80148480,new code in WORLD/WORLD.BIN (0x80148340+0x140)
+WORLD/WORLD.BIN,0x80148510,new code,"andi t4, zero, 0xD4D5",jal 0x801406B0,new code in WORLD/WORLD.BIN (0x801406B0)
+WORLD/WORLD.BIN,0x80149924,new code,"lhu gp, 23765(s0)",j 0x801498E8,new code in WORLD/WORLD.BIN (0x801498C0+0x28)
+WORLD/WORLD.BIN,0x80149970,new code,.word 0x003000FC,j 0x80124AA0,vanilla code
+WORLD/WORLD.BIN,0x8014998C,new code,.word 0x65A042C7,j 0x80124AE0,vanilla code
+WORLD/WORLD.BIN,0x801499CC,new code,.word 0xFF0480E5,jal 0x801208B8,vanilla code
+WORLD/WORLD.BIN,0x801499D4,new code,.word 0x026C547F,j 0x8014998C,new code in WORLD/WORLD.BIN (0x801498C0+0xCC)

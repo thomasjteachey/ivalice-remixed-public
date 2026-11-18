@@ -1,0 +1,198 @@
+table,id,name,field,vanilla,remixed
+inflict_statuses,00F,00F,Statuses,Sleep,Frog
+inflict_statuses,010,010,Statuses,Frog,Slow
+inflict_statuses,011,011,Statuses,Petrify,Poison
+inflict_statuses,012,012,Statuses,Slow,Faith
+inflict_statuses,013,013,Statuses,Poison,Confusion
+inflict_statuses,014,014,Statuses,Faith,Charm
+inflict_statuses,015,015,Statuses,Darkness,Innocent
+inflict_statuses,016,016,Mode,All or nothing,Cancel
+inflict_statuses,016,016,Statuses,Poison,"Darkness, Silence, Oil, Frog, Poison, Slow, Stop, Don't Move, Don't Act"
+inflict_statuses,017,017,Mode,All or nothing,Cancel
+inflict_statuses,017,017,Statuses,Confusion,Death Sentence
+inflict_statuses,018,018,Statuses,Charm,Reraise
+inflict_statuses,019,019,Statuses,Innocent,Regen
+inflict_statuses,01A,01A,Mode,Cancel,All or nothing
+inflict_statuses,01A,01A,Statuses,"Darkness, Silence, Oil, Frog, Poison, Slow, Stop, Don't Move, Don't Act",Protect
+inflict_statuses,01B,01B,Statuses,Sleep,Shell
+inflict_statuses,01C,01C,Mode,Cancel,All or nothing
+inflict_statuses,01C,01C,Statuses,Death Sentence,"Protect, Shell"
+inflict_statuses,01D,01D,Mode,none,Cancel
+inflict_statuses,01D,01D,Statuses,none,"Petrify, Darkness, Confusion, Silence, Berserk, Frog, Poison, Sleep, Don't Move, Don't Act"
+inflict_statuses,01E,01E,Mode,none,Random
+inflict_statuses,01E,01E,Statuses,none,"Undead, Petrify, Oil, Berserk, Stop, Innocent, Don't Move, Death Sentence"
+inflict_statuses,01F,01F,Mode,none,All or nothing
+inflict_statuses,01F,01F,Statuses,none,Dead
+inflict_statuses,020,020,Mode,Cancel,All or nothing
+inflict_statuses,020,020,Statuses,Dead,Haste
+inflict_statuses,021,021,Statuses,Reraise,Stop
+inflict_statuses,022,022,Statuses,Regen,Float
+inflict_statuses,023,023,Statuses,Protect,Reflect
+inflict_statuses,024,024,Statuses,Shell,Undead
+inflict_statuses,025,025,Statuses,"Protect, Shell",Berserk
+inflict_statuses,026,026,Statuses,"Petrify, Darkness, Confusion, Silence, Berserk, Frog, Poison, Sleep, Don't Move, Don't Act","Float, Reraise, Transparent, Regen, Protect, Shell, Haste, Faith, Reflect"
+inflict_statuses,027,027,Statuses,Poison,Petrify
+inflict_statuses,028,028,Mode,All or nothing,Random
+inflict_statuses,028,028,Statuses,Frog,"Reraise, Regen, Protect, Shell, Haste"
+inflict_statuses,029,029,Mode,All or nothing,Random
+inflict_statuses,029,029,Statuses,Dead,"Darkness, Confusion, Silence, Frog, Poison, Slow, Stop, Sleep"
+inflict_statuses,02A,02A,Statuses,Haste,Invite
+inflict_statuses,02B,02B,Mode,All or nothing,Cancel
+inflict_statuses,02B,02B,Statuses,Slow,"Charging, Performing"
+inflict_statuses,02C,02C,Mode,All or nothing,Random
+inflict_statuses,02C,02C,Statuses,Stop,"Confusion, Death Sentence"
+inflict_statuses,02D,02D,Statuses,Don't Move,"Regen, Haste"
+inflict_statuses,02E,02E,Mode,All or nothing,Cancel
+inflict_statuses,02E,02E,Statuses,Float,"Darkness, Silence, Poison"
+inflict_statuses,02F,02F,Mode,All or nothing,Cancel
+inflict_statuses,02F,02F,Statuses,Reflect,"Petrify, Confusion, Silence, Blood Suck, Frog, Poison, Stop, Sleep, Don't Move, Don't Act"
+inflict_statuses,030,030,Mode,All or nothing,Separate
+inflict_statuses,030,030,Statuses,Darkness,"Stop, Don't Move, Don't Act"
+inflict_statuses,031,031,Mode,All or nothing,Separate
+inflict_statuses,031,031,Statuses,Faith,"Darkness, Confusion, Silence, Frog, Poison, Slow, Sleep"
+inflict_statuses,032,032,Mode,All or nothing,Random
+inflict_statuses,032,032,Statuses,Innocent,"Sleep, Death Sentence"
+inflict_statuses,033,033,Statuses,Undead,Blood Suck
+inflict_statuses,034,034,Mode,All or nothing,Separate
+inflict_statuses,034,034,Statuses,Silence,Darkness
+inflict_statuses,035,035,Mode,All or nothing,Separate
+inflict_statuses,035,035,Statuses,Berserk,Poison
+inflict_statuses,036,036,Mode,All or nothing,Random
+inflict_statuses,036,036,Statuses,Confusion,"Darkness, Oil, Poison"
+inflict_statuses,037,037,Mode,Cancel,Separate
+inflict_statuses,037,037,Statuses,"Float, Reraise, Transparent, Regen, Protect, Shell, Haste, Faith, Reflect",Undead
+inflict_statuses,038,038,Mode,All or nothing,Separate
+inflict_statuses,038,038,Statuses,Don't Act,Dead
+inflict_statuses,039,039,Mode,All or nothing,Separate
+inflict_statuses,039,039,Statuses,Sleep,Petrify
+inflict_statuses,03A,03A,Statuses,Petrify,"Reraise, Regen, Protect, Shell, Haste"
+inflict_statuses,03B,03B,Mode,Random,Cancel
+inflict_statuses,03B,03B,Statuses,"Reraise, Regen, Protect, Shell, Haste","Darkness, Confusion, Silence, Oil, Berserk, Frog, Poison, Stop, Sleep, Don't Move, Don't Act"
+inflict_statuses,03C,03C,Statuses,"Darkness, Confusion, Silence, Frog, Poison, Slow, Stop, Sleep","Dead, Petrify, Stop"
+inflict_statuses,03D,03D,Statuses,Death Sentence,Crystal
+inflict_statuses,03E,03E,Mode,All or nothing,Cancel
+inflict_statuses,03E,03E,Statuses,Charm,"Petrify, Darkness, Silence, Poison, Stop, Don't Move, Don't Act"
+inflict_statuses,03F,03F,Statuses,Invite,Oil
+inflict_statuses,040,040,Mode,Cancel,Random
+inflict_statuses,040,040,Statuses,"Petrify, Oil, Poison, Stop","Petrify, Stop"
+inflict_statuses,041,041,Mode,All or nothing,Random
+inflict_statuses,041,041,Statuses,Don't Move,"Confusion, Berserk"
+inflict_statuses,042,042,Mode,All or nothing,Random
+inflict_statuses,042,042,Statuses,Frog,"Confusion, Sleep"
+inflict_statuses,043,043,Mode,All or nothing,Separate
+inflict_statuses,043,043,Statuses,Stop,"Petrify, Darkness, Confusion, Silence, Oil, Frog, Poison, Sleep"
+inflict_statuses,044,044,Mode,All or nothing,Separate
+inflict_statuses,044,044,Statuses,Petrify,"Petrify, Darkness, Confusion, Silence, Berserk, Frog, Poison, Slow, Sleep"
+inflict_statuses,045,045,Mode,All or nothing,Separate
+inflict_statuses,045,045,Statuses,Confusion,Blood Suck
+inflict_statuses,046,046,Mode,All or nothing,Random
+inflict_statuses,046,046,Statuses,Don't Act,"Petrify, Darkness, Silence, Don't Move, Don't Act, Death Sentence"
+inflict_statuses,047,047,Statuses,Sleep,"Frog, Poison"
+inflict_statuses,048,048,Mode,All or nothing,Separate
+inflict_statuses,048,048,Statuses,Death Sentence,Stop
+inflict_statuses,049,049,Mode,All or nothing,Separate
+inflict_statuses,049,049,Statuses,Darkness,Death Sentence
+inflict_statuses,04A,04A,Mode,All or nothing,Separate
+inflict_statuses,04B,04B,Mode,All or nothing,Separate
+inflict_statuses,04B,04B,Statuses,Slow,Confusion
+inflict_statuses,04C,04C,Mode,All or nothing,Separate
+inflict_statuses,04C,04C,Statuses,Dead,"Dead, Sleep"
+inflict_statuses,04D,04D,Mode,Random,All or nothing
+inflict_statuses,04D,04D,Statuses,"Confusion, Death Sentence","Reraise, Protect, Shell"
+inflict_statuses,04E,04E,Mode,All or nothing,Separate
+inflict_statuses,04E,04E,Statuses,"Regen, Haste",Charm
+inflict_statuses,04F,04F,Mode,Cancel,Separate
+inflict_statuses,04F,04F,Statuses,"Darkness, Silence, Poison",Innocent
+inflict_statuses,050,050,Mode,Cancel,Separate
+inflict_statuses,050,050,Statuses,"Petrify, Confusion, Silence, Blood Suck, Frog, Poison, Stop, Sleep, Don't Move, Don't Act",Sleep
+inflict_statuses,051,051,Mode,All or nothing,Separate
+inflict_statuses,051,051,Statuses,"Stop, Don't Move, Don't Act",Don't Act
+inflict_statuses,052,052,Mode,Random,Separate
+inflict_statuses,052,052,Statuses,"Darkness, Confusion, Silence, Frog, Poison, Slow, Sleep",Don't Move
+inflict_statuses,053,053,Mode,All or nothing,Random
+inflict_statuses,053,053,Statuses,Petrify,"Silence, Frog, Slow"
+inflict_statuses,054,054,Mode,Random,Separate
+inflict_statuses,054,054,Statuses,"Sleep, Death Sentence",Frog
+inflict_statuses,055,055,Mode,All or nothing,Separate
+inflict_statuses,055,055,Statuses,Blood Suck,Slow
+inflict_statuses,056,056,Statuses,Darkness,Faith
+inflict_statuses,057,057,Statuses,Poison,Innocent
+inflict_statuses,058,058,Statuses,Oil,Silence
+inflict_statuses,059,059,Statuses,Undead,Frog
+inflict_statuses,05A,05A,Statuses,Dead,Petrify
+inflict_statuses,05B,05B,Statuses,Petrify,Dead
+inflict_statuses,05C,05C,Mode,All or nothing,Separate
+inflict_statuses,05C,05C,Statuses,"Reraise, Regen, Protect, Shell, Haste",Poison
+inflict_statuses,05D,05D,Statuses,Petrify,"Darkness, Oil"
+inflict_statuses,05E,05E,Mode,Cancel,Random
+inflict_statuses,05E,05E,Statuses,"Darkness, Confusion, Silence, Oil, Berserk, Frog, Poison, Stop, Sleep, Don't Move, Don't Act","Crystal, Treasure"
+inflict_statuses,05F,05F,Statuses,"Dead, Petrify, Stop","Dead, Undead, Petrify"
+inflict_statuses,060,060,Mode,All or nothing,Random
+inflict_statuses,060,060,Statuses,Crystal,"Blood Suck, Berserk, Death Sentence"
+inflict_statuses,061,061,Mode,All or nothing,none
+inflict_statuses,061,061,Statuses,Frog,none
+inflict_statuses,062,062,Mode,All or nothing,none
+inflict_statuses,062,062,Statuses,Slow,none
+inflict_statuses,063,063,Mode,All or nothing,none
+inflict_statuses,063,063,Statuses,Silence,none
+inflict_statuses,064,064,Mode,Cancel,none
+inflict_statuses,064,064,Statuses,"Petrify, Darkness, Silence, Poison, Stop, Don't Move, Don't Act",none
+inflict_statuses,065,065,Mode,All or nothing,none
+inflict_statuses,065,065,Statuses,Oil,none
+inflict_statuses,066,066,Mode,Random,none
+inflict_statuses,066,066,Statuses,"Petrify, Stop",none
+inflict_statuses,067,067,Mode,Random,none
+inflict_statuses,067,067,Statuses,"Confusion, Berserk",none
+inflict_statuses,068,068,Mode,Random,none
+inflict_statuses,068,068,Statuses,"Confusion, Sleep",none
+inflict_statuses,069,069,Mode,Separate,none
+inflict_statuses,069,069,Statuses,"Petrify, Darkness, Confusion, Silence, Oil, Frog, Poison, Sleep",none
+inflict_statuses,06A,06A,Mode,Separate,none
+inflict_statuses,06A,06A,Statuses,"Petrify, Darkness, Confusion, Silence, Berserk, Frog, Poison, Slow, Sleep",none
+inflict_statuses,06B,06B,Mode,Separate,none
+inflict_statuses,06B,06B,Statuses,Blood Suck,none
+inflict_statuses,06C,06C,Mode,All or nothing,none
+inflict_statuses,06C,06C,Statuses,Undead,none
+inflict_statuses,06D,06D,Mode,All or nothing,none
+inflict_statuses,06D,06D,Statuses,Sleep,none
+inflict_statuses,06E,06E,Mode,All or nothing,none
+inflict_statuses,06E,06E,Statuses,Oil,none
+inflict_statuses,06F,06F,Mode,Random,none
+inflict_statuses,06F,06F,Statuses,"Petrify, Darkness, Silence, Don't Move, Don't Act",none
+inflict_statuses,070,070,Mode,All or nothing,none
+inflict_statuses,070,070,Statuses,Petrify,none
+inflict_statuses,071,071,Mode,Separate,none
+inflict_statuses,071,071,Statuses,"Dead, Sleep",none
+inflict_statuses,072,072,Mode,All or nothing,none
+inflict_statuses,072,072,Statuses,Petrify,none
+inflict_statuses,073,073,Mode,All or nothing,none
+inflict_statuses,073,073,Statuses,Frog,none
+inflict_statuses,074,074,Mode,All or nothing,none
+inflict_statuses,074,074,Statuses,"Frog, Poison",none
+inflict_statuses,075,075,Mode,Separate,none
+inflict_statuses,075,075,Statuses,Stop,none
+inflict_statuses,076,076,Mode,Separate,none
+inflict_statuses,076,076,Statuses,Death Sentence,none
+inflict_statuses,077,077,Mode,Separate,none
+inflict_statuses,077,077,Statuses,Dead,none
+inflict_statuses,078,078,Mode,Separate,none
+inflict_statuses,078,078,Statuses,Silence,none
+inflict_statuses,079,079,Mode,Separate,none
+inflict_statuses,079,079,Statuses,Confusion,none
+inflict_statuses,07C,07C,Mode,none,Separate
+inflict_statuses,07C,07C,Statuses,none,Slow
+inflict_statuses,07D,07D,Mode,none,Cancel
+inflict_statuses,07D,07D,Statuses,none,"Protect, Shell, Reflect"
+inflict_statuses,07E,07E,Mode,none,Separate
+inflict_statuses,07E,07E,Statuses,none,Don't Move
+inflict_statuses,07F,07F,Mode,none,Separate
+inflict_statuses,07F,07F,Statuses,none,Don't Act
+status_attributes,008,Petrify,Can't stack on,"Crystal, Dead, Jump","Crystal, Dead, Jump, Defending"
+status_attributes,00B,Confusion,Can't stack on,"Crystal, Dead, Jump","Crystal, Dead, Jump, Defending"
+status_attributes,00D,Blood Suck,Can't stack on,"Crystal, Dead, Jump","Crystal, Dead, Jump, Defending"
+status_attributes,014,Berserk,Can't stack on,"Crystal, Dead, Jump","Crystal, Dead, Jump, Defending"
+status_attributes,016,Frog,Can't stack on,"Crystal, Dead, Jump","Crystal, Dead, Jump, Defending"
+status_attributes,01E,Stop,Can't stack on,"Crystal, Dead, Jump","Crystal, Dead, Jump, Defending"
+status_attributes,022,Charm,Can't stack on,"Crystal, Dead, Jump","Crystal, Dead, Jump, Defending"
+status_attributes,023,Sleep,Can't stack on,"Crystal, Dead, Jump","Crystal, Dead, Jump, Defending"
+status_attributes,025,Don't Act,Can't stack on,"Crystal, Dead, Jump","Crystal, Dead, Jump, Defending"

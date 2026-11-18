@@ -1,0 +1,363 @@
+table,id,name,field,vanilla,remixed
+items,010,Sasuke Knife (10),Enemy level,95,80
+items,011,Iga Knife (11),Attributes id,0x00,0x3D
+items,012,Koga Knife (12),Enemy level,96,90
+items,012,Koga Knife (12),Attributes id,0x00,0x3E
+items,01F,Nagrarock (1F),Enemy level,95,2
+items,020,Materia Blade (20),Enemy level,96,101
+items,026,Asura Knife (26),Shop availability,7,6
+items,030,Battle Axe (30),Shop availability,4,6
+items,031,Giant Axe (31),Shop availability,7,9
+items,032,Slasher (32),Shop availability,10,14
+items,038,Wizard Rod (38),Attributes id,0x09,0x01
+items,039,Dragon Rod (39),Attributes id,0x00,0x3B
+items,03A,Faith Rod (3A),Attributes id,0x49,0x38
+items,03F,Wizard Staff (3F),Attributes id,0x0A,0x09
+items,041,Mace of Zeus (41),Attributes id,0x0B,0x0A
+items,042,Sage Staff (42),Attributes id,0x00,0x3C
+items,049,Stone Gun (49),Enemy level,95,101
+items,049,Stone Gun (49),Attributes id,0x48,0x37
+items,04E,Night Killer (4E),Kind,"Weapon, Rare",Weapon
+items,070,Ivory Rod (70),Enemy level,95,60
+items,070,Ivory Rod (70),Price,10000,30000
+items,072,Whale Whisker (72),Enemy level,96,90
+items,073,C Bag (73),Attributes id,0x0C,0x09
+items,075,P Bag (75),Attributes id,0x0D,0x05
+items,076,H Bag (76),Attributes id,0x0E,0x0B
+items,086,Ice Shield (86),Attributes id,0x0F,0x0C
+items,087,Flame Shield (87),Attributes id,0x10,0x0D
+items,088,Aegis Shield (88),Attributes id,0x11,0x09
+items,08C,Genji Shield (8C),Enemy level,36,101
+items,08C,Genji Shield (8C),Attributes id,0x00,0x3A
+items,08D,Kaiser Plate (8D),Enemy level,39,60
+items,08D,Kaiser Plate (8D),Attributes id,0x12,0x0E
+items,08E,Venetian Shield (8E),Enemy level,40,75
+items,08E,Venetian Shield (8E),Attributes id,0x13,0x0F
+items,08F,Escutcheon (8F),Enemy level,50,95
+items,09B,Genji Helmet (9B),Enemy level,36,101
+items,09B,Genji Helmet (9B),Attributes id,0x00,0x35
+items,09C,Grand Helmet (9C),Enemy level,40,90
+items,09C,Grand Helmet (9C),Attributes id,0x14,0x10
+items,0A0,Headgear (A0),Attributes id,0x15,0x11
+items,0A1,Triangle Hat (A1),Attributes id,0x16,0x09
+items,0A2,Green Beret (A2),Attributes id,0x17,0x0B
+items,0A3,Twist Headband (A3),Attributes id,0x18,0x12
+items,0A4,Holy Miter (A4),Attributes id,0x19,0x09
+items,0A6,Golden Hairpin (A6),Attributes id,0x1A,0x13
+items,0A7,Flash Hat (A7),Attributes id,0x1B,0x14
+items,0A8,Thief Hat (A8),Attributes id,0x1C,0x15
+items,0A9,Cachusha (A9),Enemy level,50,75
+items,0A9,Cachusha (A9),Attributes id,0x45,0x34
+items,0AA,Barette (AA),Enemy level,51,75
+items,0AA,Barette (AA),Attributes id,0x46,0x35
+items,0AB,Ribbon (AB),Enemy level,52,90
+items,0AB,Ribbon (AB),Attributes id,0x47,0x36
+items,0B6,Crystal Mail (B6),Enemy level,37,38
+items,0B7,Genji Armor (B7),Enemy level,37,101
+items,0B7,Genji Armor (B7),Attributes id,0x00,0x39
+items,0B8,Reflect Mail (B8),Enemy level,39,60
+items,0B8,Reflect Mail (B8),Attributes id,0x1D,0x16
+items,0B9,Maximillian (B9),Enemy level,45,90
+items,0C2,Judo Outfit (C2),Attributes id,0x1E,0x17
+items,0C3,Power Sleeve (C3),Attributes id,0x1F,0x12
+items,0C4,Earth Clothes (C4),Attributes id,0x20,0x18
+items,0C5,Secret Clothes (C5),Enemy level,35,101
+items,0C5,Secret Clothes (C5),Attributes id,0x21,0x19
+items,0C6,Black Costume (C6),Attributes id,0x22,0x1A
+items,0C7,Rubber Costume (C7),Enemy level,50,90
+items,0C7,Rubber Costume (C7),Attributes id,0x23,0x1B
+items,0CA,Wizard Robe (CA),Attributes id,0x24,0x01
+items,0CB,Chameleon Robe (CB),Attributes id,0x25,0x1C
+items,0CC,White Robe (CC),Attributes id,0x26,0x0F
+items,0CD,Black Robe (CD),Attributes id,0x27,0x0E
+items,0CE,Light Robe (CE),Attributes id,0x28,0x00
+items,0CF,Robe of Lords (CF),Enemy level,45,90
+items,0CF,Robe of Lords (CF),Attributes id,0x29,0x1D
+items,0D0,Battle Boots (D0),Attributes id,0x2A,0x1E
+items,0D1,Spike Shoes (D1),Attributes id,0x2B,0x1F
+items,0D2,Germinas Boots (D2),Attributes id,0x2C,0x20
+items,0D3,Rubber Shoes (D3),Enemy level,5,25
+items,0D3,Rubber Shoes (D3),Kind,"Accessory, Rare",Accessory
+items,0D3,Rubber Shoes (D3),Attributes id,0x2D,0x21
+items,0D4,Feather Boots (D4),Enemy level,50,40
+items,0D4,Feather Boots (D4),Kind,"Accessory, Rare",Accessory
+items,0D4,Feather Boots (D4),Attributes id,0x2E,0x22
+items,0D5,Sprint Shoes (D5),Kind,"Accessory, Rare",Accessory
+items,0D5,Sprint Shoes (D5),Attributes id,0x2F,0x0B
+items,0D6,Red Shoes (D6),Enemy level,40,35
+items,0D6,Red Shoes (D6),Kind,"Accessory, Rare",Accessory
+items,0D6,Red Shoes (D6),Attributes id,0x30,0x23
+items,0D7,Power Wrist (D7),Attributes id,0x31,0x11
+items,0D8,Genji Gauntlet (D8),Enemy level,50,101
+items,0D8,Genji Gauntlet (D8),Attributes id,0x32,0x24
+items,0D9,Magic Gauntlet (D9),Attributes id,0x33,0x01
+items,0DA,Bracer (DA),Enemy level,60,30
+items,0DA,Bracer (DA),Attributes id,0x34,0x25
+items,0DB,Reflect Ring (DB),Kind,"Accessory, Rare",Accessory
+items,0DB,Reflect Ring (DB),Attributes id,0x35,0x16
+items,0DC,Defense Ring (DC),Attributes id,0x36,0x26
+items,0DD,Magic Ring (DD),Attributes id,0x37,0x27
+items,0DE,Cursed Ring (DE),Enemy level,5,90
+items,0DE,Cursed Ring (DE),Attributes id,0x38,0x28
+items,0DF,Angel Ring (DF),Enemy level,25,70
+items,0DF,Angel Ring (DF),Kind,"Accessory, Rare",Accessory
+items,0DF,Angel Ring (DF),Attributes id,0x39,0x29
+items,0E0,Diamond Armlet (E0),Attributes id,0x3A,0x2A
+items,0E1,Jade Armlet (E1),Attributes id,0x3B,0x2B
+items,0E2,108 Gems (E2),Attributes id,0x3C,0x2C
+items,0E3,N-Kai Armlet (E3),Attributes id,0x3D,0x2D
+items,0E4,Defense Armlet (E4),Attributes id,0x3E,0x2E
+items,0E7,Wizard Mantle (E7),Attributes id,0x3F,0x09
+items,0EB,Vanish Mantle (EB),Enemy level,5,60
+items,0EB,Vanish Mantle (EB),Attributes id,0x40,0x2F
+items,0EC,Chantage (EC),Enemy level,5,90
+items,0EC,Chantage (EC),Attributes id,0x41,0x30
+items,0ED,Cherche (ED),Enemy level,5,90
+items,0ED,Cherche (ED),Attributes id,0x42,0x31
+items,0EE,Setiemson (EE),Enemy level,5,90
+items,0EE,Setiemson (EE),Attributes id,0x43,0x32
+items,0EF,Salty Rage (EF),Enemy level,5,90
+items,0EF,Salty Rage (EF),Attributes id,0x44,0x33
+items,0F3,Ether (F3),Price,200,50
+items,0F3,Ether (F3),Shop availability,7,1
+items,0F4,Hi-Ether (F4),Price,600,300
+items,0F4,Hi-Ether (F4),Shop availability,11,7
+weapons,003,Blind Knife (03),Inflict status/spell,0x09,0x34
+weapons,004,Mage Masher (04),Inflict status/spell,0x0A,0x4A
+weapons,008,Assassin Dagger (08),Inflict status/spell,0x0B,0x49
+weapons,00A,Zorlin Shape (0A),Inflict status/spell,0x0C,0x50
+weapons,00F,Spell Edge (0F),Inflict status/spell,0x0D,0x51
+weapons,011,Iga Knife (11),Power,15,14
+weapons,011,Iga Knife (11),Element,none,Water
+weapons,012,Koga Knife (12),Power,15,14
+weapons,012,Koga Knife (12),Element,none,Earth
+weapons,019,Ancient Sword (19),Inflict status/spell,0x0E,0x52
+weapons,01A,Sleep Sword (1A),Inflict status/spell,0x0F,0x31
+weapons,01F,Nagrarock (1F),Inflict status/spell,0x10,0x54
+weapons,025,Chaos Blade (25),Inflict status/spell,0x11,0x39
+weapons,026,Asura Knife (26),Power,7,9
+weapons,026,Asura Knife (26),Evade,15,40
+weapons,027,Koutetsu Knife (27),Power,8,10
+weapons,027,Koutetsu Knife (27),Evade,15,40
+weapons,028,Bizen Boat (28),Power,9,11
+weapons,028,Bizen Boat (28),Evade,15,40
+weapons,029,Murasame (29),Power,10,12
+weapons,029,Murasame (29),Evade,15,40
+weapons,02A,Heaven's Cloud (2A),Power,11,13
+weapons,02A,Heaven's Cloud (2A),Evade,15,40
+weapons,02B,Kiyomori (2B),Power,12,14
+weapons,02B,Kiyomori (2B),Evade,15,40
+weapons,02C,Muramasa (2C),Power,14,16
+weapons,02C,Muramasa (2C),Evade,15,40
+weapons,02D,Kikuichimoji (2D),Power,15,17
+weapons,02D,Kikuichimoji (2D),Evade,15,40
+weapons,02E,Masamune (2E),Power,18,21
+weapons,02E,Masamune (2E),Evade,15,40
+weapons,02F,Chirijiraden (2F),Evade,15,40
+weapons,030,Battle Axe (30),Power,9,12
+weapons,031,Giant Axe (31),Power,12,18
+weapons,032,Slasher (32),Power,16,30
+weapons,032,Slasher (32),Inflict status/spell,0x12,0x55
+weapons,037,Poison Rod (37),Inflict status/spell,0x13,0x35
+weapons,03A,Faith Rod (3A),Inflict status/spell,0x14,0x56
+weapons,03C,White Staff (3C),Inflict status/spell,0x1C,0x17
+weapons,047,Romanda Gun (47),Flags,Direct,"Direct, Two Swords"
+weapons,048,Mythril Gun (48),Flags,Direct,"Direct, Two Swords"
+weapons,049,Stone Gun (49),Flags,Direct,"Direct, Two Swords"
+weapons,04A,Blaze Gun (4A),Power,20,14
+weapons,04B,Glacier Gun (4B),Power,21,15
+weapons,04C,Blast Gun (4C),Power,22,16
+weapons,04D,Bow Gun (4D),Flags,Direct,"Direct, Two Swords"
+weapons,04E,Night Killer (4E),Flags,Direct,"Direct, Two Swords"
+weapons,04E,Night Killer (4E),Power,3,5
+weapons,04E,Night Killer (4E),Inflict status/spell,0x15,0x34
+weapons,04F,Cross Bow (4F),Flags,Direct,"Direct, Two Swords"
+weapons,04F,Cross Bow (4F),Power,4,7
+weapons,050,Poison Bow (50),Flags,Direct,"Direct, Two Swords"
+weapons,050,Poison Bow (50),Power,4,8
+weapons,050,Poison Bow (50),Inflict status/spell,0x16,0x35
+weapons,051,Hunting Bow (51),Flags,Direct,"Direct, Two Swords"
+weapons,051,Hunting Bow (51),Power,6,9
+weapons,052,Gastrafitis (52),Flags,Direct,"Direct, Two Swords"
+weapons,052,Gastrafitis (52),Power,10,13
+weapons,055,Ice Bow (55),Power,5,7
+weapons,056,Lightning Bow (56),Power,6,8
+weapons,057,Windslash Bow (57),Power,8,11
+weapons,058,Mythril Bow (58),Power,7,9
+weapons,059,Ultimus Bow (59),Power,10,14
+weapons,05A,Yoichi Bow (5A),Power,12,18
+weapons,05B,Perseus Bow (5B),Power,16,22
+weapons,05C,Ramia Harp (5C),Inflict status/spell,0x17,0x4B
+weapons,05E,Fairy Harp (5E),Inflict status/spell,0x18,0x4E
+weapons,05F,Battle Dict (5F),Flags,"Direct, Throwable","Direct, Two Swords, Throwable"
+weapons,060,Monster Dict (60),Flags,"Direct, Throwable","Direct, Two Swords, Throwable"
+weapons,061,Papyrus Plate (61),Flags,"Direct, Throwable","Direct, Two Swords, Throwable"
+weapons,062,Madlemgen (62),Flags,"Direct, Throwable","Direct, Two Swords, Throwable"
+weapons,06F,Gokuu Rod (6F),Inflict status/spell,0x19,0x57
+weapons,070,Ivory Rod (70),Power,11,14
+weapons,071,Octagon Rod (71),Inflict status/spell,0x1A,0x16
+item_attributes,009,009,MA,2,1
+item_attributes,00A,00A,PA,0,2
+item_attributes,00A,00A,MA,1,2
+item_attributes,00A,00A,Absorb,none,Lightning
+item_attributes,00A,00A,Strengthen,none,Lightning
+item_attributes,00B,00B,PA,2,0
+item_attributes,00B,00B,MA,1,0
+item_attributes,00B,00B,Speed,0,1
+item_attributes,00C,00C,MA,1,0
+item_attributes,00C,00C,Absorb,none,Ice
+item_attributes,00C,00C,Half,none,Fire
+item_attributes,00C,00C,Weak,none,Lightning
+item_attributes,00D,00D,Innate statuses,Regen,none
+item_attributes,00D,00D,Absorb,none,Fire
+item_attributes,00D,00D,Half,none,Ice
+item_attributes,00D,00D,Weak,none,Water
+item_attributes,00E,00E,Speed,1,0
+item_attributes,00E,00E,Strengthen,none,"Fire, Lightning, Ice"
+item_attributes,00F,00F,Absorb,Ice,none
+item_attributes,00F,00F,Half,Fire,"Fire, Lightning, Ice"
+item_attributes,00F,00F,Weak,Lightning,none
+item_attributes,010,010,Status immunity,none,"Darkness, Sleep"
+item_attributes,010,010,Absorb,Fire,none
+item_attributes,010,010,Half,Ice,none
+item_attributes,010,010,Weak,Water,none
+item_attributes,011,011,PA,0,1
+item_attributes,011,011,MA,1,0
+item_attributes,012,012,PA,0,2
+item_attributes,012,012,Strengthen,"Fire, Lightning, Ice",none
+item_attributes,013,013,Status immunity,none,Silence
+item_attributes,013,013,Half,"Fire, Lightning, Ice",none
+item_attributes,014,014,MA,0,1
+item_attributes,014,014,Speed,0,1
+item_attributes,014,014,Status immunity,"Darkness, Sleep",none
+item_attributes,015,015,PA,1,0
+item_attributes,015,015,Speed,0,2
+item_attributes,015,015,Status immunity,none,"Don't Move, Don't Act"
+item_attributes,016,016,MA,1,0
+item_attributes,016,016,Innate statuses,none,Reflect
+item_attributes,017,017,PA,0,1
+item_attributes,017,017,Speed,1,0
+item_attributes,017,017,Status immunity,none,Dead
+item_attributes,018,018,PA,2,0
+item_attributes,018,018,Absorb,none,Earth
+item_attributes,018,018,Strengthen,none,Earth
+item_attributes,019,019,MA,1,0
+item_attributes,019,019,Speed,0,2
+item_attributes,019,019,Starting statuses,none,Transparent
+item_attributes,01A,01A,Status immunity,Silence,Stop
+item_attributes,01B,01B,MA,1,0
+item_attributes,01B,01B,Speed,1,0
+item_attributes,01B,01B,Cancel,none,Lightning
+item_attributes,01C,01C,Speed,2,0
+item_attributes,01C,01C,Status immunity,"Don't Move, Don't Act",Dead
+item_attributes,01C,01C,Absorb,none,Holy
+item_attributes,01D,01D,PA,0,2
+item_attributes,01D,01D,MA,0,1
+item_attributes,01D,01D,Innate statuses,Reflect,"Protect, Shell"
+item_attributes,01E,01E,PA,1,0
+item_attributes,01E,01E,Move,0,1
+item_attributes,01E,01E,Status immunity,Dead,none
+item_attributes,01F,01F,PA,2,0
+item_attributes,01F,01F,Jump,0,1
+item_attributes,020,020,Move,0,1
+item_attributes,020,020,Jump,0,1
+item_attributes,020,020,Absorb,Earth,none
+item_attributes,020,020,Strengthen,Earth,none
+item_attributes,021,021,Speed,2,0
+item_attributes,021,021,Status immunity,none,Don't Move
+item_attributes,021,021,Starting statuses,Transparent,none
+item_attributes,021,021,Cancel,none,Lightning
+item_attributes,022,022,Innate statuses,none,Float
+item_attributes,022,022,Status immunity,Stop,none
+item_attributes,023,023,MA,0,1
+item_attributes,023,023,Move,0,1
+item_attributes,023,023,Cancel,Lightning,none
+item_attributes,024,024,PA,0,2
+item_attributes,025,025,PA,0,3
+item_attributes,025,025,Status immunity,Dead,none
+item_attributes,025,025,Absorb,Holy,none
+item_attributes,026,026,Status immunity,none,"Sleep, Death Sentence"
+item_attributes,026,026,Half,"Fire, Lightning, Ice",none
+item_attributes,027,027,Status immunity,none,"Silence, Berserk"
+item_attributes,027,027,Strengthen,"Fire, Lightning, Ice",none
+item_attributes,028,028,PA,0,1
+item_attributes,028,028,MA,0,1
+item_attributes,028,028,Speed,0,1
+item_attributes,028,028,Innate statuses,none,Undead
+item_attributes,028,028,Status immunity,none,Invite
+item_attributes,029,029,PA,2,0
+item_attributes,029,029,MA,1,0
+item_attributes,029,029,Innate statuses,"Protect, Shell",none
+item_attributes,029,029,Status immunity,none,"Dead, Darkness"
+item_attributes,029,029,Starting statuses,none,Reraise
+item_attributes,02A,02A,PA,0,1
+item_attributes,02A,02A,MA,0,1
+item_attributes,02A,02A,Move,1,0
+item_attributes,02A,02A,Status immunity,none,Slow
+item_attributes,02B,02B,Jump,1,0
+item_attributes,02B,02B,Status immunity,none,"Petrify, Stop"
+item_attributes,02C,02C,Move,1,0
+item_attributes,02C,02C,Jump,1,0
+item_attributes,02C,02C,Status immunity,none,"Undead, Blood Suck, Frog, Poison"
+item_attributes,02C,02C,Strengthen,none,"Fire, Lightning, Ice, Wind, Earth, Water, Holy, Dark"
+item_attributes,02D,02D,Status immunity,Don't Move,"Confusion, Charm"
+item_attributes,02D,02D,Cancel,Lightning,none
+item_attributes,02D,02D,Half,none,Dark
+item_attributes,02E,02E,Innate statuses,Float,none
+item_attributes,02E,02E,Status immunity,none,"Don't Move, Don't Act"
+item_attributes,02F,02F,Speed,1,0
+item_attributes,02F,02F,Starting statuses,none,Transparent
+item_attributes,030,030,MA,1,0
+item_attributes,030,030,Move,1,0
+item_attributes,030,030,Innate statuses,none,"Reraise, Regen"
+item_attributes,031,031,PA,1,0
+item_attributes,031,031,Innate statuses,none,"Float, Reflect"
+item_attributes,032,032,PA,2,0
+item_attributes,032,032,MA,2,1
+item_attributes,032,032,Innate statuses,none,Haste
+item_attributes,032,032,Starting statuses,none,Transparent
+item_attributes,033,033,MA,2,0
+item_attributes,033,033,Innate statuses,none,"Protect, Shell"
+item_attributes,034,034,PA,3,0
+item_attributes,034,034,Status immunity,none,"Undead, Darkness, Silence, Frog, Poison, Slow, Don't Move, Don't Act, Death Sentence"
+item_attributes,035,035,Innate statuses,Reflect,none
+item_attributes,035,035,Status immunity,none,"Dead, Petrify, Invite, Confusion, Blood Suck, Berserk, Stop, Charm, Sleep"
+item_attributes,036,036,Status immunity,"Sleep, Death Sentence","Dead, Undead, Petrify, Invite, Darkness, Confusion, Silence, Blood Suck, Berserk, Frog, Poison, Slow, Stop, Charm, Sleep, Don't Move, Don't Act, Death Sentence"
+item_attributes,037,037,Status immunity,"Silence, Berserk",none
+item_attributes,037,037,Starting statuses,none,Petrify
+item_attributes,038,038,PA,1,0
+item_attributes,038,038,MA,1,0
+item_attributes,038,038,Speed,1,0
+item_attributes,038,038,Innate statuses,Undead,Faith
+item_attributes,038,038,Status immunity,Invite,none
+item_attributes,039,039,Status immunity,"Dead, Darkness",none
+item_attributes,039,039,Starting statuses,Reraise,none
+item_attributes,039,039,Strengthen,none,"Fire, Lightning, Ice, Wind, Earth, Water, Holy, Dark"
+item_attributes,03A,03A,PA,1,0
+item_attributes,03A,03A,MA,1,0
+item_attributes,03A,03A,Status immunity,Slow,none
+item_attributes,03A,03A,Half,none,"Fire, Lightning, Ice, Wind, Earth, Water, Holy, Dark"
+item_attributes,03B,03B,Status immunity,"Petrify, Stop",none
+item_attributes,03B,03B,Half,none,"Fire, Lightning, Ice"
+item_attributes,03B,03B,Strengthen,none,"Fire, Lightning, Ice"
+item_attributes,03C,03C,Status immunity,"Undead, Blood Suck, Frog, Poison","Undead, Darkness, Silence, Frog, Poison, Slow, Don't Move, Don't Act, Death Sentence"
+item_attributes,03C,03C,Half,none,"Fire, Lightning, Ice, Wind, Earth, Water, Dark"
+item_attributes,03C,03C,Strengthen,"Fire, Lightning, Ice, Wind, Earth, Water, Holy, Dark",none
+item_attributes,03D,03D,Status immunity,"Confusion, Charm",none
+item_attributes,03D,03D,Half,Dark,none
+item_attributes,03D,03D,Strengthen,none,Earth
+item_attributes,03E,03E,Status immunity,"Don't Move, Don't Act",none
+item_attributes,03E,03E,Strengthen,none,Water
+item_attributes,03F,03F,MA,1,0
+item_attributes,040,040,Starting statuses,Transparent,none
+item_attributes,041,041,Innate statuses,"Reraise, Regen",none
+item_attributes,042,042,Innate statuses,"Float, Reflect",none
+item_attributes,043,043,MA,1,0
+item_attributes,043,043,Innate statuses,Haste,none
+item_attributes,043,043,Starting statuses,Transparent,none
+item_attributes,044,044,Innate statuses,"Protect, Shell",none
+item_attributes,045,045,Status immunity,"Undead, Darkness, Silence, Frog, Poison, Slow, Don't Move, Don't Act, Death Sentence",none
+item_attributes,046,046,Status immunity,"Dead, Petrify, Invite, Confusion, Blood Suck, Berserk, Stop, Charm, Sleep",none
+item_attributes,047,047,Status immunity,"Dead, Undead, Petrify, Invite, Darkness, Confusion, Silence, Blood Suck, Berserk, Frog, Poison, Slow, Stop, Charm, Sleep, Don't Move, Don't Act, Death Sentence",none
+item_attributes,048,048,Starting statuses,Petrify,none
+item_attributes,049,049,Innate statuses,Faith,none

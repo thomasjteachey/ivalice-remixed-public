@@ -1,0 +1,8 @@
+# Starts the 1-A recruitment scene directly from a warm world map and checks live units as soon as they exist.
+name Lorne and Bryn scene looks
+scenario 0x194
+wait log "loaded event 404" timeout=25
+wait seconds 2
+wait unit battle_id=0x91 job=0x5b graphic=0x38 timeout=25 press=RETURN every=0.75
+expect unit battle_id=0x91 job=0x5b graphic=0x38
+expect unit battle_id=0x90 graphic=0x83

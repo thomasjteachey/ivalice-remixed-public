@@ -1,0 +1,9 @@
+# Araguay's raw entry, before waiting through its scene. Flags 0x08 load a saved guest when one exists; the runtime
+# fallback builds Agrias and Gaffgarion from these complete records when a regression save lacks their guest slots.
+name Araguay unit selection
+scenario 0x79
+wait log "scenario 0x79 starts as" timeout=10
+wait entry battle_id=0x17 timeout=10
+expect entry battle_id=0x17 flags=0x8b sprites=0x17
+expect entry battle_id=0x1e flags=0x4b sprites=0x1e
+expect entry battle_id=0x90 flags=0x80 sprites=0x12

@@ -1,0 +1,47 @@
+# SCUS_942.21 in-place patches: the 2026-11-04 review
+
+ReMixed's in-place patches to SCUS_942.21 that no other note covered (`tools/unreviewed.py SCUS_942.21` listed 22
+blocks), read block by block against vanilla. Addresses are PS1 RAM unless marked as remaster RVAs (FFT_enhanced.exe,
+enhanced). Each block is one of: **ported** (with where), **waits** for a feature that isn't ported (named), **nothing**
+to port (display, data the remaster doesn't use, or a re-coding with the same effect), or **open** (a gameplay change
+not settled).
+
+## Data in SCUS
+
+| Block | What it changes | Status |
+|---|---|---|
+| 0x800320E0 (244 bytes) | A text-compression table, 122 two-byte entries for character codes 0x56–0xCF (vanilla had unused 4bpp pixel data there). ReMixed's text routine 0x80032048 (from WORLD 0x800E6CB0; the byte at 0x80032044 picks a pair's first or second character) prints such a code as two letters: 56 "th", 57 "in", 58 "an", 59 "re", 5A "ou" … 96 "ic", 66 pairs; a zero entry falls back to the font's glyph. ReMixed's help texts use it heavily (HELP.LZW, WLDHELP.LZW, HELPMENU.OUT). BATTLE.BIN's names don't. world-and-menus.md §21 called this a remap | nothing at run time (the remaster's text is Unicode in its own tables). When ReMixed's descriptions or help are ported, the text decoder (`tools/fft_text.py`) has to expand these codes through this table |
+| 0x80040F54, 0x80040FA8, 0x80040FFC, 0x80041050, 0x800410A4 | Not code: the space the compacted 0x80040BD8 freed holds unit-storage records 4–9 (84 bytes each from 0x80040F00, read through WORLD 0x80142844). These are byte 0 of records 5–9, set to 0 (empty, as the count 0x801428D4 and the new-game clear 0x80143004 read it), where vanilla's leftover code bytes were | nothing to port: unit storage isn't needed (MECHANICS.md, Unit storage) |
+| 0x80045504 | Not code: entries 52–57 of the 64 characters' starting ages (0x800454D0, copied into the save at a new game by 0x800452EC; they grow on each birthday up to 99). ReMixed: 28, 22, 16, 16, 24, 23 where vanilla had a placeholder 20. Shown in the character profiles | ported (`Patches/InPlace.cs`: the remaster's table 0x7BAC30, copied by 0x33FB84; new games only) |
+
+## Units and the roster
+
+| Block | What it changes | Status |
+|---|---|---|
+| 0x80059D30 | In the join routine 0x80059BB0, the clear of the errand byte (+0xD0) is nopped, but ReMixed's rewrite returns earlier (`j 0x8005DB40` at 0x80059CD4), so this is dead. The live change: +0xD0 is cleared only when the joining unit gets a new slot, so a unit back in its own slot keeps its flags (0x10, 0x40, 0x80). The remaster's join 0x274EB8 clears it always (0x2751A9, roster +0x11E) | waits: the job and equipment locks (then skip 0x2751A9 when the slot found is the unit's own) |
+| 0x80059E6C | The egg look (+0xD2, a random 0–3) of a bred monster egg (from WORLD 0x80125C88) isn't stored any more; ReMixed's egg drawing doesn't read it | nothing (looks only) |
+| 0x8005A400 | The raw-stat roll for a unit from battle data (from 0x8005AA64; 0x8005A448 with the unit's +0x72): vanilla picks the base table by gender (male, female, monster); ReMixed gives sprite sets 0–3 (Ramza) and 0x30 (Alma) Ramza's table (0x8005E90C + 24), so a joining Alma gets his base stats. The remaster's pick is inlined in the unit build 0x275CA4 at 0x275D68–0x275D80 | waits: the story port (Alma joining in ReMixed's events). Then a stub over those 25 bytes: kind 2 for sprite set under 4 or 0x30 |
+| 0x8005A7B4 | In the ability classifier (0x8005A72C), the Jump/Charge split moves from 0x196 to 0x190; only the returned kind changes, which no caller uses beyond zero | ported (`Patches/GunSkills.cs`, the remaster's 0x275AFA, with the Charge table repointed) |
+| 0x8005A90C | Building a battle unit from a roster slot (0x8005A8D4) also treats a slot whose +0xD0 has 0x08 as empty (ReMixed's 0x80027150), so such a unit can't be deployed or shown. The other load is the job unlock's name id (documented). Nothing found sets 0x08 in +0xD0 (only 0 and 1, from the errand dispatch WLDCORE 0x80074A94): probably ReMixed's event data marking someone as gone | waits: the story port; then also test roster +0x11E & 8 at the remaster's 0x275B98 |
+| 0x8005AFCC | The battle-data loader's tail (0x8005AC1C): starting EXP from the entry's +0x1C (under 100 kept, else random 0–99, re-coded) and, when var 0x70 is 0xFFFF, no name-id write (+0x16C) and an early return | nothing for the EXP; the var 0x70 skip belongs to Improved Level Scaling's re-run (keep the remaster's +0x1FC when it re-runs the setup) |
+| 0x8005B050 | Loading an entry's unit from the roster (battle data +1 & 8; 0x8005B038) by the entry's name id (+2) instead of its sprite set (+0), with ReMixed's 0x80059F94 matching roster +0xCE or the sprite set | waits: the story port's battle data (the remaster's own data loads guests by sprite set from slots 50–53, 0x2766C8) |
+
+The remaster's errand byte: its join (0x2751A9, 0x2751B0) and new-unit routine (0x27576C, 0x275773) clear roster
++0x11E and +0x120 where the PS1 clears +0xD0 and +0xD2, and the new-unit routine mirrors the PS1's +0x2B = 4 for Ramza
+at +0x32. So roster +0x11E is very likely the errand byte the job and equipment locks wait on (not checked in the game).
+
+## Jobs, abilities and equipment
+
+| Block | What it changes | Status |
+|---|---|---|
+| 0x8005BB4C | The starting JP per job (0x8005BA70, for units from battle data): vanilla gives a man no JP in job index 18 (Dancer); ReMixed drops that, as its index 18 is a man's Bard. The remaster: 0x2770E6 (`js` after the gender test) in 0x2770BC | settled: the gendered slots aren't ported, the remaster keeps Bard for men and Dancer for women and has its own Dark Knight (MECHANICS.md, Gendered Bard/Dancer slots), so the remaster's own rule (no JP for a man as a Dancer) stays |
+| 0x8005BBF0 | The same for a woman in job index 17 (vanilla's Bard; ReMixed's Dark Knight for everyone). The remaster: 0x2770F4 | settled: the gendered slots aren't ported, the remaster keeps Bard for men and Dancer for women and has its own Dark Knight (MECHANICS.md, Gendered Bard/Dancer slots), so the remaster's own rule (no JP for a woman as a Bard) stays |
+| 0x8005BDF0 | The random battle equipment routine's prologue and epilogue (0x8005C258) with a bigger frame and s5 saved, for ReMixed's weapon-type list at sp+48 | ported (`Patches/WeaponPick.cs`, `Patches/RandomEquipment.cs`) |
+| 0x8005C76C, 0x800271D0 | Equipment bonuses (0x8005C5C8, from the unit build 0x8005AB18, the rebuild 0x8005D710 and ReMixed's level change): vanilla ORs an item's start statuses into the current ones; ReMixed's 0x800271D0 makes each current byte (current \| start) & ~immune \| innate, with the immunities gathered so far. A start status the unit is immune to doesn't take (the Stone Gun's Petrify with a Ribbon, Barette, Genji Helmet or Jade Armlet), and innate statuses are current | ported (`Patches/StartStatuses.cs`: the remaster's loop 0x277B3F in 0x2779EC) |
+| 0x8005CC4C | The party level P (0x8005CBD0) no longer restores s2, which ReMixed's rewrite (Improved Level Scaling, documented) no longer saves | nothing (stack bookkeeping) |
+| 0x8005D1D8, 0x8005D290 | The random reaction, support or movement pick for units from battle data (0x8005D0BC): before reading a job's skillset, a man's slot 0x5C becomes job 0x38 (Bard) and a woman's 0x5B job 0x37 (Dark Knight). The remaster reads the skillset at 0x278441 in 0x278358. Making room (0x8005D278 → 0x8005D2D4), ReMixed also dropped vanilla's checks that keep Sunken State (0x1A9) and the unit's four innates out of the pick | settled: the gendered slots aren't ported, the remaster keeps Bard for men and Dancer for women and has its own Dark Knight (MECHANICS.md, Gendered Bard/Dancer slots), so the pick reads each job's own skillset as the remaster has it. The dropped Sunken State and innate checks stay vanilla's |
+| 0x8005E804, 0x8005E84C | The action state (0x8005E7A8; the remaster's 0x279370): state 0, the reset after an instant action (BATTLE 0x8017C438, 0x80183DE0), clears Charging, Jump and Defending but keeps Performing (mask 0xE), though +0x15D still becomes 0xFF; states 1–4 clear all four. Read alone, a performer that takes an instant action keeps the status but its song stops (the tick 0x80182C24 reloads only when +0x15D is 0), so it's probably part of ReMixed's wider Performing rework (BATTLE 0x80151200, 0x8015F400; battle-80150000.md §17) | settled 2026-11-04, nothing to port: the song stops in ReMixed too. After the performer's last strike, the action display's hook (BATTLE 0x80151220, from 0x80077854) empties the action record and sets +0x15D to 0 when the record holds an instant action (no CT, Non-charge, an ability past 0x16F or a sub-ability at +0x174), and the turn-order preview's reload (0x80155700, at 0x8018389C) does the same, so the lingering Performing status repeats nothing; with Math Skill (skillset 0x15) the hook clears Performing outright. Only the status icon differs from the remaster's vanilla reset, which clears it |
+| 0x8005E874 (and 0x8005E860) | `ori` and `addu` re-coded as `addiu`, same values | nothing |
+
+Also: ReMixed's party level P (0x8005CC2C) caps at 255 where vanilla capped at 99; harmless, as unit levels are capped
+at 99 later.

@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Offline check of the code mod: maps the game's exe from disk (without running
+    it) and runs the mod's patches against it, so every byte pattern, cross-check
+    and formula install is tested without launching the game. With live-hooks it
+    also installs the real hooks (Reloaded.Hooks) on that copy, to check they go in.
+
+      IvaliceRemixed.Check <exe> <patches.json> [live-hooks]
+
+    tools/build_mod.py runs it after every build. Exit code 1 means a patch
+    wouldn't apply. Reloaded.Hooks comes from your Reloaded-II install (the shared
+    hooks mod); it's copied next to the check, not into the mod.
+  -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <ReloadedDir Condition="'$(ReloadedDir)' == ''">$(RELOADEDII)</ReloadedDir>
+    <ReloadedModsDir Condition="'$(ReloadedModsDir)' == ''">$(ReloadedDir)\Mods</ReloadedModsDir>
+    <HooksDir>$(ReloadedModsDir)\reloaded.sharedlib.hooks\x64</HooksDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\eiu\src\IvaliceCore\IvaliceCore.csproj" />
+    <ProjectReference Include="..\eiu\src\EventInstructionUpgrade\EventInstructionUpgrade.csproj" />
+    <ProjectReference Include="..\IvaliceRemixed\IvaliceRemixed.csproj" />
+    <Using Include="IvaliceCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The mod's settings implement Reloaded-II's interfaces, which the loader supplies in the game. -->
+    <Reference Include="Reloaded.Mod.Interfaces"><HintPath>$(ReloadedDir)\Loader\X64\Reloaded.Mod.Interfaces.dll</HintPath></Reference>
+    <Reference Include="Reloaded.Hooks"><HintPath>$(HooksDir)\Reloaded.Hooks.dll</HintPath></Reference>
+    <Reference Include="Reloaded.Hooks.Definitions"><HintPath>$(HooksDir)\Reloaded.Hooks.Definitions.dll</HintPath></Reference>
+    <Reference Include="Reloaded.Memory"><HintPath>$(HooksDir)\Reloaded.Memory.dll</HintPath></Reference>
+    <Reference Include="Reloaded.Memory.Buffers"><HintPath>$(HooksDir)\Reloaded.Memory.Buffers.dll</HintPath></Reference>
+    <Reference Include="Iced"><HintPath>$(HooksDir)\Iced.dll</HintPath></Reference>
+    <Reference Include="Reloaded.Assembler"><HintPath>$(HooksDir)\Reloaded.Assembler.dll</HintPath></Reference>
+    <!-- Reloaded.Hooks assembles its stubs with FASM, a native DLL. -->
+    <None Include="$(HooksDir)\FASM.DLL;$(HooksDir)\FASMX64.DLL" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+  </ItemGroup>
+
+</Project>

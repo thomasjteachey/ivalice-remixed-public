@@ -1,0 +1,23 @@
+# Your local paths
+local.toml
+
+# Proprietary game inputs (local reference files only; never publish)
+/Final Fantasy Tactics.7z
+/FFT_enhanced.exe
+/FFT ReMixed-v1.2.64.23.ppf
+
+# Build output: disc images, extracted game files, full reports
+work/
+# The built mod (rebuild with tools/build_mod.py; it contains a game-derived NXD table)
+mod/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# .NET (for the Reloaded-II hook mod later)
+bin/
+obj/
+*.user
+.vs/

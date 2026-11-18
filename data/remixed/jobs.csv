@@ -1,0 +1,885 @@
+table,id,name,field,vanilla,remixed
+jobs,002,Squire (02),Monster portrait,0,1
+jobs,003,Squire (03),Monster portrait,0,2
+jobs,004,Squire (04),Monster portrait,0,3
+jobs,006,Arc Knight (06),Skillset,Mighty Sword (1E),00
+jobs,006,Arc Knight (06),Equipment,"Unused, Knife, Sword, Knight's Sword, Flail, Shield, Helmet, Armor, Robe, Shoes, Armguard, Ring, Armlet, Cloak",none
+jobs,006,Arc Knight (06),HP growth,10,11
+jobs,006,Arc Knight (06),HP multiplier,150,100
+jobs,006,Arc Knight (06),Speed multiplier,120,100
+jobs,006,Arc Knight (06),PA multiplier,120,100
+jobs,006,Arc Knight (06),MA multiplier,110,100
+jobs,006,Arc Knight (06),Move,4,0
+jobs,006,Arc Knight (06),Jump,3,0
+jobs,006,Arc Knight (06),C-Evade,15,0
+jobs,006,Arc Knight (06),Status immunity,"Invite, Blood Suck, Chicken, Frog, Charm",none
+jobs,007,Squire (07),Monster portrait,0,4
+jobs,008,Arc Knight (08),HP multiplier,168,120
+jobs,008,Arc Knight (08),MP growth,12,9
+jobs,008,Arc Knight (08),MP multiplier,80,120
+jobs,008,Arc Knight (08),Speed growth,97,100
+jobs,008,Arc Knight (08),PA growth,38,45
+jobs,008,Arc Knight (08),MA growth,48,50
+jobs,008,Arc Knight (08),MA multiplier,100,110
+jobs,008,Arc Knight (08),Monster portrait,0,122
+jobs,00A,Duke (0A),Equipment,Unused,none
+jobs,00A,Duke (0A),Move,3,0
+jobs,00A,Duke (0A),Jump,3,0
+jobs,00A,Duke (0A),C-Evade,10,0
+jobs,00A,Duke (0A),Status immunity,Invite,none
+jobs,00B,Duke (0B),Equipment,Unused,none
+jobs,00B,Duke (0B),Move,3,0
+jobs,00B,Duke (0B),Jump,3,0
+jobs,00B,Duke (0B),C-Evade,10,0
+jobs,00B,Duke (0B),Status immunity,Invite,none
+jobs,00C,Princess (0C),Monster portrait,0,5
+jobs,00D,Holy Swordsman (0D),Monster portrait,0,6
+jobs,00E,High Priest (0E),Equipment,"Unused, Robe, Shoes, Armguard, Ring, Armlet, Cloak",none
+jobs,00E,High Priest (0E),Move,3,0
+jobs,00E,High Priest (0E),Jump,3,0
+jobs,00E,High Priest (0E),C-Evade,10,0
+jobs,00E,High Priest (0E),Status immunity,Invite,none
+jobs,00F,Dragoner (0F),Innate A,Monster Talk (1D9),<Nothing> (000)
+jobs,00F,Dragoner (0F),Monster portrait,0,7
+jobs,011,Dark Knight (11),Skillset,Dark Sword (27),56
+jobs,011,Dark Knight (11),Equipment,"Unused, Sword, Shield, Helmet, Armor, Robe, Shoes, Armguard, Ring, Armlet, Cloak",none
+jobs,011,Dark Knight (11),HP multiplier,150,100
+jobs,011,Dark Knight (11),Speed multiplier,120,100
+jobs,011,Dark Knight (11),MA multiplier,90,100
+jobs,011,Dark Knight (11),Move,3,0
+jobs,011,Dark Knight (11),Jump,3,0
+jobs,011,Dark Knight (11),C-Evade,15,0
+jobs,011,Dark Knight (11),Status immunity,"Petrify, Invite, Blood Suck, Transparent, Berserk, Charm",none
+jobs,011,Dark Knight (11),Monster portrait,0,155
+jobs,011,Dark Knight (11),Monster palette,0,4
+jobs,012,Hell Knight (12),Skillset,Un-truth (2E),50
+jobs,012,Hell Knight (12),Innate A,<Nothing> (000),Secret Hunt (1D7)
+jobs,012,Hell Knight (12),Equipment,Unused,"Unused, Knife, Sword, Rod, Staff, Crossbow, Bow, Book, Shield, Hat, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak"
+jobs,012,Hell Knight (12),HP growth,0,11
+jobs,012,Hell Knight (12),HP multiplier,0,90
+jobs,012,Hell Knight (12),MP growth,0,8
+jobs,012,Hell Knight (12),MP multiplier,0,120
+jobs,012,Hell Knight (12),Speed growth,0,100
+jobs,012,Hell Knight (12),Speed multiplier,0,90
+jobs,012,Hell Knight (12),PA growth,0,50
+jobs,012,Hell Knight (12),PA multiplier,0,100
+jobs,012,Hell Knight (12),MA growth,0,48
+jobs,012,Hell Knight (12),MA multiplier,0,110
+jobs,012,Hell Knight (12),Jump,3,4
+jobs,012,Hell Knight (12),C-Evade,8,10
+jobs,012,Hell Knight (12),Innate statuses,Dead,none
+jobs,012,Hell Knight (12),Status immunity,"No Effect, Crystal, Undead, Charging, Jump, Defending, Performing, Petrify, Invite, Darkness, Confusion, Silence, Blood Suck, Treasure, Oil, Float, Reraise, Transparent, Berserk, Chicken, Frog, Critical, Poison, Regen, Protect, Shell, Haste, Slow, Stop, Faith, Innocent, Charm, Sleep, Don't Move, Don't Act, Reflect, Death Sentence",none
+jobs,012,Hell Knight (12),Monster portrait,0,16
+jobs,013,Bishop (13),Equipment,Unused,none
+jobs,013,Bishop (13),HP growth,15,11
+jobs,013,Bishop (13),MP multiplier,180,100
+jobs,013,Bishop (13),Move,3,0
+jobs,013,Bishop (13),Jump,3,0
+jobs,013,Bishop (13),C-Evade,10,0
+jobs,013,Bishop (13),Status immunity,Invite,none
+jobs,014,Cleric (14),Monster portrait,0,11
+jobs,015,Astrologist (15),Monster portrait,0,12
+jobs,016,Engineer (16),Innate A,<Nothing> (000),Maintenance (1DB)
+jobs,016,Engineer (16),Monster portrait,0,19
+jobs,017,Dark Knight (17),Monster portrait,0,13
+jobs,018,Cardinal (18),Equipment,"Unused, Knife, Robe, Shoes, Armguard, Ring, Armlet, Cloak",none
+jobs,018,Cardinal (18),Move,3,0
+jobs,018,Cardinal (18),Jump,3,0
+jobs,018,Cardinal (18),C-Evade,10,0
+jobs,018,Cardinal (18),Status immunity,Invite,none
+jobs,019,Heaven Knight (19),Innate A,<Nothing> (000),Concentrate (1D5)
+jobs,019,Heaven Knight (19),Equipment,"Unused, Staff, Pole, Hat, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak","Unused, Knife, Sword, Knight's Sword, Gun, Crossbow, Bow, Spear, Shield, Helmet, Hat, Armor, Clothing, Robe, Shoes, Armguard, Ring, Armlet"
+jobs,019,Heaven Knight (19),HP growth,11,10
+jobs,019,Heaven Knight (19),HP multiplier,90,110
+jobs,019,Heaven Knight (19),MP growth,11,13
+jobs,019,Heaven Knight (19),MP multiplier,100,80
+jobs,019,Heaven Knight (19),Speed growth,100,80
+jobs,019,Heaven Knight (19),Speed multiplier,115,120
+jobs,019,Heaven Knight (19),PA multiplier,80,115
+jobs,019,Heaven Knight (19),Move,3,4
+jobs,019,Heaven Knight (19),Jump,3,4
+jobs,019,Heaven Knight (19),C-Evade,10,25
+jobs,019,Heaven Knight (19),Monster portrait,0,9
+jobs,01A,Hell Knight (1A),Equipment,"Unused, Staff, Pole, Hat, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak","Unused, Axe, Rod, Staff, Instrument, Book, Pole, Cloth, Hat, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak"
+jobs,01A,Hell Knight (1A),HP growth,10,11
+jobs,01A,Hell Knight (1A),MP growth,11,10
+jobs,01A,Hell Knight (1A),PA multiplier,105,100
+jobs,01A,Hell Knight (1A),MA growth,50,48
+jobs,01A,Hell Knight (1A),MA multiplier,100,120
+jobs,01A,Hell Knight (1A),Monster portrait,0,15
+jobs,01D,Arc Duke (1D),Equipment,"Unused, Robe, Shoes, Armguard, Ring, Armlet, Cloak","Unused, Sword, Knight's Sword, Shield, Helmet, Armor, Robe, Shoes, Armguard, Ring, Armlet, Cloak"
+jobs,01D,Arc Duke (1D),HP growth,11,10
+jobs,01D,Arc Duke (1D),HP multiplier,100,110
+jobs,01D,Arc Duke (1D),C-Evade,10,15
+jobs,01D,Arc Duke (1D),Monster portrait,0,23
+jobs,01E,Holy Knight (1E),Monster portrait,0,23
+jobs,01F,Temple Knight (1F),Monster portrait,0,17
+jobs,021,Arc Witch (21),Skillset,00,52
+jobs,021,Arc Witch (21),Equipment,"Unused, Knife, Robe, Shoes, Armguard, Ring, Armlet, Cloak","Unused, Knife, Sword, Rod, Staff, Book, Hat, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak"
+jobs,021,Arc Witch (21),HP growth,11,12
+jobs,021,Arc Witch (21),HP multiplier,100,80
+jobs,021,Arc Witch (21),MP growth,11,8
+jobs,021,Arc Witch (21),MP multiplier,100,120
+jobs,021,Arc Witch (21),MA growth,50,48
+jobs,021,Arc Witch (21),MA multiplier,100,110
+jobs,021,Arc Witch (21),Monster portrait,0,18
+jobs,022,Engineer (22),Skillset,Snipe (25),Basic Skill (05)
+jobs,022,Engineer (22),Innate A,Maintenance (1DB),<Nothing> (000)
+jobs,022,Engineer (22),Equipment,"Unused, Gun, Hat, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak","Unused, Sword, Knight's Sword, Shield, Helmet, Armor, Robe, Shoes, Armguard, Ring, Armlet, Cloak"
+jobs,022,Engineer (22),HP growth,11,10
+jobs,022,Engineer (22),HP multiplier,100,110
+jobs,022,Engineer (22),MP growth,13,11
+jobs,022,Engineer (22),MP multiplier,75,100
+jobs,022,Engineer (22),Speed multiplier,115,100
+jobs,022,Engineer (22),PA multiplier,95,100
+jobs,022,Engineer (22),Jump,4,3
+jobs,022,Engineer (22),C-Evade,18,15
+jobs,022,Engineer (22),Monster portrait,0,23
+jobs,023,Bi-Count (23),Equipment,"Unused, Robe, Shoes, Armguard, Ring, Armlet, Cloak",none
+jobs,023,Bi-Count (23),Move,3,0
+jobs,023,Bi-Count (23),Jump,3,0
+jobs,023,Bi-Count (23),C-Evade,10,0
+jobs,023,Bi-Count (23),Status immunity,Invite,none
+jobs,025,Divine Knight (25),Skillset,Mighty Sword (3C),00
+jobs,025,Divine Knight (25),Equipment,"Unused, Sword, Knight's Sword, Shield, Helmet, Armor, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak",none
+jobs,025,Divine Knight (25),HP growth,10,11
+jobs,025,Divine Knight (25),HP multiplier,150,100
+jobs,025,Divine Knight (25),MP growth,10,11
+jobs,025,Divine Knight (25),Speed multiplier,115,100
+jobs,025,Divine Knight (25),PA growth,38,50
+jobs,025,Divine Knight (25),PA multiplier,122,100
+jobs,025,Divine Knight (25),Move,4,0
+jobs,025,Divine Knight (25),Jump,3,0
+jobs,025,Divine Knight (25),C-Evade,21,0
+jobs,025,Divine Knight (25),Status immunity,"Dead, Undead, Petrify, Invite, Confusion, Blood Suck, Reraise, Transparent, Berserk, Chicken, Frog, Poison, Stop, Charm, Sleep, Don't Move, Don't Act, Death Sentence",none
+jobs,026,Knight Blade (26),Innate A,Concentrate (1D5),<Nothing> (000)
+jobs,029,Heaven Knight (29),Equipment,"Unused, Staff, Pole, Hat, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak","Unused, Sword, Rod, Staff, Instrument, Book, Pole, Cloth, Hat, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak"
+jobs,029,Heaven Knight (29),MP growth,11,10
+jobs,029,Heaven Knight (29),MP multiplier,100,110
+jobs,029,Heaven Knight (29),Speed multiplier,115,110
+jobs,029,Heaven Knight (29),PA multiplier,100,90
+jobs,029,Heaven Knight (29),MA growth,50,48
+jobs,029,Heaven Knight (29),MA multiplier,100,130
+jobs,029,Heaven Knight (29),Move,3,4
+jobs,029,Heaven Knight (29),C-Evade,10,8
+jobs,029,Heaven Knight (29),Monster portrait,0,14
+jobs,02A,Divine Knight (2A),Monster portrait,0,20
+jobs,02C,Cleric (2C),Monster portrait,0,21
+jobs,02F,Divine Knight (2F),Skillset,Mighty Sword (42),00
+jobs,02F,Divine Knight (2F),Equipment,"Unused, Sword, Knight's Sword, Crossbow, Shield, Helmet, Armor, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak",none
+jobs,02F,Divine Knight (2F),HP growth,10,11
+jobs,02F,Divine Knight (2F),HP multiplier,125,100
+jobs,02F,Divine Knight (2F),MP growth,15,11
+jobs,02F,Divine Knight (2F),MP multiplier,80,100
+jobs,02F,Divine Knight (2F),Speed multiplier,105,100
+jobs,02F,Divine Knight (2F),PA growth,39,50
+jobs,02F,Divine Knight (2F),PA multiplier,120,100
+jobs,02F,Divine Knight (2F),MA multiplier,90,100
+jobs,02F,Divine Knight (2F),Move,4,0
+jobs,02F,Divine Knight (2F),Jump,3,0
+jobs,02F,Divine Knight (2F),C-Evade,12,0
+jobs,02F,Divine Knight (2F),Status immunity,"Dead, Petrify, Invite",none
+jobs,030,Cleric (30),Equipment,"Unused, Staff, Hat, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak","Unused, Staff, Flail, Book, Hat, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak"
+jobs,030,Cleric (30),HP multiplier,90,100
+jobs,030,Cleric (30),MP multiplier,100,150
+jobs,030,Cleric (30),Speed multiplier,105,115
+jobs,030,Cleric (30),C-Evade,18,24
+jobs,030,Cleric (30),Monster portrait,0,21
+jobs,032,Soldier (32),Innate A,<Nothing> (000),Two Hands (1DC)
+jobs,032,Soldier (32),Equipment,"Unused, Sword, Hat, Hair Adornment, Clothing, Shoes, Armguard, Ring, Armlet, Cloak","Unused, Sword, Knight's Sword, Katana, Hat, Hair Adornment, Clothing, Shoes, Armguard, Ring, Armlet, Cloak"
+jobs,032,Soldier (32),Monster portrait,0,22
+jobs,034,Holy Knight (34),Innate A,<Nothing> (000),Equip Change (1E0)
+jobs,034,Holy Knight (34),Equipment,"Unused, Sword, Knight's Sword, Shield, Helmet, Armor, Robe, Shoes, Armguard, Ring, Armlet, Cloak","Unused, Knife, Ninja Blade, Sword, Knight's Sword, Katana, Axe, Rod, Staff, Flail, Gun, Crossbow, Bow, Instrument, Book, Spear, Pole, Bag, Cloth, Shield, Helmet, Hat, Hair Adornment, Armor, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak, Perfume"
+jobs,034,Holy Knight (34),HP growth,11,9
+jobs,034,Holy Knight (34),HP multiplier,150,140
+jobs,034,Holy Knight (34),MP growth,11,9
+jobs,034,Holy Knight (34),MP multiplier,100,130
+jobs,034,Holy Knight (34),Speed growth,100,95
+jobs,034,Holy Knight (34),Speed multiplier,100,110
+jobs,034,Holy Knight (34),PA growth,50,45
+jobs,034,Holy Knight (34),PA multiplier,100,110
+jobs,034,Holy Knight (34),MA growth,46,40
+jobs,034,Holy Knight (34),MA multiplier,100,120
+jobs,034,Holy Knight (34),Move,3,4
+jobs,034,Holy Knight (34),Jump,3,4
+jobs,034,Holy Knight (34),Monster portrait,0,8
+jobs,035,Chemist (35),Skillset,Item (06),56
+jobs,035,Chemist (35),Equipment,"Unused, Knife, Ninja Blade, Sword, Knight's Sword, Katana, Axe, Rod, Staff, Flail, Gun, Crossbow, Bow, Instrument, Book, Spear, Pole, Bag, Cloth, Shield, Helmet, Hat, Hair Adornment, Armor, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak, Perfume","Unused, Sword, Knight's Sword, Axe, Bow, Spear, Shield, Helmet, Armor, Shoes, Armguard, Ring, Armlet, Cloak"
+jobs,035,Chemist (35),HP growth,12,8
+jobs,035,Chemist (35),HP multiplier,75,145
+jobs,035,Chemist (35),MP growth,16,15
+jobs,035,Chemist (35),MP multiplier,75,80
+jobs,035,Chemist (35),Speed multiplier,100,80
+jobs,035,Chemist (35),PA growth,75,40
+jobs,035,Chemist (35),PA multiplier,75,120
+jobs,035,Chemist (35),MA growth,50,52
+jobs,035,Chemist (35),Move,3,2
+jobs,035,Chemist (35),Jump,3,130
+jobs,035,Chemist (35),C-Evade,0,35
+jobs,035,Chemist (35),Status immunity,Invite,none
+jobs,035,Chemist (35),Monster portrait,0,102
+jobs,036,Priest (36),Skillset,White Magic (0A),57
+jobs,036,Priest (36),Equipment,"Unused, Knife, Ninja Blade, Sword, Knight's Sword, Katana, Axe, Rod, Staff, Flail, Gun, Crossbow, Bow, Instrument, Book, Spear, Pole, Bag, Cloth, Shield, Helmet, Hat, Hair Adornment, Armor, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak, Perfume","Unused, Rod, Book, Hat, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak"
+jobs,036,Priest (36),HP growth,10,9
+jobs,036,Priest (36),HP multiplier,80,140
+jobs,036,Priest (36),MP growth,10,8
+jobs,036,Priest (36),MP multiplier,120,140
+jobs,036,Priest (36),Speed multiplier,110,90
+jobs,036,Priest (36),PA growth,50,55
+jobs,036,Priest (36),PA multiplier,90,80
+jobs,036,Priest (36),MA growth,50,49
+jobs,036,Priest (36),Status immunity,Invite,none
+jobs,036,Priest (36),Monster portrait,0,103
+jobs,037,Wizard (37),Skillset,Black Magic (0B),4E
+jobs,037,Wizard (37),Equipment,"Unused, Knife, Ninja Blade, Sword, Knight's Sword, Katana, Axe, Rod, Staff, Flail, Gun, Crossbow, Bow, Instrument, Book, Spear, Pole, Bag, Cloth, Shield, Helmet, Hat, Hair Adornment, Armor, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak, Perfume","Unused, Sword, Knight's Sword, Katana, Axe, Flail, Shield, Helmet, Hair Adornment, Armor, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak, Perfume"
+jobs,037,Wizard (37),HP multiplier,75,80
+jobs,037,Wizard (37),MP growth,9,20
+jobs,037,Wizard (37),MP multiplier,120,90
+jobs,037,Wizard (37),PA growth,60,40
+jobs,037,Wizard (37),PA multiplier,60,140
+jobs,037,Wizard (37),MA multiplier,150,80
+jobs,037,Wizard (37),Status immunity,Invite,none
+jobs,037,Wizard (37),Monster portrait,0,10
+jobs,038,Oracle (38),Skillset,Yin Yang Magic (10),4D
+jobs,038,Oracle (38),Innate A,<Nothing> (000),1E5
+jobs,038,Oracle (38),Equipment,"Unused, Knife, Ninja Blade, Sword, Knight's Sword, Katana, Axe, Rod, Staff, Flail, Gun, Crossbow, Bow, Instrument, Book, Spear, Pole, Bag, Cloth, Shield, Helmet, Hat, Hair Adornment, Armor, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak, Perfume","Unused, Instrument, Hat, Clothing, Shoes, Armguard, Ring, Armlet, Cloak"
+jobs,038,Oracle (38),HP growth,12,20
+jobs,038,Oracle (38),HP multiplier,75,55
+jobs,038,Oracle (38),MP growth,10,20
+jobs,038,Oracle (38),MP multiplier,110,50
+jobs,038,Oracle (38),PA growth,60,80
+jobs,038,Oracle (38),PA multiplier,50,30
+jobs,038,Oracle (38),MA multiplier,120,115
+jobs,038,Oracle (38),C-Evade,0,5
+jobs,038,Oracle (38),Status immunity,Invite,none
+jobs,038,Oracle (38),Monster portrait,0,11
+jobs,039,39,Skillset,00,Dark Sword (27)
+jobs,039,39,Equipment,"Robe, Shoes, Armguard, Ring, Armlet, Cloak","Unused, Sword, Shield, Helmet, Armor, Robe, Shoes, Armguard, Ring, Armlet, Cloak"
+jobs,039,39,HP multiplier,100,150
+jobs,039,39,Speed multiplier,100,120
+jobs,039,39,MA multiplier,100,90
+jobs,039,39,Move,0,4
+jobs,039,39,Jump,0,3
+jobs,039,39,C-Evade,0,15
+jobs,039,39,Innate statuses,none,Undead
+jobs,039,39,Status immunity,Invite,"Petrify, Invite, Confusion, Blood Suck, Treasure, Transparent, Berserk, Chicken, Frog, Stop, Charm"
+jobs,03A,3A,Skillset,00,Phantom (49)
+jobs,03A,3A,Equipment,"Unused, Knife, Robe, Shoes, Armguard, Ring, Armlet, Cloak","Unused, Knife, Sword, Knight's Sword, Shield, Helmet, Armor, Robe, Shoes, Armguard, Ring, Armlet, Cloak"
+jobs,03A,3A,HP growth,11,10
+jobs,03A,3A,HP multiplier,100,122
+jobs,03A,3A,MP multiplier,100,145
+jobs,03A,3A,Speed multiplier,100,105
+jobs,03A,3A,PA growth,50,48
+jobs,03A,3A,PA multiplier,100,125
+jobs,03A,3A,MA growth,50,45
+jobs,03A,3A,MA multiplier,100,105
+jobs,03A,3A,Move,3,4
+jobs,03A,3A,C-Evade,10,14
+jobs,03B,3B,Skillset,Limit (29),White-aid (2A)
+jobs,03B,3B,Equipment,Unused,"Unused, Rod, Staff, Book, Pole, Hat, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak"
+jobs,03B,3B,HP growth,7,10
+jobs,03B,3B,HP multiplier,100,160
+jobs,03B,3B,MP growth,30,11
+jobs,03B,3B,MP multiplier,30,200
+jobs,03B,3B,Speed growth,100,120
+jobs,03B,3B,PA growth,30,50
+jobs,03B,3B,PA multiplier,100,90
+jobs,03B,3B,MA growth,6,49
+jobs,03B,3B,MA multiplier,100,150
+jobs,03B,3B,Move,8,4
+jobs,03B,3B,Jump,8,3
+jobs,03B,3B,C-Evade,10,9
+jobs,03B,3B,Status immunity,Invite,"Crystal, Dead, Undead, Petrify, Invite, Darkness, Confusion, Silence, Blood Suck, Dark/Evil Looking, Treasure, Oil, Reraise, Transparent, Berserk, Chicken, Frog, Poison, Slow, Stop, Innocent, Charm, Sleep, Don't Move, Don't Act, Death Sentence"
+jobs,03D,Knight (3D),Skillset,Sword Skill (9B),00
+jobs,03D,Knight (3D),Innate A,Monster Skill (1DE),<Nothing> (000)
+jobs,03D,Knight (3D),Equipment,"Unused, Sword, Knight's Sword, Flail, Shield, Helmet, Armor, Robe, Shoes, Armguard, Ring, Armlet, Cloak",none
+jobs,03D,Knight (3D),HP growth,9,11
+jobs,03D,Knight (3D),HP multiplier,130,100
+jobs,03D,Knight (3D),MP growth,15,11
+jobs,03D,Knight (3D),MP multiplier,80,100
+jobs,03D,Knight (3D),Speed multiplier,110,100
+jobs,03D,Knight (3D),PA growth,40,50
+jobs,03D,Knight (3D),PA multiplier,125,100
+jobs,03D,Knight (3D),MA multiplier,80,100
+jobs,03D,Knight (3D),Move,3,0
+jobs,03D,Knight (3D),Jump,3,0
+jobs,03D,Knight (3D),C-Evade,10,0
+jobs,03D,Knight (3D),Innate statuses,Undead,none
+jobs,03D,Knight (3D),Status immunity,"Invite, Darkness, Blood Suck, Reraise, Transparent, Poison, Regen, Charm, Death Sentence",none
+jobs,03F,Archer (3F),Skillset,Charge (9C),00
+jobs,03F,Archer (3F),Innate A,Monster Skill (1DE),<Nothing> (000)
+jobs,03F,Archer (3F),Equipment,"Unused, Crossbow, Bow, Shield, Hat, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak",none
+jobs,03F,Archer (3F),HP growth,10,11
+jobs,03F,Archer (3F),HP multiplier,110,100
+jobs,03F,Archer (3F),MP growth,16,11
+jobs,03F,Archer (3F),MP multiplier,65,100
+jobs,03F,Archer (3F),Speed multiplier,105,100
+jobs,03F,Archer (3F),PA growth,45,50
+jobs,03F,Archer (3F),PA multiplier,115,100
+jobs,03F,Archer (3F),MA multiplier,80,100
+jobs,03F,Archer (3F),Move,3,0
+jobs,03F,Archer (3F),Jump,3,0
+jobs,03F,Archer (3F),C-Evade,10,0
+jobs,03F,Archer (3F),Innate statuses,"Undead, Float",none
+jobs,03F,Archer (3F),Status immunity,"Invite, Darkness, Blood Suck, Reraise, Transparent, Poison, Regen, Charm, Death Sentence",none
+jobs,042,Wizard (42),Skillset,Black Magic (9D),00
+jobs,042,Wizard (42),Innate A,Monster Skill (1DE),<Nothing> (000)
+jobs,042,Wizard (42),Equipment,"Unused, Rod, Hat, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak",none
+jobs,042,Wizard (42),MP growth,9,11
+jobs,042,Wizard (42),MP multiplier,120,100
+jobs,042,Wizard (42),Speed multiplier,105,100
+jobs,042,Wizard (42),PA growth,60,50
+jobs,042,Wizard (42),PA multiplier,60,100
+jobs,042,Wizard (42),MA growth,48,50
+jobs,042,Wizard (42),MA multiplier,150,100
+jobs,042,Wizard (42),Move,3,0
+jobs,042,Wizard (42),Jump,3,0
+jobs,042,Wizard (42),C-Evade,5,0
+jobs,042,Wizard (42),Innate statuses,"Undead, Float",none
+jobs,042,Wizard (42),Status immunity,"Invite, Darkness, Blood Suck, Reraise, Transparent, Poison, Regen, Charm, Death Sentence",none
+jobs,044,Time Mage (44),Skillset,Time Magic (9E),00
+jobs,044,Time Mage (44),Innate A,Monster Skill (1DE),<Nothing> (000)
+jobs,044,Time Mage (44),Equipment,"Unused, Staff, Hat, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak",none
+jobs,044,Time Mage (44),MP growth,10,11
+jobs,044,Time Mage (44),MP multiplier,120,100
+jobs,044,Time Mage (44),Speed multiplier,110,100
+jobs,044,Time Mage (44),PA growth,65,50
+jobs,044,Time Mage (44),PA multiplier,50,100
+jobs,044,Time Mage (44),MA growth,48,50
+jobs,044,Time Mage (44),MA multiplier,135,100
+jobs,044,Time Mage (44),Move,3,0
+jobs,044,Time Mage (44),Jump,3,0
+jobs,044,Time Mage (44),C-Evade,5,0
+jobs,044,Time Mage (44),Innate statuses,"Undead, Float",none
+jobs,044,Time Mage (44),Status immunity,"Invite, Darkness, Blood Suck, Reraise, Transparent, Poison, Regen, Charm, Death Sentence",none
+jobs,046,Oracle (46),Skillset,Yin Yang Magic (9F),00
+jobs,046,Oracle (46),Innate A,Monster Skill (1DE),<Nothing> (000)
+jobs,046,Oracle (46),Equipment,"Unused, Rod, Staff, Book, Pole, Hat, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak",none
+jobs,046,Oracle (46),HP multiplier,90,100
+jobs,046,Oracle (46),MP growth,10,11
+jobs,046,Oracle (46),MP multiplier,110,100
+jobs,046,Oracle (46),Speed multiplier,110,100
+jobs,046,Oracle (46),PA growth,60,50
+jobs,046,Oracle (46),PA multiplier,50,100
+jobs,046,Oracle (46),MA growth,45,50
+jobs,046,Oracle (46),MA multiplier,120,100
+jobs,046,Oracle (46),Move,3,0
+jobs,046,Oracle (46),Jump,3,0
+jobs,046,Oracle (46),C-Evade,5,0
+jobs,046,Oracle (46),Innate statuses,"Undead, Float",none
+jobs,046,Oracle (46),Status immunity,"Invite, Darkness, Blood Suck, Reraise, Transparent, Poison, Regen, Charm, Death Sentence",none
+jobs,047,Summoner (47),Skillset,Summon Magic (A0),00
+jobs,047,Summoner (47),Innate A,Monster Skill (1DE),<Nothing> (000)
+jobs,047,Summoner (47),Equipment,"Unused, Rod, Staff, Hat, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak",none
+jobs,047,Summoner (47),HP growth,12,11
+jobs,047,Summoner (47),HP multiplier,85,100
+jobs,047,Summoner (47),MP growth,8,11
+jobs,047,Summoner (47),MP multiplier,125,100
+jobs,047,Summoner (47),PA growth,70,50
+jobs,047,Summoner (47),PA multiplier,50,100
+jobs,047,Summoner (47),MA growth,40,50
+jobs,047,Summoner (47),MA multiplier,125,100
+jobs,047,Summoner (47),Move,3,0
+jobs,047,Summoner (47),Jump,3,0
+jobs,047,Summoner (47),C-Evade,5,0
+jobs,047,Summoner (47),Innate statuses,"Undead, Float",none
+jobs,047,Summoner (47),Status immunity,"Invite, Darkness, Blood Suck, Reraise, Transparent, Poison, Regen, Charm, Death Sentence",none
+jobs,048,Holy Dragon (48),MP growth,30,6
+jobs,048,Holy Dragon (48),MA growth,6,8
+jobs,048,Holy Dragon (48),MA multiplier,110,55
+jobs,048,Holy Dragon (48),Monster portrait,148,24
+jobs,04A,Squire (4A),Monster portrait,0,26
+jobs,04B,Chemist (4B),Monster portrait,0,28
+jobs,04C,Knight (4C),Monster portrait,0,30
+jobs,04D,Archer (4D),Monster portrait,0,32
+jobs,04E,Monk (4E),Monster portrait,0,34
+jobs,04F,Priest (4F),Monster portrait,0,36
+jobs,050,Wizard (50),Monster portrait,0,38
+jobs,051,Time Mage (51),Monster portrait,0,40
+jobs,052,Summoner (52),Monster portrait,0,42
+jobs,053,Thief (53),Innate A,<Nothing> (000),Gained Jp UP (1CF)
+jobs,053,Thief (53),Monster portrait,0,44
+jobs,054,Mediator (54),Innate A,Monster Talk (1D9),Equip Gun (1CD)
+jobs,054,Mediator (54),Monster portrait,0,46
+jobs,055,Oracle (55),Monster portrait,0,48
+jobs,056,Geomancer (56),Monster portrait,0,50
+jobs,057,Lancer (57),Monster portrait,0,52
+jobs,058,Samurai (58),Innate A,<Nothing> (000),Two Hands (1DC)
+jobs,058,Samurai (58),HP growth,12,9
+jobs,058,Samurai (58),HP multiplier,75,130
+jobs,058,Samurai (58),MA multiplier,90,102
+jobs,058,Samurai (58),Monster portrait,0,54
+jobs,059,Ninja (59),Monster portrait,0,56
+jobs,05A,Calculator (5A),Innate A,<Nothing> (000),Gained Exp UP (1D0)
+jobs,05A,Calculator (5A),Monster portrait,0,58
+jobs,05B,Bard (5B),Equipment,"Unused, Instrument, Hat, Clothing, Shoes, Armguard, Ring, Armlet, Cloak","Unused, Sword, Knight's Sword, Katana, Axe, Flail, Shield, Helmet, Armor, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak"
+jobs,05B,Bard (5B),HP growth,20,12
+jobs,05B,Bard (5B),HP multiplier,55,80
+jobs,05B,Bard (5B),MP multiplier,50,90
+jobs,05B,Bard (5B),PA growth,80,40
+jobs,05B,Bard (5B),PA multiplier,30,140
+jobs,05B,Bard (5B),MA multiplier,115,80
+jobs,05B,Bard (5B),C-Evade,5,0
+jobs,05B,Bard (5B),Monster portrait,0,60
+jobs,05C,Dancer (5C),Innate A,<Nothing> (000),1E5
+jobs,05C,Dancer (5C),PA growth,50,80
+jobs,05C,Dancer (5C),Monster portrait,0,60
+jobs,05D,Mime (5D),Monster portrait,0,62
+jobs,05E,Chocobo (5E),Innate A,Walk on Water (Move*) (1F7),Move Underwater (1F9)
+jobs,05E,Chocobo (5E),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,05E,Chocobo (5E),MP growth,30,3
+jobs,05E,Chocobo (5E),MP multiplier,100,130
+jobs,05E,Chocobo (5E),MA growth,7,9
+jobs,05E,Chocobo (5E),MA multiplier,94,57
+jobs,05E,Chocobo (5E),Monster portrait,134,63
+jobs,05F,Black Chocobo (5F),Innate A,Walk on Water (Move*) (1F7),Move Underwater (1F9)
+jobs,05F,Black Chocobo (5F),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,05F,Black Chocobo (5F),Equipment,Unused,"Unused, Ring"
+jobs,05F,Black Chocobo (5F),MP growth,30,3
+jobs,05F,Black Chocobo (5F),MP multiplier,150,160
+jobs,05F,Black Chocobo (5F),MA growth,7,9
+jobs,05F,Black Chocobo (5F),MA multiplier,105,62
+jobs,05F,Black Chocobo (5F),Monster portrait,134,63
+jobs,060,Red Chocobo (60),Innate A,Walk on Water (Move*) (1F7),Move Underwater (1F9)
+jobs,060,Red Chocobo (60),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,060,Red Chocobo (60),MP growth,30,3
+jobs,060,Red Chocobo (60),MP multiplier,90,120
+jobs,060,Red Chocobo (60),MA growth,7,9
+jobs,060,Red Chocobo (60),MA multiplier,99,60
+jobs,060,Red Chocobo (60),Monster portrait,134,63
+jobs,061,Goblin (61),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,061,Goblin (61),MP growth,30,3
+jobs,061,Goblin (61),MP multiplier,40,120
+jobs,061,Goblin (61),MA growth,7,9
+jobs,061,Goblin (61),MA multiplier,85,52
+jobs,061,Goblin (61),Monster portrait,135,64
+jobs,062,Black Goblin (62),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,062,Black Goblin (62),MP growth,30,3
+jobs,062,Black Goblin (62),MP multiplier,35,115
+jobs,062,Black Goblin (62),MA growth,7,9
+jobs,062,Black Goblin (62),MA multiplier,87,53
+jobs,062,Black Goblin (62),Monster portrait,135,64
+jobs,063,Gobbledeguck (63),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,063,Gobbledeguck (63),MP growth,30,3
+jobs,063,Gobbledeguck (63),MP multiplier,75,150
+jobs,063,Gobbledeguck (63),MA growth,7,9
+jobs,063,Gobbledeguck (63),MA multiplier,92,56
+jobs,063,Gobbledeguck (63),Monster portrait,135,64
+jobs,064,Bomb (64),Innate A,(Cannot enter water) (1F1),Float (1FA)
+jobs,064,Bomb (64),Innate B,Float (1FA),<Nothing> (000)
+jobs,064,Bomb (64),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,064,Bomb (64),MP growth,30,3
+jobs,064,Bomb (64),MP multiplier,20,120
+jobs,064,Bomb (64),MA growth,7,9
+jobs,064,Bomb (64),MA multiplier,93,56
+jobs,064,Bomb (64),Innate statuses,none,Float
+jobs,064,Bomb (64),Status immunity,"Blood Suck, Oil, Float","Blood Suck, Oil"
+jobs,064,Bomb (64),Monster portrait,136,65
+jobs,065,Grenade (65),Innate A,(Cannot enter water) (1F1),Float (1FA)
+jobs,065,Grenade (65),Innate B,Float (1FA),<Nothing> (000)
+jobs,065,Grenade (65),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,065,Grenade (65),MP growth,30,3
+jobs,065,Grenade (65),MP multiplier,30,120
+jobs,065,Grenade (65),MA growth,7,9
+jobs,065,Grenade (65),MA multiplier,94,57
+jobs,065,Grenade (65),Innate statuses,none,Float
+jobs,065,Grenade (65),Status immunity,"Blood Suck, Oil, Float","Blood Suck, Oil"
+jobs,065,Grenade (65),Monster portrait,136,65
+jobs,066,Explosive (66),Innate A,(Cannot enter water) (1F1),Float (1FA)
+jobs,066,Explosive (66),Innate B,Float (1FA),<Nothing> (000)
+jobs,066,Explosive (66),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,066,Explosive (66),MP growth,30,3
+jobs,066,Explosive (66),MP multiplier,40,120
+jobs,066,Explosive (66),MA growth,7,9
+jobs,066,Explosive (66),MA multiplier,96,58
+jobs,066,Explosive (66),Innate statuses,none,Float
+jobs,066,Explosive (66),Status immunity,"Blood Suck, Oil, Float","Blood Suck, Oil"
+jobs,066,Explosive (66),Monster portrait,136,65
+jobs,067,Red Panther (67),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,067,Red Panther (67),MP growth,30,3
+jobs,067,Red Panther (67),MP multiplier,50,120
+jobs,067,Red Panther (67),MA growth,7,9
+jobs,067,Red Panther (67),MA multiplier,91,55
+jobs,067,Red Panther (67),Monster portrait,137,66
+jobs,068,Cuar (68),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,068,Cuar (68),MP growth,30,3
+jobs,068,Cuar (68),MP multiplier,60,120
+jobs,068,Cuar (68),MA growth,7,9
+jobs,068,Cuar (68),MA multiplier,105,62
+jobs,068,Cuar (68),Monster portrait,137,66
+jobs,069,Vampire (69),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,069,Vampire (69),MP growth,30,3
+jobs,069,Vampire (69),MP multiplier,70,120
+jobs,069,Vampire (69),MA growth,7,9
+jobs,069,Vampire (69),MA multiplier,85,52
+jobs,069,Vampire (69),Monster portrait,137,66
+jobs,06A,Pisco Demon (6A),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,06A,Pisco Demon (6A),MP growth,30,3
+jobs,06A,Pisco Demon (6A),MA growth,7,9
+jobs,06A,Pisco Demon (6A),MA multiplier,96,58
+jobs,06A,Pisco Demon (6A),Monster portrait,138,67
+jobs,06B,Squidlarkin (6B),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,06B,Squidlarkin (6B),MP growth,30,3
+jobs,06B,Squidlarkin (6B),MP multiplier,115,120
+jobs,06B,Squidlarkin (6B),MA growth,7,9
+jobs,06B,Squidlarkin (6B),MA multiplier,96,58
+jobs,06B,Squidlarkin (6B),Monster portrait,138,67
+jobs,06C,Mindflare (6C),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,06C,Mindflare (6C),MP growth,30,3
+jobs,06C,Mindflare (6C),MP multiplier,160,120
+jobs,06C,Mindflare (6C),MA growth,7,9
+jobs,06C,Mindflare (6C),MA multiplier,92,56
+jobs,06C,Mindflare (6C),Monster portrait,138,67
+jobs,06D,Skeleton (6D),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,06D,Skeleton (6D),MP growth,30,3
+jobs,06D,Skeleton (6D),MP multiplier,5,120
+jobs,06D,Skeleton (6D),MA growth,7,9
+jobs,06D,Skeleton (6D),MA multiplier,85,52
+jobs,06D,Skeleton (6D),Monster portrait,139,68
+jobs,06E,Bone Snatch (6E),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,06E,Bone Snatch (6E),MP growth,30,3
+jobs,06E,Bone Snatch (6E),MP multiplier,4,120
+jobs,06E,Bone Snatch (6E),MA growth,7,9
+jobs,06E,Bone Snatch (6E),MA multiplier,87,53
+jobs,06E,Bone Snatch (6E),Monster portrait,139,68
+jobs,06F,Living Bone (6F),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,06F,Living Bone (6F),MP growth,30,3
+jobs,06F,Living Bone (6F),MP multiplier,3,120
+jobs,06F,Living Bone (6F),MA growth,7,9
+jobs,06F,Living Bone (6F),MA multiplier,88,54
+jobs,06F,Living Bone (6F),Monster portrait,139,68
+jobs,070,Ghoul (70),Innate A,(Cannot enter water) (1F1),Non-charge (1E3)
+jobs,070,Ghoul (70),MP growth,30,3
+jobs,070,Ghoul (70),MP multiplier,124,120
+jobs,070,Ghoul (70),MA growth,7,9
+jobs,070,Ghoul (70),MA multiplier,105,62
+jobs,070,Ghoul (70),Innate statuses,Undead,"Undead, Float"
+jobs,070,Ghoul (70),Status immunity,"Blood Suck, Float, Reraise, Poison, Regen","Blood Suck, Reraise, Poison, Regen"
+jobs,070,Ghoul (70),Monster portrait,140,69
+jobs,071,Gust (71),Innate A,(Cannot enter water) (1F1),Non-charge (1E3)
+jobs,071,Gust (71),MP growth,30,3
+jobs,071,Gust (71),MP multiplier,96,120
+jobs,071,Gust (71),MA growth,7,9
+jobs,071,Gust (71),MA multiplier,106,63
+jobs,071,Gust (71),Innate statuses,Undead,"Undead, Float"
+jobs,071,Gust (71),Status immunity,"Blood Suck, Float, Reraise, Poison, Regen","Blood Suck, Reraise, Poison, Regen"
+jobs,071,Gust (71),Monster portrait,140,69
+jobs,072,Revnant (72),Innate A,(Cannot enter water) (1F1),Non-charge (1E3)
+jobs,072,Revnant (72),MP growth,30,3
+jobs,072,Revnant (72),MP multiplier,64,120
+jobs,072,Revnant (72),MA growth,7,9
+jobs,072,Revnant (72),MA multiplier,110,65
+jobs,072,Revnant (72),Innate statuses,Undead,"Undead, Float"
+jobs,072,Revnant (72),Status immunity,"Blood Suck, Float, Reraise, Poison, Regen","Blood Suck, Reraise, Poison, Regen"
+jobs,072,Revnant (72),Monster portrait,140,69
+jobs,073,Flotiball (73),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,073,Flotiball (73),MP growth,30,3
+jobs,073,Flotiball (73),MP multiplier,80,120
+jobs,073,Flotiball (73),MA growth,7,9
+jobs,073,Flotiball (73),MA multiplier,89,58
+jobs,073,Flotiball (73),Monster portrait,141,70
+jobs,074,Ahriman (74),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,074,Ahriman (74),MP growth,30,3
+jobs,074,Ahriman (74),MP multiplier,95,120
+jobs,074,Ahriman (74),MA growth,7,9
+jobs,074,Ahriman (74),MA multiplier,95,57
+jobs,074,Ahriman (74),Monster portrait,141,70
+jobs,075,Plague (75),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,075,Plague (75),MP growth,30,3
+jobs,075,Plague (75),MP multiplier,140,120
+jobs,075,Plague (75),MA growth,7,9
+jobs,075,Plague (75),MA multiplier,120,70
+jobs,075,Plague (75),Monster portrait,141,70
+jobs,076,Juravis (76),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,076,Juravis (76),MP growth,30,3
+jobs,076,Juravis (76),MP multiplier,40,120
+jobs,076,Juravis (76),MA growth,7,9
+jobs,076,Juravis (76),MA multiplier,85,52
+jobs,076,Juravis (76),Monster portrait,142,71
+jobs,077,Steel Hawk (77),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,077,Steel Hawk (77),MP growth,30,3
+jobs,077,Steel Hawk (77),MP multiplier,60,120
+jobs,077,Steel Hawk (77),MA growth,7,9
+jobs,077,Steel Hawk (77),MA multiplier,90,55
+jobs,077,Steel Hawk (77),Monster portrait,142,71
+jobs,078,Cocatoris (78),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,078,Cocatoris (78),MP growth,30,3
+jobs,078,Cocatoris (78),MP multiplier,10,120
+jobs,078,Cocatoris (78),MA growth,7,9
+jobs,078,Cocatoris (78),MA multiplier,100,60
+jobs,078,Cocatoris (78),Monster portrait,142,71
+jobs,079,Uribo (79),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,079,Uribo (79),MP growth,30,3
+jobs,079,Uribo (79),MP multiplier,1,120
+jobs,079,Uribo (79),MA growth,7,9
+jobs,079,Uribo (79),MA multiplier,110,65
+jobs,079,Uribo (79),Monster portrait,143,72
+jobs,07A,Porky (7A),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,07A,Porky (7A),MP growth,30,3
+jobs,07A,Porky (7A),MP multiplier,1,120
+jobs,07A,Porky (7A),MA growth,7,9
+jobs,07A,Porky (7A),MA multiplier,110,65
+jobs,07A,Porky (7A),Monster portrait,143,72
+jobs,07B,Wildbow (7B),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,07B,Wildbow (7B),MP growth,30,3
+jobs,07B,Wildbow (7B),MP multiplier,1,120
+jobs,07B,Wildbow (7B),MA growth,7,9
+jobs,07B,Wildbow (7B),MA multiplier,110,65
+jobs,07B,Wildbow (7B),Monster portrait,143,72
+jobs,07C,Woodman (7C),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,07C,Woodman (7C),MP growth,30,2
+jobs,07C,Woodman (7C),MA growth,7,9
+jobs,07C,Woodman (7C),MA multiplier,100,60
+jobs,07C,Woodman (7C),Monster portrait,144,73
+jobs,07D,Trent (7D),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,07D,Trent (7D),MP growth,30,2
+jobs,07D,Trent (7D),MP multiplier,180,160
+jobs,07D,Trent (7D),MA growth,7,9
+jobs,07D,Trent (7D),MA multiplier,95,52
+jobs,07D,Trent (7D),Monster portrait,144,73
+jobs,07E,Taiju (7E),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,07E,Taiju (7E),MP growth,30,2
+jobs,07E,Taiju (7E),MP multiplier,150,160
+jobs,07E,Taiju (7E),MA growth,7,9
+jobs,07E,Taiju (7E),MA multiplier,99,59
+jobs,07E,Taiju (7E),Monster portrait,144,73
+jobs,07F,Bull Demon (7F),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,07F,Bull Demon (7F),MP growth,30,3
+jobs,07F,Bull Demon (7F),MP multiplier,5,120
+jobs,07F,Bull Demon (7F),MA growth,7,9
+jobs,07F,Bull Demon (7F),MA multiplier,100,60
+jobs,07F,Bull Demon (7F),Monster portrait,145,74
+jobs,080,Minitaurus (80),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,080,Minitaurus (80),MP growth,30,10
+jobs,080,Minitaurus (80),MP multiplier,8,80
+jobs,080,Minitaurus (80),MA growth,7,9
+jobs,080,Minitaurus (80),MA multiplier,100,60
+jobs,080,Minitaurus (80),Monster portrait,145,74
+jobs,081,Sacred (81),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,081,Sacred (81),MP growth,30,3
+jobs,081,Sacred (81),MP multiplier,10,120
+jobs,081,Sacred (81),MA growth,7,9
+jobs,081,Sacred (81),MA multiplier,100,60
+jobs,081,Sacred (81),Monster portrait,145,74
+jobs,082,Morbol (82),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,082,Morbol (82),MP growth,30,3
+jobs,082,Morbol (82),MP multiplier,15,120
+jobs,082,Morbol (82),Monster portrait,146,75
+jobs,083,Ochu (83),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,083,Ochu (83),MP growth,30,3
+jobs,083,Ochu (83),MP multiplier,15,120
+jobs,083,Ochu (83),Monster portrait,146,75
+jobs,084,Great Morbol (84),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,084,Great Morbol (84),MP growth,30,3
+jobs,084,Great Morbol (84),MP multiplier,10,120
+jobs,084,Great Morbol (84),Monster portrait,146,75
+jobs,085,Behemoth (85),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,085,Behemoth (85),MP growth,30,3
+jobs,085,Behemoth (85),MA growth,7,9
+jobs,085,Behemoth (85),MA multiplier,105,62
+jobs,085,Behemoth (85),Monster portrait,147,76
+jobs,086,King Behemoth (86),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,086,King Behemoth (86),MP growth,30,3
+jobs,086,King Behemoth (86),MA growth,7,9
+jobs,086,King Behemoth (86),MA multiplier,100,60
+jobs,086,King Behemoth (86),Monster portrait,147,76
+jobs,087,Dark Behemoth (87),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,087,Dark Behemoth (87),MP growth,30,3
+jobs,087,Dark Behemoth (87),MA growth,6,8
+jobs,087,Dark Behemoth (87),MA multiplier,95,57
+jobs,087,Dark Behemoth (87),Monster portrait,147,76
+jobs,088,Dragon (88),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,088,Dragon (88),MP growth,30,3
+jobs,088,Dragon (88),MP multiplier,75,120
+jobs,088,Dragon (88),MA growth,7,9
+jobs,088,Dragon (88),MA multiplier,100,42
+jobs,088,Dragon (88),Monster portrait,148,77
+jobs,089,Blue Dragon (89),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,089,Blue Dragon (89),MP growth,30,3
+jobs,089,Blue Dragon (89),MP multiplier,110,120
+jobs,089,Blue Dragon (89),MA growth,7,9
+jobs,089,Blue Dragon (89),MA multiplier,105,44
+jobs,089,Blue Dragon (89),Monster portrait,148,77
+jobs,08A,Red Dragon (8A),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,08A,Red Dragon (8A),MP growth,30,3
+jobs,08A,Red Dragon (8A),MP multiplier,115,120
+jobs,08A,Red Dragon (8A),MA growth,6,8
+jobs,08A,Red Dragon (8A),MA multiplier,100,42
+jobs,08A,Red Dragon (8A),Monster portrait,148,77
+jobs,08B,Hyudra (8B),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,08B,Hyudra (8B),Monster portrait,149,78
+jobs,08C,Hydra (8C),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,08C,Hydra (8C),Monster portrait,149,78
+jobs,08D,Tiamat (8D),Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,08D,Tiamat (8D),Monster portrait,149,78
+jobs,08E,8E,Skillset,00,Basic Skill (05)
+jobs,08E,8E,Equipment,none,"Unused, Clothing"
+jobs,08E,8E,HP multiplier,100,50
+jobs,08E,8E,MP multiplier,100,1
+jobs,08E,8E,PA multiplier,100,20
+jobs,08E,8E,MA multiplier,100,1
+jobs,08E,8E,Move,0,4
+jobs,08E,8E,Jump,0,2
+jobs,090,Byblos (90),Skillset,Byblos (AA),94
+jobs,090,Byblos (90),Monster portrait,150,79
+jobs,090,Byblos (90),Monster graphic,0,17
+jobs,091,Steel Giant (91),Skillset,Work (AB),95
+jobs,091,Steel Giant (91),Innate B,Any Weather (1F4),<Nothing> (000)
+jobs,091,Steel Giant (91),Innate C,Any Ground (1F5),<Nothing> (000)
+jobs,091,Steel Giant (91),Monster portrait,154,82
+jobs,091,Steel Giant (91),Monster graphic,0,21
+jobs,092,92,Skillset,00,Breath (2C)
+jobs,092,92,Innate A,<Nothing> (000),Counter (1BA)
+jobs,092,92,Innate B,<Nothing> (000),Attack UP (1D1)
+jobs,092,92,Innate C,<Nothing> (000),Magic AttackUP (1D3)
+jobs,092,92,Innate D,<Nothing> (000),Magic DefendUP (1D4)
+jobs,092,92,Equipment,none,Unused
+jobs,092,92,HP growth,11,6
+jobs,092,92,HP multiplier,100,130
+jobs,092,92,MP growth,11,30
+jobs,092,92,MP multiplier,100,115
+jobs,092,92,Speed growth,100,90
+jobs,092,92,Speed multiplier,100,132
+jobs,092,92,PA growth,50,39
+jobs,092,92,PA multiplier,100,147
+jobs,092,92,MA growth,50,9
+jobs,092,92,MA multiplier,100,60
+jobs,092,92,Move,0,5
+jobs,092,92,Jump,0,131
+jobs,092,92,C-Evade,0,5
+jobs,092,92,Status immunity,none,"Crystal, Dead, Undead, Petrify, Invite, Confusion, Silence, Blood Suck, Treasure, Oil, Float, Reraise, Transparent, Berserk, Chicken, Frog, Poison, Regen, Stop, Faith, Innocent, Charm, Sleep, Don't Act, Death Sentence"
+jobs,092,92,Monster palette,0,4
+jobs,092,92,Monster graphic,0,15
+jobs,093,93,Skillset,00,Dark Sword (27)
+jobs,093,93,Innate A,<Nothing> (000),Defense UP (1D2)
+jobs,093,93,Equipment,none,"Unused, Sword, Shield, Helmet, Armor, Robe, Shoes, Armguard, Ring, Armlet, Cloak"
+jobs,093,93,HP multiplier,100,150
+jobs,093,93,Speed multiplier,100,120
+jobs,093,93,MA multiplier,100,90
+jobs,093,93,Move,0,3
+jobs,093,93,Jump,0,3
+jobs,093,93,C-Evade,0,15
+jobs,093,93,Status immunity,none,"Petrify, Invite, Blood Suck, Transparent, Berserk, Charm"
+jobs,094,94,Skillset,00,9A
+jobs,094,94,Equipment,none,"Unused, Knife, Ninja Blade, Sword, Knight's Sword, Katana, Axe, Rod, Staff, Flail, Gun, Crossbow, Bow, Instrument, Book, Spear, Pole, Bag, Cloth, Shield, Helmet, Hat, Hair Adornment, Armor, Clothing, Robe, Shoes, Armguard, Ring, Armlet, Cloak, Perfume"
+jobs,094,94,HP growth,11,9
+jobs,094,94,HP multiplier,100,135
+jobs,094,94,MP growth,11,10
+jobs,094,94,MP multiplier,100,140
+jobs,094,94,Speed growth,100,90
+jobs,094,94,Speed multiplier,100,110
+jobs,094,94,PA multiplier,100,120
+jobs,094,94,MA multiplier,100,160
+jobs,094,94,Move,0,5
+jobs,094,94,Jump,0,3
+jobs,094,94,C-Evade,0,20
+jobs,094,94,Innate statuses,none,Undead
+jobs,094,94,Status immunity,none,"Petrify, Invite, Confusion, Blood Suck, Treasure, Transparent, Berserk, Chicken, Frog, Stop, Charm"
+jobs,095,95,Skillset,00,A9
+jobs,095,95,Innate A,<Nothing> (000),Move Underwater (1F9)
+jobs,095,95,Innate C,<Nothing> (000),Counter (1BA)
+jobs,095,95,Innate D,<Nothing> (000),Non-charge (1E3)
+jobs,095,95,Equipment,none,Unused
+jobs,095,95,HP growth,11,4
+jobs,095,95,HP multiplier,100,115
+jobs,095,95,MP growth,11,3
+jobs,095,95,MP multiplier,100,120
+jobs,095,95,Speed growth,100,85
+jobs,095,95,Speed multiplier,100,115
+jobs,095,95,PA growth,50,45
+jobs,095,95,PA multiplier,100,110
+jobs,095,95,MA growth,50,7
+jobs,095,95,MA multiplier,100,80
+jobs,095,95,Move,0,6
+jobs,095,95,Jump,0,5
+jobs,095,95,C-Evade,0,10
+jobs,095,95,Status immunity,none,Blood Suck
+jobs,095,95,Monster portrait,0,63
+jobs,095,95,Monster palette,0,3
+jobs,095,95,Monster graphic,0,1
+jobs,096,Apanda (96),Skillset,Bio (AC),96
+jobs,096,Apanda (96),Monster portrait,150,79
+jobs,096,Apanda (96),Monster graphic,0,17
+jobs,097,Serpentarius (97),Skillset,Dark Cloud (AD),A8
+jobs,097,Serpentarius (97),Innate C,Short Charge (1E2),MA Save (1A7)
+jobs,097,Serpentarius (97),Innate D,Counter (1BA),<Nothing> (000)
+jobs,097,Serpentarius (97),HP growth,10,4
+jobs,097,Serpentarius (97),HP multiplier,100,91
+jobs,097,Serpentarius (97),MP growth,8,3
+jobs,097,Serpentarius (97),MP multiplier,150,120
+jobs,097,Serpentarius (97),Speed growth,100,85
+jobs,097,Serpentarius (97),Speed multiplier,90,136
+jobs,097,Serpentarius (97),PA growth,70,39
+jobs,097,Serpentarius (97),PA multiplier,50,130
+jobs,097,Serpentarius (97),MA growth,50,9
+jobs,097,Serpentarius (97),MA multiplier,125,50
+jobs,097,Serpentarius (97),Move,4,5
+jobs,097,Serpentarius (97),C-Evade,3,10
+jobs,097,Serpentarius (97),Status immunity,"Crystal, Dead, Undead, Petrify, Invite, Confusion, Silence, Blood Suck, Treasure, Float, Reraise, Transparent, Berserk, Chicken, Poison, Regen, Charm, Sleep, Don't Move, Don't Act, Death Sentence","Blood Suck, Float"
+jobs,097,Serpentarius (97),Cancel,Ice,none
+jobs,097,Serpentarius (97),Half,none,"Lightning, Wind"
+jobs,097,Serpentarius (97),Monster portrait,151,80
+jobs,097,Serpentarius (97),Monster graphic,0,18
+jobs,098,Holy Dragon (98),Skillset,00,Byblos (AA)
+jobs,098,Holy Dragon (98),Innate A,<Nothing> (000),Counter (1BA)
+jobs,098,Holy Dragon (98),Innate D,<Nothing> (000),(Cannot enter water) (1F1)
+jobs,098,Holy Dragon (98),Equipment,none,Unused
+jobs,098,Holy Dragon (98),HP growth,11,3
+jobs,098,Holy Dragon (98),HP multiplier,100,150
+jobs,098,Holy Dragon (98),MP growth,11,4
+jobs,098,Holy Dragon (98),Speed growth,100,85
+jobs,098,Holy Dragon (98),Speed multiplier,100,120
+jobs,098,Holy Dragon (98),PA growth,50,30
+jobs,098,Holy Dragon (98),PA multiplier,100,150
+jobs,098,Holy Dragon (98),MA growth,50,60
+jobs,098,Holy Dragon (98),MA multiplier,100,40
+jobs,098,Holy Dragon (98),Move,0,2
+jobs,098,Holy Dragon (98),Jump,0,5
+jobs,098,Holy Dragon (98),C-Evade,0,40
+jobs,098,Holy Dragon (98),Status immunity,none,"Blood Suck, Float"
+jobs,098,Holy Dragon (98),Monster portrait,148,100
+jobs,098,Holy Dragon (98),Monster palette,3,0
+jobs,098,Holy Dragon (98),Monster graphic,15,19
+jobs,099,Archaic Demon (99),Skillset,Dark Magic (AE),98
+jobs,099,Archaic Demon (99),Monster portrait,153,81
+jobs,099,Archaic Demon (99),Monster graphic,0,20
+jobs,09A,Ultima Demon (9A),Skillset,Night Magic (AF),99
+jobs,09A,Ultima Demon (9A),Monster portrait,153,81
+jobs,09A,Ultima Demon (9A),Monster graphic,0,20
+jobs,09B,9B,Skillset,00,97
+jobs,09B,9B,Innate A,<Nothing> (000),(Cannot enter water) (1F1)
+jobs,09B,9B,Innate C,<Nothing> (000),Short Charge (1E2)
+jobs,09B,9B,Innate D,<Nothing> (000),Counter (1BA)
+jobs,09B,9B,Equipment,none,Unused
+jobs,09B,9B,HP growth,11,10
+jobs,09B,9B,MP growth,11,8
+jobs,09B,9B,MP multiplier,100,150
+jobs,09B,9B,Speed multiplier,100,90
+jobs,09B,9B,PA growth,50,70
+jobs,09B,9B,PA multiplier,100,50
+jobs,09B,9B,MA multiplier,100,125
+jobs,09B,9B,Move,0,4
+jobs,09B,9B,Jump,0,3
+jobs,09B,9B,C-Evade,0,3
+jobs,09B,9B,Status immunity,none,"Crystal, Dead, Undead, Petrify, Invite, Confusion, Silence, Blood Suck, Treasure, Float, Reraise, Transparent, Berserk, Chicken, Poison, Regen, Charm, Sleep, Don't Move, Don't Act, Death Sentence"
+jobs,09B,9B,Cancel,none,Ice
+jobs,09F,9F,Skillset,00,Sing (16)
+jobs,09F,9F,Equipment,none,"Unused, Instrument, Hat, Clothing, Shoes, Armguard, Ring, Armlet, Cloak"
+jobs,09F,9F,HP growth,11,20
+jobs,09F,9F,HP multiplier,100,55
+jobs,09F,9F,MP growth,11,20
+jobs,09F,9F,MP multiplier,100,50
+jobs,09F,9F,PA growth,50,80
+jobs,09F,9F,PA multiplier,100,30
+jobs,09F,9F,MA multiplier,100,115
+jobs,09F,9F,Move,0,3
+jobs,09F,9F,Jump,0,3
+jobs,09F,9F,C-Evade,0,5
+job_requirements,010,Bard,Chemist level,2,0
+job_requirements,010,Bard,Knight level,0,8
+job_requirements,010,Bard,White Mage level,2,0
+job_requirements,010,Bard,Black Mage level,2,8
+job_requirements,010,Bard,Time Mage level,2,0
+job_requirements,010,Bard,Summoner level,4,0
+job_requirements,010,Bard,Orator level,4,0
+job_requirements,010,Bard,Mystic level,2,0

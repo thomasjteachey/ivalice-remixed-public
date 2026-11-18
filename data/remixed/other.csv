@@ -1,0 +1,374 @@
+table,id,name,field,vanilla,remixed
+action_events,001,001,bytes,00 04 09 07 02 03 00 00 00 00 00 00 00 00 00 00,00 00 09 07 02 03 00 00 00 00 00 00 00 00 00 00
+action_events,004,004,bytes,00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00,00 00 00 00 00 00 00 00 00 05 00 00 00 00 00 00
+action_events,005,005,bytes,00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00,00 06 05 00 00 05 00 00 00 00 00 00 00 00 00 00
+action_events,00A,00A,bytes,00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00,00 00 00 00 00 00 00 00 06 06 06 06 06 06 06 06
+ability_animations,000,<Nothing> (000),bytes,00 2c 00,00 01 01
+ability_animations,001,Cure (001),bytes,01 2c 00,01 01 01
+ability_animations,002,Cure 2 (002),bytes,01 2c 00,01 01 01
+ability_animations,003,Cure 3 (003),bytes,01 2c 00,01 01 01
+ability_animations,004,Cure 4 (004),bytes,01 2c 00,01 01 01
+ability_animations,005,Raise (005),bytes,01 2c 00,01 01 01
+ability_animations,006,Raise 2 (006),bytes,01 2c 00,01 01 01
+ability_animations,007,Reraise (007),bytes,01 2c 00,01 01 01
+ability_animations,008,Regen (008),bytes,01 2c 00,01 01 01
+ability_animations,009,Protect (009),bytes,01 2c 00,01 01 01
+ability_animations,00A,Protect 2 (00A),bytes,01 2c 00,01 01 01
+ability_animations,00B,Shell (00B),bytes,01 2c 00,01 01 01
+ability_animations,00C,Shell 2 (00C),bytes,01 2c 00,01 01 01
+ability_animations,00D,Wall (00D),bytes,01 2c 00,01 02 01
+ability_animations,00E,Esuna (00E),bytes,01 2c 00,01 01 01
+ability_animations,00F,Holy (00F),bytes,01 2c 00,02 03 03
+ability_animations,010,Fire (010),bytes,01 2c 00,03 03 03
+ability_animations,011,Fire 2 (011),bytes,01 2c 00,03 03 03
+ability_animations,012,Fire 3 (012),bytes,01 2c 00,03 03 03
+ability_animations,013,Fire 4 (013),bytes,01 2c 00,03 03 03
+ability_animations,014,Bolt (014),bytes,01 2c 00,04 04 04
+ability_animations,015,Bolt 2 (015),bytes,01 2c 00,04 04 04
+ability_animations,016,Bolt 3 (016),bytes,01 2c 00,04 04 04
+ability_animations,017,Bolt 4 (017),bytes,01 2c 00,04 04 04
+ability_animations,018,Ice (018),bytes,01 2c 00,04 04 04
+ability_animations,019,Ice 2 (019),bytes,01 2c 00,04 05 05
+ability_animations,01A,Ice 3 (01A),bytes,01 2c 00,05 05 05
+ability_animations,01B,Ice 4 (01B),bytes,01 2c 00,05 05 05
+ability_animations,01C,Poison (01C),bytes,01 2c 00,05 05 06
+ability_animations,01D,Frog (01D),bytes,01 2c 00,06 06 06
+ability_animations,01E,Death (01E),bytes,01 2c 00,06 06 06
+ability_animations,01F,Flare (01F),bytes,01 2c 00,07 07 07
+ability_animations,020,Haste (020),bytes,01 2c 00,07 07 07
+ability_animations,021,Haste 2 (021),bytes,01 2c 00,07 08 09
+ability_animations,022,Slow (022),bytes,01 2c 00,0a 0a 0a
+ability_animations,023,Slow 2 (023),bytes,01 2c 00,0b 0b 0b
+ability_animations,024,Stop (024),bytes,01 2c 00,0c 0d 0c
+ability_animations,025,Don't Move (025),bytes,01 2c 00,0c 0c 0c
+ability_animations,026,Float (026),bytes,01 2c 00,0c 0c 0e
+ability_animations,027,Reflect (027),bytes,01 2c 00,0e 0e 0e
+ability_animations,028,(Summon Demon) (028),bytes,01 2c 00,0e 0e 0e
+ability_animations,029,Quick (029),bytes,01 2c 00,0e 0e 0e
+ability_animations,02A,Demi (02A),bytes,01 2c 00,0f 0f 0f
+ability_animations,02B,Demi 2 (02B),bytes,01 2c 00,0f 02 01
+ability_animations,02C,Meteor (02C),bytes,01 2c 00,01 01 01
+ability_animations,02D,02D,bytes,01 74 00,0f 0f 0f
+ability_animations,02E,Blind (02E),bytes,01 74 00,02 02 02
+ability_animations,02F,Spell Absorb (02F),bytes,01 74 00,02 02 02
+ability_animations,030,Life Drain (030),bytes,01 74 00,02 02 10
+ability_animations,031,Pray Faith (031),bytes,01 74 00,11 12 13
+ability_animations,032,Doubt Faith (032),bytes,01 74 00,13 13 13
+ability_animations,033,Zombie (033),bytes,01 74 00,14 01 02
+ability_animations,034,Silence Song (034),bytes,01 74 00,02 02 02
+ability_animations,035,Blind Rage (035),bytes,01 74 00,02 02 02
+ability_animations,036,Foxbird (036),bytes,01 74 00,02 02 02
+ability_animations,037,Confusion Song (037),bytes,01 74 00,02 01 01
+ability_animations,038,Dispel Magic (038),bytes,01 74 00,01 15 15
+ability_animations,039,Paralyze (039),bytes,01 74 00,15 15 15
+ability_animations,03A,Sleep (03A),bytes,01 74 00,15 15 15
+ability_animations,03B,Petrify (03B),bytes,01 74 00,15 15 15
+ability_animations,03C,Moogle (03C),bytes,02 2c 00,15 02 16
+ability_animations,03D,Shiva (03D),bytes,02 2c 00,17 02 0f
+ability_animations,03E,Ramuh (03E),bytes,02 2c 00,0f 0f 0f
+ability_animations,03F,Ifrit (03F),bytes,02 2c 00,18 0f 0f
+ability_animations,040,Titan (040),bytes,02 2c 00,0f 0f 0f
+ability_animations,041,Golem (041),bytes,02 2c 00,0f 19 19
+ability_animations,042,Carbunkle (042),bytes,02 2c 00,19 19 1a
+ability_animations,043,Bahamut (043),bytes,02 2c 00,0f 01 01
+ability_animations,044,Odin (044),bytes,02 2c 00,01 01 01
+ability_animations,045,Leviathan (045),bytes,02 2c 00,01 01 01
+ability_animations,046,Salamander (046),bytes,02 2c 00,01 01 0f
+ability_animations,047,Silf (047),bytes,02 2c 00,02 02 02
+ability_animations,048,Fairy (048),bytes,02 2c 00,01 01 01
+ability_animations,049,Lich (049),bytes,02 2c 00,02 01 01
+ability_animations,04A,Cyclops (04A),bytes,02 2c 00,01 01 01
+ability_animations,04B,Zodiac (04B),bytes,02 2c 00,1b 1b 01
+ability_animations,04C,Asura (04C),bytes,03 73 00,01 01 01
+ability_animations,04D,Koutetsu (04D),bytes,03 73 00,01 01 01
+ability_animations,04E,Bizen Boat (04E),bytes,03 73 00,19 19 19
+ability_animations,04F,Murasame (04F),bytes,03 73 00,19 19 19
+ability_animations,050,Heaven's Cloud (050),bytes,03 73 00,19 19 19
+ability_animations,051,Kiyomori (051),bytes,03 73 00,19 19 19
+ability_animations,052,Muramasa (052),bytes,03 73 00,19 19 1c
+ability_animations,053,Kikuichimoji (053),bytes,03 73 00,1d 1e 1f
+ability_animations,054,Masamune (054),bytes,03 73 00,1f 1f 1f
+ability_animations,055,Chirijiraden (055),bytes,03 73 00,20 19 02
+ability_animations,056,Angel Song (056),bytes,0d 28 00,02 02 02
+ability_animations,057,Life Song (057),bytes,0d 28 00,02 02 02
+ability_animations,058,Cheer Song (058),bytes,0d 28 00,02 21 22
+ability_animations,059,Battle Song (059),bytes,0d 28 00,23 24 25
+ability_animations,05A,Magic Song (05A),bytes,0d 28 00,26 27 28
+ability_animations,05B,Nameless Song (05B),bytes,0d 28 00,1e 26 1e
+ability_animations,05C,Last Song (05C),bytes,0d 28 00,1b 29 2a
+ability_animations,05D,Witch Hunt (05D),bytes,0e 6f 00,2b 2c 2d
+ability_animations,05E,Wiznaibus (05E),bytes,0e 6f 00,2e 2f 2e
+ability_animations,05F,Slow Dance (05F),bytes,0e 6f 00,1e 30 31
+ability_animations,060,Polka Polka (060),bytes,0e 6f 00,32 32 33
+ability_animations,061,Disillusion (061),bytes,0e 6f 00,34 34 34
+ability_animations,062,Nameless Dance (062),bytes,0e 6f 00,34 35 36
+ability_animations,063,Last Dance (063),bytes,0e 6f 00,36 36 37
+ability_animations,064,Spin Fist (064),bytes,04 67 00,38 39 39
+ability_animations,065,Repeating Fist (065),bytes,04 68 00,39 3a 34
+ability_animations,066,Wave Fist (066),bytes,04 3e 00,1e 3b 28
+ability_animations,067,Earth Slash (067),bytes,04 3e 00,3c 3d 26
+ability_animations,068,Secret Fist (068),bytes,04 3e 00,3e 3f 40
+ability_animations,069,Stigma Magic (069),bytes,04 69 00,41 41 41
+ability_animations,06A,Chakra (06A),bytes,04 69 00,41 42 1e
+ability_animations,06B,Revive (06B),bytes,04 69 00,43 44 45
+ability_animations,06C,Gil Taking (06C),bytes,11 71 00,02 46 47
+ability_animations,06D,Steal Heart (06D),bytes,11 72 00,48 49 48
+ability_animations,06E,Steal Helmet (06E),bytes,11 71 00,4a 4b 4c
+ability_animations,06F,Steal Armor (06F),bytes,11 71 00,4d 4e 4f
+ability_animations,070,Steal Shield (070),bytes,11 71 00,50 51 51
+ability_animations,071,Steal Weapon (071),bytes,11 71 00,51 52 53
+ability_animations,072,Steal Accessory (072),bytes,11 71 00,54 54 55
+ability_animations,073,Steal Exp (073),bytes,11 71 00,19 01 32
+ability_animations,074,Invitation (074),bytes,06 6c 06,56 57 57
+ability_animations,075,Persuade (075),bytes,06 6c 00,58 59 5a
+ability_animations,076,Praise (076),bytes,06 6c 00,5b 5c 5d
+ability_animations,077,Threaten (077),bytes,06 6c 00,02 02 02
+ability_animations,078,Preach (078),bytes,06 6c 00,02 02 02
+ability_animations,079,Solution (079),bytes,06 6c 00,02 02 02
+ability_animations,07A,Death Sentence (07A),bytes,06 6c 00,02 5e 5f
+ability_animations,07B,Negotiate (07B),bytes,06 6c 00,5f 5f 5f
+ability_animations,07C,Insult (07C),bytes,06 6c 0e,5f 5f 5f
+ability_animations,07D,Mimic Daravon (07D),bytes,06 6c 0f,5f 5f 5f
+ability_animations,07E,Pitfall (07E),bytes,03 2c 00,5f 5f 5f
+ability_animations,07F,Water Ball (07F),bytes,03 2c 00,5f 60 60
+ability_animations,080,Hell Ivy (080),bytes,03 2c 00,60 60 60
+ability_animations,081,Carve Model (081),bytes,03 2c 00,60 60 60
+ability_animations,082,Local Quake (082),bytes,03 2c 00,60 60 60
+ability_animations,083,Kamaitachi (083),bytes,03 2c 00,60 61 61
+ability_animations,084,Demon Fire (084),bytes,03 2c 00,61 61 61
+ability_animations,085,Quicksand (085),bytes,03 2c 00,61 5e 5e
+ability_animations,086,Sand Storm (086),bytes,03 2c 00,5e 5e 5e
+ability_animations,087,Blizzard (087),bytes,03 2c 00,5e 5e 5e
+ability_animations,088,Gusty Wind (088),bytes,03 2c 00,5e 5e 5e
+ability_animations,089,Lava Ball (089),bytes,03 2c 00,5e 5e 5e
+ability_animations,08A,Head Break (08A),bytes,07 00 00,00 00 00
+ability_animations,08B,Armor Break (08B),bytes,07 00 00,00 00 00
+ability_animations,08C,Shield Break (08C),bytes,07 00 00,00 00 62
+ability_animations,08D,Weapon Break (08D),bytes,07 00 00,63 64 65
+ability_animations,08E,Magic Break (08E),bytes,07 00 00,66 67 68
+ability_animations,08F,Speed Break (08F),bytes,07 00 00,64 64 69
+ability_animations,090,Power Break (090),bytes,07 00 00,64 6a 6b
+ability_animations,091,Mind Break (091),bytes,07 00 00,6c 64 64
+ability_animations,092,Accumulate (092),bytes,07 16 00,64 6d 64
+ability_animations,093,Dash (093),bytes,04 6a 00,64 6b 64
+ability_animations,094,Throw Stone (094),bytes,11 4c 00,6e 6f 70
+ability_animations,095,Heal (095),bytes,03 66 16,64 71 64
+ability_animations,096,Yell (096),bytes,03 66 00,64 72 64
+ability_animations,097,Cheer Up (097),bytes,03 66 00,64 00 00
+ability_animations,098,Wish (098),bytes,03 66 00,02 00 04
+ability_animations,099,Scream (099),bytes,11 22 19,00 06 00
+ability_animations,09A,Ultima (09A),bytes,01 2c 00,08 00 0a
+ability_animations,09B,Stasis Sword (09B),bytes,07 00 00,00 0c 00
+ability_animations,09C,Split Punch (09C),bytes,07 00 00,0e 00 10
+ability_animations,09D,Crush Punch (09D),bytes,07 00 00,00 12 00
+ability_animations,09E,Lightning Stab (09E),bytes,07 00 00,14 00 16
+ability_animations,09F,Holy Explosion (09F),bytes,07 00 00,00 18 00
+ability_animations,0A0,Shellbust Stab (0A0),bytes,07 00 00,1a 00 1c
+ability_animations,0A1,Blastar Punch (0A1),bytes,07 00 00,00 1e 00
+ability_animations,0A2,Hellcry Punch (0A2),bytes,07 00 00,20 00 22
+ability_animations,0A3,Icewolf Bite (0A3),bytes,07 00 00,00 24 00
+ability_animations,0A4,Dark Sword (0A4),bytes,07 00 00,26 00 28
+ability_animations,0A5,Night Sword (0A5),bytes,07 00 00,00 2a 00
+ability_animations,0A6,Dark Holy (0A6),bytes,01 2c 00,2c 00 2e
+ability_animations,0A7,Deathspell 2 (0A7),bytes,01 2c 00,00 30 20
+ability_animations,0A8,Galaxy Stop (0A8),bytes,01 2c 00,35 00 37
+ability_animations,0A9,Heaven Thunder (0A9),bytes,06 65 00,00 39 00
+ability_animations,0AA,Asura (0AA),bytes,06 65 00,3b 00 3d
+ability_animations,0AB,Diamond Sword (0AB),bytes,06 65 00,00 3f 00
+ability_animations,0AC,Hydragon Pit (0AC),bytes,06 65 00,41 20 46
+ability_animations,0AD,Space Storage (0AD),bytes,06 65 00,00 48 20
+ability_animations,0AE,Sky Demon (0AE),bytes,06 65 00,4d 20 52
+ability_animations,0AF,Heaven Bolt Back (0AF),bytes,06 65 00,20 57 20
+ability_animations,0B0,Asura Back (0B0),bytes,06 65 00,5c 20 61
+ability_animations,0B1,Diamond Sword Back (0B1),bytes,06 65 00,00 63 00
+ability_animations,0B2,Hydragon Pit Back (0B2),bytes,06 65 00,65 00 67
+ability_animations,0B3,Space Storage Back (0B3),bytes,06 65 00,20 6c 00
+ability_animations,0B4,Sky Demon Back (0B4),bytes,06 65 00,6e 00 70
+ability_animations,0B5,Seal (0B5),bytes,05 6d 00,00 72 00
+ability_animations,0B6,Shadow Stitch (0B6),bytes,05 6d 00,74 00 76
+ability_animations,0B7,Stop Bracelet (0B7),bytes,05 3e 00,20 7b 00
+ability_animations,0B8,(Summon Angel) (0B8),bytes,03 2c 00,7d 00 7f
+ability_animations,0B9,Shock (0B9),bytes,03 2c 00,00 81 00
+ability_animations,0BA,Difference (0BA),bytes,03 2c 00,83 00 85
+ability_animations,0BB,Seal (0BB),bytes,03 2c 00,00 87 00
+ability_animations,0BC,Chicken Race (0BC),bytes,03 2c 00,89 00 8b
+ability_animations,0BD,Hold Tight (0BD),bytes,03 2c 00,00 8d 00
+ability_animations,0BE,Darkness (0BE),bytes,03 2c 00,8f 20 94
+ability_animations,0BF,Lose Voice (0BF),bytes,03 2c 00,20 99 20
+ability_animations,0C0,Loss (0C0),bytes,03 2c 00,9e 00 a0
+ability_animations,0C1,Spell (0C1),bytes,03 2c 00,20 a5 00
+ability_animations,0C2,Nightmare (0C2),bytes,03 2c 00,a7 00 a9
+ability_animations,0C3,Death Cold (0C3),bytes,03 2c 00,00 ab 20
+ability_animations,0C4,Magic Ruin (0C4),bytes,01 00 00,b0 00 b2
+ability_animations,0C5,Speed Ruin (0C5),bytes,01 00 00,20 b7 00
+ability_animations,0C6,Power Ruin (0C6),bytes,01 00 00,b9 20 be
+ability_animations,0C7,Mind Ruin (0C7),bytes,01 00 00,00 c0 00
+ability_animations,0C8,Blood Suck (0C8),bytes,11 16 23,c2 20 c7
+ability_animations,0C9,Allure (0C9),bytes,03 2c 03,00 c9 00
+ability_animations,0CA,Bio (0CA),bytes,01 2c 00,cb 20 d0
+ability_animations,0CB,Bio (0CB),bytes,01 2c 00,00 d2 20
+ability_animations,0CC,Bio (0CC),bytes,01 2c 00,d7 00 d9
+ability_animations,0CD,Bio 2 (0CD),bytes,01 2c 00,20 de 20
+ability_animations,0CE,Bio 2 (0CE),bytes,01 2c 00,e3 00 e5
+ability_animations,0CF,Bio 2 (0CF),bytes,01 2c 00,00 e7 00
+ability_animations,0D0,Bio 2 (0D0),bytes,01 2c 00,e9 20 ee
+ability_animations,0D1,Bio 3 (0D1),bytes,01 2c 00,00 f0 00
+ability_animations,0D2,Bio 3 (0D2),bytes,01 2c 00,f2 00 f4
+ability_animations,0D3,Bio 3 (0D3),bytes,01 2c 00,00 f6 00
+ability_animations,0D4,Magic Barrier (0D4),bytes,03 2c 00,f8 00 fa
+ability_animations,0D5,Leg Aim (0D5),bytes,07 00 1f,00 fc 00
+ability_animations,0D6,Arm Aim (0D6),bytes,07 00 1e,fe 00 00
+ability_animations,0D7,Seal Evil (0D7),bytes,07 00 27,01 02 01
+ability_animations,0D8,Melt (0D8),bytes,01 2c 00,04 01 06
+ability_animations,0D9,Tornado (0D9),bytes,01 2c 00,21 0b 21
+ability_animations,0DA,Quake (0DA),bytes,01 2c 00,10 01 12
+ability_animations,0DB,(Teleport 3: Send) (0DB),bytes,01 2c 00,21 17 01
+ability_animations,0DC,(Teleport 3: Arrive) (0DC),bytes,01 2c 00,19 21 1e
+ability_animations,0DD,Toad 2 (0DD),bytes,01 2c 00,21 23 21
+ability_animations,0DE,Gravi 2 (0DE),bytes,01 2c 00,28 21 2d
+ability_animations,0DF,Flare 2 (0DF),bytes,01 2c 00,01 2f 21
+ability_animations,0E0,Blind 2 (0E0),bytes,01 2c 00,34 21 39
+ability_animations,0E1,Small Bomb (0E1),bytes,0a 41 00,21 3e 21
+ability_animations,0E2,Small Bomb (0E2),bytes,0a 41 00,43 21 48
+ability_animations,0E3,Confuse 2 (0E3),bytes,01 2c 00,21 4d 21
+ability_animations,0E4,Sleep 2 (0E4),bytes,01 2c 00,00 2c 01
+ability_animations,0E5,Ultima (0E5),bytes,01 2c 00,2c 07 00
+ability_animations,0E6,All-ultima (0E6),bytes,01 2c 00,01 74 02
+ability_animations,0E7,Mute (0E7),bytes,01 2c 00,2c 03 73
+ability_animations,0E8,Despair 2 (0E8),bytes,01 2c 00,0d 28 0e
+ability_animations,0E9,Return 2 (0E9),bytes,01 2c 00,6f 04 67
+ability_animations,0EA,Blind (0EA),bytes,01 00 00,04 68 04
+ability_animations,0EB,Aspel (0EB),bytes,01 00 00,3e 04 69
+ability_animations,0EC,Drain (0EC),bytes,01 00 00,11 71 11
+ability_animations,0ED,Faith (0ED),bytes,01 00 00,72 06 6c
+ability_animations,0EE,Innocent (0EE),bytes,01 00 00,03 2c 07
+ability_animations,0EF,Zombie (0EF),bytes,01 00 00,16 04 6a
+ability_animations,0F0,Silence (0F0),bytes,01 00 00,11 4c 03
+ability_animations,0F1,Berserk (0F1),bytes,01 00 00,66 11 22
+ability_animations,0F2,Chicken (0F2),bytes,01 00 00,06 65 05
+ability_animations,0F3,Confuse (0F3),bytes,01 00 00,6d 05 3e
+ability_animations,0F4,Despair (0F4),bytes,01 00 00,08 0c 57
+ability_animations,0F5,Don't Act (0F5),bytes,01 00 00,03 2c 01
+ability_animations,0F6,Sleep (0F6),bytes,01 00 00,00 11 16
+ability_animations,0F7,Break (0F7),bytes,01 00 00,0a 41 0c
+ability_animations,0F8,Ice Bracelet (0F8),bytes,08 65 00,1b 0c 2c
+ability_animations,0F9,Fire Bracelet (0F9),bytes,08 65 00,0a 00 08
+ability_animations,0FA,Thunder Bracelet (0FA),bytes,08 65 00,0c 57 06
+ability_animations,0FB,Dragon Tame (0FB),bytes,06 66 28,66 08 65
+ability_animations,0FC,Dragon Care (0FC),bytes,06 66 00,04 0a 00
+ability_animations,0FD,Dragon Power Up (0FD),bytes,06 66 00,0a 6a 04
+ability_animations,0FE,Dragon Level Up (0FE),bytes,06 66 00,0a 41 0a
+ability_animations,0FF,Holy Bracelet (0FF),bytes,08 65 00,5f 04 0b
+ability_animations,100,Shock! (100),bytes,01 00 00,42 0b 76
+ability_animations,101,Braver (101),bytes,07 00 00,04 0b 44
+ability_animations,102,Cross-slash (102),bytes,07 00 00,0b 6f 04
+ability_animations,103,Blade Beam (103),bytes,07 00 00,0b 44 0b
+ability_animations,104,Climhazzard (104),bytes,07 00 00,29 0a 6a
+ability_animations,105,Meteorain (105),bytes,07 00 00,04 7d 0a
+ability_animations,106,Finish Touch (106),bytes,07 00 00,67 08 0a
+ability_animations,107,Omnislash (107),bytes,07 00 00,61 0b 6d
+ability_animations,108,Cherry Blossom (108),bytes,07 00 00,0a 42 0b
+ability_animations,109,Choco Attack (109),bytes,0a 00 00,62 0a 43
+ability_animations,10A,Choco Ball (10A),bytes,0a 41 00,0a 63 04
+ability_animations,10B,Choco Meteor (10B),bytes,0b 42 00,22 08 0a
+ability_animations,10C,Choco Esuna (10C),bytes,0b 44 00,45 07 00
+ability_animations,10D,Choco Cure (10D),bytes,0b 44 00,0c 65 0b
+ability_animations,10E,Tackle (10E),bytes,0a 6a 00,29 0b 2c
+ability_animations,10F,Goblin Punch (10F),bytes,0a 7d 00,0a 3d 0a
+ability_animations,110,Turn Punch (110),bytes,0a 67 00,65 0a 46
+ability_animations,111,Eye Gouge (111),bytes,0a 00 00,0a 47 0a
+ability_animations,112,Mutilate (112),bytes,0a 6a 00,48 0a 49
+ability_animations,113,Bite (113),bytes,0a 00 00,0b 64 08
+ability_animations,114,Small Bomb (114),bytes,0a 41 00,0b 64 0b
+ability_animations,115,Self Destruct (115),bytes,0a 61 24,2c 08 0a
+ability_animations,116,Flame Attack (116),bytes,0a 42 00,66 07 00
+ability_animations,117,Spark (117),bytes,0b 62 00,08 0a 68
+ability_animations,118,Scratch (118),bytes,0a 43 00,07 00 0a
+ability_animations,119,Cat Kick (119),bytes,0a 63 00,69 08 0a
+ability_animations,11A,Blaster (11A),bytes,04 22 00,4b 0b 69
+ability_animations,11B,Poison Nail (11B),bytes,0a 45 00,0a 6b 0a
+ability_animations,11C,Blood Suck (11C),bytes,04 22 00,4c 0b 4d
+ability_animations,11D,Tentacle (11D),bytes,0a 00 00,08 0b 4d
+ability_animations,11E,Black Ink (11E),bytes,0c 65 00,0b 28 0a
+ability_animations,11F,Odd Soundwave (11F),bytes,0b 29 00,6c 08 0a
+ability_animations,120,Mind Blast (120),bytes,0b 2c 2a,4f 04 76
+ability_animations,121,Level Blast (121),bytes,0b 2c 00,0a 50 04
+ability_animations,122,Knife Hand (122),bytes,0a 3d 00,0b 42 0b
+ability_animations,123,Thunder Soul (123),bytes,0a 65 00,64 0a 53
+ability_animations,124,Aqua Soul (124),bytes,0a 65 00,0a 6d 08
+ability_animations,125,Ice Soul (125),bytes,0a 65 00,0a 6d 0b
+ability_animations,126,Wind Soul (126),bytes,0a 65 00,22 0a 6e
+ability_animations,127,Throw Spirit (127),bytes,0a 46 00,0a 6f 08
+ability_animations,128,Zombie Touch (128),bytes,0a 47 00,0b 54 0b
+ability_animations,129,Sleep Touch (129),bytes,0a 47 00,2c 0b 54
+ability_animations,12A,Drain Touch (12A),bytes,0a 47 00,08 0b 54
+ability_animations,12B,Grease Touch (12B),bytes,0a 48 00,03 2c 0a
+ability_animations,12C,Wing Attack (12C),bytes,0a 49 00,55 08 0a
+ability_animations,12D,Look of Devil (12D),bytes,0b 64 00,57 0b 2c
+ability_animations,12E,Look of Fright (12E),bytes,0b 64 00,08 0c 57
+ability_animations,12F,Circle (12F),bytes,0b 64 00,08 65 0a
+ability_animations,130,Death Sentence (130),bytes,0b 64 00,58 0c 59
+ability_animations,131,Scratch Up (131),bytes,0a 65 00,0b 70 08
+ability_animations,132,Beak (132),bytes,0a 00 00,0b 70 0b
+ability_animations,133,Shine Lover (133),bytes,0a 66 00,2c 0b 00
+ability_animations,134,Feather Bomb (134),bytes,0a 67 00,0b 72 0a
+ability_animations,135,Beaking (135),bytes,0a 68 00,73 0a 74
+ability_animations,136,Straight Dash (136),bytes,0a 69 00,0a 75 0a
+ability_animations,137,Nose Bracelet (137),bytes,0a 6a 00,76 0a 5c
+ability_animations,138,Oink (138),bytes,0a 4b 00,0a 71 00
+ability_animations,139,Pooh- (139),bytes,0a 6b 00,00 09 01
+ability_animations,13A,Please Eat (13A),bytes,0a 4c 00,12 4c 0f
+ability_animations,13B,Leaf Dance (13B),bytes,0b 4d 00,76 08 0a
+ability_animations,13C,Protect Spirit (13C),bytes,0b 4d 00,50 10 69
+ability_animations,13D,Clam Spirit (13D),bytes,0b 4d 00,08 10 1b
+ability_animations,13E,Spirit of Life (13E),bytes,0b 4d 00,10 69 10
+ability_animations,13F,Magic Spirit (13F),bytes,0b 4d 00,69 08 0a
+ability_animations,140,Shake Off (140),bytes,0a 00 00,46 10 6d
+ability_animations,141,Wave Around (141),bytes,0a 6c 00,10 6d 08
+ability_animations,142,Mimic Titan (142),bytes,0a 4f 00,0b 65 10
+ability_animations,143,Gather Power (143),bytes,0a 50 00,69 08 0a
+ability_animations,144,Blow Fire (144),bytes,0c 51 00,6d 10 69
+ability_animations,145,Tentacle (145),bytes,0a 00 00,08 0c 59
+ability_animations,146,Lick (146),bytes,0a 53 00,10 69 08
+ability_animations,147,Goo (147),bytes,0a 6d 00,0b 62 10
+ability_animations,148,Bad Bracelet (148),bytes,0a 6d 00,69 10 00
+ability_animations,149,Moldball Virus (149),bytes,0a 6d 2b,08 0b 64
+ability_animations,14A,Stab Up (14A),bytes,0a 6e 00,10 69 08
+ability_animations,14B,Sudden Cry (14B),bytes,0a 6f 00,0a 66 10
+ability_animations,14C,Hurricane (14C),bytes,0b 54 00,69 08 0b
+ability_animations,14D,Ulmaguest (14D),bytes,0b 54 00,4d 10 69
+ability_animations,14E,Giga Flare (14E),bytes,0b 54 00,08 0a 71
+ability_animations,14F,Dash (14F),bytes,0a 55 00,10 69 08
+ability_animations,150,Tail Swing (150),bytes,0a 00 00,0c 57 10
+ability_animations,151,Ice Bracelet (151),bytes,0c 57 00,69 08 0b
+ability_animations,152,Fire Bracelet (152),bytes,0c 57 00,72 10 6c
+ability_animations,153,Thunder Bracelet (153),bytes,0c 57 00,08 0a 39
+ability_animations,154,Triple Attack (154),bytes,0a 58 00,10 69 00
+move_find_items,016,016,bytes,20 10 00 00 20 10 00 00 20 10 00 00 20 10 00 00,1d 10 4d d0 26 10 80 90 32 10 33 ac 99 10 3b bb
+move_find_items,01A,01A,bytes,00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00,1e 10 83 fd 2b 10 b0 f1 1a 10 93 f3 30 10 d7 fc
+move_find_items,02D,02D,bytes,00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00,81 10 21 fb 06 10 cb fb 0f 10 a9 fc 7b 10 0f f8
+move_find_items,038,038,bytes,00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00,31 00 f5 fd 63 00 f5 fd 76 00 f5 fd 9b 00 f5 fd
+move_find_items,04B,04B,bytes,3a 02 7d f2 4b 01 7d f2 51 08 7d f2 89 02 20 20,3a 02 7d f2 4b 01 4b 87 51 08 7d f2 89 02 20 7d
+move_find_items,064,064,bytes,00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00,66 00 25 17 12 00 de 17 00 00 cf 17 00 00 e9 17
+move_find_items,074,074,bytes,00 10 f1 f0 00 10 f1 f0 00 10 f1 f0 00 10 f1 f0,33 28 f5 f5 37 28 f5 f5 73 28 f5 f5 77 28 f5 f5
+move_find_items,077,077,bytes,00 10 f1 f0 00 10 f1 f0 00 10 f1 f0 00 10 f1 f0,11 10 44 f5 28 10 35 f5 89 10 87 f0 74 10 20 f0
+propositions,004,004,bytes,0d 01 01 04,10 01 01 04
+propositions,009,009,bytes,02 02 03 01,02 02 03 10
+propositions,00F,00F,bytes,03 04 08 01,03 04 10 01
+propositions,015,015,bytes,01 06 01 04,01 10 01 04
+propositions,01B,01B,bytes,06 01 05 04,10 01 05 04
+propositions,020,020,bytes,06 06 01 0b,06 06 01 10
+propositions,275,275,bytes,01 08 0f 14,05 08 0a 0f
+propositions,276,276,bytes,1e 23 28 2d,14 14 0f 0a
+propositions,277,277,bytes,2d 32 01 08,08 05 0a 0a
+propositions,278,278,bytes,0a 0f 1e 23,0a 0a 0a 00
+propositions,279,279,bytes,28 2d 2d 32,14 0f 0a 08
+propositions,27A,27A,bytes,01 08 0f 0f,05 05 08 0a
+propositions,27B,27B,bytes,0f 14 28 32,0f 14 0a 0a
+propositions,27C,27C,bytes,32 32 00 00,0a 0a 00 00
+formation_sprites1,000,000,bytes,00 00 01 02 03 00 00 04 00 00 00 00 05 06 00 07 00 0d 09 0a 0b 0c 13 0d 00 0e 0f 00 10 00 17 11 12 12 13 00 00 00 00 00 12 0e 14 00 15 00 00 14 15 00 16 00 17 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00,8a 00 84 00 2e 00 2e 00 57 3f 65 00 e6 00 28 00 1a 00 2e 28 d5 3f 65 00 e6 00 56 00 1a 00 2e 00 d6 3f 65 00 e6 00 84 00 1a 00 2e 00 d7 3f 65 00 00 00 28 00 2e 00 2e 00 14 40 65 00 00 00 00 00 00 00 00 00 00 00 00 00 4e 00
+formation_sprites2,000,000,bytes,00 00 00 00 01 00 02 00 03 00 78 00 79 00 04 00 7a 00 7b 00 7c 00 7d 00 05 00 06 00 7e 00 07 00 7f 00 0d 00 09 00 0a 00 0b 00 0c 00 13 00 0d 00 81 00 0e 00 0f 00 82 00 10 00 83 00 17 00 11 00 85 00 12 00 13 00 86 00 87 00 88 00 89 00 8a 00 12 00 0e 00 14 00 8b 00 15 00 8d 00 8e 00 14 00 15 00 8c 00 16 00 00 00 17 00 00 00 00 00 00 00 00 00 00 00 8d 00 8e 00 8f 00 00 00 90 00 00 00 91 00 00 00 00 00 92 00 00 00 93 00 00 00 00 00 18 00 00 00,00 00 00 00 01 00 02 00 03 00 00 00 00 00 04 00 0a 00 00 00 00 00 00 00 05 00 06 00 00 00 07 00 00 00 1d 00 10 00 00 00 0b 00 0c 00 13 00 0d 00 00 00 09 00 0f 00 00 00 00 00 17 00 17 00 11 00 00 00 12 00 17 00 00 00 00 00 00 00 00 00 00 00 00 00 0e 00 14 00 00 00 15 00 00 00 00 00 00 00 15 00 00 00 16 00 00 00 08 00 0b 00 0c 00 3b 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 4e 00 00 00
+formation_sprites2a,000,000,bytes,00 00 00 00 01 00 02 00 03 00 78 00 79 00 04 00 7a 00 7b 00 7c 00 7d 00 05 00 06 00 7e 00 07 00 7f 00 0d 00 09 00 0a 00 0b 00 0c 00 13 00 0d 00 81 00 0e 00 0f 00 82 00 10 00 83 00 17 00 11 00 85 00 12 00 13 00 86 00 87 00 88 00 89 00 8a 00 12 00 0e 00 14 00 8b 00 15 00 8d 00 8e 00 14 00 15 00 8c 00 16 00 00 00 17 00 00 00 00 00 00 00 00 00 00 00 8d 00 8e 00 8f 00 00 00 90 00 00 00 91 00 00 00 00 00 92 00 00 00 93 00 00 00 00 00 18 00 00 00,00 00 00 00 01 00 02 00 03 00 00 00 00 00 04 00 0a 00 00 00 00 00 00 00 05 00 06 00 00 00 07 00 00 00 1d 00 10 00 00 00 0b 00 0c 00 13 00 0d 00 00 00 09 00 0f 00 00 00 00 00 17 00 17 00 11 00 00 00 12 00 17 00 00 00 00 00 00 00 00 00 00 00 00 00 0e 00 14 00 00 00 15 00 00 00 00 00 00 00 15 00 00 00 16 00 00 00 08 00 0b 00 0c 00 3b 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 4e 00 00 00
+formation_sprites2b,000,000,bytes,00 00 00 00 01 00 02 00 03 00 78 00 79 00 04 00 7a 00 7b 00 7c 00 7d 00 05 00 06 00 7e 00 07 00 7f 00 0d 00 09 00 0a 00 0b 00 0c 00 13 00 0d 00 81 00 0e 00 0f 00 82 00 10 00 83 00 17 00 11 00 85 00 12 00 13 00 86 00 87 00 88 00 89 00 8a 00 12 00 0e 00 14 00 8b 00 15 00 8d 00 8e 00 14 00 15 00 8c 00 16 00 00 00 17 00 00 00 00 00 00 00 00 00 00 00 8d 00 8e 00 8f 00 00 00 90 00 00 00 91 00 00 00 00 00 92 00 00 00 93 00 00 00 00 00 18 00 00 00,00 00 00 00 01 00 02 00 03 00 00 00 00 00 04 00 0a 00 00 00 00 00 00 00 05 00 06 00 00 00 07 00 00 00 1d 00 10 00 00 00 0b 00 0c 00 13 00 0d 00 00 00 09 00 0f 00 00 00 00 00 17 00 17 00 11 00 00 00 12 00 17 00 00 00 00 00 00 00 00 00 00 00 00 00 0e 00 14 00 00 00 15 00 00 00 00 00 00 00 15 00 00 00 16 00 00 00 08 00 0b 00 0c 00 3b 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 4e 00 00 00
+formation_sprites2c,000,000,bytes,00 00 00 00 01 00 02 00 03 00 78 00 79 00 04 00 7a 00 7b 00 7c 00 7d 00 05 00 06 00 7e 00 07 00 7f 00 0d 00 09 00 0a 00 0b 00 0c 00 13 00 0d 00 81 00 0e 00 0f 00 82 00 10 00 83 00 17 00 11 00 85 00 12 00 13 00 86 00 87 00 88 00 89 00 8a 00 12 00 0e 00 14 00 8b 00 15 00 8d 00 8e 00 14 00 15 00 8c 00 16 00 00 00 17 00 00 00 00 00 00 00 00 00 00 00 8d 00 8e 00 8f 00 00 00 90 00 00 00 91 00 00 00 00 00 92 00 00 00 93 00 00 00 00 00 18 00 00 00,00 00 00 00 01 00 02 00 03 00 00 00 00 00 04 00 0a 00 00 00 00 00 00 00 05 00 06 00 00 00 07 00 00 00 1d 00 10 00 00 00 0b 00 0c 00 13 00 0d 00 00 00 09 00 0f 00 00 00 00 00 17 00 17 00 11 00 00 00 12 00 17 00 00 00 00 00 00 00 00 00 00 00 00 00 0e 00 14 00 00 00 15 00 00 00 00 00 00 00 15 00 00 00 16 00 00 00 08 00 0b 00 0c 00 3b 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 4e 00 00 00
+formation_sprites2d,000,000,bytes,00 00 00 00 01 00 02 00 03 00 78 00 79 00 04 00 7a 00 7b 00 7c 00 7d 00 05 00 06 00 7e 00 07 00 7f 00 0d 00 09 00 0a 00 0b 00 0c 00 13 00 0d 00 81 00 0e 00 0f 00 82 00 10 00 83 00 17 00 11 00 85 00 12 00 13 00 86 00 87 00 88 00 89 00 8a 00 12 00 0e 00 14 00 8b 00 15 00 8d 00 8e 00 14 00 15 00 8c 00 16 00 00 00 17 00 00 00 00 00 00 00 00 00 00 00 8d 00 8e 00 8f 00 00 00 90 00 00 00 91 00 00 00 00 00 92 00 00 00 93 00 00 00 00 00 18 00 00 00,00 00 00 00 01 00 02 00 03 00 00 00 00 00 04 00 0a 00 00 00 00 00 00 00 05 00 06 00 00 00 07 00 00 00 1d 00 10 00 00 00 0b 00 0c 00 13 00 0d 00 00 00 09 00 0f 00 00 00 00 00 17 00 17 00 11 00 00 00 12 00 17 00 00 00 00 00 00 00 00 00 00 00 00 00 0e 00 14 00 00 00 15 00 00 00 00 00 00 00 15 00 00 00 16 00 00 00 08 00 0b 00 0c 00 3b 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 4e 00 00 00

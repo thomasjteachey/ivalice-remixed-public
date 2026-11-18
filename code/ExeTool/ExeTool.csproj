@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Reverse-engineering helper for the remaster's exes (not part of the mod).
+    Disassembles, finds cross-references, switch jump tables and pointer tables.
+
+      dotnet run -c Release -/-project code/ExeTool -/- <exe> <command> [args]
+
+    Run with no command for the list. Uses Iced (MIT) for x64 decoding.
+  -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Iced" Version="1.17.0" />
+  </ItemGroup>
+
+</Project>

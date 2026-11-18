@@ -1,0 +1,26 @@
+Windows Registry Editor Version 5.00
+
+; The marker keys Reloaded-II's launcher checks (bitbeans' RedistributableChecker) for the Visual C++ 2015-2022
+; runtimes, for The Ivalice Chronicles' Proton prefix on the Deck (docs/STEAM_DECK.md). Proton already has the runtime
+; DLLs in the prefix, and Microsoft's vc_redist installers don't leave these keys under Wine, so the launcher shows
+; "Missing Requirements" without them. Import in both registry views:
+;   flatpak run --command=protontricks com.github.Matoking.protontricks -c \
+;     'wine reg import vc_markers.reg /reg:64 && wine reg import vc_markers.reg /reg:32 && wineserver -w' 1004640
+
+[HKEY_CLASSES_ROOT\Installer\Dependencies\VC,redist.x64,amd64,14.16,bundle]
+"Version"="14.44.35211.0"
+"DisplayName"="Microsoft Visual C++ 2015-2022 Redistributable (x64) - 14.44.35211"
+
+[HKEY_CLASSES_ROOT\Installer\Dependencies\VC,redist.x86,x86,14.16,bundle]
+"Version"="14.44.35211.0"
+"DisplayName"="Microsoft Visual C++ 2015-2022 Redistributable (x86) - 14.44.35211"
+
+[HKEY_CLASSES_ROOT\Installer\Dependencies\,,amd64,14.0,bundle]
+"Version"="14.44.35211.0"
+
+[HKEY_CLASSES_ROOT\Installer\Dependencies\,,x86,14.0,bundle]
+"Version"="14.44.35211.0"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\DevDiv\VC\Servicing\14.0\RuntimeMinimum]
+"Version"="14.44.35211"
+"Install"=dword:00000001

@@ -1,0 +1,1207 @@
+table,id,name,field,vanilla,remixed
+abilities,000,<Nothing> (000),AI flags,"HP, Target Enemies, Unknown3, Unknown10","HP, Target Enemies, Unknown3, Unknown4, Unknown10"
+abilities,028,(Summon Demon) (028),JP cost,0,300
+abilities,028,(Summon Demon) (028),Learn rate,0,100
+abilities,028,(Summon Demon) (028),AI flags,none,"HP, Target Enemies, Unknown10"
+abilities,028,(Summon Demon) (028),Flags,none,Used by enemies
+abilities,02D,02D,Learn rate,0,100
+abilities,02D,02D,AI flags,none,"HP, Target Enemies, Unknown3, Unknown10"
+abilities,02D,02D,Flags,none,"Used by enemies, Unknown4"
+abilities,04B,Zodiac (04B),Learn rate,90,100
+abilities,06C,Gil Taking (06C),AI flags,Unknown10,"Unknown4, Unknown10"
+abilities,06E,Steal Helmet (06E),AI flags,"HP, Unequip, Target Enemies, Unknown3, Unknown10","HP, Unequip, Target Enemies, Unknown3, Unknown4, Unknown10"
+abilities,06F,Steal Armor (06F),AI flags,"HP, Unequip, Target Enemies, Unknown3, Unknown10","HP, Unequip, Target Enemies, Unknown3, Unknown4, Unknown10"
+abilities,070,Steal Shield (070),AI flags,"Unequip, Target Enemies, Unknown3, Unknown10","Unequip, Target Enemies, Unknown3, Unknown4, Unknown10"
+abilities,071,Steal Weapon (071),AI flags,"Unequip, Target Enemies, Unknown3, Unknown10","Unequip, Target Enemies, Unknown3, Unknown4, Unknown10"
+abilities,072,Steal Accessory (072),AI flags,"Unequip, Target Enemies, Unknown3, Unknown10","Unequip, Target Enemies, Unknown3, Unknown4, Unknown10"
+abilities,07E,Pitfall (07E),JP cost,150,100
+abilities,07E,Pitfall (07E),Learn rate,50,60
+abilities,07F,Water Ball (07F),JP cost,150,400
+abilities,080,Hell Ivy (080),JP cost,150,500
+abilities,081,Carve Model (081),JP cost,150,800
+abilities,081,Carve Model (081),Learn rate,60,50
+abilities,082,Local Quake (082),AI flags,"HP, Target Enemies, Unknown9","HP, Add Status, Target Enemies, Unknown3, Unknown10"
+abilities,082,Local Quake (082),Flags,Used by enemies,"Used by enemies, Unknown4"
+abilities,083,Kamaitachi (083),JP cost,150,50
+abilities,083,Kamaitachi (083),Learn rate,60,100
+abilities,083,Kamaitachi (083),AI flags,"HP, Target Enemies, Unknown9","HP, Add Status, Target Enemies, Reflectable, Unknown1, Unknown2, Silence, Unknown9"
+abilities,084,Demon Fire (084),JP cost,150,200
+abilities,084,Demon Fire (084),Learn rate,60,100
+abilities,084,Demon Fire (084),AI flags,"HP, Target Enemies, Unknown9","HP, Add Status, Target Enemies, Reflectable, Unknown1, Unknown2, Silence, Unknown9"
+abilities,085,Quicksand (085),JP cost,150,480
+abilities,085,Quicksand (085),Learn rate,60,100
+abilities,085,Quicksand (085),AI flags,"HP, Target Enemies, Unknown9","HP, Add Status, Target Enemies, Reflectable, Unknown1, Unknown2, Silence, Unknown9"
+abilities,086,Sand Storm (086),JP cost,150,850
+abilities,086,Sand Storm (086),Learn rate,60,30
+abilities,086,Sand Storm (086),Learn flags,"Learn with JP, Display name","Learn with JP, Display name, Learn on hit"
+abilities,086,Sand Storm (086),AI flags,"HP, Target Enemies, Unknown9","HP, Add Status, Target Enemies, Unknown1, Unknown2, Silence, Unknown9"
+abilities,088,Gusty Wind (088),AI flags,"HP, Target Enemies, Unknown9","HP, Target Enemies, Unknown10"
+abilities,089,Lava Ball (089),AI flags,"HP, Target Enemies, Unknown9","HP, Cancel Status, Target Allies, Unknown6"
+abilities,097,Cheer Up (097),Learn rate,50,0
+abilities,0A1,Blastar Punch (0A1),Learn rate,80,100
+abilities,0A2,Hellcry Punch (0A2),Learn rate,70,40
+abilities,0A6,Dark Holy (0A6),JP cost,0,750
+abilities,0A7,Deathspell 2 (0A7),JP cost,0,350
+abilities,0A9,Heaven Thunder (0A9),JP cost,0,100
+abilities,0A9,Heaven Thunder (0A9),AI flags,"HP, Target Enemies, Allow Randomly, Silence, Unknown9","HP, Target Enemies, Target Allies, Allow Randomly, Silence, Unknown9"
+abilities,0AA,Asura (0AA),AI flags,"HP, Target Enemies, Allow Randomly, Silence, Unknown9","HP, Target Enemies, Target Allies, Allow Randomly, Silence, Unknown9"
+abilities,0AB,Diamond Sword (0AB),AI flags,"HP, Target Enemies, Allow Randomly, Silence, Unknown9","HP, Target Enemies, Target Allies, Allow Randomly, Silence, Unknown9"
+abilities,0AC,Hydragon Pit (0AC),Flags,Used by enemies,"Used by enemies, Unknown3"
+abilities,0AD,Space Storage (0AD),AI flags,"HP, Target Enemies, Allow Randomly, Silence, Unknown9","HP, Add Status, Target Enemies, Target Allies, Allow Randomly, Silence, Unknown9"
+abilities,0AE,Sky Demon (0AE),AI flags,"HP, Target Enemies, Allow Randomly, Silence, Unknown9","HP, Target Enemies, Target Allies, Allow Randomly, Silence, Unknown9"
+abilities,0AF,Heaven Bolt Back (0AF),JP cost,0,100
+abilities,0AF,Heaven Bolt Back (0AF),AI flags,"HP, Target Enemies, Allow Randomly, Silence, Unknown9","HP, Add Status, Target Enemies, Allow Randomly, Unknown2, Silence, Unknown9"
+abilities,0AF,Heaven Bolt Back (0AF),Flags,Used by enemies,"Used by enemies, Unknown3"
+abilities,0B0,Asura Back (0B0),AI flags,"HP, Target Enemies, Allow Randomly, Silence, Unknown9","HP, Add Status, Target Enemies, Allow Randomly, Unknown2, Silence, Unknown9"
+abilities,0B0,Asura Back (0B0),Flags,Used by enemies,"Used by enemies, Unknown3"
+abilities,0B1,Diamond Sword Back (0B1),AI flags,"HP, Target Enemies, Allow Randomly, Silence, Unknown9","HP, Add Status, Target Enemies, Allow Randomly, Unknown2, Silence, Unknown9"
+abilities,0B1,Diamond Sword Back (0B1),Flags,Used by enemies,"Used by enemies, Unknown3"
+abilities,0B2,Hydragon Pit Back (0B2),AI flags,"HP, Target Enemies, Allow Randomly, Silence, Unknown9","HP, Add Status, Target Enemies, Allow Randomly, Unknown2, Silence, Unknown9"
+abilities,0B2,Hydragon Pit Back (0B2),Flags,Used by enemies,"Used by enemies, Unknown3"
+abilities,0B3,Space Storage Back (0B3),AI flags,"HP, Target Enemies, Allow Randomly, Silence, Unknown9","HP, Add Status, Target Enemies, Allow Randomly, Unknown2, Silence, Unknown9"
+abilities,0B3,Space Storage Back (0B3),Flags,Used by enemies,"Used by enemies, Unknown3"
+abilities,0B4,Sky Demon Back (0B4),AI flags,"HP, Target Enemies, Allow Randomly, Silence, Unknown9","HP, Add Status, Target Enemies, Allow Randomly, Unknown2, Silence, Unknown9"
+abilities,0B4,Sky Demon Back (0B4),Flags,Used by enemies,"Used by enemies, Unknown3"
+abilities,0B5,Seal (0B5),JP cost,0,450
+abilities,0B5,Seal (0B5),Learn rate,100,60
+abilities,0B5,Seal (0B5),Flags,Used by enemies,"Used by enemies, Unknown4"
+abilities,0B6,Shadow Stitch (0B6),Learn rate,100,0
+abilities,0B6,Shadow Stitch (0B6),Learn flags,"Learn with JP, Display name",Display name
+abilities,0B7,Stop Bracelet (0B7),Learn rate,100,0
+abilities,0B7,Stop Bracelet (0B7),Learn flags,"Learn with JP, Display name",Display name
+abilities,0B8,(Summon Angel) (0B8),JP cost,0,600
+abilities,0B8,(Summon Angel) (0B8),Learn rate,0,50
+abilities,0B8,(Summon Angel) (0B8),AI flags,none,"MP, Target Enemies, Unknown10"
+abilities,0B8,(Summon Angel) (0B8),Flags,none,Used by enemies
+abilities,0B9,Shock (0B9),JP cost,0,700
+abilities,0BB,Seal (0BB),AI flags,"HP, Target Enemies","Add Status, Target Enemies"
+abilities,0C4,Magic Ruin (0C4),JP cost,0,350
+abilities,0C4,Magic Ruin (0C4),AI flags,"MP, Target Enemies, Unknown2, Unknown9","HP, MP, Target Enemies, Target Allies, Undead Reverse, Unknown2, Unknown9"
+abilities,0C5,Speed Ruin (0C5),JP cost,0,500
+abilities,0C5,Speed Ruin (0C5),Learn rate,100,30
+abilities,0C5,Speed Ruin (0C5),AI flags,"Stats, Target Enemies, Unknown2, Unknown9","Stats, Target Enemies, Target Allies, Unknown2, Unknown9"
+abilities,0C6,Power Ruin (0C6),JP cost,0,200
+abilities,0C6,Power Ruin (0C6),Learn rate,100,80
+abilities,0C6,Power Ruin (0C6),AI flags,"Stats, Target Enemies, Unknown2, Unknown9","Stats, Target Enemies, Target Allies, Unknown2, Unknown9"
+abilities,0C7,Mind Ruin (0C7),JP cost,0,300
+abilities,0C7,Mind Ruin (0C7),Learn rate,100,60
+abilities,0C7,Mind Ruin (0C7),AI flags,"Stats, Target Enemies, Unknown2, Unknown9","Stats, Target Enemies, Target Allies, Unknown2, Unknown9"
+abilities,0CA,Bio (0CA),Learn flags,"Learn with JP, Display name",Learn with JP
+abilities,0CA,Bio (0CA),AI flags,"HP, Target Enemies, Reflectable, Unknown1, Unknown2, Silence, Unknown9","HP, Target Enemies, Unknown4, Unknown10"
+abilities,0CA,Bio (0CA),Flags,Used by enemies,"Used by enemies, Unknown4"
+abilities,0CB,Bio (0CB),Learn flags,"Learn with JP, Display name",Learn with JP
+abilities,0CB,Bio (0CB),AI flags,"HP, Target Enemies, Reflectable, Unknown1, Unknown2, Silence, Unknown9","HP, Target Enemies, Unknown4, Unknown10"
+abilities,0CB,Bio (0CB),Flags,Used by enemies,"Used by enemies, Unknown4"
+abilities,0CC,Bio (0CC),Learn flags,"Learn with JP, Display name",Learn with JP
+abilities,0CC,Bio (0CC),AI flags,"HP, Target Enemies, Reflectable, Unknown1, Unknown2, Silence, Unknown9","HP, Target Enemies, Unknown4, Unknown10"
+abilities,0CC,Bio (0CC),Flags,Used by enemies,"Used by enemies, Unknown4"
+abilities,0CD,Bio 2 (0CD),Learn flags,"Learn with JP, Display name",Learn with JP
+abilities,0CD,Bio 2 (0CD),AI flags,"Add Status, Target Enemies, Reflectable, Unknown1, Unknown2, Silence, Unknown9","HP, Target Enemies, Unknown4, Unknown10"
+abilities,0CD,Bio 2 (0CD),Flags,Used by enemies,"Used by enemies, Unknown4"
+abilities,0CE,Bio 2 (0CE),Learn flags,"Learn with JP, Display name",Learn with JP
+abilities,0CE,Bio 2 (0CE),AI flags,"Add Status, Target Enemies, Reflectable, Unknown1, Unknown2, Silence, Unknown9","HP, Target Enemies, Unknown4, Unknown10"
+abilities,0CE,Bio 2 (0CE),Flags,Used by enemies,"Used by enemies, Unknown4"
+abilities,0CF,Bio 2 (0CF),Learn flags,"Learn with JP, Display name",Learn with JP
+abilities,0CF,Bio 2 (0CF),AI flags,"Add Status, Target Enemies, Reflectable, Unknown1, Unknown2, Silence, Unknown9","HP, Target Enemies, Unknown4, Unknown10"
+abilities,0CF,Bio 2 (0CF),Flags,Used by enemies,"Used by enemies, Unknown4"
+abilities,0D0,Bio 2 (0D0),Learn flags,"Learn with JP, Display name",Learn with JP
+abilities,0D0,Bio 2 (0D0),AI flags,"Add Status, Target Enemies, Reflectable, Unknown1, Unknown2, Silence, Unknown9","HP, Target Enemies, Unknown4, Unknown10"
+abilities,0D0,Bio 2 (0D0),Flags,Used by enemies,"Used by enemies, Unknown4"
+abilities,0D1,Bio 3 (0D1),Learn flags,"Learn with JP, Display name",Learn with JP
+abilities,0D1,Bio 3 (0D1),AI flags,"HP, Target Enemies, Reflectable, Unknown1, Unknown2, Silence, Unknown9","HP, Target Enemies, Unknown4, Unknown10"
+abilities,0D1,Bio 3 (0D1),Flags,Used by enemies,"Used by enemies, Unknown4"
+abilities,0D2,Bio 3 (0D2),Learn flags,"Learn with JP, Display name",Learn with JP
+abilities,0D2,Bio 3 (0D2),AI flags,"HP, Target Enemies, Reflectable, Unknown1, Unknown2, Silence, Unknown9","HP, Target Enemies, Unknown4, Unknown10"
+abilities,0D2,Bio 3 (0D2),Flags,Used by enemies,"Used by enemies, Unknown4"
+abilities,0D3,Bio 3 (0D3),Learn flags,"Learn with JP, Display name",Learn with JP
+abilities,0D3,Bio 3 (0D3),AI flags,"HP, Target Enemies, Reflectable, Unknown1, Unknown2, Silence, Unknown9","HP, Target Enemies, Unknown4, Unknown10"
+abilities,0D3,Bio 3 (0D3),Flags,Used by enemies,"Used by enemies, Unknown4"
+abilities,0D4,Magic Barrier (0D4),JP cost,0,450
+abilities,0DB,(Teleport 3: Send) (0DB),JP cost,0,1200
+abilities,0DB,(Teleport 3: Send) (0DB),Learn rate,0,50
+abilities,0DB,(Teleport 3: Send) (0DB),AI flags,none,"MP, Add Status, Target Enemies, Unknown10"
+abilities,0DB,(Teleport 3: Send) (0DB),Flags,none,Used by enemies
+abilities,0E3,Confuse 2 (0E3),JP cost,0,500
+abilities,0E4,Sleep 2 (0E4),JP cost,0,1000
+abilities,0E5,Ultima (0E5),Learn rate,100,0
+abilities,0E5,Ultima (0E5),Learn flags,"Learn with JP, Display name",Display name
+abilities,0E6,All-ultima (0E6),Learn rate,100,0
+abilities,0E6,All-ultima (0E6),Learn flags,"Learn with JP, Display name",Display name
+abilities,0E8,Despair 2 (0E8),JP cost,0,500
+abilities,0E9,Return 2 (0E9),JP cost,0,1500
+abilities,0F1,Berserk (0F1),Learn rate,74,45
+abilities,0F2,Chicken (0F2),Learn rate,76,20
+abilities,0F3,Confuse (0F3),Learn rate,78,55
+abilities,0F5,Don't Act (0F5),Learn rate,82,50
+abilities,0F6,Sleep (0F6),Learn rate,84,40
+abilities,0F7,Break (0F7),Learn rate,86,30
+abilities,0F8,Ice Bracelet (0F8),Learn flags,"Learn with JP, Display name",Display name
+abilities,0F8,Ice Bracelet (0F8),AI flags,"HP, Target Enemies, Unknown4, Unknown6, Unknown9","HP, Target Enemies, Silence, Unknown9"
+abilities,0F8,Ice Bracelet (0F8),Flags,Used by enemies,"Used by enemies, Unknown4"
+abilities,0F9,Fire Bracelet (0F9),AI flags,"HP, Target Enemies, Unknown4, Unknown6, Unknown9","Add Status, Target Enemies"
+abilities,101,Braver (101),JP cost,150,100
+abilities,101,Braver (101),AI flags,"HP, Target Enemies, Unknown10","HP, Target Enemies, Unknown1, Unknown3, Unknown4, Unknown10"
+abilities,101,Braver (101),Flags,Used by enemies,"Used by enemies, Unknown4"
+abilities,102,Cross-slash (102),AI flags,"HP, Target Enemies","HP, Target Enemies, Unknown1, Unknown3, Unknown4, Unknown10"
+abilities,102,Cross-slash (102),Flags,Used by enemies,"Used by enemies, Unknown4"
+abilities,103,Blade Beam (103),JP cost,250,300
+abilities,104,Climhazzard (104),JP cost,450,400
+abilities,104,Climhazzard (104),AI flags,"HP, Target Enemies","HP, Target Enemies, Unknown1, Unknown4"
+abilities,104,Climhazzard (104),Flags,Used by enemies,"Used by enemies, Unknown4"
+abilities,105,Meteorain (105),JP cost,560,500
+abilities,105,Meteorain (105),AI flags,"HP, Target Enemies","HP, Target Enemies, Unknown1, Unknown9"
+abilities,106,Finish Touch (106),JP cost,670,600
+abilities,106,Finish Touch (106),AI flags,"Add Status, Target Enemies","Add Status, Target Enemies, Unknown1"
+abilities,107,Omnislash (107),JP cost,900,700
+abilities,107,Omnislash (107),AI flags,"Unequip, Target Enemies, Unknown10","HP, Target Enemies, Unknown1, Unknown4, Unknown10"
+abilities,108,Cherry Blossom (108),JP cost,1200,800
+abilities,108,Cherry Blossom (108),AI flags,"HP, Target Enemies","HP, Target Enemies, Unknown1, Unknown9"
+abilities,10D,Choco Cure (10D),JP cost,0,9999
+abilities,10D,Choco Cure (10D),Learn flags,"Learn with JP, Display name","Display name, Learn on hit"
+abilities,10F,Goblin Punch (10F),JP cost,0,9999
+abilities,10F,Goblin Punch (10F),Learn flags,"Learn with JP, Display name","Display name, Learn on hit"
+abilities,111,Eye Gouge (111),JP cost,0,150
+abilities,112,Mutilate (112),AI flags,"HP, Target Enemies, Undead Reverse, Unknown3, Unknown10","HP, Target Enemies, Undead Reverse, Unknown3, Unknown6, Unknown10"
+abilities,115,Self Destruct (115),JP cost,0,9999
+abilities,115,Self Destruct (115),Learn flags,"Learn with JP, Display name","Display name, Learn on hit"
+abilities,11B,Poison Nail (11B),JP cost,0,9999
+abilities,11B,Poison Nail (11B),Learn flags,"Learn with JP, Display name","Display name, Learn on hit"
+abilities,121,Level Blast (121),JP cost,0,9999
+abilities,121,Level Blast (121),Learn flags,"Learn with JP, Display name","Display name, Learn on hit"
+abilities,126,Wind Soul (126),JP cost,0,9999
+abilities,126,Wind Soul (126),Learn flags,"Learn with JP, Display name","Display name, Learn on hit"
+abilities,12A,Drain Touch (12A),JP cost,0,9999
+abilities,12A,Drain Touch (12A),Learn flags,"Learn with JP, Display name","Display name, Learn on hit"
+abilities,130,Death Sentence (130),JP cost,0,9999
+abilities,130,Death Sentence (130),Learn flags,"Learn with JP, Display name","Display name, Learn on hit"
+abilities,130,Death Sentence (130),AI flags,"Add Status, Target Enemies, Silence, Unknown9","HP, MP, Target Enemies, Target Allies, Unknown2, Unknown9"
+abilities,133,Shine Lover (133),JP cost,0,9999
+abilities,133,Shine Lover (133),Learn flags,"Learn with JP, Display name","Display name, Learn on hit"
+abilities,135,Beaking (135),JP cost,0,9999
+abilities,135,Beaking (135),Learn flags,"Learn with JP, Display name","Display name, Learn on hit"
+abilities,138,Oink (138),JP cost,0,9999
+abilities,138,Oink (138),Learn flags,"Learn with JP, Display name","Display name, Learn on hit"
+abilities,13F,Magic Spirit (13F),JP cost,0,9999
+abilities,13F,Magic Spirit (13F),Learn flags,"Learn with JP, Display name","Display name, Learn on hit"
+abilities,142,Mimic Titan (142),JP cost,0,9999
+abilities,142,Mimic Titan (142),Learn flags,"Learn with JP, Display name","Display name, Learn on hit"
+abilities,144,Blow Fire (144),JP cost,0,600
+abilities,144,Blow Fire (144),Learn rate,100,60
+abilities,144,Blow Fire (144),AI flags,"HP, Target Enemies, Unknown3, Unknown4, Unknown6, Unknown9","HP, Target Enemies, Undead Reverse, Unknown3, Unknown4, Unknown6, Unknown10"
+abilities,145,Tentacle (145),AI flags,"HP, Target Enemies, Unknown3, Unknown10","Cancel Status, Target Allies, Undead Reverse, Silence"
+abilities,145,Tentacle (145),Flags,"Used by enemies, Unknown4",Used by enemies
+abilities,148,Bad Bracelet (148),JP cost,0,9999
+abilities,148,Bad Bracelet (148),Learn flags,"Learn with JP, Display name","Display name, Learn on hit"
+abilities,14C,Hurricane (14C),JP cost,0,9999
+abilities,14C,Hurricane (14C),Learn flags,"Learn with JP, Display name","Display name, Learn on hit"
+abilities,150,Tail Swing (150),JP cost,0,9999
+abilities,150,Tail Swing (150),Learn flags,"Learn with JP, Display name","Display name, Learn on hit"
+abilities,150,Tail Swing (150),AI flags,"HP, Target Enemies, Unknown3, Unknown10","Add Status, Target Allies, Line of Sight"
+abilities,150,Tail Swing (150),Flags,"Used by enemies, Unknown4",Used by enemies
+abilities,151,Ice Bracelet (151),JP cost,0,150
+abilities,151,Ice Bracelet (151),AI flags,"HP, Target Enemies, Unknown3, Unknown4, Unknown6, Unknown9","HP, Target Enemies, Unknown4, Unknown6, Unknown9"
+abilities,152,Fire Bracelet (152),JP cost,0,150
+abilities,152,Fire Bracelet (152),AI flags,"HP, Target Enemies, Unknown3, Unknown4, Unknown6, Unknown9","HP, Target Enemies, Unknown4, Unknown6, Unknown9"
+abilities,153,Thunder Bracelet (153),JP cost,0,150
+abilities,153,Thunder Bracelet (153),AI flags,"HP, Target Enemies, Unknown3, Unknown4, Unknown6, Unknown9","HP, Target Enemies, Unknown4, Unknown6, Unknown9"
+abilities,158,Dark Whisper (158),JP cost,0,9999
+abilities,158,Dark Whisper (158),Learn flags,"Learn with JP, Display name","Display name, Learn on hit"
+abilities,165,165,Learn flags,Learn with JP,"Learn with JP, Display name"
+abilities,165,165,AI flags,none,"HP, Target Enemies, Unknown3, Unknown10"
+abilities,165,165,Flags,none,"Used by enemies, Unknown4"
+abilities,166,166,Learn flags,Learn with JP,"Learn with JP, Display name"
+abilities,166,166,AI flags,none,"HP, Target Enemies, Unknown3, Unknown10"
+abilities,166,166,Flags,none,"Used by enemies, Unknown4"
+abilities,167,167,Learn flags,Learn with JP,"Learn with JP, Display name"
+abilities,167,167,AI flags,none,"HP, Target Enemies, Unknown3, Unknown10"
+abilities,167,167,Flags,none,"Used by enemies, Unknown4"
+abilities,168,168,Learn flags,Learn with JP,"Learn with JP, Display name"
+abilities,168,168,AI flags,none,"HP, Target Enemies, Unknown3, Unknown10"
+abilities,168,168,Flags,none,"Used by enemies, Unknown4"
+abilities,169,169,Learn flags,Learn with JP,"Learn with JP, Display name"
+abilities,169,169,AI flags,none,"HP, Target Enemies, Unknown10"
+abilities,169,169,Flags,none,"Used by enemies, Unknown4"
+abilities,16A,16A,Learn flags,Learn with JP,"Learn with JP, Display name"
+abilities,16A,16A,AI flags,none,"HP, Target Enemies, Unknown3, Unknown4, Unknown10"
+abilities,16A,16A,Flags,none,"Used by enemies, Unknown4"
+abilities,16B,16B,Learn flags,Learn with JP,"Learn with JP, Display name"
+abilities,16B,16B,AI flags,none,"HP, Target Enemies, Unknown3, Unknown5, Unknown10"
+abilities,16B,16B,Flags,none,"Used by enemies, Unknown4"
+abilities,16C,16C,Learn flags,Learn with JP,"Learn with JP, Display name"
+abilities,16C,16C,AI flags,none,"HP, Target Enemies, Unknown3, Unknown4, Unknown5, Unknown10"
+abilities,16C,16C,Flags,none,"Used by enemies, Unknown4"
+abilities,16D,16D,Learn flags,Learn with JP,"Learn with JP, Display name"
+abilities,16D,16D,AI flags,none,"HP, Target Enemies, Unknown3, Unknown10"
+abilities,16D,16D,Flags,none,"Used by enemies, Unknown4"
+abilities,16E,16E,Learn flags,Learn with JP,"Learn with JP, Display name"
+abilities,16E,16E,AI flags,none,"HP, Target Enemies, Unknown3, Unknown10"
+abilities,16E,16E,Flags,none,"Used by enemies, Unknown4"
+abilities,16F,Frog Attack (16F),AI flags,"HP, Target Enemies, Unknown10","HP, Target Enemies, Unknown4, Unknown10"
+abilities,173,Ether (173),JP cost,300,50
+abilities,174,Hi-Ether (174),JP cost,400,250
+abilities,174,Hi-Ether (174),Learn rate,10,15
+abilities,18A,Level Jump2 (18A),JP cost,150,100
+abilities,18A,Level Jump2 (18A),Learn rate,50,100
+abilities,18B,Level Jump3 (18B),JP cost,300,200
+abilities,18C,Level Jump4 (18C),JP cost,450,300
+abilities,18D,Level Jump5 (18D),JP cost,600,400
+abilities,18E,Level Jump8 (18E),JP cost,900,500
+abilities,18F,Vertical Jump2 (18F),JP cost,100,750
+abilities,190,Vertical Jump3 (190),JP cost,200,700
+abilities,192,Vertical Jump5 (192),JP cost,400,300
+abilities,192,Vertical Jump5 (192),Learn rate,50,65
+abilities,192,Vertical Jump5 (192),Learn flags,Learn with JP,"Learn with JP, Display name"
+abilities,192,Vertical Jump5 (192),AI flags,"HP, Target Enemies","HP, Add Status, Target Enemies, Unknown1, Unknown3"
+abilities,193,Vertical Jump6 (193),JP cost,500,400
+abilities,193,Vertical Jump6 (193),Learn rate,50,40
+abilities,193,Vertical Jump6 (193),Learn flags,Learn with JP,"Learn with JP, Display name"
+abilities,193,Vertical Jump6 (193),AI flags,"HP, Target Enemies","HP, Target Enemies, Unknown1, Unknown3"
+abilities,194,Vertical Jump7 (194),JP cost,600,200
+abilities,194,Vertical Jump7 (194),Learn rate,50,0
+abilities,194,Vertical Jump7 (194),Learn flags,Learn with JP,"Learn with JP, Display name"
+abilities,194,Vertical Jump7 (194),AI flags,"HP, Target Enemies","HP, Target Enemies, Unknown1, Unknown3"
+abilities,195,Vertical Jump8 (195),JP cost,900,600
+abilities,195,Vertical Jump8 (195),Learn rate,50,70
+abilities,195,Vertical Jump8 (195),Learn flags,Learn with JP,"Learn with JP, Display name"
+abilities,195,Vertical Jump8 (195),AI flags,"HP, Target Enemies","HP, Target Enemies, Unknown1, Unknown3"
+abilities,196,Charge+1 (196),Learn rate,70,80
+abilities,196,Charge+1 (196),AI flags,"HP, Target Enemies","HP, Target Enemies, Unknown1, Unknown3"
+abilities,197,Charge+2 (197),JP cost,150,200
+abilities,197,Charge+2 (197),Learn rate,50,100
+abilities,197,Charge+2 (197),AI flags,"HP, Target Enemies","HP, Target Enemies, Unknown1, Unknown3"
+abilities,198,Charge+3 (198),JP cost,200,250
+abilities,198,Charge+3 (198),Learn rate,50,90
+abilities,198,Charge+3 (198),AI flags,"HP, Target Enemies","HP, Target Enemies, Unknown1, Unknown3"
+abilities,199,Charge+4 (199),JP cost,250,300
+abilities,199,Charge+4 (199),Learn rate,50,70
+abilities,199,Charge+4 (199),AI flags,"HP, Target Enemies","HP, Target Enemies, Unknown1, Unknown3"
+abilities,19A,Charge+5 (19A),JP cost,300,400
+abilities,19A,Charge+5 (19A),AI flags,"HP, Target Enemies","HP, Target Enemies, Unknown1, Unknown3"
+abilities,19B,Charge+7 (19B),JP cost,400,500
+abilities,19B,Charge+7 (19B),Learn rate,50,10
+abilities,19B,Charge+7 (19B),AI flags,"HP, Target Enemies","HP, Target Enemies, Unknown1, Unknown3"
+abilities,19C,Charge+10 (19C),JP cost,600,100
+abilities,19C,Charge+10 (19C),Learn rate,50,75
+abilities,19C,Charge+10 (19C),AI flags,"HP, Target Enemies","HP, Target Enemies, Unknown1"
+abilities,19D,Charge+20 (19D),JP cost,1000,200
+abilities,19D,Charge+20 (19D),Learn rate,50,30
+abilities,19D,Charge+20 (19D),AI flags,"HP, Target Enemies","HP, Cancel Status, Target Enemies, Unknown1, Unknown3"
+abilities,1A9,Sunken State (1A9),Learn rate,10,0
+abilities,1B7,Gilgame Heart (1B7),Learn rate,20,40
+abilities,1BB,1BB,JP cost,200,350
+abilities,1BF,Weapon Guard (1BF),JP cost,200,100
+abilities,1C9,Equip Knife (1C9),JP cost,400,200
+abilities,1CF,Gained Jp UP (1CF),JP cost,200,600
+abilities,1D0,Gained Exp UP (1D0),JP cost,350,1000
+abilities,1D0,Gained Exp UP (1D0),Learn rate,50,0
+abilities,1D6,Train (1D6),Learn rate,50,10
+abilities,1D7,Secret Hunt (1D7),Learn rate,50,10
+abilities,1D9,Monster Talk (1D9),JP cost,100,400
+abilities,1DA,Throw Item (1DA),Learn rate,50,20
+abilities,1DE,Monster Skill (1DE),Learn rate,55,20
+abilities,1E0,Equip Change (1E0),Learn rate,100,0
+abilities,1E1,1E1,JP cost,0,700
+abilities,1E3,Non-charge (1E3),Learn rate,50,0
+abilities,1E3,Non-charge (1E3),Learn flags,Learn with JP,none
+abilities,1E4,1E4,JP cost,200,400
+abilities,1E5,1E5,JP cost,200,750
+abilities,1F3,Teleport 2 (1F3),Learn rate,100,0
+abilities,1F3,Teleport 2 (1F3),Learn flags,Learn with JP,none
+abilities,1F4,Any Weather (1F4),JP cost,200,100
+abilities,1F4,Any Weather (1F4),Learn rate,50,60
+abilities,1F5,Any Ground (1F5),JP cost,220,300
+abilities,1F6,Move in Water (Walk*) (1F6),JP cost,420,450
+abilities,1F7,Walk on Water (Move*) (1F7),JP cost,300,600
+abilities,1F8,Move on Lava (1F8),JP cost,150,100
+abilities,1F8,Move on Lava (1F8),Learn rate,30,20
+abilities,1FC,Silent Walk (1FC),JP cost,700,500
+abilities,1FD,Move-Find Item (1FD),Learn rate,75,0
+ability_attributes,001,Cure (001),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Requires Materia Blade, Targeting"
+ability_attributes,002,Cure 2 (002),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Requires Materia Blade, Targeting"
+ability_attributes,005,Raise (005),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Requires Materia Blade, Targeting"
+ability_attributes,005,Raise (005),Inflict status,0x20,0x08
+ability_attributes,006,Raise 2 (006),Inflict status,0x20,0x08
+ability_attributes,007,Reraise (007),Inflict status,0x21,0x18
+ability_attributes,008,Regen (008),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Requires Materia Blade, Targeting"
+ability_attributes,008,Regen (008),Inflict status,0x22,0x19
+ability_attributes,009,Protect (009),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Requires Materia Blade, Targeting"
+ability_attributes,009,Protect (009),Inflict status,0x23,0x1A
+ability_attributes,00A,Protect 2 (00A),Inflict status,0x23,0x1A
+ability_attributes,00B,Shell (00B),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Requires Materia Blade, Targeting"
+ability_attributes,00B,Shell (00B),Inflict status,0x24,0x1B
+ability_attributes,00C,Shell 2 (00C),Inflict status,0x24,0x1B
+ability_attributes,00D,Wall (00D),Inflict status,0x25,0x1C
+ability_attributes,00E,Esuna (00E),Inflict status,0x26,0x1D
+ability_attributes,010,Fire (010),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Evadeable, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Requires Materia Blade, Evadeable, Targeting"
+ability_attributes,011,Fire 2 (011),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Evadeable, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Requires Materia Blade, Evadeable, Targeting"
+ability_attributes,014,Bolt (014),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Evadeable, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Requires Materia Blade, Evadeable, Targeting"
+ability_attributes,015,Bolt 2 (015),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Evadeable, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Requires Materia Blade, Evadeable, Targeting"
+ability_attributes,015,Bolt 2 (015),MP cost,10,12
+ability_attributes,018,Ice (018),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Evadeable, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Requires Materia Blade, Evadeable, Targeting"
+ability_attributes,019,Ice 2 (019),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Evadeable, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Requires Materia Blade, Evadeable, Targeting"
+ability_attributes,01C,Poison (01C),Inflict status,0x27,0x11
+ability_attributes,01D,Frog (01D),Inflict status,0x73,0x0F
+ability_attributes,01E,Death (01E),Inflict status,0x29,0x1F
+ability_attributes,020,Haste (020),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Requires Materia Blade, Targeting"
+ability_attributes,020,Haste (020),Inflict status,0x2A,0x20
+ability_attributes,021,Haste 2 (021),Inflict status,0x2A,0x20
+ability_attributes,022,Slow (022),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Evadeable, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Requires Materia Blade, Evadeable, Targeting"
+ability_attributes,022,Slow (022),Inflict status,0x2B,0x10
+ability_attributes,023,Slow 2 (023),Inflict status,0x2B,0x10
+ability_attributes,024,Stop (024),Inflict status,0x2C,0x21
+ability_attributes,025,Don't Move (025),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Evadeable, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Requires Materia Blade, Evadeable, Targeting"
+ability_attributes,025,Don't Move (025),Inflict status,0x2D,0x0E
+ability_attributes,026,Float (026),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Requires Materia Blade, Targeting"
+ability_attributes,026,Float (026),Inflict status,0x2E,0x22
+ability_attributes,027,Reflect (027),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Requires Materia Blade, Targeting"
+ability_attributes,027,Reflect (027),Inflict status,0x2F,0x23
+ability_attributes,028,(Summon Demon) (028),Range,0,3
+ability_attributes,028,(Summon Demon) (028),Vertical,0,2
+ability_attributes,028,(Summon Demon) (028),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Silence, Mimic, Targeting","Vertical Tolerance, Weapon Strike, Target Self, Hit Enemies, Hit Allies, Silence, Mimic, Show Quote, Targeting"
+ability_attributes,028,(Summon Demon) (028),Element,none,Dark
+ability_attributes,028,(Summon Demon) (028),Formula,0x00,0x2D
+ability_attributes,028,(Summon Demon) (028),Y,0,2
+ability_attributes,028,(Summon Demon) (028),Inflict status,0x00,0x48
+ability_attributes,02A,Demi (02A),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Evadeable, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Requires Materia Blade, Evadeable, Targeting"
+ability_attributes,02D,02D,Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Silence, Mimic, Targeting","Weapon Range, Weapon Strike, Target Self, Hit Enemies, Hit Allies, Hit Caster, Silence, Shirahadori, Targeting"
+ability_attributes,02D,02D,Formula,0x00,0x19
+ability_attributes,02D,02D,X,0,4
+ability_attributes,02D,02D,Y,0,64
+ability_attributes,02E,Blind (02E),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Evadeable, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Requires Materia Blade, Evadeable, Targeting"
+ability_attributes,02E,Blind (02E),Inflict status,0x30,0x09
+ability_attributes,031,Pray Faith (031),Inflict status,0x31,0x12
+ability_attributes,032,Doubt Faith (032),Inflict status,0x32,0x15
+ability_attributes,033,Zombie (033),Inflict status,0x33,0x24
+ability_attributes,034,Silence Song (034),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Evadeable, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Requires Materia Blade, Evadeable, Targeting"
+ability_attributes,034,Silence Song (034),Inflict status,0x34,0x0A
+ability_attributes,035,Blind Rage (035),Inflict status,0x35,0x25
+ability_attributes,036,Foxbird (036),Inflict status,0x00,0x10
+ability_attributes,037,Confusion Song (037),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Evadeable, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Requires Materia Blade, Evadeable, Targeting"
+ability_attributes,037,Confusion Song (037),Inflict status,0x36,0x13
+ability_attributes,038,Dispel Magic (038),Inflict status,0x37,0x26
+ability_attributes,039,Paralyze (039),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Evadeable, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Requires Materia Blade, Evadeable, Targeting"
+ability_attributes,039,Paralyze (039),Inflict status,0x38,0x0D
+ability_attributes,03A,Sleep (03A),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Evadeable, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Reflect, Arithmetick, Mimic, Show Quote, Counter Magic, Requires Materia Blade, Evadeable, Targeting"
+ability_attributes,03A,Sleep (03A),Inflict status,0x39,0x0C
+ability_attributes,03B,Petrify (03B),Inflict status,0x3A,0x27
+ability_attributes,03C,Moogle (03C),Flags,"Target Self, Hit Allies, Follow Target, Hit Caster, Mimic, Show Quote, Targeting","Target Self, Hit Allies, Follow Target, Hit Caster, Mimic, Show Quote, Requires Materia Blade, Targeting"
+ability_attributes,03D,Shiva (03D),Flags,"Target Self, Hit Enemies, Follow Target, Hit Caster, Mimic, Show Quote, Targeting","Target Self, Hit Enemies, Follow Target, Hit Caster, Mimic, Show Quote, Requires Materia Blade, Targeting"
+ability_attributes,03E,Ramuh (03E),Flags,"Target Self, Hit Enemies, Follow Target, Hit Caster, Mimic, Show Quote, Targeting","Target Self, Hit Enemies, Follow Target, Hit Caster, Mimic, Show Quote, Requires Materia Blade, Targeting"
+ability_attributes,03F,Ifrit (03F),Flags,"Target Self, Hit Enemies, Follow Target, Hit Caster, Mimic, Show Quote, Targeting","Target Self, Hit Enemies, Follow Target, Hit Caster, Mimic, Show Quote, Requires Materia Blade, Targeting"
+ability_attributes,040,Titan (040),Flags,"Target Self, Hit Enemies, Follow Target, Hit Caster, Mimic, Show Quote, Targeting","Target Self, Hit Enemies, Follow Target, Hit Caster, Mimic, Show Quote, Requires Materia Blade, Targeting"
+ability_attributes,042,Carbunkle (042),Inflict status,0x2F,0x23
+ability_attributes,044,Odin (044),Inflict status,0x00,0x38
+ability_attributes,047,Silf (047),Element,none,Wind
+ability_attributes,047,Silf (047),Formula,0x0A,0x08
+ability_attributes,047,Silf (047),X,150,0
+ability_attributes,047,Silf (047),Y,0,24
+ability_attributes,047,Silf (047),Inflict status,0x34,0x58
+ability_attributes,047,Silf (047),MP cost,26,30
+ability_attributes,049,Lich (049),Inflict status,0x00,0x37
+ability_attributes,050,Heaven's Cloud (050),Inflict status,0x2B,0x55
+ability_attributes,051,Kiyomori (051),Inflict status,0x25,0x1C
+ability_attributes,052,Muramasa (052),Inflict status,0x4D,0x2C
+ability_attributes,054,Masamune (054),Inflict status,0x4E,0x2D
+ability_attributes,056,Angel Song (056),Inflict status,0x00,0x40
+ability_attributes,057,Life Song (057),Inflict status,0x00,0x80
+ability_attributes,058,Cheer Song (058),Y,0,1
+ability_attributes,058,Cheer Song (058),Inflict status,0x00,0x01
+ability_attributes,059,Battle Song (059),Y,0,1
+ability_attributes,059,Battle Song (059),Inflict status,0x00,0x04
+ability_attributes,05A,Magic Song (05A),Y,0,1
+ability_attributes,05A,Magic Song (05A),Inflict status,0x00,0x08
+ability_attributes,05B,Nameless Song (05B),Inflict status,0x3B,0x28
+ability_attributes,05C,Last Song (05C),Y,0,127
+ability_attributes,05C,Last Song (05C),Inflict status,0x00,0x02
+ability_attributes,05D,Witch Hunt (05D),Inflict status,0x00,0x40
+ability_attributes,05E,Wiznaibus (05E),Inflict status,0x00,0x80
+ability_attributes,05F,Slow Dance (05F),Y,0,1
+ability_attributes,05F,Slow Dance (05F),Inflict status,0x00,0x01
+ability_attributes,060,Polka Polka (060),Y,0,1
+ability_attributes,060,Polka Polka (060),Inflict status,0x00,0x04
+ability_attributes,061,Disillusion (061),Y,0,1
+ability_attributes,061,Disillusion (061),Inflict status,0x00,0x08
+ability_attributes,062,Nameless Dance (062),Inflict status,0x3C,0x29
+ability_attributes,063,Last Dance (063),Y,0,127
+ability_attributes,063,Last Dance (063),Inflict status,0x00,0x02
+ability_attributes,064,Spin Fist (064),Vertical,0,2
+ability_attributes,065,Repeating Fist (065),Vertical,1,2
+ability_attributes,068,Secret Fist (068),Vertical,0,1
+ability_attributes,068,Secret Fist (068),Formula,0x50,0x2B
+ability_attributes,068,Secret Fist (068),Inflict status,0x3D,0x0B
+ability_attributes,069,Stigma Magic (069),Inflict status,0x26,0x1D
+ability_attributes,06B,Revive (06B),Inflict status,0x20,0x08
+ability_attributes,06C,Gil Taking (06C),Range,1,2
+ability_attributes,06C,Gil Taking (06C),Flags,"Vertical Tolerance, Hit Enemies, Silence, Mimic, Shirahadori, Evadeable, Targeting","Vertical Tolerance, Hit Enemies, Silence, Mimic, Direct, Shirahadori, Evadeable, Targeting"
+ability_attributes,06D,Steal Heart (06D),Inflict status,0x3E,0x14
+ability_attributes,06E,Steal Helmet (06E),Range,1,2
+ability_attributes,06E,Steal Helmet (06E),Flags,"Vertical Tolerance, Hit Enemies, Silence, Mimic, Shirahadori, Evadeable, Targeting","Vertical Tolerance, Hit Enemies, Silence, Mimic, Direct, Shirahadori, Evadeable, Targeting"
+ability_attributes,06E,Steal Helmet (06E),Inflict status,0x00,0x03
+ability_attributes,06F,Steal Armor (06F),Range,1,2
+ability_attributes,06F,Steal Armor (06F),Flags,"Vertical Tolerance, Hit Enemies, Silence, Mimic, Shirahadori, Evadeable, Targeting","Vertical Tolerance, Hit Enemies, Silence, Mimic, Direct, Shirahadori, Evadeable, Targeting"
+ability_attributes,06F,Steal Armor (06F),Inflict status,0x00,0x04
+ability_attributes,070,Steal Shield (070),Range,1,2
+ability_attributes,070,Steal Shield (070),Flags,"Vertical Tolerance, Hit Enemies, Silence, Mimic, Shirahadori, Evadeable, Targeting","Vertical Tolerance, Hit Enemies, Silence, Mimic, Direct, Shirahadori, Evadeable, Targeting"
+ability_attributes,070,Steal Shield (070),Inflict status,0x00,0x02
+ability_attributes,071,Steal Weapon (071),Range,1,2
+ability_attributes,071,Steal Weapon (071),Flags,"Vertical Tolerance, Hit Enemies, Silence, Mimic, Shirahadori, Evadeable, Targeting","Vertical Tolerance, Hit Enemies, Silence, Mimic, Direct, Shirahadori, Evadeable, Targeting"
+ability_attributes,071,Steal Weapon (071),Inflict status,0x00,0x01
+ability_attributes,072,Steal Accessory (072),Range,1,2
+ability_attributes,072,Steal Accessory (072),Flags,"Vertical Tolerance, Hit Enemies, Silence, Mimic, Shirahadori, Evadeable, Targeting","Vertical Tolerance, Hit Enemies, Silence, Mimic, Direct, Shirahadori, Evadeable, Targeting"
+ability_attributes,072,Steal Accessory (072),Inflict status,0x00,0x05
+ability_attributes,073,Steal Exp (073),Range,1,2
+ability_attributes,073,Steal Exp (073),Flags,"Vertical Tolerance, Hit Enemies, Hit Allies, Silence, Mimic, Targeting","Vertical Tolerance, Hit Enemies, Hit Allies, Silence, Mimic, Direct, Targeting"
+ability_attributes,074,Invitation (074),Inflict status,0x3F,0x2A
+ability_attributes,075,Persuade (075),Y,0,127
+ability_attributes,075,Persuade (075),Inflict status,0x00,0x02
+ability_attributes,076,Praise (076),X,50,80
+ability_attributes,076,Praise (076),Inflict status,0x00,0x90
+ability_attributes,077,Threaten (077),Inflict status,0x00,0x10
+ability_attributes,078,Preach (078),X,50,80
+ability_attributes,078,Preach (078),Inflict status,0x00,0xA0
+ability_attributes,079,Solution (079),Inflict status,0x00,0x20
+ability_attributes,07A,Death Sentence (07A),Inflict status,0x3D,0x0B
+ability_attributes,07B,Negotiate (07B),Effect area,0,1
+ability_attributes,07B,Negotiate (07B),Vertical,3,4
+ability_attributes,07B,Negotiate (07B),Flags,"Vertical Tolerance, Hit Enemies, Mimic, Targeting","Vertical Tolerance, Target Self, Hit Enemies, Hit Allies, Hit Caster, Mimic, Targeting"
+ability_attributes,07B,Negotiate (07B),X,90,80
+ability_attributes,07B,Negotiate (07B),Y,0,30
+ability_attributes,07B,Negotiate (07B),Inflict status,0x00,0x82
+ability_attributes,07C,Insult (07C),Inflict status,0x35,0x25
+ability_attributes,07D,Mimic Daravon (07D),Inflict status,0x39,0x0C
+ability_attributes,07E,Pitfall (07E),Range,5,7
+ability_attributes,07E,Pitfall (07E),Effect area,1,0
+ability_attributes,07E,Pitfall (07E),Flags,"Target Self, Hit Enemies, Hit Allies, Silence, Mimic, Counter Flood, Targeting","Hit Enemies, Hit Allies, Silence, Mimic, Counter Flood, Targeting"
+ability_attributes,07E,Pitfall (07E),Element,none,"Fire, Ice, Wind, Earth, Water"
+ability_attributes,07E,Pitfall (07E),Inflict status,0x41,0x21
+ability_attributes,07F,Water Ball (07F),Range,5,6
+ability_attributes,07F,Water Ball (07F),Effect area,1,6
+ability_attributes,07F,Water Ball (07F),Vertical,0,6
+ability_attributes,07F,Water Ball (07F),Flags,"Target Self, Hit Enemies, Hit Allies, Silence, Mimic, Counter Flood, Targeting","Vertical Fixed, Hit Enemies, Hit Allies, Linear Attack, Silence, Mimic, Counter Flood, Targeting"
+ability_attributes,07F,Water Ball (07F),Element,Water,"Fire, Ice, Wind, Earth, Water"
+ability_attributes,07F,Water Ball (07F),Inflict status,0x42,0x0F
+ability_attributes,080,Hell Ivy (080),Vertical,0,2
+ability_attributes,080,Hell Ivy (080),Element,none,"Fire, Ice, Wind, Earth, Water"
+ability_attributes,080,Hell Ivy (080),Inflict status,0x43,0x0F
+ability_attributes,081,Carve Model (081),Range,5,3
+ability_attributes,081,Carve Model (081),Effect area,1,3
+ability_attributes,081,Carve Model (081),Vertical,0,3
+ability_attributes,081,Carve Model (081),Flags,"Target Self, Hit Enemies, Hit Allies, Silence, Mimic, Counter Flood, Targeting","Vertical Fixed, Hit Enemies, Hit Allies, Linear Attack, Three Directions, Silence, Mimic, Counter Flood, Targeting"
+ability_attributes,081,Carve Model (081),Element,none,"Fire, Ice, Wind, Earth, Water"
+ability_attributes,081,Carve Model (081),Inflict status,0x44,0x0E
+ability_attributes,082,Local Quake (082),Range,5,1
+ability_attributes,082,Local Quake (082),Effect area,1,0
+ability_attributes,082,Local Quake (082),Vertical,0,2
+ability_attributes,082,Local Quake (082),Flags,"Target Self, Hit Enemies, Hit Allies, Silence, Mimic, Counter Flood, Targeting","Weapon Range, Weapon Strike, Hit Enemies, Hit Allies, Silence, Counter Flood, Shirahadori, Evadeable, Targeting"
+ability_attributes,082,Local Quake (082),Element,Earth,none
+ability_attributes,082,Local Quake (082),Formula,0x24,0x2D
+ability_attributes,082,Local Quake (082),Y,2,10
+ability_attributes,082,Local Quake (082),Inflict status,0x45,0x1F
+ability_attributes,083,Kamaitachi (083),Range,5,4
+ability_attributes,083,Kamaitachi (083),Vertical,0,1
+ability_attributes,083,Kamaitachi (083),Flags,"Target Self, Hit Enemies, Hit Allies, Silence, Mimic, Counter Flood, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Reflect, Show Quote, Counter Magic, Evadeable, Targeting"
+ability_attributes,083,Kamaitachi (083),Element,Wind,Dark
+ability_attributes,083,Kamaitachi (083),Formula,0x24,0x08
+ability_attributes,083,Kamaitachi (083),Y,2,14
+ability_attributes,083,Kamaitachi (083),Inflict status,0x46,0x36
+ability_attributes,083,Kamaitachi (083),CT,0,4
+ability_attributes,083,Kamaitachi (083),MP cost,0,6
+ability_attributes,084,Demon Fire (084),Range,5,4
+ability_attributes,084,Demon Fire (084),Vertical,0,2
+ability_attributes,084,Demon Fire (084),Flags,"Target Self, Hit Enemies, Hit Allies, Silence, Mimic, Counter Flood, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Reflect, Show Quote, Counter Magic, Evadeable, Targeting"
+ability_attributes,084,Demon Fire (084),Element,Fire,Dark
+ability_attributes,084,Demon Fire (084),Formula,0x24,0x08
+ability_attributes,084,Demon Fire (084),Y,2,18
+ability_attributes,084,Demon Fire (084),Inflict status,0x47,0x53
+ability_attributes,084,Demon Fire (084),CT,0,5
+ability_attributes,084,Demon Fire (084),MP cost,0,12
+ability_attributes,085,Quicksand (085),Range,5,4
+ability_attributes,085,Quicksand (085),Vertical,0,3
+ability_attributes,085,Quicksand (085),Flags,"Target Self, Hit Enemies, Hit Allies, Silence, Mimic, Counter Flood, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Reflect, Show Quote, Counter Magic, Evadeable, Targeting"
+ability_attributes,085,Quicksand (085),Element,Water,Dark
+ability_attributes,085,Quicksand (085),Formula,0x24,0x08
+ability_attributes,085,Quicksand (085),Y,2,24
+ability_attributes,085,Quicksand (085),Inflict status,0x48,0x5F
+ability_attributes,085,Quicksand (085),CT,0,7
+ability_attributes,085,Quicksand (085),MP cost,0,24
+ability_attributes,086,Sand Storm (086),Range,5,4
+ability_attributes,086,Sand Storm (086),Effect area,1,2
+ability_attributes,086,Sand Storm (086),Vertical,0,3
+ability_attributes,086,Sand Storm (086),Flags,"Target Self, Hit Enemies, Hit Allies, Silence, Mimic, Counter Flood, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Show Quote, Evadeable, Targeting"
+ability_attributes,086,Sand Storm (086),Element,Wind,Dark
+ability_attributes,086,Sand Storm (086),Formula,0x24,0x08
+ability_attributes,086,Sand Storm (086),Y,2,32
+ability_attributes,086,Sand Storm (086),Inflict status,0x49,0x60
+ability_attributes,086,Sand Storm (086),CT,0,10
+ability_attributes,086,Sand Storm (086),MP cost,0,48
+ability_attributes,087,Blizzard (087),Inflict status,0x4A,0x0A
+ability_attributes,088,Gusty Wind (088),Range,5,99
+ability_attributes,088,Gusty Wind (088),Vertical,0,99
+ability_attributes,088,Gusty Wind (088),Flags,"Target Self, Hit Enemies, Hit Allies, Silence, Mimic, Counter Flood, Targeting","Hit Enemies, Hit Allies, Silence, Shirahadori, Targeting"
+ability_attributes,088,Gusty Wind (088),Element,Wind,none
+ability_attributes,088,Gusty Wind (088),Formula,0x24,0x38
+ability_attributes,088,Gusty Wind (088),Y,2,200
+ability_attributes,088,Gusty Wind (088),Inflict status,0x4B,0x5E
+ability_attributes,089,Lava Ball (089),Range,5,0
+ability_attributes,089,Lava Ball (089),Effect area,1,0
+ability_attributes,089,Lava Ball (089),Flags,"Target Self, Hit Enemies, Hit Allies, Silence, Mimic, Counter Flood, Targeting","Auto, Target Self, Hit Allies, Hit Caster, Silence, Mimic, Show Quote"
+ability_attributes,089,Lava Ball (089),Formula,0x24,0x3C
+ability_attributes,089,Lava Ball (089),Y,2,1
+ability_attributes,089,Lava Ball (089),Inflict status,0x4C,0x1D
+ability_attributes,08A,Head Break (08A),Inflict status,0x00,0x03
+ability_attributes,08B,Armor Break (08B),Inflict status,0x00,0x04
+ability_attributes,08C,Shield Break (08C),Inflict status,0x00,0x02
+ability_attributes,08D,Weapon Break (08D),Inflict status,0x00,0x01
+ability_attributes,08E,Magic Break (08E),X,50,0
+ability_attributes,08E,Magic Break (08E),Y,50,0
+ability_attributes,08F,Speed Break (08F),X,2,50
+ability_attributes,08F,Speed Break (08F),Y,50,2
+ability_attributes,08F,Speed Break (08F),Inflict status,0x00,0x01
+ability_attributes,090,Power Break (090),X,3,50
+ability_attributes,090,Power Break (090),Y,50,3
+ability_attributes,090,Power Break (090),Inflict status,0x00,0x04
+ability_attributes,091,Mind Break (091),X,3,50
+ability_attributes,091,Mind Break (091),Y,50,3
+ability_attributes,091,Mind Break (091),Inflict status,0x00,0x08
+ability_attributes,092,Accumulate (092),Formula,0x36,0x3B
+ability_attributes,092,Accumulate (092),Inflict status,0x00,0x84
+ability_attributes,093,Dash (093),X,0,100
+ability_attributes,094,Throw Stone (094),Flags,"Hit Enemies, Hit Allies, Silence, Mimic, Direct, Evadeable, Targeting","Hit Enemies, Hit Allies, Silence, Mimic, Show Quote, Direct, Evadeable, Targeting"
+ability_attributes,095,Heal (095),Inflict status,0x4F,0x2E
+ability_attributes,096,Yell (096),Formula,0x39,0x3B
+ability_attributes,096,Yell (096),Inflict status,0x00,0x81
+ability_attributes,097,Cheer Up (097),Formula,0x3A,0x3B
+ability_attributes,097,Cheer Up (097),X,0,5
+ability_attributes,097,Cheer Up (097),Y,5,0
+ability_attributes,097,Cheer Up (097),Inflict status,0x00,0x90
+ability_attributes,099,Scream (099),Inflict status,0x00,0x9D
+ability_attributes,09A,Ultima (09A),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Show Quote, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Show Quote, Requires Materia Blade, Targeting"
+ability_attributes,09B,Stasis Sword (09B),Flags,"Weapon Strike, Target Self, Hit Enemies, Hit Allies, Silence, Show Quote, Requires Sword, Targeting","Weapon Strike, Target Self, Hit Enemies, Hit Allies, Silence, Show Quote, Targeting"
+ability_attributes,09B,Stasis Sword (09B),Inflict status,0x75,0x48
+ability_attributes,09C,Split Punch (09C),Flags,"Vertical Tolerance, Weapon Strike, Target Self, Hit Enemies, Hit Allies, Silence, Show Quote, Requires Sword, Targeting","Vertical Tolerance, Weapon Strike, Target Self, Hit Enemies, Hit Allies, Silence, Show Quote, Targeting"
+ability_attributes,09C,Split Punch (09C),Inflict status,0x76,0x49
+ability_attributes,09D,Crush Punch (09D),Flags,"Vertical Tolerance, Weapon Strike, Target Self, Hit Enemies, Hit Allies, Silence, Show Quote, Requires Sword, Targeting","Vertical Tolerance, Weapon Strike, Target Self, Hit Enemies, Hit Allies, Silence, Show Quote, Targeting"
+ability_attributes,09D,Crush Punch (09D),Inflict status,0x77,0x38
+ability_attributes,09E,Lightning Stab (09E),Flags,"Weapon Strike, Target Self, Hit Enemies, Hit Allies, Silence, Show Quote, Requires Sword, Targeting","Weapon Strike, Target Self, Hit Enemies, Hit Allies, Silence, Show Quote, Targeting"
+ability_attributes,09E,Lightning Stab (09E),Inflict status,0x78,0x4A
+ability_attributes,09F,Holy Explosion (09F),Flags,"Vertical Fixed, Weapon Strike, Hit Enemies, Hit Allies, Linear Attack, Silence, Show Quote, Requires Sword, Targeting","Vertical Fixed, Weapon Strike, Hit Enemies, Hit Allies, Linear Attack, Silence, Show Quote, Targeting"
+ability_attributes,09F,Holy Explosion (09F),Inflict status,0x79,0x4B
+ability_attributes,0A0,Shellbust Stab (0A0),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Show Quote, Requires Sword, Targeting","Weapon Strike, Hit Enemies, Hit Allies, Silence, Show Quote, Targeting"
+ability_attributes,0A0,Shellbust Stab (0A0),Inflict status,0x00,0x04
+ability_attributes,0A1,Blastar Punch (0A1),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Show Quote, Requires Sword, Targeting","Weapon Strike, Hit Enemies, Hit Allies, Silence, Show Quote, Targeting"
+ability_attributes,0A1,Blastar Punch (0A1),Inflict status,0x00,0x03
+ability_attributes,0A2,Hellcry Punch (0A2),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Show Quote, Requires Sword, Targeting","Weapon Strike, Hit Enemies, Hit Allies, Silence, Show Quote, Targeting"
+ability_attributes,0A2,Hellcry Punch (0A2),Inflict status,0x00,0x01
+ability_attributes,0A3,Icewolf Bite (0A3),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Show Quote, Requires Sword, Targeting","Weapon Strike, Hit Enemies, Hit Allies, Silence, Show Quote, Targeting"
+ability_attributes,0A3,Icewolf Bite (0A3),Inflict status,0x00,0x05
+ability_attributes,0A4,Dark Sword (0A4),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Show Quote, Requires Sword, Targeting","Weapon Strike, Hit Enemies, Hit Allies, Silence, Mimic, Show Quote, Targeting"
+ability_attributes,0A5,Night Sword (0A5),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Show Quote, Requires Sword, Targeting","Weapon Strike, Hit Enemies, Hit Allies, Silence, Mimic, Show Quote, Targeting"
+ability_attributes,0A7,Deathspell 2 (0A7),Inflict status,0x50,0x2F
+ability_attributes,0A8,Galaxy Stop (0A8),X,50,70
+ability_attributes,0A8,Galaxy Stop (0A8),Inflict status,0x51,0x30
+ability_attributes,0AA,Asura (0AA),Effect area,1,3
+ability_attributes,0AA,Asura (0AA),Vertical,3,2
+ability_attributes,0AA,Asura (0AA),X,6,12
+ability_attributes,0AB,Diamond Sword (0AB),Effect area,1,2
+ability_attributes,0AB,Diamond Sword (0AB),Vertical,3,1
+ability_attributes,0AB,Diamond Sword (0AB),X,6,5
+ability_attributes,0AC,Hydragon Pit (0AC),Effect area,1,2
+ability_attributes,0AC,Hydragon Pit (0AC),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Random Fire, Hit Caster, Show Quote, Animate Miss","Target Self, Hit Enemies, Follow Target, Random Fire, Show Quote, Animate Miss"
+ability_attributes,0AC,Hydragon Pit (0AC),X,6,4
+ability_attributes,0AD,Space Storage (0AD),Effect area,1,3
+ability_attributes,0AD,Space Storage (0AD),Vertical,3,1
+ability_attributes,0AD,Space Storage (0AD),X,6,8
+ability_attributes,0AD,Space Storage (0AD),Inflict status,0x52,0x31
+ability_attributes,0AE,Sky Demon (0AE),Effect area,1,0
+ability_attributes,0AE,Sky Demon (0AE),X,6,3
+ability_attributes,0AF,Heaven Bolt Back (0AF),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Random Fire, Hit Caster, Show Quote, Animate Miss","Target Self, Hit Enemies, Follow Target, Random Fire, Show Quote, Animate Miss"
+ability_attributes,0AF,Heaven Bolt Back (0AF),Inflict status,0x00,0x4F
+ability_attributes,0B0,Asura Back (0B0),Effect area,1,3
+ability_attributes,0B0,Asura Back (0B0),Vertical,3,2
+ability_attributes,0B0,Asura Back (0B0),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Random Fire, Hit Caster, Show Quote, Animate Miss","Target Self, Hit Enemies, Follow Target, Random Fire, Show Quote, Animate Miss"
+ability_attributes,0B0,Asura Back (0B0),X,6,12
+ability_attributes,0B0,Asura Back (0B0),Inflict status,0x00,0x4F
+ability_attributes,0B1,Diamond Sword Back (0B1),Effect area,1,2
+ability_attributes,0B1,Diamond Sword Back (0B1),Vertical,3,1
+ability_attributes,0B1,Diamond Sword Back (0B1),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Random Fire, Hit Caster, Show Quote, Animate Miss","Target Self, Hit Enemies, Follow Target, Random Fire, Show Quote, Animate Miss"
+ability_attributes,0B1,Diamond Sword Back (0B1),X,6,5
+ability_attributes,0B1,Diamond Sword Back (0B1),Inflict status,0x00,0x4F
+ability_attributes,0B2,Hydragon Pit Back (0B2),Effect area,1,2
+ability_attributes,0B2,Hydragon Pit Back (0B2),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Random Fire, Hit Caster, Show Quote, Animate Miss","Target Self, Hit Enemies, Follow Target, Random Fire, Show Quote, Animate Miss"
+ability_attributes,0B2,Hydragon Pit Back (0B2),X,6,4
+ability_attributes,0B2,Hydragon Pit Back (0B2),Inflict status,0x00,0x15
+ability_attributes,0B3,Space Storage Back (0B3),Effect area,1,3
+ability_attributes,0B3,Space Storage Back (0B3),Vertical,3,1
+ability_attributes,0B3,Space Storage Back (0B3),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Random Fire, Hit Caster, Show Quote, Animate Miss","Target Self, Hit Enemies, Follow Target, Random Fire, Show Quote, Animate Miss"
+ability_attributes,0B3,Space Storage Back (0B3),X,6,8
+ability_attributes,0B3,Space Storage Back (0B3),Inflict status,0x52,0x1E
+ability_attributes,0B4,Sky Demon Back (0B4),Effect area,1,0
+ability_attributes,0B4,Sky Demon Back (0B4),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Random Fire, Hit Caster, Show Quote, Animate Miss","Target Self, Hit Enemies, Follow Target, Random Fire, Show Quote, Animate Miss"
+ability_attributes,0B4,Sky Demon Back (0B4),X,6,3
+ability_attributes,0B4,Sky Demon Back (0B4),Inflict status,0x00,0x4F
+ability_attributes,0B5,Seal (0B5),Range,6,1
+ability_attributes,0B5,Seal (0B5),Effect area,0,1
+ability_attributes,0B5,Seal (0B5),Vertical,0,2
+ability_attributes,0B5,Seal (0B5),Flags,"Target Self, Hit Enemies, Hit Allies, Hit Caster, Silence, Targeting","Vertical Fixed, Vertical Tolerance, Weapon Strike, Hit Enemies, Hit Allies, Linear Attack, Three Directions, Silence, Shirahadori, Evadeable, Targeting"
+ability_attributes,0B5,Seal (0B5),Formula,0x38,0x01
+ability_attributes,0B5,Seal (0B5),Inflict status,0x53,0x00
+ability_attributes,0B6,Shadow Stitch (0B6),Inflict status,0x2C,0x21
+ability_attributes,0B7,Stop Bracelet (0B7),Inflict status,0x29,0x1F
+ability_attributes,0B8,(Summon Angel) (0B8),Range,0,3
+ability_attributes,0B8,(Summon Angel) (0B8),Effect area,0,3
+ability_attributes,0B8,(Summon Angel) (0B8),Vertical,0,3
+ability_attributes,0B8,(Summon Angel) (0B8),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Silence, Mimic, Targeting","Vertical Fixed, Vertical Tolerance, Weapon Strike, Hit Enemies, Hit Allies, Linear Attack, Three Directions, Silence, Mimic, Show Quote, Targeting"
+ability_attributes,0B8,(Summon Angel) (0B8),Element,none,Dark
+ability_attributes,0B8,(Summon Angel) (0B8),Formula,0x00,0x39
+ability_attributes,0B8,(Summon Angel) (0B8),X,0,4
+ability_attributes,0B8,(Summon Angel) (0B8),Y,0,3
+ability_attributes,0BB,Seal (0BB),Inflict status,0x72,0x27
+ability_attributes,0BC,Chicken Race (0BC),Inflict status,0x38,0x0D
+ability_attributes,0BD,Hold Tight (0BD),Inflict status,0x2D,0x0E
+ability_attributes,0BE,Darkness (0BE),Inflict status,0x30,0x09
+ability_attributes,0BF,Lose Voice (0BF),Inflict status,0x34,0x0A
+ability_attributes,0C0,Loss (0C0),Inflict status,0x36,0x13
+ability_attributes,0C1,Spell (0C1),Inflict status,0x2C,0x21
+ability_attributes,0C2,Nightmare (0C2),Inflict status,0x54,0x32
+ability_attributes,0C3,Death Cold (0C3),Inflict status,0x62,0x10
+ability_attributes,0C4,Magic Ruin (0C4),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Follow Target, Silence, Show Quote, Requires Sword, Targeting","Weapon Strike, Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Silence, Show Quote, Targeting"
+ability_attributes,0C4,Magic Ruin (0C4),Formula,0x1B,0x1A
+ability_attributes,0C4,Magic Ruin (0C4),X,250,0
+ability_attributes,0C4,Magic Ruin (0C4),Y,50,15
+ability_attributes,0C4,Magic Ruin (0C4),MP cost,20,10
+ability_attributes,0C5,Speed Ruin (0C5),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Follow Target, Silence, Show Quote, Requires Sword, Targeting","Weapon Strike, Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Silence, Show Quote, Targeting"
+ability_attributes,0C5,Speed Ruin (0C5),X,3,250
+ability_attributes,0C5,Speed Ruin (0C5),Y,250,1
+ability_attributes,0C5,Speed Ruin (0C5),Inflict status,0x00,0x01
+ability_attributes,0C6,Power Ruin (0C6),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Follow Target, Silence, Show Quote, Requires Sword, Targeting","Weapon Strike, Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Silence, Show Quote, Targeting"
+ability_attributes,0C6,Power Ruin (0C6),X,5,250
+ability_attributes,0C6,Power Ruin (0C6),Y,250,1
+ability_attributes,0C6,Power Ruin (0C6),Inflict status,0x00,0x04
+ability_attributes,0C7,Mind Ruin (0C7),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Follow Target, Silence, Show Quote, Requires Sword, Targeting","Weapon Strike, Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Silence, Show Quote, Targeting"
+ability_attributes,0C7,Mind Ruin (0C7),X,5,250
+ability_attributes,0C7,Mind Ruin (0C7),Y,250,1
+ability_attributes,0C7,Mind Ruin (0C7),Inflict status,0x00,0x08
+ability_attributes,0C8,Blood Suck (0C8),Inflict status,0x55,0x33
+ability_attributes,0C9,Allure (0C9),Inflict status,0x3E,0x14
+ability_attributes,0CA,Bio (0CA),Range,4,1
+ability_attributes,0CA,Bio (0CA),Effect area,1,0
+ability_attributes,0CA,Bio (0CA),Vertical,2,1
+ability_attributes,0CA,Bio (0CA),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Reflect, Show Quote, Counter Magic, Evadeable, Targeting","Vertical Tolerance, Hit Enemies, Hit Allies, Follow Target, Silence, Normal Attack, Counter Flood, Evadeable, Targeting"
+ability_attributes,0CA,Bio (0CA),Formula,0x08,0x01
+ability_attributes,0CA,Bio (0CA),Y,12,0
+ability_attributes,0CA,Bio (0CA),Inflict status,0x56,0x00
+ability_attributes,0CA,Bio (0CA),CT,3,0
+ability_attributes,0CA,Bio (0CA),MP cost,8,0
+ability_attributes,0CB,Bio (0CB),Range,4,1
+ability_attributes,0CB,Bio (0CB),Effect area,1,0
+ability_attributes,0CB,Bio (0CB),Vertical,2,1
+ability_attributes,0CB,Bio (0CB),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Reflect, Show Quote, Counter Magic, Evadeable, Targeting","Vertical Tolerance, Hit Enemies, Hit Allies, Follow Target, Silence, Normal Attack, Counter Flood, Evadeable, Targeting"
+ability_attributes,0CB,Bio (0CB),Formula,0x08,0x01
+ability_attributes,0CB,Bio (0CB),Y,12,0
+ability_attributes,0CB,Bio (0CB),Inflict status,0x57,0x00
+ability_attributes,0CB,Bio (0CB),CT,3,0
+ability_attributes,0CB,Bio (0CB),MP cost,8,0
+ability_attributes,0CC,Bio (0CC),Range,4,1
+ability_attributes,0CC,Bio (0CC),Effect area,1,0
+ability_attributes,0CC,Bio (0CC),Vertical,2,1
+ability_attributes,0CC,Bio (0CC),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Reflect, Show Quote, Counter Magic, Evadeable, Targeting","Vertical Tolerance, Hit Enemies, Hit Allies, Follow Target, Silence, Normal Attack, Counter Flood, Evadeable, Targeting"
+ability_attributes,0CC,Bio (0CC),Formula,0x08,0x01
+ability_attributes,0CC,Bio (0CC),Y,12,0
+ability_attributes,0CC,Bio (0CC),Inflict status,0x58,0x00
+ability_attributes,0CC,Bio (0CC),CT,3,0
+ability_attributes,0CC,Bio (0CC),MP cost,8,0
+ability_attributes,0CD,Bio 2 (0CD),Range,4,1
+ability_attributes,0CD,Bio 2 (0CD),Effect area,1,0
+ability_attributes,0CD,Bio 2 (0CD),Vertical,3,1
+ability_attributes,0CD,Bio 2 (0CD),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Reflect, Show Quote, Counter Magic, Evadeable, Targeting","Vertical Tolerance, Hit Enemies, Hit Allies, Follow Target, Silence, Normal Attack, Counter Flood, Evadeable, Targeting"
+ability_attributes,0CD,Bio 2 (0CD),Formula,0x0A,0x01
+ability_attributes,0CD,Bio 2 (0CD),X,110,0
+ability_attributes,0CD,Bio 2 (0CD),Inflict status,0x61,0x00
+ability_attributes,0CD,Bio 2 (0CD),CT,5,0
+ability_attributes,0CD,Bio 2 (0CD),MP cost,16,0
+ability_attributes,0CE,Bio 2 (0CE),Range,4,1
+ability_attributes,0CE,Bio 2 (0CE),Effect area,1,0
+ability_attributes,0CE,Bio 2 (0CE),Vertical,3,1
+ability_attributes,0CE,Bio 2 (0CE),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Reflect, Show Quote, Counter Magic, Evadeable, Targeting","Vertical Tolerance, Hit Enemies, Hit Allies, Follow Target, Silence, Normal Attack, Counter Flood, Evadeable, Targeting"
+ability_attributes,0CE,Bio 2 (0CE),Formula,0x0A,0x01
+ability_attributes,0CE,Bio 2 (0CE),X,110,0
+ability_attributes,0CE,Bio 2 (0CE),Inflict status,0x62,0x00
+ability_attributes,0CE,Bio 2 (0CE),CT,5,0
+ability_attributes,0CE,Bio 2 (0CE),MP cost,16,0
+ability_attributes,0CF,Bio 2 (0CF),Range,4,1
+ability_attributes,0CF,Bio 2 (0CF),Effect area,1,0
+ability_attributes,0CF,Bio 2 (0CF),Vertical,3,1
+ability_attributes,0CF,Bio 2 (0CF),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Reflect, Show Quote, Counter Magic, Evadeable, Targeting","Vertical Tolerance, Hit Enemies, Hit Allies, Follow Target, Silence, Normal Attack, Counter Flood, Evadeable, Targeting"
+ability_attributes,0CF,Bio 2 (0CF),Formula,0x0A,0x01
+ability_attributes,0CF,Bio 2 (0CF),X,120,0
+ability_attributes,0CF,Bio 2 (0CF),Inflict status,0x63,0x00
+ability_attributes,0CF,Bio 2 (0CF),CT,5,0
+ability_attributes,0CF,Bio 2 (0CF),MP cost,16,0
+ability_attributes,0D0,Bio 2 (0D0),Range,4,1
+ability_attributes,0D0,Bio 2 (0D0),Effect area,1,0
+ability_attributes,0D0,Bio 2 (0D0),Vertical,3,1
+ability_attributes,0D0,Bio 2 (0D0),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Reflect, Show Quote, Counter Magic, Evadeable, Targeting","Vertical Tolerance, Hit Enemies, Hit Allies, Follow Target, Silence, Normal Attack, Counter Flood, Evadeable, Targeting"
+ability_attributes,0D0,Bio 2 (0D0),Formula,0x0A,0x01
+ability_attributes,0D0,Bio 2 (0D0),X,110,0
+ability_attributes,0D0,Bio 2 (0D0),Inflict status,0x72,0x00
+ability_attributes,0D0,Bio 2 (0D0),CT,5,0
+ability_attributes,0D0,Bio 2 (0D0),MP cost,16,0
+ability_attributes,0D1,Bio 3 (0D1),Range,4,1
+ability_attributes,0D1,Bio 3 (0D1),Effect area,2,0
+ability_attributes,0D1,Bio 3 (0D1),Vertical,3,1
+ability_attributes,0D1,Bio 3 (0D1),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Reflect, Show Quote, Counter Magic, Evadeable, Targeting","Vertical Tolerance, Hit Enemies, Hit Allies, Follow Target, Silence, Normal Attack, Counter Flood, Evadeable, Targeting"
+ability_attributes,0D1,Bio 3 (0D1),Formula,0x08,0x01
+ability_attributes,0D1,Bio 3 (0D1),Y,24,0
+ability_attributes,0D1,Bio 3 (0D1),Inflict status,0x59,0x00
+ability_attributes,0D1,Bio 3 (0D1),CT,6,0
+ability_attributes,0D1,Bio 3 (0D1),MP cost,24,0
+ability_attributes,0D2,Bio 3 (0D2),Range,4,1
+ability_attributes,0D2,Bio 3 (0D2),Effect area,2,0
+ability_attributes,0D2,Bio 3 (0D2),Vertical,3,1
+ability_attributes,0D2,Bio 3 (0D2),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Reflect, Show Quote, Counter Magic, Evadeable, Targeting","Vertical Tolerance, Hit Enemies, Hit Allies, Follow Target, Silence, Normal Attack, Counter Flood, Evadeable, Targeting"
+ability_attributes,0D2,Bio 3 (0D2),Formula,0x08,0x01
+ability_attributes,0D2,Bio 3 (0D2),Y,24,0
+ability_attributes,0D2,Bio 3 (0D2),Inflict status,0x5A,0x00
+ability_attributes,0D2,Bio 3 (0D2),CT,6,0
+ability_attributes,0D2,Bio 3 (0D2),MP cost,24,0
+ability_attributes,0D3,Bio 3 (0D3),Range,4,1
+ability_attributes,0D3,Bio 3 (0D3),Effect area,2,0
+ability_attributes,0D3,Bio 3 (0D3),Vertical,3,1
+ability_attributes,0D3,Bio 3 (0D3),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Reflect, Show Quote, Counter Magic, Evadeable, Targeting","Vertical Tolerance, Hit Enemies, Hit Allies, Follow Target, Silence, Normal Attack, Counter Flood, Evadeable, Targeting"
+ability_attributes,0D3,Bio 3 (0D3),Formula,0x08,0x01
+ability_attributes,0D3,Bio 3 (0D3),Y,24,0
+ability_attributes,0D3,Bio 3 (0D3),Inflict status,0x5B,0x00
+ability_attributes,0D3,Bio 3 (0D3),CT,6,0
+ability_attributes,0D3,Bio 3 (0D3),MP cost,24,0
+ability_attributes,0D4,Magic Barrier (0D4),Inflict status,0x5C,0x3A
+ability_attributes,0D5,Leg Aim (0D5),Flags,"Weapon Range, Target Self, Hit Enemies, Hit Allies, Hit Caster, Silence, Targeting","Weapon Range, Target Self, Hit Enemies, Hit Allies, Hit Caster, Silence, Requires Sword, Targeting"
+ability_attributes,0D5,Leg Aim (0D5),Inflict status,0x2D,0x0E
+ability_attributes,0D6,Arm Aim (0D6),Flags,"Weapon Range, Target Self, Hit Enemies, Hit Allies, Hit Caster, Silence, Targeting","Weapon Range, Target Self, Hit Enemies, Hit Allies, Hit Caster, Silence, Requires Sword, Targeting"
+ability_attributes,0D6,Arm Aim (0D6),Inflict status,0x38,0x0D
+ability_attributes,0D7,Seal Evil (0D7),Flags,"Weapon Range, Target Self, Hit Enemies, Hit Allies, Hit Caster, Silence, Targeting","Weapon Range, Target Self, Hit Enemies, Hit Allies, Hit Caster, Silence, Requires Sword, Targeting"
+ability_attributes,0D7,Seal Evil (0D7),Y,0,6
+ability_attributes,0D7,Seal Evil (0D7),Inflict status,0x5D,0x27
+ability_attributes,0DB,(Teleport 3: Send) (0DB),Effect area,0,2
+ability_attributes,0DB,(Teleport 3: Send) (0DB),Vertical,0,3
+ability_attributes,0DB,(Teleport 3: Send) (0DB),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Silence, Mimic, Targeting","Weapon Strike, Auto, Hit Enemies, Hit Allies, Follow Target, Silence, Mimic, Show Quote, Targeting"
+ability_attributes,0DB,(Teleport 3: Send) (0DB),Element,none,Dark
+ability_attributes,0DB,(Teleport 3: Send) (0DB),Formula,0x00,0x13
+ability_attributes,0DB,(Teleport 3: Send) (0DB),Y,0,2
+ability_attributes,0DB,(Teleport 3: Send) (0DB),Inflict status,0x00,0x10
+ability_attributes,0DC,(Teleport 3: Arrive) (0DC),Effect area,0,255
+ability_attributes,0DC,(Teleport 3: Arrive) (0DC),Vertical,0,255
+ability_attributes,0DC,(Teleport 3: Arrive) (0DC),Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Silence, Mimic, Targeting","Auto, Target Self, Hit Enemies, Silence, Mimic"
+ability_attributes,0DC,(Teleport 3: Arrive) (0DC),Formula,0x00,0x2D
+ability_attributes,0DC,(Teleport 3: Arrive) (0DC),Y,0,255
+ability_attributes,0DD,Toad 2 (0DD),Inflict status,0x28,0x0F
+ability_attributes,0E0,Blind 2 (0E0),Inflict status,0x30,0x09
+ability_attributes,0E3,Confuse 2 (0E3),Inflict status,0x36,0x13
+ability_attributes,0E4,Sleep 2 (0E4),Inflict status,0x39,0x0C
+ability_attributes,0E8,Despair 2 (0E8),Inflict status,0x37,0x26
+ability_attributes,0E8,Despair 2 (0E8),MP cost,0,40
+ability_attributes,0E9,Return 2 (0E9),MP cost,0,45
+ability_attributes,0EA,Blind (0EA),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Requires Sword, Evadeable, Targeting","Weapon Strike, Hit Enemies, Hit Allies, Silence, Evadeable, Targeting"
+ability_attributes,0EA,Blind (0EA),Inflict status,0x30,0x09
+ability_attributes,0EB,Aspel (0EB),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Requires Sword, Evadeable, Targeting","Weapon Strike, Hit Enemies, Hit Allies, Silence, Evadeable, Targeting"
+ability_attributes,0EC,Drain (0EC),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Requires Sword, Evadeable, Targeting","Weapon Strike, Hit Enemies, Hit Allies, Silence, Evadeable, Targeting"
+ability_attributes,0ED,Faith (0ED),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Requires Sword, Evadeable, Targeting","Weapon Strike, Hit Enemies, Hit Allies, Silence, Evadeable, Targeting"
+ability_attributes,0ED,Faith (0ED),Inflict status,0x31,0x12
+ability_attributes,0EE,Innocent (0EE),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Requires Sword, Evadeable, Targeting","Weapon Strike, Hit Enemies, Hit Allies, Silence, Evadeable, Targeting"
+ability_attributes,0EE,Innocent (0EE),Inflict status,0x32,0x15
+ability_attributes,0EF,Zombie (0EF),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Requires Sword, Evadeable, Targeting","Weapon Strike, Hit Enemies, Hit Allies, Silence, Evadeable, Targeting"
+ability_attributes,0EF,Zombie (0EF),Inflict status,0x33,0x24
+ability_attributes,0F0,Silence (0F0),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Requires Sword, Evadeable, Targeting","Weapon Strike, Hit Enemies, Hit Allies, Silence, Evadeable, Targeting"
+ability_attributes,0F0,Silence (0F0),Inflict status,0x34,0x0A
+ability_attributes,0F1,Berserk (0F1),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Requires Sword, Evadeable, Targeting","Weapon Strike, Hit Enemies, Hit Allies, Silence, Evadeable, Targeting"
+ability_attributes,0F1,Berserk (0F1),Inflict status,0x35,0x25
+ability_attributes,0F2,Chicken (0F2),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Requires Sword, Evadeable, Targeting","Weapon Strike, Hit Enemies, Hit Allies, Silence, Evadeable, Targeting"
+ability_attributes,0F2,Chicken (0F2),Inflict status,0x00,0x10
+ability_attributes,0F3,Confuse (0F3),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Requires Sword, Evadeable, Targeting","Weapon Strike, Hit Enemies, Hit Allies, Silence, Evadeable, Targeting"
+ability_attributes,0F3,Confuse (0F3),Inflict status,0x36,0x13
+ability_attributes,0F4,Despair (0F4),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Requires Sword, Evadeable, Targeting","Weapon Strike, Hit Enemies, Hit Allies, Silence, Evadeable, Targeting"
+ability_attributes,0F4,Despair (0F4),Inflict status,0x37,0x26
+ability_attributes,0F5,Don't Act (0F5),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Requires Sword, Evadeable, Targeting","Weapon Strike, Hit Enemies, Hit Allies, Silence, Evadeable, Targeting"
+ability_attributes,0F5,Don't Act (0F5),Inflict status,0x38,0x0D
+ability_attributes,0F6,Sleep (0F6),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Requires Sword, Evadeable, Targeting","Weapon Strike, Hit Enemies, Hit Allies, Silence, Evadeable, Targeting"
+ability_attributes,0F6,Sleep (0F6),Inflict status,0x39,0x0C
+ability_attributes,0F7,Break (0F7),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Requires Sword, Evadeable, Targeting","Weapon Strike, Hit Enemies, Hit Allies, Silence, Evadeable, Targeting"
+ability_attributes,0F7,Break (0F7),Inflict status,0x3A,0x27
+ability_attributes,0F8,Ice Bracelet (0F8),Range,2,0
+ability_attributes,0F8,Ice Bracelet (0F8),Flags,"Vertical Fixed, Vertical Tolerance, Hit Enemies, Hit Allies, Linear Attack, Silence, Animate Miss, Direct, Evadeable, Targeting","Vertical Tolerance, Auto, Target Self, Hit Enemies, Hit Allies, Mimic, Counter Flood, Counter Magic, Shirahadori, Evadeable"
+ability_attributes,0F8,Ice Bracelet (0F8),Element,Ice,none
+ability_attributes,0F8,Ice Bracelet (0F8),Formula,0x4E,0x5F
+ability_attributes,0F8,Ice Bracelet (0F8),Y,12,3
+ability_attributes,0F9,Fire Bracelet (0F9),Range,2,3
+ability_attributes,0F9,Fire Bracelet (0F9),Effect area,2,0
+ability_attributes,0F9,Fire Bracelet (0F9),Vertical,2,1
+ability_attributes,0F9,Fire Bracelet (0F9),Flags,"Vertical Fixed, Vertical Tolerance, Hit Enemies, Hit Allies, Linear Attack, Silence, Animate Miss, Direct, Evadeable, Targeting","Target Self, Hit Enemies, Hit Allies, Silence, Evadeable"
+ability_attributes,0F9,Fire Bracelet (0F9),Element,Fire,none
+ability_attributes,0F9,Fire Bracelet (0F9),Formula,0x4E,0x3D
+ability_attributes,0F9,Fire Bracelet (0F9),X,0,65
+ability_attributes,0F9,Fire Bracelet (0F9),Y,12,0
+ability_attributes,0F9,Fire Bracelet (0F9),Inflict status,0x00,0x47
+ability_attributes,0FA,Thunder Bracelet (0FA),Range,2,0
+ability_attributes,0FA,Thunder Bracelet (0FA),Effect area,2,0
+ability_attributes,0FA,Thunder Bracelet (0FA),Vertical,2,0
+ability_attributes,0FA,Thunder Bracelet (0FA),Flags,"Vertical Fixed, Vertical Tolerance, Hit Enemies, Hit Allies, Linear Attack, Silence, Animate Miss, Direct, Evadeable, Targeting","Weapon Range, Weapon Strike, Hit Enemies, Hit Allies, Silence, Normal Attack, Counter Flood, Direct, Shirahadori, Evadeable, Targeting"
+ability_attributes,0FA,Thunder Bracelet (0FA),Element,Lightning,none
+ability_attributes,0FA,Thunder Bracelet (0FA),Formula,0x4E,0x11
+ability_attributes,0FA,Thunder Bracelet (0FA),Y,12,40
+ability_attributes,0FA,Thunder Bracelet (0FA),Inflict status,0x00,0x02
+ability_attributes,0FB,Dragon Tame (0FB),Inflict status,0x3F,0x2A
+ability_attributes,0FC,Dragon Care (0FC),Flags,"Vertical Tolerance, Hit Enemies, Hit Allies, Silence, Targeting","Vertical Tolerance, Target Self, Hit Enemies, Hit Allies, Hit Caster, Silence, Targeting"
+ability_attributes,0FC,Dragon Care (0FC),Inflict status,0x5E,0x3B
+ability_attributes,0FD,Dragon Power Up (0FD),Flags,"Vertical Tolerance, Hit Enemies, Hit Allies, Silence, Targeting","Vertical Tolerance, Target Self, Hit Enemies, Hit Allies, Hit Caster, Silence, Targeting"
+ability_attributes,0FD,Dragon Power Up (0FD),Inflict status,0x00,0x9D
+ability_attributes,0FE,Dragon Level Up (0FE),Flags,"Vertical Tolerance, Hit Enemies, Hit Allies, Silence, Targeting","Vertical Tolerance, Target Self, Hit Enemies, Hit Allies, Hit Caster, Silence, Targeting"
+ability_attributes,100,Shock! (100),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Requires Sword, Targeting","Weapon Strike, Hit Enemies, Hit Allies, Silence, Mimic, Targeting"
+ability_attributes,101,Braver (101),Vertical,0,4
+ability_attributes,101,Braver (101),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Requires Materia Blade, Targeting","Vertical Tolerance, Weapon Strike, Hit Enemies, Hit Allies, Silence, Show Quote, Counter Flood, Direct, Shirahadori, Evadeable, Targeting"
+ability_attributes,101,Braver (101),Formula,0x4E,0x46
+ability_attributes,101,Braver (101),Y,12,2
+ability_attributes,101,Braver (101),CT,3,2
+ability_attributes,102,Cross-slash (102),Effect area,1,0
+ability_attributes,102,Cross-slash (102),Vertical,0,2
+ability_attributes,102,Cross-slash (102),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Requires Materia Blade, Targeting","Vertical Tolerance, Weapon Strike, Hit Enemies, Hit Allies, Silence, Show Quote, Counter Flood, Direct, Shirahadori, Evadeable, Targeting"
+ability_attributes,102,Cross-slash (102),Formula,0x4E,0x46
+ability_attributes,102,Cross-slash (102),Y,22,0
+ability_attributes,102,Cross-slash (102),Inflict status,0x00,0x0E
+ability_attributes,102,Cross-slash (102),CT,4,3
+ability_attributes,103,Blade Beam (103),Effect area,0,1
+ability_attributes,103,Blade Beam (103),Vertical,0,1
+ability_attributes,103,Blade Beam (103),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Requires Materia Blade, Targeting","Weapon Strike, Hit Enemies, Hit Allies, Silence, Show Quote, Counter Flood, Shirahadori, Targeting"
+ability_attributes,104,Climhazzard (104),Vertical,0,1
+ability_attributes,104,Climhazzard (104),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Requires Materia Blade, Targeting","Vertical Tolerance, Weapon Strike, Hit Enemies, Hit Allies, Silence, Show Quote, Counter Flood, Direct, Shirahadori, Targeting"
+ability_attributes,105,Meteorain (105),Range,3,4
+ability_attributes,105,Meteorain (105),Effect area,2,3
+ability_attributes,105,Meteorain (105),Vertical,0,255
+ability_attributes,105,Meteorain (105),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Requires Materia Blade, Targeting","Weapon Strike, Hit Enemies, Hit Allies, Top-down Target, Silence, Show Quote, Counter Flood, Counter Magic, Targeting"
+ability_attributes,105,Meteorain (105),Formula,0x4E,0x2D
+ability_attributes,105,Meteorain (105),X,0,10
+ability_attributes,105,Meteorain (105),Y,26,0
+ability_attributes,105,Meteorain (105),CT,10,5
+ability_attributes,106,Finish Touch (106),Range,3,4
+ability_attributes,106,Finish Touch (106),Vertical,0,1
+ability_attributes,106,Finish Touch (106),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Requires Materia Blade, Targeting","Weapon Strike, Hit Enemies, Hit Allies, Silence, Show Quote, Counter Flood, Counter Magic, Evadeable, Targeting"
+ability_attributes,106,Finish Touch (106),Inflict status,0x5F,0x3C
+ability_attributes,107,Omnislash (107),Range,3,2
+ability_attributes,107,Omnislash (107),Effect area,2,1
+ability_attributes,107,Omnislash (107),Vertical,0,3
+ability_attributes,107,Omnislash (107),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Requires Materia Blade, Targeting","Vertical Tolerance, Weapon Strike, Hit Enemies, Hit Allies, Silence, Show Quote, Counter Flood, Shirahadori, Targeting"
+ability_attributes,107,Omnislash (107),Formula,0x4E,0x46
+ability_attributes,107,Omnislash (107),Y,40,8
+ability_attributes,107,Omnislash (107),CT,15,8
+ability_attributes,108,Cherry Blossom (108),Vertical,0,3
+ability_attributes,108,Cherry Blossom (108),Flags,"Weapon Strike, Hit Enemies, Hit Allies, Silence, Requires Materia Blade, Targeting","Vertical Tolerance, Weapon Strike, Hit Enemies, Hit Allies, Silence, Show Quote, Counter Flood, Shirahadori, Targeting"
+ability_attributes,108,Cherry Blossom (108),Formula,0x4E,0x2D
+ability_attributes,108,Cherry Blossom (108),Y,60,6
+ability_attributes,108,Cherry Blossom (108),CT,20,8
+ability_attributes,10B,Choco Meteor (10B),Y,4,9
+ability_attributes,10C,Choco Esuna (10C),X,65,75
+ability_attributes,10C,Choco Esuna (10C),Inflict status,0x64,0x3E
+ability_attributes,10D,Choco Cure (10D),Y,3,8
+ability_attributes,10D,Choco Cure (10D),CT,0,3
+ability_attributes,10D,Choco Cure (10D),MP cost,0,5
+ability_attributes,10F,Goblin Punch (10F),X,35,255
+ability_attributes,10F,Goblin Punch (10F),CT,0,4
+ability_attributes,10F,Goblin Punch (10F),MP cost,0,2
+ability_attributes,111,Eye Gouge (111),Formula,0x50,0x2B
+ability_attributes,111,Eye Gouge (111),X,45,65
+ability_attributes,111,Eye Gouge (111),Inflict status,0x30,0x09
+ability_attributes,112,Mutilate (112),Flags,"Vertical Tolerance, Hit Enemies, Hit Allies, Silence, Evadeable, Targeting","Weapon Range, Hit Enemies, Hit Allies, Silence, Counter Flood, Direct, Shirahadori, Evadeable, Targeting"
+ability_attributes,114,Small Bomb (114),Y,4,10
+ability_attributes,115,Self Destruct (115),Inflict status,0x65,0x3F
+ability_attributes,115,Self Destruct (115),CT,0,2
+ability_attributes,115,Self Destruct (115),MP cost,0,10
+ability_attributes,116,Flame Attack (116),Y,3,7
+ability_attributes,117,Spark (117),Y,2,5
+ability_attributes,11A,Blaster (11A),Inflict status,0x66,0x40
+ability_attributes,11B,Poison Nail (11B),Flags,"Vertical Tolerance, Hit Enemies, Hit Allies, Silence, Shirahadori, Evadeable, Targeting","Weapon Range, Hit Enemies, Hit Allies, Silence, Shirahadori, Evadeable, Targeting"
+ability_attributes,11B,Poison Nail (11B),Formula,0x50,0x46
+ability_attributes,11B,Poison Nail (11B),X,40,16
+ability_attributes,11B,Poison Nail (11B),Inflict status,0x27,0x5C
+ability_attributes,11B,Poison Nail (11B),CT,0,2
+ability_attributes,11B,Poison Nail (11B),MP cost,0,4
+ability_attributes,11C,Blood Suck (11C),Inflict status,0x6B,0x45
+ability_attributes,11E,Black Ink (11E),X,50,60
+ability_attributes,11E,Black Ink (11E),Inflict status,0x30,0x09
+ability_attributes,11F,Odd Soundwave (11F),Inflict status,0x37,0x26
+ability_attributes,120,Mind Blast (120),X,35,45
+ability_attributes,120,Mind Blast (120),Inflict status,0x67,0x41
+ability_attributes,121,Level Blast (121),Flags,"Target Self, Hit Enemies, Hit Allies, Silence, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Silence, Targeting"
+ability_attributes,121,Level Blast (121),X,60,65
+ability_attributes,121,Level Blast (121),CT,0,6
+ability_attributes,121,Level Blast (121),MP cost,0,15
+ability_attributes,123,Thunder Soul (123),Y,2,5
+ability_attributes,124,Aqua Soul (124),Y,2,5
+ability_attributes,125,Ice Soul (125),Y,2,5
+ability_attributes,126,Wind Soul (126),Flags,"Hit Enemies, Hit Allies, Silence, Direct, Evadeable, Targeting","Hit Enemies, Hit Allies, Follow Target, Silence, Direct, Evadeable, Targeting"
+ability_attributes,126,Wind Soul (126),Formula,0x4E,0x18
+ability_attributes,126,Wind Soul (126),Y,3,7
+ability_attributes,126,Wind Soul (126),CT,0,4
+ability_attributes,126,Wind Soul (126),MP cost,0,10
+ability_attributes,128,Zombie Touch (128),X,45,65
+ability_attributes,128,Zombie Touch (128),Inflict status,0x6C,0x24
+ability_attributes,129,Sleep Touch (129),X,40,60
+ability_attributes,129,Sleep Touch (129),Inflict status,0x6D,0x0C
+ability_attributes,12A,Drain Touch (12A),X,60,65
+ability_attributes,12A,Drain Touch (12A),CT,0,2
+ability_attributes,12A,Drain Touch (12A),MP cost,0,15
+ability_attributes,12B,Grease Touch (12B),X,50,80
+ability_attributes,12B,Grease Touch (12B),Inflict status,0x6E,0x3F
+ability_attributes,12D,Look of Devil (12D),X,35,40
+ability_attributes,12D,Look of Devil (12D),Inflict status,0x6F,0x46
+ability_attributes,12E,Look of Fright (12E),X,40,45
+ability_attributes,12E,Look of Fright (12E),Inflict status,0x00,0x10
+ability_attributes,12F,Circle (12F),X,55,65
+ability_attributes,130,Death Sentence (130),Range,3,4
+ability_attributes,130,Death Sentence (130),Flags,"Hit Enemies, Hit Allies, Targeting","Hit Enemies, Hit Allies, Follow Target, Silence, Evadeable, Targeting"
+ability_attributes,130,Death Sentence (130),Formula,0x3D,0x58
+ability_attributes,130,Death Sentence (130),X,40,65
+ability_attributes,130,Death Sentence (130),Y,0,1
+ability_attributes,130,Death Sentence (130),Inflict status,0x3D,0x00
+ability_attributes,130,Death Sentence (130),CT,0,6
+ability_attributes,130,Death Sentence (130),MP cost,0,50
+ability_attributes,132,Beak (132),Formula,0x50,0x2B
+ability_attributes,132,Beak (132),X,37,40
+ability_attributes,132,Beak (132),Inflict status,0x70,0x27
+ability_attributes,133,Shine Lover (133),Flags,"Vertical Tolerance, Hit Enemies, Silence, Shirahadori, Evadeable, Targeting","Weapon Range, Weapon Strike, Hit Enemies, Silence, Shirahadori, Evadeable, Targeting"
+ability_attributes,134,Feather Bomb (134),Y,2,5
+ability_attributes,135,Beaking (135),Vertical,1,0
+ability_attributes,135,Beaking (135),Flags,"Vertical Tolerance, Hit Enemies, Hit Allies, Silence, Shirahadori, Evadeable, Targeting","Weapon Range, Hit Enemies, Hit Allies, Silence, Shirahadori, Evadeable, Targeting"
+ability_attributes,135,Beaking (135),X,45,100
+ability_attributes,135,Beaking (135),Y,2,1
+ability_attributes,135,Beaking (135),CT,0,5
+ability_attributes,135,Beaking (135),MP cost,0,20
+ability_attributes,137,Nose Bracelet (137),X,40,45
+ability_attributes,137,Nose Bracelet (137),Inflict status,0x3E,0x14
+ability_attributes,138,Oink (138),Flags,"Vertical Tolerance, Hit Enemies, Hit Allies, Silence, Animate Miss, Targeting","Vertical Tolerance, Hit Enemies, Hit Allies, Follow Target, Silence, Animate Miss, Targeting"
+ability_attributes,138,Oink (138),X,70,80
+ability_attributes,138,Oink (138),Inflict status,0x20,0x08
+ability_attributes,138,Oink (138),CT,0,4
+ability_attributes,138,Oink (138),MP cost,0,15
+ability_attributes,139,Pooh- (139),Inflict status,0x68,0x42
+ability_attributes,13A,Please Eat (13A),Inflict status,0x60,0x3D
+ability_attributes,13B,Leaf Dance (13B),Vertical,0,3
+ability_attributes,13B,Leaf Dance (13B),Y,3,7
+ability_attributes,13C,Protect Spirit (13C),Flags,"Auto, Hit Enemies, Hit Allies, Silence","Auto, Hit Enemies, Hit Allies, Hit Caster, Silence"
+ability_attributes,13C,Protect Spirit (13C),X,45,70
+ability_attributes,13C,Protect Spirit (13C),Inflict status,0x23,0x1A
+ability_attributes,13D,Clam Spirit (13D),Flags,"Auto, Hit Enemies, Hit Allies, Silence","Auto, Hit Enemies, Hit Allies, Hit Caster, Silence"
+ability_attributes,13D,Clam Spirit (13D),X,45,70
+ability_attributes,13D,Clam Spirit (13D),Inflict status,0x24,0x1B
+ability_attributes,13E,Spirit of Life (13E),Flags,"Auto, Hit Enemies, Hit Allies, Silence","Auto, Hit Enemies, Hit Allies, Hit Caster, Silence"
+ability_attributes,13E,Spirit of Life (13E),Y,2,9
+ability_attributes,13F,Magic Spirit (13F),Flags,"Auto, Hit Enemies, Hit Allies, Silence","Auto, Hit Enemies, Hit Allies, Hit Caster, Silence"
+ability_attributes,13F,Magic Spirit (13F),Y,1,10
+ability_attributes,13F,Magic Spirit (13F),CT,0,4
+ability_attributes,13F,Magic Spirit (13F),MP cost,0,2
+ability_attributes,141,Wave Around (141),Vertical,1,2
+ability_attributes,142,Mimic Titan (142),Y,3,7
+ability_attributes,142,Mimic Titan (142),CT,0,5
+ability_attributes,142,Mimic Titan (142),MP cost,0,10
+ability_attributes,143,Gather Power (143),Formula,0x36,0x3B
+ability_attributes,143,Gather Power (143),Inflict status,0x00,0x84
+ability_attributes,144,Blow Fire (144),Effect area,2,0
+ability_attributes,144,Blow Fire (144),Vertical,2,0
+ability_attributes,144,Blow Fire (144),Flags,"Vertical Fixed, Vertical Tolerance, Hit Enemies, Hit Allies, Linear Attack, Silence, Animate Miss, Direct, Evadeable, Targeting","Weapon Range, Weapon Strike, Hit Enemies, Hit Allies, Silence, Mimic, Normal Attack, Animate Miss, Counter Flood, Direct, Shirahadori, Evadeable, Targeting"
+ability_attributes,144,Blow Fire (144),Formula,0x4E,0x06
+ability_attributes,144,Blow Fire (144),Y,4,253
+ability_attributes,145,Tentacle (145),Vertical,1,3
+ability_attributes,145,Tentacle (145),Flags,"Vertical Tolerance, Hit Enemies, Hit Allies, Silence, Counter Flood, Shirahadori, Evadeable, Targeting","Vertical Tolerance, Hit Enemies, Hit Allies, Targeting"
+ability_attributes,145,Tentacle (145),Formula,0x01,0x35
+ability_attributes,145,Tentacle (145),X,0,222
+ability_attributes,145,Tentacle (145),Y,0,33
+ability_attributes,145,Tentacle (145),Inflict status,0x00,0x08
+ability_attributes,146,Lick (146),Inflict status,0x2F,0x23
+ability_attributes,147,Goo (147),Inflict status,0x2D,0x0E
+ability_attributes,148,Bad Bracelet (148),Vertical,0,2
+ability_attributes,148,Bad Bracelet (148),Inflict status,0x69,0x43
+ability_attributes,148,Bad Bracelet (148),CT,0,4
+ability_attributes,148,Bad Bracelet (148),MP cost,0,10
+ability_attributes,149,Moldball Virus (149),Flags,"Vertical Tolerance, Hit Enemies, Hit Allies, Silence, Evadeable, Targeting","Vertical Tolerance, Hit Enemies, Hit Allies, Silence, Targeting"
+ability_attributes,149,Moldball Virus (149),X,5,20
+ability_attributes,14B,Sudden Cry (14B),Inflict status,0x29,0x38
+ability_attributes,14C,Hurricane (14C),Flags,"Target Self, Hit Enemies, Hit Allies, Hit Caster, Silence, Targeting","Target Self, Hit Enemies, Hit Allies, Silence, Evadeable, Targeting"
+ability_attributes,14C,Hurricane (14C),X,50,90
+ability_attributes,14C,Hurricane (14C),CT,0,6
+ability_attributes,14C,Hurricane (14C),MP cost,0,25
+ability_attributes,150,Tail Swing (150),Range,1,2
+ability_attributes,150,Tail Swing (150),Effect area,0,1
+ability_attributes,150,Tail Swing (150),Vertical,2,1
+ability_attributes,150,Tail Swing (150),Flags,"Vertical Tolerance, Hit Enemies, Hit Allies, Silence, Shirahadori, Evadeable, Targeting","Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Silence, Targeting"
+ability_attributes,150,Tail Swing (150),Formula,0x37,0x51
+ability_attributes,150,Tail Swing (150),X,0,70
+ability_attributes,150,Tail Swing (150),Y,15,0
+ability_attributes,150,Tail Swing (150),Inflict status,0x00,0x4D
+ability_attributes,150,Tail Swing (150),CT,0,5
+ability_attributes,150,Tail Swing (150),MP cost,0,50
+ability_attributes,151,Ice Bracelet (151),Flags,"Vertical Fixed, Vertical Tolerance, Hit Enemies, Hit Allies, Linear Attack, Silence, Animate Miss, Direct, Evadeable, Targeting","Vertical Fixed, Vertical Tolerance, Hit Enemies, Hit Allies, Linear Attack, Three Directions, Silence, Animate Miss, Evadeable, Targeting"
+ability_attributes,151,Ice Bracelet (151),Y,5,12
+ability_attributes,152,Fire Bracelet (152),Flags,"Vertical Fixed, Vertical Tolerance, Hit Enemies, Hit Allies, Linear Attack, Silence, Animate Miss, Direct, Evadeable, Targeting","Vertical Fixed, Vertical Tolerance, Hit Enemies, Hit Allies, Linear Attack, Three Directions, Silence, Animate Miss, Evadeable, Targeting"
+ability_attributes,152,Fire Bracelet (152),Y,5,12
+ability_attributes,153,Thunder Bracelet (153),Flags,"Vertical Fixed, Vertical Tolerance, Hit Enemies, Hit Allies, Linear Attack, Silence, Animate Miss, Direct, Evadeable, Targeting","Vertical Fixed, Vertical Tolerance, Hit Enemies, Hit Allies, Linear Attack, Three Directions, Silence, Animate Miss, Evadeable, Targeting"
+ability_attributes,153,Thunder Bracelet (153),Y,5,12
+ability_attributes,158,Dark Whisper (158),Flags,"Hit Enemies, Hit Allies, Random Fire, Silence, Animate Miss, Targeting","Hit Enemies, Hit Allies, Follow Target, Random Fire, Silence, Animate Miss, Targeting"
+ability_attributes,158,Dark Whisper (158),Inflict status,0x71,0x4C
+ability_attributes,158,Dark Whisper (158),CT,0,4
+ability_attributes,158,Dark Whisper (158),MP cost,0,8
+ability_attributes,15A,Poison Frog (15A),Inflict status,0x74,0x47
+ability_attributes,15C,Lifebreak (15C),Range,4,5
+ability_attributes,15E,Grand Cross (15E),Inflict status,0x6A,0x44
+ability_attributes,160,Compress (160),Inflict status,0x29,0x38
+ability_attributes,164,Parasite (164),Inflict status,0x69,0x43
+ability_attributes,165,165,Range,15,1
+ability_attributes,165,165,Effect area,15,0
+ability_attributes,165,165,Vertical,3,2
+ability_attributes,165,165,Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Silence, Mimic, Targeting","Vertical Tolerance, Weapon Strike, Hit Enemies, Hit Allies, Hit Caster, Silence, Evadeable, Targeting"
+ability_attributes,165,165,Element,none,Dark
+ability_attributes,165,165,Formula,0x08,0x46
+ability_attributes,165,165,X,0,4
+ability_attributes,165,165,Y,6,0
+ability_attributes,165,165,Inflict status,0x00,0x0D
+ability_attributes,166,166,Range,15,0
+ability_attributes,166,166,Effect area,15,2
+ability_attributes,166,166,Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Silence, Mimic, Targeting","Auto, Hit Enemies, Hit Allies, Follow Target, Silence, Evadeable"
+ability_attributes,166,166,Element,none,Wind
+ability_attributes,166,166,Formula,0x08,0x46
+ability_attributes,166,166,X,0,10
+ability_attributes,166,166,Y,6,0
+ability_attributes,167,167,Range,4,1
+ability_attributes,167,167,Vertical,0,3
+ability_attributes,167,167,Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Silence, Mimic, Targeting","Vertical Tolerance, Weapon Strike, Hit Enemies, Hit Allies, Hit Caster, Silence, Evadeable, Targeting"
+ability_attributes,167,167,Formula,0x0E,0x46
+ability_attributes,167,167,X,200,12
+ability_attributes,167,167,Y,100,0
+ability_attributes,167,167,Inflict status,0x29,0x11
+ability_attributes,168,168,Range,15,1
+ability_attributes,168,168,Effect area,15,0
+ability_attributes,168,168,Vertical,3,1
+ability_attributes,168,168,Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Silence, Mimic, Targeting","Vertical Tolerance, Weapon Strike, Hit Enemies, Hit Allies, Hit Caster, Silence, Evadeable, Targeting"
+ability_attributes,168,168,Element,none,Ice
+ability_attributes,168,168,Formula,0x0B,0x46
+ability_attributes,168,168,X,50,8
+ability_attributes,168,168,Inflict status,0x23,0x0E
+ability_attributes,169,169,Range,15,1
+ability_attributes,169,169,Effect area,15,0
+ability_attributes,169,169,Vertical,3,1
+ability_attributes,169,169,Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Silence, Mimic, Targeting","Vertical Tolerance, Weapon Strike, Hit Enemies, Hit Allies, Hit Caster, Silence, Targeting"
+ability_attributes,169,169,Formula,0x0B,0x46
+ability_attributes,169,169,X,0,14
+ability_attributes,169,169,Inflict status,0x24,0x7D
+ability_attributes,16A,16A,Range,15,4
+ability_attributes,16A,16A,Effect area,15,0
+ability_attributes,16A,16A,Vertical,3,0
+ability_attributes,16A,16A,Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Silence, Mimic, Targeting","Weapon Strike, Hit Enemies, Hit Allies, Hit Caster, Silence, Direct, Evadeable, Targeting"
+ability_attributes,16A,16A,Element,none,Fire
+ability_attributes,16A,16A,Formula,0x0B,0x46
+ability_attributes,16A,16A,X,6,12
+ability_attributes,16A,16A,Inflict status,0x24,0x00
+ability_attributes,16B,16B,Range,15,6
+ability_attributes,16B,16B,Effect area,15,6
+ability_attributes,16B,16B,Vertical,3,2
+ability_attributes,16B,16B,Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Silence, Mimic, Targeting","Vertical Fixed, Weapon Strike, Hit Enemies, Hit Allies, Linear Attack, Silence, Evadeable, Targeting"
+ability_attributes,16B,16B,Formula,0x0B,0x46
+ability_attributes,16B,16B,X,16,12
+ability_attributes,16B,16B,Inflict status,0x24,0x00
+ability_attributes,16C,16C,Range,15,2
+ability_attributes,16C,16C,Effect area,15,2
+ability_attributes,16C,16C,Vertical,3,2
+ability_attributes,16C,16C,Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Silence, Mimic, Targeting","Vertical Fixed, Weapon Strike, Hit Enemies, Hit Allies, Linear Attack, Silence, Direct, Evadeable, Targeting"
+ability_attributes,16C,16C,Element,none,Wind
+ability_attributes,16C,16C,Formula,0x0B,0x46
+ability_attributes,16C,16C,X,46,6
+ability_attributes,16C,16C,Inflict status,0x24,0x10
+ability_attributes,16D,16D,Range,15,5
+ability_attributes,16D,16D,Effect area,15,1
+ability_attributes,16D,16D,Vertical,3,2
+ability_attributes,16D,16D,Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Silence, Mimic, Targeting","Weapon Strike, Hit Enemies, Hit Allies, Hit Caster, Silence, Evadeable, Targeting"
+ability_attributes,16D,16D,Element,none,Dark
+ability_attributes,16D,16D,Formula,0x0B,0x46
+ability_attributes,16D,16D,X,37,12
+ability_attributes,16D,16D,Inflict status,0x24,0x00
+ability_attributes,16E,16E,Range,15,0
+ability_attributes,16E,16E,Effect area,15,0
+ability_attributes,16E,16E,Vertical,3,0
+ability_attributes,16E,16E,Flags,"Target Self, Hit Enemies, Hit Allies, Follow Target, Hit Caster, Silence, Mimic, Targeting","Weapon Range, Weapon Strike, Target Self, Hit Enemies, Hit Allies, Hit Caster, Silence, Evadeable, Targeting"
+ability_attributes,16E,16E,Element,none,"Water, Holy"
+ability_attributes,16E,16E,Formula,0x0B,0x46
+ability_attributes,16E,16E,X,135,20
+ability_attributes,16E,16E,Inflict status,0x24,0x00
+ability_jump,18A,Level Jump2 (18A),Horizontal,2,3
+ability_jump,18A,Level Jump2 (18A),Vertical,0,99
+ability_jump,18B,Level Jump3 (18B),Horizontal,3,1
+ability_jump,18B,Level Jump3 (18B),Vertical,0,99
+ability_jump,18C,Level Jump4 (18C),Horizontal,4,1
+ability_jump,18C,Level Jump4 (18C),Vertical,0,99
+ability_jump,18D,Level Jump5 (18D),Horizontal,5,1
+ability_jump,18D,Level Jump5 (18D),Vertical,0,99
+ability_jump,18E,Level Jump8 (18E),Horizontal,8,1
+ability_jump,18E,Level Jump8 (18E),Vertical,0,99
+ability_jump,18F,Vertical Jump2 (18F),Horizontal,0,1
+ability_jump,18F,Vertical Jump2 (18F),Vertical,2,99
+ability_jump,190,Vertical Jump3 (190),Horizontal,0,20
+ability_jump,190,Vertical Jump3 (190),Vertical,3,99
+ability_jump,191,Vertical Jump4 (191),Horizontal,0,1
+ability_jump,191,Vertical Jump4 (191),Vertical,4,1
+ability_jump,192,Vertical Jump5 (192),Horizontal,0,3
+ability_jump,192,Vertical Jump5 (192),Vertical,5,250
+ability_jump,193,Vertical Jump6 (193),Horizontal,0,3
+ability_jump,193,Vertical Jump6 (193),Vertical,6,252
+ability_jump,194,Vertical Jump7 (194),Horizontal,0,3
+ability_jump,194,Vertical Jump7 (194),Vertical,7,254
+ability_jump,195,Vertical Jump8 (195),Horizontal,0,4
+ability_jump,195,Vertical Jump8 (195),Vertical,8,0
+ability_charge,196,Charge+1 (196),CT,4,3
+ability_charge,197,Charge+2 (197),CT,5,4
+ability_charge,19C,Charge+10 (19C),CT,20,2
+ability_charge,19C,Charge+10 (19C),Power bonus,10,0
+ability_charge,19D,Charge+20 (19D),CT,35,1
+ability_charge,19D,Charge+20 (19D),Power bonus,20,255
+ability_effects,028,(Summon Demon) (028),Effect id,0x02B,0x0F6
+ability_effects,02D,02D,Effect id,0x11F,0x0E2
+ability_effects,07B,Negotiate (07B),Effect id,0x076,0x132
+ability_effects,082,Local Quake (082),Effect id,0x07D,0x0E2
+ability_effects,083,Kamaitachi (083),Effect id,0x07E,0x0D4
+ability_effects,084,Demon Fire (084),Effect id,0x07F,0x0D7
+ability_effects,085,Quicksand (085),Effect id,0x080,0x0DB
+ability_effects,086,Sand Storm (086),Effect id,0x081,0x0E9
+ability_effects,089,Lava Ball (089),Effect id,0x084,0x10F
+ability_effects,0B5,Seal (0B5),Effect id,0x0BD,0x14B
+ability_effects,0B8,(Summon Angel) (0B8),Effect id,0x0C0,0x08C
+ability_effects,0CA,Bio (0CA),Effect id,0x0D4,0xFFFF
+ability_effects,0CB,Bio (0CB),Effect id,0x0D5,0xFFFF
+ability_effects,0CC,Bio (0CC),Effect id,0x0D6,0xFFFF
+ability_effects,0CD,Bio 2 (0CD),Effect id,0x0D7,0xFFFF
+ability_effects,0CE,Bio 2 (0CE),Effect id,0x0D8,0xFFFF
+ability_effects,0CF,Bio 2 (0CF),Effect id,0x0D9,0xFFFF
+ability_effects,0D0,Bio 2 (0D0),Effect id,0x0DA,0xFFFF
+ability_effects,0D1,Bio 3 (0D1),Effect id,0x0DB,0xFFFF
+ability_effects,0D2,Bio 3 (0D2),Effect id,0x0DC,0xFFFF
+ability_effects,0D3,Bio 3 (0D3),Effect id,0x0DD,0xFFFF
+ability_effects,0DB,(Teleport 3: Send) (0DB),Effect id,0x0E7,0x086
+ability_effects,0DC,(Teleport 3: Arrive) (0DC),Effect id,0x0E8,0x05F
+ability_effects,0F8,Ice Bracelet (0F8),Effect id,0x184,0x054
+ability_effects,0F9,Fire Bracelet (0F9),Effect id,0x185,0x192
+ability_effects,0FA,Thunder Bracelet (0FA),Effect id,0x186,0x061
+ability_effects,130,Death Sentence (130),Effect id,0x163,0x0CC
+ability_effects,144,Blow Fire (144),Effect id,0x177,0x145
+ability_effects,145,Tentacle (145),Effect id,0x178,0x10C
+ability_effects,150,Tail Swing (150),Effect id,0x183,0x00D
+ability_effects,165,165,Effect id,0x1FE,0x0BE
+ability_effects,166,166,Effect id,0x1FE,0x089
+ability_effects,167,167,Effect id,0x1FE,0x01C
+ability_effects,168,168,Effect id,0x1FE,0x184
+ability_effects,169,169,Effect id,0x1FE,0x0AB
+ability_effects,16A,16A,Effect id,0x1FE,0x011
+ability_effects,16B,16B,Effect id,0x1FE,0x08C
+ability_effects,16C,16C,Effect id,0x1FE,0x083
+ability_effects,16D,16D,Effect id,0x1FE,0x07F
+ability_effects,16E,16E,Effect id,0x1FE,0x0A7
+ability_effects,192,Vertical Jump5 (192),Effect id,0xFFFF,0x0D5
+ability_effects,1A0,Exp (1A0),Effect id,0x001,0x02B
+ability_effects,1A1,Height (1A1),Effect id,0x001,0x0C0
+ability_effects,1A2,Prime Number (1A2),Effect id,0x001,0x0E7
+ability_effects,1A3,5 (1A3),Effect id,0x001,0x0E8
+ability_effects,1BB,1BB,Effect id,0xFFFF,0x0BF
+ability_effects,1C0,Finger Guard (1C0),Effect id,0xFFFF,0x132

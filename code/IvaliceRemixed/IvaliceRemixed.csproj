@@ -1,0 +1,69 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The code half of the Ivalice ReMixed mod: memory patches and hooks for what
+    the FFT mod loader's tables can't express. tools/build_mod.py builds it and
+    copies the DLL into the mod folder.
+
+    Reloaded-II supplies Reloaded.Mod.Interfaces at runtime, and the shared
+    hooks mod (reloaded.sharedlib.hooks) the Reloaded.Hooks interfaces, so they're
+    referenced from your Reloaded-II install and not copied (the template's NuGet
+    packages do the same with ExcludeAssets="runtime"). build_mod.py passes
+    ReloadedDir and ReloadedModsDir.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+    <AssemblyName>IvaliceRemixed</AssemblyName>
+    <RootNamespace>IvaliceRemixed</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Private builds opt in explicitly. Public Release and ordinary Debug builds compile the developer surface out. -->
+    <EnableDeveloperMenu Condition="'$(EnableDeveloperMenu)' == ''">false</EnableDeveloperMenu>
+    <DefineConstants Condition="'$(EnableDeveloperMenu)' == 'true'">$(DefineConstants);DEVELOPER_MENU</DefineConstants>
+    <ReloadedDir Condition="'$(ReloadedDir)' == ''">$(RELOADEDII)</ReloadedDir>
+    <ReloadedModsDir Condition="'$(ReloadedModsDir)' == ''">$(ReloadedDir)\Mods</ReloadedModsDir>
+    <HooksDir>$(ReloadedModsDir)\reloaded.sharedlib.hooks\x64</HooksDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Reloaded.Mod.Interfaces">
+      <HintPath>$(ReloadedDir)\Loader\X64\Reloaded.Mod.Interfaces.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Reloaded.Hooks.Definitions">
+      <HintPath>$(HooksDir)\Reloaded.Hooks.Definitions.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Reloaded.Hooks.ReloadedII.Interfaces">
+      <HintPath>$(HooksDir)\Reloaded.Hooks.ReloadedII.Interfaces.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="IvaliceRemixed.Check" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- From the Event Instruction Upgrade's repo (the code/eiu submodule): the remaster's knowledge both mods share
+         (shipped beside the DLL), and the upgrade's API (its mod exports it; Reloaded-II shares that copy). -->
+    <ProjectReference Include="..\eiu\src\IvaliceCore\IvaliceCore.csproj" />
+    <ProjectReference Include="..\eiu\src\EventInstructionUpgrade.Interfaces\EventInstructionUpgrade.Interfaces.csproj" />
+    <Using Include="IvaliceCore" />
+  </ItemGroup>
+
+  <Target Name="CheckReloadedDir" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="!Exists('$(ReloadedDir)\Loader\X64\Reloaded.Mod.Interfaces.dll')"
+           Text="Set ReloadedDir to your Reloaded-II folder (build with tools/build_mod.py, or pass -p:ReloadedDir=...)." />
+    <Error Condition="!Exists('$(HooksDir)\Reloaded.Hooks.Definitions.dll')"
+           Text="Install Reloaded-II's shared hooks mod (reloaded.sharedlib.hooks; the FFT mod loader depends on it), or pass -p:ReloadedModsDir=..." />
+  </Target>
+
+</Project>

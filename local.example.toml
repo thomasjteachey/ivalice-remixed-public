@@ -1,0 +1,23 @@
+# Copy this to local.toml (gitignored) and point it at your own files.
+
+[inputs]
+# Vanilla US PS1 disc (SCUS-94221): a .7z holding the .bin/.cue, or the .bin itself.
+vanilla_disc = "C:/path/to/Final Fantasy Tactics.7z"
+# The ReMixed patch from FFHacktics (PPF 3.0).
+remixed_ppf = "C:/path/to/FFT ReMixed-v1.2.64.23.ppf"
+
+[tools]
+seven_zip = "C:/Program Files/7-Zip/7z.exe"
+# FF16Tools CLI (https://github.com/Nenkai/FF16Tools) and the FFT mod loader's
+# folder (https://github.com/Nenkai/fftivc.utility.modloader), for the remaster side.
+ff16tools = "C:/path/to/FF16Tools/win-x64/FF16Tools.CLI.exe"
+modloader = "C:/path/to/fftivc.utility.modloader"
+# Optional: the Reloaded-II folder, for compiling the mod's C# part. Defaults to
+# the folder above target.reloaded_mods.
+# reloaded = "C:/path/to/Reloaded-II"
+
+[target]
+# The Ivalice Chronicles install folder.
+tic_dir = "C:/Program Files (x86)/Steam/steamapps/common/FINAL FANTASY TACTICS - The Ivalice Chronicles"
+# Reloaded-II's Mods folder, for `build_mod.py --install`.
+reloaded_mods = "C:/path/to/Reloaded-II/Mods"
