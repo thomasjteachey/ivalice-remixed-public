@@ -1,0 +1,52 @@
+# The Dark Knight on the job menu's second page, without GenericJobs (Patches/JobMenuPages.cs), and roster Dark Knights
+# in the party menus. Run with
+#   python -I tools/quick_test.py --restart --stop tests/quick/dark-knight-page.txt
+# The save's generics David (roster slot 7, a man) and Alexis (slot 8, a woman) are made Dark Knights as a job change
+# leaves them (the roster record's job, +2; graphics 0x9F and 0xA0, ReMixed's art), for the Units screen's portraits.
+# Ramza's job menu (the status screen's Job, the cursor on his Thief, slot 9): down to the grid's bottom row (slot 16),
+# down again past it to the second page (the first page's last row, then the Dark Knight in slot 6), locked, and its
+# requirements (Knight 8, Black Mage 8); down from it back to the first page. Then Ramza is given Knight 8 and Black
+# Mage 8 (his roster record's levels, +0x74, a nibble a job: Knight byte 1's high, Black Mage byte 3's) and the second
+# page shows the Dark Knight open, with ReMixed's icon, and its job change prompt. Each step framed.
+name The Dark Knight's job menu page
+wait world depth=1 state=0 timeout=20
+send poke +0x11A8D7A A0
+send poke +0x11A8FD2 A0
+key ESCAPE wait=1.5
+wait world depth=2 state=1 timeout=10
+shot units
+key F wait=1.5
+key DOWN wait=1
+key F wait=2.5
+shot job-menu
+key DOWN wait=1.5
+key DOWN wait=2.5
+shot page-two-locked
+key F wait=1.5
+shot dark-knight-requirements
+key ESCAPE wait=1.5
+key DOWN wait=2.5
+shot page-one-again
+key ESCAPE times=4 wait=1.2
+wait world depth=1 state=0 timeout=15
+send poke +0x11A7D85 88
+send poke +0x11A7D87 88
+key ESCAPE wait=1.5
+wait world depth=2 state=1 timeout=10
+key F wait=1.5
+key DOWN wait=1
+key F wait=2.5
+key DOWN wait=1.5
+key DOWN wait=2.5
+shot page-two-open
+key F wait=1.5
+shot dark-knight-change
+key ESCAPE times=5 wait=1.2
+wait world depth=1 state=0 timeout=15
+# A roster Dark Knight's own status: the Units screen's second unit, framed.
+key ESCAPE wait=1.5
+wait world depth=2 state=1 timeout=10
+key RIGHT wait=0.8
+key F wait=1.5
+shot second-unit-status
+key ESCAPE times=3 wait=1.2

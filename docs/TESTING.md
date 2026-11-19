@@ -298,7 +298,7 @@ including its unit-selection `flags`; `units` exposes the live job, graphic, pal
 `knight_level`, `black_mage_level`, `bard_level`, `dancer_level` and `dark_knight_level`; `roster` records also have
 `errand` (+0x11E, which the remaster shows as an errand when it isn't 0). `count=N` on an `expect` wants N records so
 (`count=0`: none). An event's opening block can be checked at once, without playing its scene
-(`tests/quick/performer-join.txt`; `river-camp-leave.txt` and `remixed-job-levels.txt` likewise). Screenshots are
+(`tests/quick/performer-join.txt`; `river-camp-leave.txt` and `remixed-job-levels.txt` likewise). The job menu's second page and roster Dark Knights in the party menus: `tests/quick/dark-knight-page.txt` (the roster record's job, +2, poked to 0xA0; a job's level follows its JP, so poking the level nibbles at +0x74 doesn't open a job). Screenshots are
 still for a final visual review, not a prerequisite for these checks.
 
 A battle's in-battle scene is reached without playing to its condition: `send event SCENARIO PHASE` runs that phase of

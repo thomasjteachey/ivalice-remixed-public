@@ -162,6 +162,8 @@ try
         problems += SelfTest.ReflectBounces(game, log);
         problems += SelfTest.GunSkillRules(game, log);
         problems += SelfTest.DragonTechRules(game, log);
+        // Last: its unlock changes the remaster's unlocked-jobs routine, which JobLevelRules checks as it was.
+        problems += SelfTest.JobMenuPagesRules(game, log);
     }
 }
 catch (Exception e)
@@ -5948,6 +5950,31 @@ internal static unsafe class SelfTest
         PackFiles.StandIns.Remove(number);
         RemixedSprites.Given.Remove(graphic);
 
+        // A PSP graphic, the Dark Knight's man (0x9F): the table names a sheet file the archives don't have (880,
+        // unit_psp/), so the game reads the male Squire's in its place; its texture is a stub (0x456), its animation set
+        // a person's.
+        const int psp = 0x9F;
+        uint pspFile = sheets[2 * psp], pspSize = sheets[2 * psp + 1], pspSet = sets[psp];
+        var pspTexture = textures[psp];
+        RemixedSprites.Give(psp, sheet, 0x39A, pspSet);
+        var pspNumber = RemixedSprites.FileBase + psp;
+        Check($"0x9F (sheet file {pspFile}, texture 0x{pspTexture:X}, animation set 0x{pspSet:X8}) given a sheet: file "
+              + $"0x{sheets[2 * psp]:X}, texture 0x{textures[psp]:X}, read in place of file "
+              + $"{PackFiles.StandIns.GetValueOrDefault(pspNumber)} (the male Squire's {sheets[2 * 0x60]})",
+              pspFile == 880 && pspTexture == 0x456 && pspSet == 0x24000000 && sheets[2 * psp] == pspNumber
+              && others[2 * psp] == pspNumber && textures[psp] == 0x39A
+              && PackFiles.StandIns.GetValueOrDefault(pspNumber) == sheets[2 * 0x60] && sheets[2 * 0x60] != pspFile);
+        foreach (var table in new[] { sheets, others })
+            GameImage.Unprotected((nint)(table + 2 * psp), 8, () =>
+            {
+                table[2 * psp] = pspFile;
+                table[2 * psp + 1] = pspSize;
+            });
+        GameImage.Unprotected((nint)(textures + psp), 4, () => textures[psp] = pspTexture);
+        PackFiles.Files.Remove(pspNumber);
+        PackFiles.StandIns.Remove(pspNumber);
+        RemixedSprites.Given.Remove(psp);
+
         // A graphic drawn as another (RemixedSprites.DrawAs, as 0x38 as the remaster's male Bard): 0x3C, Velius's, which
         // nothing of the mod's changes, as 0x82, then put back.
         const int alias = 0x3C, bard = 0x82;
@@ -8146,6 +8173,57 @@ internal static unsafe class SelfTest
                  $"(0x{label - image:X}; {string.Join(" ", info.Select(at => $"0x{at - image:X}"))})" +
                  $"{(menusOk ? "" : ": WRONG")}");
         return (ok ? 0 : 1) + (menusOk ? 0 : 1);
+    }
+
+    /// <summary>
+    /// The Dark Knight's job menu page and ReMixed's unlock for it (<see cref="JobMenuPages"/>): its sites, ReMixed's
+    /// requirement row in the remaster's table, and the unlocked-jobs routine itself (0x348684) on made-up levels.
+    /// </summary>
+    public static int JobMenuPagesRules(Game game, Log log)
+    {
+        var failures = 0;
+        void Check(string what, bool ok)
+        {
+            if (!ok)
+                failures++;
+            log.Info($"self-test: job menu pages, {what}{(ok ? "" : ": WRONG")}");
+        }
+        if (!JobMenuPages.Paging)
+            log.Info($"self-test: job menu pages, installed: {JobMenuPages.Install(game, genericJobsLoaded: false)}");
+        var image = game.Image.ImageStart;
+        var row = (byte*)JobMenuPages.RequirementRowAt;
+        Check($"the Dark Knight's requirement row (0x{JobMenuPages.RequirementRowAt - image:X}) is ReMixed's, "
+              + (row == null ? "none" : Convert.ToHexString(new ReadOnlySpan<byte>(row, 12))),
+              row != null && new ReadOnlySpan<byte>(row, 12).SequenceEqual(JobMenuPages.DarkKnightRequirement));
+        var clear = (byte*)JobMenuPages.UnlockClearAt;
+        var count = (byte*)JobMenuPages.UnlockCountAt;
+        var icon = (byte*)JobMenuPages.IconLimitAt;
+        var rsm = (byte*)JobMenuPages.RsmLoopAt;
+        Check($"the unlock's clearing gone (0x{JobMenuPages.UnlockClearAt - image:X}), 20 jobs from the table "
+              + $"(0x{JobMenuPages.UnlockCountAt - image:X}), the icon id past 24 (0x{JobMenuPages.IconLimitAt - image:X}), "
+              + $"the reactions' jobs to 21 (0x{JobMenuPages.RsmLoopAt - image:X})",
+              clear != null && clear[0] == 0x90 && clear[1] == 0x90 && clear[2] == 0x90 && count != null && count[2] == 0x14
+              && icon != null && icon[0] == 0xEB && icon[1] == 0x02 && rsm != null && rsm[2] == 0x15);
+        // The routine: levels a nibble a job index, high first (Knight 2: byte 1's high; Black Mage 6: byte 3's high).
+        var unlocked = JobLevels.UnlockedFunction;
+        var levels = stackalloc byte[16];
+        var learned = stackalloc byte[0x100];
+        new Span<byte>(learned, 0x100).Clear();
+        int With(params (int At, byte Value)[] set)
+        {
+            new Span<byte>(levels, 16).Clear();
+            foreach (var (at, value) in set)
+                levels[at] = value;
+            return unlocked(levels, 0x80, learned, 0);
+        }
+        var both = With((1, 0x80), (3, 0x80));
+        var shortOne = With((1, 0x80), (3, 0x70));
+        var lions = With((6, 0x88), (7, 0x88));
+        Check($"Knight 8 and Black Mage 8 open the Dark Knight (0x{both:X6}), Black Mage 7 doesn't (0x{shortOne:X6}), "
+              + $"and War of the Lions' row (Geomancer, Dragoon, Samurai, Ninja 8) doesn't (0x{lions:X6})",
+              (both & JobMenuPages.DarkKnightBit) != 0 && (shortOne & JobMenuPages.DarkKnightBit) == 0
+              && (lions & JobMenuPages.DarkKnightBit) == 0);
+        return failures;
     }
 
     private static byte* _fakeItems, _fakeWeapons;

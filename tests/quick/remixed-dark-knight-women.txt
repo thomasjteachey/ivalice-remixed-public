@@ -5,12 +5,23 @@
 # skillset, the Dark Knight unlocked by that row and taught after Mime (Patches/JobLevels.cs). Night Sword (slot 0:
 # 100 JP, 100%) and Summon Demon (slot 2: 300 JP, 100%) always fit, and all of it never does. Before (2026-11-19):
 # the Bard's Sing (0x16) as their primary, which a woman never learns, nothing unlocked past the Chemist, and no Dark
-# Knight abilities. The battle itself crashes about 12 s in (0x216EB4), after these are read.
-name ReMixeds Dark Knight women learn Darkness by their level
+# Knight abilities.
+# They draw as the remaster's woman's Dark Knight, graphic 0xA0, which had no CharShape row and no art: the battle went
+# black and crashed about 12 s in (0x216EB4, a null row's height). Now 0xA0 has a row and draws as ReMixed's 0x37 (its
+# woman's Dark Knight, 37.SPR), with that face (build_mod.py DARK_KNIGHT_GRAPHICS). The shots: the battle 30 s in, and
+# a Dark Knight's turn (its unit card and face) and what it did with it.
+name ReMixeds Dark Knight women learn Darkness by their level and draw
 wait world depth=1 state=0 timeout=20
 scenario 0x342
 wait unit battle_id=0x80 timeout=90
 show units
 expect unit job=0xa0 primary=0xe0 dark_knight_level=8 unlocked&0x8=0x8 dark_knight_learned&0xA00000=0xA00000 count=8
 expect unit job=0xa0 dark_knight_learned=0xffffff count=0
-shot battle
+expect unit job=0xa0 graphic=0xa0 count=8
+wait seconds 30
+shot drawn
+wait unit job=0xa0 turn=1 timeout=300
+wait seconds 3
+shot dark-knight-turn
+wait seconds 15
+shot dark-knight-acted

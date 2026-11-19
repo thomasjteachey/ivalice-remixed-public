@@ -33,6 +33,10 @@ internal static unsafe class RemixedSprites
     internal const uint FileBase = 0x10000;
     internal const int Graphics = 0xAA;
     internal const string Folder = "Sprites";
+    /// <summary>The PSP's graphics (0x9F-0xA9, the Dark Knight's 0x9F and 0xA0 among them): the remaster's sheet table
+    /// names files for them (fftpack 880-890, unit_psp/) that its archives don't have, and its read looks a number up
+    /// unchecked, so a sheet given to one is read in place of the male Squire's (<see cref="StandInGraphic"/>).</summary>
+    internal const int FirstPspGraphic = 0x9F, StandInGraphic = 0x60;
 
     /// <summary>The sheet tables, from the sheet's loader (0x26E750): test eax, eax; lea rcx, [one table];
     /// lea r14, [the other]; cmove r14, rcx; mov ebp, [r14 + r15*8 + 4] (the size to read).</summary>
@@ -109,7 +113,7 @@ internal static unsafe class RemixedSprites
     internal static void Give(int graphic, byte[] sheet, int texture, uint animationSet)
     {
         var number = FileBase + (uint)graphic;
-        PackFiles.StandIns[number] = SheetTable[2 * graphic];
+        PackFiles.StandIns[number] = SheetTable[2 * (graphic >= FirstPspGraphic ? StandInGraphic : graphic)];
         PackFiles.Files[number] = sheet;
         foreach (var table in new[] { (nint)SheetTable, (nint)OtherSheetTable })
         {

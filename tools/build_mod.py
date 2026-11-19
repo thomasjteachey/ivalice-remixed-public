@@ -1085,8 +1085,9 @@ def build_ability_overrides(cfg: dict, scus_old: bytes, scus_new: bytes, empty: 
 
 # The job menu's button bar (the game's UIButtonGuide table: a row per screen and slot, the input action whose icon
 # shows, the UI text, a second icon, and Unknown25 = 1 for the left side). The job menu is screen 1023 (B Back, A
-# Confirm, Job Abilities and Job Summary on the left, X Job Progress); its slot 4 is empty. GenericJobs pages the job
-# grid with up and down past its edge (the Dark Knight on page two), so the slot shows d-pad up and down (actions 33
+# Confirm, Job Abilities and Job Summary on the left, X Job Progress); its slot 4 is empty. The code mod pages the job
+# grid with up and down past its edge (the Dark Knight on page two; Patches/JobMenuPages.cs, from cipherxof's
+# GenericJobs, which does the same when it's installed), so the slot shows d-pad up and down (actions 33
 # menu_up and 34 menu_down) with "Change Page" (UI text 3206), as screen 15003 does.
 JOB_MENU_GUIDE = {"Key": 1023, "Key2": 4, "Unknown8": 33, "UnknownC": 3206, "Unknown14": 34, "Unknown25": 1}
 # The Tavern's roster picker (Dispatch Missions) with its cursor on a unit already picked is screen 5023 (B Remove Unit,
@@ -1123,7 +1124,7 @@ def build_job_menu_guide(cfg: dict) -> str:
     target = MOD_DIR / "FFTIVC" / "data" / "enhanced" / "nxd" / "uibuttonguide.nxd"
     target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy(built, target)
-    return ("the job menu's slot 4: d-pad up and down, \"Change Page\" (for GenericJobs' second page); the Tavern's "
+    return ("the job menu's slot 4: d-pad up and down, \"Change Page\" (for the Dark Knight's page); the Tavern's "
             "roster picker on a picked unit: the confirm button, \"Confirm Units\"")
 
 
@@ -1307,6 +1308,7 @@ EIU_FILES = ["EventInstructionUpgrade.dll", "EventInstructionUpgrade.deps.json",
 SHARED_CODE_FILES = ["IvaliceCore.dll", "IvaliceCore.pdb",
                      "EventInstructionUpgrade.Interfaces.dll", "EventInstructionUpgrade.Interfaces.pdb"]
 CODE_DATA = Path("Data") / "patches.json"  # in the mod folder; read by the DLL at startup
+NOTICES = "THIRD-PARTY-NOTICES.md"  # the licences of code the DLL ports (GenericJobs' MIT), shipped with it
 
 
 def build_code(cfg: dict) -> Path | None:
@@ -4048,7 +4050,8 @@ def add_nxd_rows(cfg: dict, file: str, table: str, rows: dict[int, dict], pack_n
     added = [k for k in rows if k not in have]
     for k in added:
         row = {"Key": k, **rows[k]}
-        db.execute(f'insert into "{table}" ({", ".join(row)}) values ({", ".join("?" for _ in row)})', list(row.values()))
+        names = ", ".join(f'"{c}"' for c in row)  # quoted: some tables' columns have "+" in them (CharShape)
+        db.execute(f'insert into "{table}" ({names}) values ({", ".join("?" for _ in row)})', list(row.values()))
     db.commit()
     db.close()
     ff16tools(cfg, "sqlite-to-nxd", "-i", work / "table.sqlite", "-o", work / "out", "-t", table)
@@ -6040,7 +6043,29 @@ REMIXED_SPRITES = {
     0x5F: "a knight in grey with a red hood (vanilla: a red silhouette, KASANEM.SPR)",
     0x97: "a Lamia, in the Hydras' slot (ReMixed's Hydra family and its Serpentarius draw as Lamias)",
     0x98: "a Tonberry (vanilla: a copy of the Dragon; ReMixed's job 0x98 draws as it)",
+    0x9F: "ReMixed's man's Dark Knight, its 82.SPR (the remaster's Dark Knight's man, with no art; DARK_KNIGHT_GRAPHICS)",
 }
+# The remaster's Dark Knight job (0xA0, DARK_KNIGHT) draws a man as graphic 0x9F and a woman as 0xA0 (0x278EDC), the
+# PSP's numbers, which it has no art for (4,608-byte stub textures, sheets its archives lack: fftpack 880-881,
+# unit_psp/) and no row in CharShape (NXD 0xAE, keyed by graphic, 0x00-0x9E). The per-unit draw 0x216EB4 (from
+# 0x213F14) reads the row's +0x2C (its height) without checking it, so a battle with a Dark Knight in it went black and
+# crashed about 12 s in, at exe+0x217172 (Brave Story's rounds 0x332 and 0x342, ReMixed's only battles with Dark
+# Knights; seen on the PC, 2026-11-19, on every build). GenericJobs (the job menu's second page, docs/release) ships
+# rows, art and faces of its own for them, which the PC's install hasn't. The port draws them as ReMixed does without
+# it: ReMixed's man's Dark Knight is its 82.SPR (it moved the Bard out of 0x82 for it), its woman's its 37.SPR (its
+# job 0x37's), which the mod already gives graphic 0x37. So 0x9F takes ReMixed's 82.SPR (REMIXED_SPRITE_SHEETS) under
+# texture 0x39A, 0x38's own, which nothing draws once 0x38 draws as the Bard (REMIXED_SPRITE_ALIASES), and face 0x5B
+# (a male Squire copy's number, which the remaster's fold never gives); 0xA0 draws as 0x37, its face too; and each gets
+# a CharShape row, a copy of the row of a graphic drawn the same way (DARK_KNIGHT_SHAPES). None of these are the
+# numbers GenericJobs' files take (textures 0x456-0x45E, faces 159-162), so with it installed the two mods' art for
+# a graphic never mixes (ReMixed's sheet and palettes with its textures); its rows merge with these cell by cell.
+DARK_KNIGHT_GRAPHICS = (0x9F, 0xA0)
+DARK_KNIGHT_SHAPES = {0x9F: 0x64, 0xA0: 0x37}  # graphic -> the game's row it copies (the male Knight's, 0x37's)
+# ReMixed's sheet for a graphic of REMIXED_SPRITES that ReMixed draws under another number (else its own BATTLE/XX.SPR).
+REMIXED_SPRITE_SHEETS = {0x9F: 0x82}
+# The remaster's animation sets by graphic (.rdata 0x673300, 4 bytes each, 0xAA of them): BATTLE.BIN's (SPRITE_ANIMATIONS)
+# for 0x00-0x9E, then the PSP's graphics, which ReMixed's BATTLE.BIN hasn't. The build checks the first part matches.
+REMASTER_ANIMATION_SETS, REMASTER_GRAPHICS = 0x673300, 0xAA
 # The texture each graphic's art goes under (its first; the second is the next number), and what the remaster's table
 # (.rdata 0x7151F0) holds there now, which the DLL checks before changing it. 0x5D-0x5F have no texture in the
 # remaster (-1, so it drew their classic dummies, the red stand-ins): 0x5D takes 0x370, which nothing names (a copy of
@@ -6056,14 +6081,16 @@ SPRITE_TEXTURES = {0x11: (0x362, 0x45A), 0x12: (0x368, 0x460), 0x19: (0x366, 0x4
                    0x3A: (0x39E, 0x462), 0x3B: (0x3A0, 0x464), 0x46: (0x3B4, 0x3B4), 0x47: (0x402, 0x466),
                    0x57: (0x3D4, 0x3D4), 0x58: (0x3D6, 0x3D6), 0x59: (0x3D8, 0x3D8), 0x5A: (0x3DA, 0x3DA),
                    0x5D: (-1, 0x370), 0x5E: (-1, 0x3DC), 0x5F: (-1, 0x3DE), 0x97: (0x44E, 0x44E),
-                   0x98: (0x450, 0x450)}
+                   0x98: (0x450, 0x450), 0x9F: (0x456, 0x39A)}
 # ReMixed's graphics whose sheet is one of vanilla's that the remaster draws under another graphic: graphic -> (that
 # graphic, what the remaster's texture table holds for this one now). The DLL points the graphic's sheet and texture at
 # that graphic's, so it draws the remaster's own redraw rather than a scaled copy. ReMixed's 38.SPR is vanilla's
 # GIN_M.SPR, the male Bard, which the remaster draws as 0x82 (ReMixed moved the Bard there to give 0x82 to its Dark
 # Knight); its locked look 0xB4 draws as 0x38 (IvaliceCore's CreateUnit.Graphic). Both are type2 (their animation
-# sets, BATTLE.BIN 0x2D748, the same in the remaster and ReMixed), so 0x38 animates as the Bard does.
-REMIXED_SPRITE_ALIASES = {0x38: (0x82, 0x39A)}
+# sets, BATTLE.BIN 0x2D748, the same in the remaster and ReMixed), so 0x38 animates as the Bard does. The remaster's
+# woman's Dark Knight, 0xA0, draws as ReMixed's 0x37 (DARK_KNIGHT_GRAPHICS), whose animation set (ReMixed's: type1 and
+# type1) is the one the remaster gives 0xA0; the build checks it.
+REMIXED_SPRITE_ALIASES = {0x38: (0x82, 0x39A), 0xA0: (0x37, 0x458)}
 # A graphic's animation set: 4 bytes a graphic in BATTLE.BIN (its SHP, its SEQ, a hover flag and its height), the same
 # for 0x00-0x9E in the remaster's .rdata 0x673300 (RemixedSprites.cs has what the numbers pick). ReMixed changed it
 # for its own art: 0x57 (the dragon) mon and mon, and 0x5A (the hydra) mon and ruka, as vanilla's Hydras, where
@@ -6146,8 +6173,9 @@ def write_remaster_moves(cfg: dict) -> str:
 def write_remixed_sprites(cfg: dict, battle_old: bytes, battle_new: bytes) -> tuple[str, list[list[int]]]:
     """REMIXED_SPRITES from ReMixed's disc: each sheet as Sprites/XX.spr in the mod (the DLL gives the game it in the
     graphic's place, RemixedSprites.cs) and its two textures as system/ffto/g2d/tex_N.bin (the mod loader serves
-    them), with its animation set from BATTLE.BIN (SPRITE_ANIMATIONS). Returns a line for the report and the DLL's
-    data: [graphic, its texture now, its texture, its animation set now (vanilla's), ReMixed's]."""
+    them), with its animation set from BATTLE.BIN (SPRITE_ANIMATIONS). A graphic of REMIXED_SPRITE_SHEETS takes that
+    sheet and its animation set. Returns a line for the report and the DLL's data: [graphic, its texture now, its
+    texture, its animation set now (the remaster's), ReMixed's]."""
     sheets = MOD_DIR / SPRITES_DIR
     textures = MOD_DIR / "FFTIVC" / "data" / "enhanced" / "system" / "ffto" / "g2d"
     if sheets.exists():
@@ -6156,6 +6184,9 @@ def write_remixed_sprites(cfg: dict, battle_old: bytes, battle_new: bytes) -> tu
     textures.mkdir(parents=True, exist_ok=True)
     data, held, redrawn = [], [], []
     remasters = remaster_sprite_sets(cfg)
+    remaster_sets = remaster_animation_sets(cfg, battle_old)
+    # A texture an alias frees (0x38's, which draws as the Bard) is free only while that alias isn't held back.
+    freed = {now: graphic for graphic, (_, now) in REMIXED_SPRITE_ALIASES.items()}
     g2d = WORK / "remaster" / "extract" / "enhanced" / "system" / "ffto" / "g2d.dat"
     if SPRITE_REMASTER_ART and not g2d.exists():
         tic = Path(cfg["target"]["tic_dir"]) / "data" / "enhanced"
@@ -6168,12 +6199,17 @@ def write_remixed_sprites(cfg: dict, battle_old: bytes, battle_new: bytes) -> tu
                 held.append(f"0x{graphic:02X} (the remaster's entries "
                             + ", ".join(f"0x{e:03X}" for e in remasters[graphic]) + " use it)")
                 continue
-            entry = patched.find(f"BATTLE/{graphic:02X}.SPR")
+            source = REMIXED_SPRITE_SHEETS.get(graphic, graphic)
+            entry = patched.find(f"BATTLE/{source:02X}.SPR")
             if entry is None:
-                sys.exit(f"ReMixed's disc has no BATTLE/{graphic:02X}.SPR")
+                sys.exit(f"ReMixed's disc has no BATTLE/{source:02X}.SPR")
             spr = patched.read(entry)
             (sheets / f"{graphic:02X}.spr").write_bytes(spr[:sprites.sheet_length(spr)])
             now, texture = SPRITE_TEXTURES[graphic]
+            owner = freed.get(texture)
+            if owner is not None and owner < 0x80 and remasters.get(owner):
+                sys.exit(f"0x{graphic:02X}'s texture 0x{texture:X} is 0x{owner:02X}'s, which the remaster's entries "
+                         + ", ".join(f"0x{e:03X}" for e in remasters[owner]) + " still draw (SPRITE_TEXTURES)")
             if graphic in SPRITE_REMASTER_ART:
                 theirs = SPRITE_REMASTER_ART[graphic]
                 sector, _ = struct.unpack_from("<II", battle_old, SPRITE_SHEETS + 8 * theirs)
@@ -6187,9 +6223,8 @@ def write_remixed_sprites(cfg: dict, battle_old: bytes, battle_new: bytes) -> tu
                 top, bottom = sprites.textures(spr)
             (textures / f"tex_{texture}.bin").write_bytes(top)
             (textures / f"tex_{texture + 1}.bin").write_bytes(bottom)
-            at = SPRITE_ANIMATIONS + 4 * graphic
-            set_now, = struct.unpack_from("<I", battle_old, at)
-            remixed_set, = struct.unpack_from("<I", battle_new, at)
+            set_now = remaster_sets[graphic]
+            remixed_set, = struct.unpack_from("<I", battle_new, SPRITE_ANIMATIONS + 4 * source)
             data.append([graphic, now, texture, set_now, remixed_set])
     names = ", ".join(f"0x{row[0]:02X}" for row in data)
     sets = ", ".join(f"0x{g:02X} {animation_set_name(now)} -> {animation_set_name(new)}"
@@ -6197,6 +6232,20 @@ def write_remixed_sprites(cfg: dict, battle_old: bytes, battle_new: bytes) -> tu
     line = (f"{len(data)} of ReMixed's graphics ({names}): sheets in {SPRITES_DIR}/, Scale2x textures in g2d/"
             + (f" (but {', '.join(redrawn)})" if redrawn else "") + f", ReMixed's animation sets ({sets})")
     return line + (f"; held back: {'; '.join(held)}" if held else ""), data
+
+
+def remaster_animation_sets(cfg: dict, battle_old: bytes) -> list[int]:
+    """The remaster's animation set by graphic (REMASTER_ANIMATION_SETS), checked against vanilla's BATTLE.BIN for the
+    graphics it has (0x00-0x9E)."""
+    from exe import Exe  # noqa: PLC0415
+    image = Exe(Path(cfg["target"]["tic_dir"]) / "FFT_enhanced.exe")
+    sets = list(struct.unpack("<" + "I" * REMASTER_GRAPHICS,
+                              image.read(REMASTER_ANIMATION_SETS, 4 * REMASTER_GRAPHICS)))
+    vanilla = list(struct.unpack_from("<" + "I" * 0x9F, battle_old, SPRITE_ANIMATIONS))
+    if sets[:0x9F] != vanilla:
+        sys.exit(f"the remaster's animation sets (.rdata 0x{REMASTER_ANIMATION_SETS:X}) aren't vanilla's BATTLE.BIN's: "
+                 "find the table again (RemixedSprites.AnimationSetsPattern)")
+    return sets
 
 
 def animation_set_name(entry: int) -> str:
@@ -6209,20 +6258,49 @@ def animation_set_name(entry: int) -> str:
     return text + (f" (hover {hover}, height 0x{height:X})" if (hover, height) != (0, 0x24) else "")
 
 
-def write_sprite_aliases(cfg: dict) -> tuple[str, list[list[int]]]:
+def write_sprite_aliases(cfg: dict, battle_old: bytes, sprite_data: list[list[int]]) -> tuple[str, list[list[int]]]:
     """REMIXED_SPRITE_ALIASES for the DLL (RemixedSprites.InstallAliases), each unless a battle entry of the remaster's
-    still uses its sprite set. Returns a line for the report and the data: [graphic, its texture now, the graphic it
-    draws as]."""
+    still uses its sprite set. The DLL leaves a graphic's animation set as it is, so each must already animate as the
+    graphic it draws as does (with ReMixed's set where write_remixed_sprites gives one). Returns a line for the report
+    and the data: [graphic, its texture now, the graphic it draws as]."""
     remasters = remaster_sprite_sets(cfg)
+    sets = remaster_animation_sets(cfg, battle_old)
+    for graphic, _, _, _, remixed_set in sprite_data:
+        sets[graphic] = remixed_set
     data, held = [], []
     for graphic, (source, now) in sorted(REMIXED_SPRITE_ALIASES.items()):
         if graphic < 0x80 and remasters.get(graphic):
             held.append(f"0x{graphic:02X} (the remaster's entries "
                         + ", ".join(f"0x{e:03X}" for e in remasters[graphic]) + " use it)")
-        else:
-            data.append([graphic, now, source])
-    line = ", ".join(f"0x{g:02X} as the remaster's 0x{s:02X}" for g, _, s in data) or "none"
-    return line + (f"; held back: {'; '.join(held)}" if held else ""), data
+            continue
+        if sets[graphic] != sets[source]:
+            sys.exit(f"0x{graphic:02X} animates as {animation_set_name(sets[graphic])}, 0x{source:02X}, which it draws "
+                     f"as, as {animation_set_name(sets[source])} (REMIXED_SPRITE_ALIASES)")
+        data.append([graphic, now, source])
+    given = {row[0] for row in sprite_data}
+    line = ", ".join(f"0x{g:02X} as {'ReMixed' if s in given else 'the remaster'}'s 0x{s:02X}" for g, _, s in data)
+    return (line or "none") + (f"; held back: {'; '.join(held)}" if held else ""), data
+
+
+def write_dark_knight_shapes(cfg: dict) -> str:
+    """CharShape (NXD 0xAE) rows for the remaster's Dark Knight graphics (DARK_KNIGHT_GRAPHICS), each a copy of the
+    row of the graphic DARK_KNIGHT_SHAPES names. Returns a line for the report."""
+    db = sqlite3.connect(nxd_sqlite(cfg, "charshape"))
+    columns = [c for _, c, *_ in db.execute('pragma table_info("CharShape")') if c != "Key"]
+    rows = {}
+    for graphic in DARK_KNIGHT_GRAPHICS:
+        like = DARK_KNIGHT_SHAPES[graphic]
+        found = db.execute(f'select {", ".join(chr(34) + c + chr(34) for c in columns)} from "CharShape" where Key = ?',
+                           (like,)).fetchone()
+        if found is None:
+            sys.exit(f"CharShape has no row 0x{like:02X} for 0x{graphic:02X} to copy (DARK_KNIGHT_SHAPES)")
+        rows[graphic] = dict(zip(columns, found))
+    keys = {k for (k,) in db.execute('select Key from "CharShape"')}
+    db.close()
+    if any(g in keys for g in DARK_KNIGHT_GRAPHICS) or max(keys) + 1 != min(DARK_KNIGHT_GRAPHICS):
+        sys.exit("CharShape's keys aren't 0x00-0x9E any more: check DARK_KNIGHT_GRAPHICS")
+    line = add_nxd_rows(cfg, "charshape", "CharShape", rows)
+    return line + " (" + ", ".join(f"0x{g:02X} as 0x{DARK_KNIGHT_SHAPES[g]:02X}" for g in DARK_KNIGHT_GRAPHICS) + ")"
 
 
 # ReMixed's characters' faces (asked 2026-11-12: their speech boxes and unit cards showed the remaster's faces of
@@ -6248,8 +6326,10 @@ REMASTER_FACE_FOLDS = {0x11: 0x17, 0x12: 0x1A, 0x14: 0x30, 0x16: 0x22, 0x1E: 0x3
                        0x58: 0x60, 0x59: 0x60, 0x5A: 0x60, 0x5B: 0x60, 0x5C: 0x60, 0x98: 0x94}
 # ReMixed's graphics whose own number holds a face the remaster still shows for one of its characters (above), so their
 # faces go under numbers the fold never gives (graphics it folds into others): Ashley's 0x34 under 0x14, ReMixed's 0x19
-# under 0x28, its 0x3A under 0x2A and its 0x3B under 0x2C (the shared sprite slots, 2026-11-12).
-FACE_NUMBERS = {0x34: 0x14, 0x19: 0x28, 0x3A: 0x2A, 0x3B: 0x2C}
+# under 0x28, its 0x3A under 0x2A and its 0x3B under 0x2C (the shared sprite slots, 2026-11-12). The remaster's
+# man's Dark Knight, 0x9F, under 0x5B (a male Squire copy's, which the fold sends to 0x60), not its own 159, which
+# GenericJobs ships a face as (DARK_KNIGHT_GRAPHICS).
+FACE_NUMBERS = {0x34: 0x14, 0x19: 0x28, 0x3A: 0x2A, 0x3B: 0x2C, 0x9F: 0x5B}
 
 
 def face_number(graphic: int, given: set[int]) -> int:
@@ -6293,7 +6373,8 @@ def write_remixed_faces(cfg: dict, sprite_data: list[list[int]]) -> tuple[str, l
     given = {row[0] for row in sprite_data}
     with Disc(remixed_bin(cfg)) as patched:
         for graphic in [row[0] for row in sprite_data]:
-            faces = sprites.face_atlas(patched.read(patched.find(f"BATTLE/{graphic:02X}.SPR")), parts)
+            source = REMIXED_SPRITE_SHEETS.get(graphic, graphic)
+            faces = sprites.face_atlas(patched.read(patched.find(f"BATTLE/{source:02X}.SPR")), parts)
             if faces is None:
                 none.append(f"0x{graphic:02X}")
                 continue
@@ -6709,6 +6790,9 @@ def build_name_tables(cfg: dict, renames: dict[str, dict[int, str]], skip: dict[
                                                          every.get(name, {}), skip.get(name, set()), names)
         counts[name] = len(rows)
     jp = write_jp_costs(db, f"{NAME_LISTS['abilities'][0]}-en", costs)
+    counts["Dark Knight's rows"] = write_dark_knight_rows(db)
+    counts["jobs"] = counts["jobs"] or 1  # the job and command tables carry the Dark Knight's rows either way
+    counts["skillsets"] = counts["skillsets"] or 1
     db.commit()
     db.close()
     out_dir = MOD_DIR / "FFTIVC" / "data" / "enhanced" / "nxd"
@@ -6721,6 +6805,119 @@ def build_name_tables(cfg: dict, renames: dict[str, dict[int, str]], skip: dict[
         shutil.copy(built, out_dir / f"{table.lower()}.en.nxd")
     counts["JP costs"] = jp
     return counts
+
+
+# ReMixed's Dark Knight in the job menu (Patches/JobMenuPages.cs, from cipherxof's GenericJobs, which was needed for it
+# before 0.9.22). The remaster's own Dark Knight rows are bare: job 0xA0 has no name, command, icon or help in the job
+# table, its command (Darkness, 224) no icon, its unlock row in generaljob.nxd (20) no JP curve or requirements, and
+# the job help (UiJobAbilityHelp) has no row for it. Here they are ReMixed's: its name, Darkness, an icon drawn from its
+# own sheet (tools/job_icons.py; number 160, past the remaster's 1-24, which the DLL lets through), the generic jobs' JP
+# curve, ReMixed's requirements (Knight 8, Black Mage 8; its row 17) and a help page in the remaster's style from the
+# port's names. Its job art (jobtype) stays the remaster's none: the job menu hides a job's art past Mime anyway.
+DARK_KNIGHT_JOB_ROW = 0xA0
+DARK_KNIGHT_COMMAND = 0xE0
+DARK_KNIGHT_ICON = 160
+DARK_KNIGHT_HELP = 35  # the job help's first free row (the remaster's are 0-34)
+DARK_KNIGHT_SORT = 90  # Job's Unknown15, 200-390 by tens for the generic jobs; 90 as GenericJobs had it on the Deck
+DARK_KNIGHT_UNLOCK_ROW = 20  # generaljob.nxd's rows by job index; the Dark Knight's is 20
+DARK_KNIGHT_REQUIREMENTS = ([2, 6], [8, 8])  # ReMixed's row 17: Knight (index 2) 8, Black Mage (index 6) 8
+DARK_KNIGHT_EQUIPMENT = {  # ReMixed's job 0x5B row (its Dark Knight), as the remaster's help lists equipment
+    "Hands": "Sword/Knight's Sword/Katana/Axe/Flail/Shield", "Head": "Helm", "Body": "Armor/Clothing/Robe",
+    "Accessories": "Shoes/Cloak/Armguard/Armlet/Ring"}
+DARK_KNIGHT_SHOWN = [(105, "Action Ability", 0xA5), (105, "Action Ability", 0xB8), (107, "Support Ability", 0x1D9)]
+
+
+def write_dark_knight_rows(db: sqlite3.Connection) -> int:
+    """The Dark Knight's rows in the job and command name tables (their English database): its name if the remaster
+    has none, Darkness, its icon, its help row and its sort number. Returns the fields changed."""
+    job = db.execute('select Name, "jobcommand+Id", TexturePartsIndex, "uijobabilityhelp+Id", Unknown15 '
+                     'from "Job-en" where Key = ?', (DARK_KNIGHT_JOB_ROW,)).fetchone()
+    if job is None:
+        sys.exit("the remaster's job table has no Dark Knight row (0xA0); see Patches/JobMenuPages.cs")
+    name, command, icon, help_row, sort = job
+    db.execute('update "Job-en" set Name = ?, "jobcommand+Id" = ?, TexturePartsIndex = ?, "uijobabilityhelp+Id" = ?, '
+               'Unknown15 = ? where Key = ?', (name or "Dark Knight", DARK_KNIGHT_COMMAND, DARK_KNIGHT_ICON,
+                                               DARK_KNIGHT_HELP, DARK_KNIGHT_SORT, DARK_KNIGHT_JOB_ROW))
+    db.execute('update "JobCommand-en" set IconId = ? where Key = ?', (DARK_KNIGHT_ICON, DARK_KNIGHT_COMMAND))
+    return sum([not name, command != DARK_KNIGHT_COMMAND, icon != DARK_KNIGHT_ICON, help_row != DARK_KNIGHT_HELP,
+                sort != DARK_KNIGHT_SORT, 1])
+
+
+def dark_knight_help(abilities: dict[int, tuple[str, str]]) -> str:
+    """The Dark Knight's job help in the remaster's layout, from the port's ability names and descriptions."""
+    def head(title: str) -> str:
+        return f"<color=abilityhint_cap_01><icon=104>{title}</color>"
+    lines = [head("Job Overview"), "",
+             " - A knight trained in the dark arts, who draws on unholy power.",
+             " - The job command Darkness enables blade techniques that drain HP or MP, and",
+             "   others that sacrifice the user's own HP to strike harder.",
+             " - Opens once Knight and Black Mage have both reached job level 8.",
+             " - Possesses high physical attack.", "", head("Usable Equipment"), ""]
+    lines += [f" - {slot}: {kinds}" for slot, kinds in DARK_KNIGHT_EQUIPMENT.items()]
+    lines += ["", head("Select Abilities")]
+    for icon, kind, ability in DARK_KNIGHT_SHOWN:
+        name, description = abilities[ability]
+        description = re.sub(r"\s*Requires:.*$", "", description or "").strip()
+        lines += ["", f" <icon={icon}>{kind}: {name}", f"  - {description}"]
+    return "\n".join(lines)
+
+
+def write_dark_knight_page(cfg: dict) -> str:
+    """The Dark Knight's unlock row (generaljob.nxd), its job help (UiJobAbilityHelp) and its two icons. Returns a line
+    for the report. Run after build_name_tables, whose ability names the help uses."""
+    import hashlib
+    import job_icons
+    names_db = sqlite3.connect(WORK / "remaster" / "build" / "names" / "names.sqlite")
+    abilities = {k: (n, d) for k, n, d in names_db.execute(
+        f'select Key, Name, Description from "{NAME_LISTS["abilities"][0]}-en"')}
+    names_db.close()
+
+    def unlock(db: sqlite3.Connection) -> str:
+        curve = db.execute('select RequiredJobExp from "GeneralJob" where Key = 0').fetchone()[0]
+        ids, levels = DARK_KNIGHT_REQUIREMENTS
+        db.execute('update "GeneralJob" set RequiredJobExp = ?, RequiredJobIds = ?, RequiredJobLevels = ? where Key = ?',
+                   (curve, json.dumps(ids), json.dumps(levels), DARK_KNIGHT_UNLOCK_ROW))
+        return f", row {DARK_KNIGHT_UNLOCK_ROW}: the JP curve {curve}, Knight 8 and Black Mage 8"
+    lines = [add_nxd_rows(cfg, "generaljob", "GeneralJob", {}, edit=unlock),
+             add_nxd_rows(cfg, "uijobabilityhelp.en", "UiJobAbilityHelp-en",
+                          {DARK_KNIGHT_HELP: {"DLCFlags": 0, "Comment": None, "Text": dark_knight_help(abilities)}},
+                          pack_name="0004.en.pac")]
+
+    # The icons: drawn, made textures by FF16Tools (cached by picture), with the remaster's Mime's parts renamed.
+    tic = Path(cfg["target"]["tic_dir"]) / "data" / "enhanced"
+    extract = WORK / "remaster" / "extract" / "enhanced"
+    exe = cfg["tools"]["ff16tools"]
+    cache = WORK / "cache" / "job-icons"
+    cache.mkdir(parents=True, exist_ok=True)
+    with Disc(remixed_bin(cfg)) as patched:
+        icons = job_icons.dark_knight_icons(patched.read(patched.find(f"BATTLE/{job_icons.SHEET:02X}.SPR")))
+    for kind, folder in (("j", "job"), ("jc", "job_comm")):
+        size, rgba = icons[kind]
+        template_name = f"{kind}_020_uitx"
+        name = f"{kind}_{DARK_KNIGHT_ICON:03d}_uitx"
+        parts_file = extract / "ui" / "ffto" / "icon" / folder / "textureparts" / f"{template_name}.utexpt"
+        if not parts_file.exists():
+            ff16tools(cfg, "unpack", "-i", tic / "0008.pac", "-f",
+                      f"ui/ffto/icon/{folder}/textureparts/{template_name}.utexpt", "-o", extract)
+        parts = parts_file.read_bytes()
+        if sprites.texture_parts(parts)[0] != f"ui/ffto/icon/{folder}/texture/{template_name}.tex":
+            sys.exit(f"the remaster's {template_name} parts name another texture: check its layout")
+        cached = cache / f"{hashlib.sha1(rgba).hexdigest()}.tex"
+        if not cached.exists():
+            png = cache / f"{name}.png"
+            sprites.write_rgba_png(png, rgba, size, size)
+            subprocess.run([exe, "img-conv", "-i", png], check=True, capture_output=True)
+            if not png.with_suffix(".tex").exists():
+                sys.exit(f"FF16Tools made no texture of {png}")
+            shutil.move(png.with_suffix(".tex"), cached)
+            png.unlink()
+        out = MOD_DIR / "FFTIVC" / "data" / "enhanced" / "ui" / "ffto" / "icon" / folder
+        (out / "texture").mkdir(parents=True, exist_ok=True)
+        (out / "textureparts").mkdir(parents=True, exist_ok=True)
+        shutil.copy2(cached, out / "texture" / f"{name}.tex")
+        (out / "textureparts" / f"{name}.utexpt").write_bytes(parts.replace(template_name.encode(), name.encode()))
+    lines.append(f"icons {DARK_KNIGHT_ICON} (job menu and Darkness) from ReMixed's {job_icons.SHEET:02X}.SPR")
+    return "; ".join(lines)
 
 
 # ReMixed's names for the second Javelin (106) and the second Escutcheon (143): the remaster names both of each alike
@@ -7220,7 +7417,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata. The title screen's plaque shows it (write_title_screen).
-RELEASE_VERSION = "0.9.21"
+RELEASE_VERSION = "0.9.22"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:
@@ -7612,6 +7809,7 @@ def main() -> None:
         print(f"  {'Names (English)':24} " + ", ".join(f"{len(n) if isinstance(n, (list, dict)) else n} {k}"
                                                          for k, n in name_counts.items()))
         print(f"  {'Item names (English)':24} " + write_item_names(cfg))
+        print(f"  {'Dark Knight page':24} " + write_dark_knight_page(cfg))
         print(f"  {'Mission postings':24} " + write_mission_postings(cfg))
         print(f"  {'Options page, reveal':24} " + write_options_page(cfg))
         print(f"  {'Dispatch Missions':24} " + write_dispatch_text(cfg, test_evt))
@@ -7632,10 +7830,13 @@ def main() -> None:
         print(f"  {'Unit sprites':24} " + line)
         line, face_data = write_remixed_faces(cfg, sprite_data)
         print(f"  {'Faces':24} " + line)
-        line, sprite_aliases = write_sprite_aliases(cfg)
+        line, sprite_aliases = write_sprite_aliases(cfg, battle_old, sprite_data)
         print(f"  {'Unit sprites as others':24} " + line)
-        # A graphic drawn as another shows that one's face too (0x38 the Bard's).
-        face_data += [[graphic, REMASTER_FACE_FOLDS.get(source, source)] for graphic, _, source in sprite_aliases]
+        # A graphic drawn as another shows that one's face too (0x38 the Bard's, 0xA0 ReMixed's 0x37's).
+        own_faces = dict((graphic, face) for graphic, face in face_data)
+        face_data += [[graphic, own_faces.get(source, REMASTER_FACE_FOLDS.get(source, source))]
+                      for graphic, _, source in sprite_aliases]
+        print(f"  {'Dark Knight shapes':24} " + write_dark_knight_shapes(cfg))
         print(f"  {'Table list':24} " + update_root_nxl(cfg))
 
     # Patches for the DLL: exe name -> patch name -> data (see code/IvaliceRemixed/Patcher.cs).
@@ -7662,6 +7863,7 @@ def main() -> None:
     if code and shipped:
         for name in CODE_FILES + SHARED_CODE_FILES:
             shutil.copy2(code / name, MOD_DIR / name)
+        shutil.copy2(ROOT / NOTICES, MOD_DIR / NOTICES)
         EIU_DIR.mkdir(parents=True, exist_ok=True)
         for name in EIU_FILES + SHARED_CODE_FILES:
             shutil.copy2(code / name, EIU_DIR / name)
@@ -7747,6 +7949,7 @@ def code_only(cfg: dict, install_now: bool) -> None:
     EIU_DIR.mkdir(parents=True, exist_ok=True)
     for name in CODE_FILES + SHARED_CODE_FILES:
         shutil.copy2(code / name, MOD_DIR / name)
+    shutil.copy2(ROOT / NOTICES, MOD_DIR / NOTICES)
     for name in EIU_FILES + SHARED_CODE_FILES:
         shutil.copy2(code / name, EIU_DIR / name)
     print(f"Wrote code artifacts to {MOD_DIR.relative_to(ROOT)} and {EIU_DIR.relative_to(ROOT)}")

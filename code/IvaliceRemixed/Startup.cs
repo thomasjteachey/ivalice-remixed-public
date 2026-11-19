@@ -110,6 +110,16 @@ public class Startup : IMod
             {
                 log.Error($"fast-forward: no toggle, held as the game has it ({e.Message})");
             }
+            try
+            {
+                var genericJobs = loader.GetActiveMods().Any(m =>
+                    string.Equals(m.Generic.ModId, Patches.JobMenuPages.GenericJobsModId, StringComparison.OrdinalIgnoreCase));
+                log.Info($"job menu: {Patches.JobMenuPages.Install(game, genericJobs)}");
+            }
+            catch (Exception e)
+            {
+                log.Error($"job menu: no page for the Dark Knight ({e.Message})");
+            }
             TestRecorder.Install(game);
 #if DEVELOPER_MENU
             // Private builds only: the explicit MSBuild property supplies this symbol, and a marker gates it again.

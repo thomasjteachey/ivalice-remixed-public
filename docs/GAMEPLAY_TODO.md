@@ -5,7 +5,7 @@ is, and what it waits on. The technical details (what ReMixed's code does, where
 [MECHANICS.md](MECHANICS.md) and [REMASTER.md](REMASTER.md); data held back is in
 [the build report](generated/mod-build.md).
 
-**Progress: 100% of gameplay** (106 done, 1 open: 1 small, 0 medium, 0 large). Worked out from this list by
+**Progress: 98% of gameplay** (106 done, 2 open: 1 small, 1 medium, 0 large). Worked out from this list by
 `python -I tools/todo_progress.py`, open items weighted by size (small 1, medium 3, large 15) and done ones at 2 each,
 and updated with every change to the list. Everything outside the story and display ports is ported or settled
 (the formulas ReMixed rewrote in place were the last, 2026-11-12; ReMixed's own battles writing their units back,
@@ -449,7 +449,19 @@ the Lionel scene's event art and Two Shots have sessions of their own):
   learns from it like any other job, and those units fight with Darkness: the five men know all of it (ReMixed gives
   them its whole set), the eight women what their level buys (Night Sword and Summon Demon always, the rest by
   chance). Seen in the hidden PC game (2026-11-19, `tests/quick/remixed-dark-knight-men.txt` and `-women.txt`). Not
-  seen: a Dark Knight using them, as both rounds crash as their battle starts drawing (a problem of their own). *medium*
+  seen: a Dark Knight using them, as both rounds crashed as their battle started drawing (fixed below). *medium*
+- [x] Brave Story's two Dark Knight rounds went black and closed the game about 12 seconds into their battle (found
+  2026-11-19, on every build): the remaster draws its Dark Knights with sprite numbers it has no art and no shape for,
+  so its battle drawing read a shape that isn't there. GenericJobs, the mod that adds the Dark Knight's job-menu page,
+  ships its own art for them, which a game without it doesn't have. They now draw with ReMixed's own Dark Knight
+  sprites and faces, the men in ReMixed's horned armour, the women in its skull helm, with GenericJobs or without it
+  (the port's art takes over from GenericJobs' for these two, as ReMixed's look). How a round starts doesn't matter:
+  its units and their drawing are the same either way. Seen in the hidden PC game (2026-11-19, without GenericJobs):
+  both rounds play on for minutes, a man's and a woman's turn with their faces on the unit card, a move and an action
+  (`tests/quick/remixed-dark-knight-men.txt`, 5 minutes, and `-women.txt`), and a player's Dark Knight, a man and a
+  woman made so by a job change, in a random battle, the formation screen and their turns
+  (`tests/quick/party-dark-knight-man.txt` and `-woman.txt`). Not seen: on the Deck with GenericJobs, and reached
+  from the round before (below). *small*
 - [x] A performer's song through another action (ported 2026-11-19): in ReMixed a performer that takes an instant
   action (an item, an attack) goes on performing, the song kept and given back after the action (seen on the PS1: a
   Potion, then Battle Song landing again). A Math Skill ends the performance, and a spell that charges replaces it, as
@@ -591,6 +603,24 @@ Reported by a player:
   Boco's screens in the thanks scene, which goes on over its map (`araguay-thanks-join-screen.txt`), Luso's at Mandalia
   (`mandalia-luso-join-screen.txt`) and turning him down (`mandalia-luso-declined.txt`). Not seen yet: Zalbag's and the
   chapter-3 branch's. *small*
+- [ ] Brave Story's rounds handing on in the game: its second round started on its own, with its units downed, fires
+  its victory, then goes on (one of its units up again) and never loads the third (seen on the PC, 2026-11-19;
+  `tests/quick/brave-story-round-handoff.txt`, not passing). The ten-round chain hasn't been seen working in the
+  game yet. *medium*
+- [x] The Dark Knight's unit card showed no job name without GenericJobs: the remaster's job table has no name for its
+  Dark Knight (nor its command), which GenericJobs filled (seen on the PC, 2026-11-19, on both Brave Story rounds'
+  Dark Knights). The port now gives it its name, Darkness and its icon itself (below, the job menu's page).
+- [x] The Dark Knight's job menu page without GenericJobs (asked 2026-11-19: the mod needed cipherxof's GenericJobs
+  installed for it). The mod pages the job menu itself, from GenericJobs' MIT code for the Dark Knight alone (not its
+  Onion Knight, its art or its fixes for the remaster's own Dark Knight abilities): scroll down past the grid's last
+  row for the second page, the first page's last row and then the Dark Knight. It opens by ReMixed's rule, Knight 8
+  and Black Mage 8 (War of the Lions' 20 kills and six jobs before), and has its name, Darkness, the generic jobs'
+  JP curve, a job help page and icons drawn from ReMixed's own Dark Knight sheet. With GenericJobs still installed
+  the mod leaves the page to it and keeps ReMixed's rule. Checked offline (the unlock on made-up levels) and seen in
+  the hidden PC game without GenericJobs (2026-11-19, `tests/quick/dark-knight-page.txt`): the second page, the
+  Dark Knight locked with ReMixed's requirements, back to the first page, and roster Dark Knights in ReMixed's
+  armour with "Dark Knight", Darkness and their icons. Not seen: the slot opened (a poked level doesn't open it;
+  levels follow JP). *medium*
 
 
 ReMixed's in-place patches are all reviewed: BATTLE.BIN, SCUS, WORLD and the EVENT overlays (analysis/
@@ -1291,7 +1321,7 @@ In order:
 
 ## Done
 
-- The Dark Knight in the job menu, through cipherxof's GenericJobs (a second page with the Dark Knight and Onion Knight), with d-pad up and down and "Change Page" in the job menu's button bar (the game's UIButtonGuide table, screen 1023's slot 4). Seen on the Deck (2026-11-04).
+- The Dark Knight in the job menu on a second page of its own (the mod's since 2026-11-19, from cipherxof's GenericJobs before), with d-pad up and down and "Change Page" in the job menu's button bar (the game's UIButtonGuide table, screen 1023's slot 4). Seen on the Deck with GenericJobs (2026-11-04).
 - Improved Level Scaling's default, deployed units only: the remaster builds the enemies while the formation screen is
   still up (seen on the Deck), so at a battle's first countdown each enemy that scaled with the roster's party level
   gets a level from the deployed units' highest instead, its stats redone by the game's own steps (base stats,

@@ -1,0 +1,26 @@
+# A player's Dark Knight, a man, in battle (no GenericJobs; run with --restart --location 24 --stop). The remaster draws
+# a generic of job 0xA0 as graphic 0x9F (a woman 0xA0), which had no CharShape row and no art: any battle with one
+# went black and crashed about 12 s in (0x216EB4). The port gives 0x9F ReMixed's man's Dark Knight (its 82.SPR) and a
+# row (build_mod.py DARK_KNIGHT_GRAPHICS). Here the save's generic David (roster slot 7, a man) is made a Dark Knight as
+# a job change leaves him (the roster record's job, +2) with a Long Sword (0x14) in his right hand (roster +0x14:
+# Darkness wants a sword, and the formation stops on its warning without one), and copied into slot 0 too, as the
+# formation list's order (it places the first) isn't the slots' (David came first here); then a random battle on
+# Mandalia Plains, where his unit is made from the roster, not from battle data. The shots: he stands on the field
+# 20 s in, then his turn (the AI plays it) with his face on the unit card.
+# The PC's test mode (RecordAndAutoBattle) gives the party to the AI as guests, so the unit is found by its job.
+name A player's Dark Knight, a man, draws in battle
+wait world depth=1 state=0 timeout=20
+send poke +0x11A8D7A A0
+send poke +0x11A8D8C 14 00
+copy roster 7 0
+key RETURN
+wait log "reveal treasures: map" press=RETURN every=3 timeout=180
+formation units=1
+wait unit job=0xa0 present=1 timeout=60
+show units
+expect unit present=1 job=0xa0 graphic=0x9f count=1
+wait seconds 20
+shot placed
+wait unit job=0xa0 present=1 turn=1 timeout=240
+wait seconds 3
+shot turn

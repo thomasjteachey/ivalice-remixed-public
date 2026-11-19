@@ -4,23 +4,22 @@ The mod's page on Nexus Mods: https://www.nexusmods.com/finalfantasytacticstheiv
 (published 2026-11-14 with 0.9.1; the Event Instruction Upgrade has its own page, mod 186). Its text, ready to paste. Nexus's
 description editor takes BBCode. ReMixed's author, Nyzer, gave his permission on 2026-11-12 ("Sure, go nuts", in reply to
 the user on Discord); the credits link ReMixed's thread on FFHacktics.
-Written for release 0.9.21 (2026-11-19); update the "What's in it" and "Not ported yet" lists from
+Written for release 0.9.22 (2026-11-19); update the "What's in it" and "Not ported yet" lists from
 [GAMEPLAY_TODO.md](../GAMEPLAY_TODO.md) for each release.
 
 ## Page fields
 
 - **Name:** Ivalice ReMixed
 - **Category:** Overhauls (or Gameplay)
-- **Version:** 0.9.21
+- **Version:** 0.9.22
 - **Language:** English
 - **Requirements** (Nexus's requirements tab):
   - FFT Mod Loader by Nenkai: https://www.nexusmods.com/finalfantasytacticstheivalicechronicles/mods/4
   - Reloaded-II (the mod manager the loader runs in; linked from the loader's page)
   - Event Instruction Upgrade, the port of Xifanie's PS1 event hack that ReMixed's events need: its own Nexus page
     (https://www.nexusmods.com/finalfantasytacticstheivalicechronicles/mods/186), see [nexus-page-eiu.md](nexus-page-eiu.md)
-  - cipherxof's Dark Knight and Onion Knight (Generic), "GenericJobs" (https://www.nexusmods.com/finalfantasytacticstheivalicechronicles/mods/34, on Nexus as TriggerHappy;
-    https://github.com/cipherxof/FFTGenericJobs): it adds the job menu's second page, where the Dark Knight appears.
-    Listed as a requirement on Nexus (since 2026-11-15) so the download popup names it; only the Dark Knight needs it
+  - (Until 0.9.21 also cipherxof's Dark Knight and Onion Knight (Generic) for the Dark Knight's job menu page; from
+    0.9.22 the mod has that page itself, so take it off the requirements tab.)
 - **Brief overview** (at most 350 characters):
 
   > An unofficial port of The Lion War ReMixed to The Ivalice Chronicles: ReMixed's balance, battle rules and Extra
@@ -40,7 +39,7 @@ All credit for ReMixed's design goes to its authors (see Credits). This port is 
 [list]
 [*][b]ReMixed's balance:[/b] its jobs, skillsets, abilities, items and random battles, with its names and descriptions.
 [*][b]ReMixed's battle rules:[/b] its damage formulas and support abilities; Brave lowering the damage a unit takes; knockback; hitting bodies and shooting past allies; Move-Find's items; stolen equipment coming back after the battle; enemy levels that scale to your deployed units; paying before a battle to have its hidden items marked.
-[*][b]The Dark Knight[/b] as ReMixed has it (its gear, skills and unlock), for men and women. To pick it in the job menu, install [url=https://www.nexusmods.com/finalfantasytacticstheivalicechronicles/mods/34]Dark Knight and Onion Knight (Generic)[/url] too: it adds the job menu's second page, where the Dark Knight is. The rest of the mod works without it.
+[*][b]The Dark Knight[/b] as ReMixed has it (its gear, skills and unlock: Knight and Black Mage at level 8), for men and women, on the job menu's second page: scroll down past the last row. No other mod is needed for it.
 [*][b]Extra Options[/b], as in ReMixed: permadeath, JP and EXP rates, spillover JP, JP refunds, a victory bonus, the Nemesis System (downed enemies come back by name), back attacks, Brave and damage, knockback, guest control, poaching, MP and casting options, zodiac compatibility, enemy power and levels, job levels and rare equipment. Set them under Configure Mod in Reloaded-II for new saves, and for each save on the ReMixed tab of the game's Settings.
 [*][b]Missions:[/b] all 31 of ReMixed's Rendezvous battles, Mirror Match too, posted under the Tavern's own Missions button as the story unlocks them, each with ReMixed's scenes and lines; the confirm button on a posting asks whether to accept it. A won mission spins ReMixed's Treasure Wheel.
 [*][b]Side chapter 1-A[/b] (Agrias's story): offered at the end of chapter 1, as in ReMixed; declining it, or finishing it, goes on to chapter 2. Its battles with Bryn and Lorne along deploy ReMixed's second squad, six of your units in all.
@@ -67,8 +66,9 @@ All credit for ReMixed's design goes to its authors (see Credits). This port is 
 [size=4][b]Installation[/b][/size]
 [list=1]
 [*]Set up Reloaded-II and the FFT Mod Loader (see the loader's page and Nenkai's guide: https://nenkai.github.io/ffxvi-modding/modding/installing_mods_fft).
-[*]Download the [url=https://www.nexusmods.com/finalfantasytacticstheivalicechronicles/mods/186]Event Instruction Upgrade[/url] (the port of Xifanie's PS1 event hack that ReMixed's scenes are written for) and this mod, and drag both zips onto Reloaded-II's window. For the Dark Knight, add [url=https://www.nexusmods.com/finalfantasytacticstheivalicechronicles/mods/34]Dark Knight and Onion Knight (Generic)[/url] the same way and enable it too.
+[*]Download the [url=https://www.nexusmods.com/finalfantasytacticstheivalicechronicles/mods/186]Event Instruction Upgrade[/url] (the port of Xifanie's PS1 event hack that ReMixed's scenes are written for) and this mod, and drag both zips onto Reloaded-II's window.
 [*]Enable the FFT Mod Loader and Ivalice ReMixed for FFT_enhanced.exe. The Event Instruction Upgrade loads with it; you don't have to tick it. If Reloaded-II asks to download a missing library (Reloaded's shared hooks), let it.
+[*]If you added Dark Knight and Onion Knight (Generic) for an earlier version, disable it in Reloaded-II: the Dark Knight's page is part of this mod now, and that mod's art replaces some of this one's.
 [*]Optionally, set the Extra Options: right-click Ivalice ReMixed, Configure Mod.
 [*]Start the game through Reloaded-II and begin a new game.
 [/list]
@@ -83,16 +83,16 @@ Untick Ivalice ReMixed in Reloaded-II. Its saves stay in their own folder.
 [*]Xifanie: the Event Instruction Upgrade, the PS1 event hack ReMixed's scenes are written for (ported as its own mod: [url=https://www.nexusmods.com/finalfantasytacticstheivalicechronicles/mods/186]Event Instruction Upgrade[/url])
 [*]Nenkai: the FFT Mod Loader and FF16Tools
 [*]The FFHacktics wiki and tools (FFTPatcher by Glain and others)
-[*]cipherxof (TriggerHappy on Nexus): [url=https://www.nexusmods.com/finalfantasytacticstheivalicechronicles/mods/34]Dark Knight and Onion Knight (Generic)[/url], the job menu's second page
+[*]cipherxof (TriggerHappy on Nexus): the job menu's second page, ported from the code of [url=https://github.com/cipherxof/FFTGenericJobs]GenericJobs[/url] (MIT licence) for the Dark Knight
 [/list]
 ```
 
 ## File (the upload)
 
-- **File:** `mod/release/nexus/IvaliceReMixed-0.9.21.zip`: only ReMixed's folder, cut from
-  `mod/release/IvaliceReMixed-0.9.21.zip` (the upgrade's folder goes up on its own page; never the other zips in
+- **File:** `mod/release/nexus/IvaliceReMixed-0.9.22.zip`: only ReMixed's folder, cut from
+  `mod/release/IvaliceReMixed-0.9.22.zip` (the upgrade's folder goes up on its own page; never the other zips in
   `mod/steam-deck/`, which are other people's mods)
-- **Name:** Ivalice ReMixed 0.9.21
+- **Name:** Ivalice ReMixed 0.9.22
 - **Category:** Main file
 - **Description:** Drag onto Reloaded-II with the Event Instruction Upgrade. Needs the FFT Mod Loader. Enhanced mode.
 

@@ -1,0 +1,20 @@
+# Brave Story's Dark Knight round reached the way the mission plays it, round by round (build_mod.py MISSION_ROUNDS):
+# its second round (0x331, ReMixed's 0x0B9) started, its enemies downed, and its conditions handing on to the third
+# (0x332, ReMixed's 0x0BA), whose five Dark Knights (the remaster's graphic 0x9F) used to black the battle out and crash
+# it about 12 s in, as the round started on its own did. A round started on its own has no party, so `defeat` downs
+# all its units. Its battle logs no condition set as it starts; the level scaling's line says it has begun.
+# NOT PASSING YET (2026-11-19, two runs): after `defeat` the round's condition set 1 fires at once, but the round goes
+# on (ReMixed's 0x19, "Rapha", was standing again and kept taking turns) and the third round never loads in 240 s. The
+# round chain itself hasn't been seen in the game (GAMEPLAY_TODO.md, Brave Story's first round); this case is where to
+# start on it. The Dark Knight round is checked started on its own (remixed-dark-knight-men.txt).
+name Brave Story hands its second round on to the Dark Knights
+wait world depth=1 state=0 timeout=20
+scenario 0x331
+wait log "level scaling: the battle" timeout=120
+wait seconds 10
+shot second-round
+defeat
+wait unit job=0xa0 graphic=0x9f timeout=240 press=RETURN every=3
+show units
+wait seconds 30
+shot third-round
