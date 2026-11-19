@@ -1,0 +1,37 @@
+# A performer's song goes on through an instant action (ReMixed's persistent performances, seen on the PS1 2026-11-18:
+# Battle Song, a Potion, the song back and landing again). Run with
+#   python -I tools/quick_test.py --restart --location 24 --stop tests/quick/performance-through-item.txt
+# A random battle on Mandalia Plains (Enter on the field), the party kept the player's (the PC's settings let the AI
+# play it), one unit placed and given Sing (0x16) as its secondary, Battle Song (0x059, Sing's fourth: bit 0x10 of the
+# Bard's first learned byte, +0xD5) and Don't Move (+0x65 bit 0x08, and its innate copy +0x5B), so each act ends its
+# turn without the menus (F confirms the facing). Its first turn sings; its second uses a Potion on itself (item 0xF0,
+# ability 0x170): the mod keeps the song through it (the queue's reset and the action's start leave Performing),
+# gives it back once the turn is over, and the song lands again. Its third turn opens the command menu with the song
+# still going: no "The unit is performing" notice (the remaster's 0x8002), as in ReMixed.
+name A performer's song goes on through a Potion
+send testmode record
+wait world depth=1 state=0 timeout=20
+key RETURN
+wait log "reveal treasures: map" press=RETURN every=3 timeout=180
+formation units=1
+poke unit player=1 present=1 offset=0x13 hex=16
+poke unit player=1 present=1 offset=0xD5 or=10
+poke unit player=1 present=1 offset=0x5B or=08
+poke unit player=1 present=1 offset=0x65 or=08
+send act 16 59 self
+wait log "harness: unit \d+ used 0x059" timeout=240
+wait unit player=1 present=1 ability=0x059 statuses=1 timeout=10
+shot singing
+send act 06 170 self
+wait log "performances: unit \d+ keeps performing 0x059 \(countdown \d+\) through 0x170" press=F every=2 timeout=300
+wait log "harness: unit \d+ used 0x170" timeout=30
+wait log "performances: unit \d+ goes on performing as 0x170 starts" timeout=30
+wait log "performances: unit \d+'s song 0x059 is back, countdown \d+" press=F every=2 timeout=60
+wait unit player=1 present=1 ability=0x059 statuses=1 timeout=10
+shot back
+wait log "performances: unit \d+'s song 0x059 goes on after its instant action" timeout=180
+wait seconds 1.5
+shot landing
+wait unit player=1 present=1 turn=1 statuses=1 timeout=180
+wait seconds 3
+shot no-notice

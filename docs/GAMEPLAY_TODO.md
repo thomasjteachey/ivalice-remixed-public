@@ -5,7 +5,7 @@ is, and what it waits on. The technical details (what ReMixed's code does, where
 [MECHANICS.md](MECHANICS.md) and [REMASTER.md](REMASTER.md); data held back is in
 [the build report](generated/mod-build.md).
 
-**Progress: 97% of gameplay** (106 done, 3 open: 1 small, 2 medium, 0 large). Worked out from this list by
+**Progress: 100% of gameplay** (106 done, 1 open: 1 small, 0 medium, 0 large). Worked out from this list by
 `python -I tools/todo_progress.py`, open items weighted by size (small 1, medium 3, large 15) and done ones at 2 each,
 and updated with every change to the list. Everything outside the story and display ports is ported or settled
 (the formulas ReMixed rewrote in place were the last, 2026-11-12; ReMixed's own battles writing their units back,
@@ -440,16 +440,26 @@ the Lionel scene's event art and Two Shots have sessions of their own):
   campaign's. Elias's join also set a roster byte ReMixed never reads back, which the remaster shows as an errand; it's
   left out. A save that's already past the river camp is put right as it loads (Bryn and Lorne leave, their gear back
   in the inventory; Elias back from his "errand"). Checked offline; not seen in the game yet. *small*
-- [ ] ReMixed's Dark Knight enemies may know none of their own skills: ReMixed teaches a unit made from battle data
-  the abilities of each job by its level, its Dark Knight among them, and the remaster's step stops before its Dark
-  Knight, so a Dark Knight enemy's Darkness list could be empty. Found reading the code; to see in one of those
-  battles, then teach it as ReMixed does. *medium*
-- [ ] A performer's song through another action: in ReMixed a performer that takes an instant action (an item, an
-  attack) goes on performing, the song kept and given back after the action (seen on the PS1: a Potion, then Battle
-  Song landing again). A Math Skill ends the performance, and a spell that charges replaces it, as in vanilla. That's
-  why ReMixed took out its "Performing" notice at the start of a performer's turn. In the port the song still stops,
-  so the remaster's notice ("Using another ability will cancel the performance") is still true and stays until the
-  song is kept the same way, the way a rider's charge is kept while its mount acts. *medium*
+- [x] ReMixed's Dark Knight enemies knew none of their own skills: ReMixed teaches a unit made from battle data the
+  abilities of each job by its level, its Dark Knight among them, and the remaster's step stopped before the Dark
+  Knight (and never opened the job for these units). On top of that the two Brave Story rounds that field Dark Knights
+  gave them the wrong command: five men the remaster's own story skillset, eight women the Bard's songs, which a woman
+  never learns. Seen in the hidden PC game (2026-11-19) before the fix: no Dark Knight skills on any of the 13. Now,
+  as in ReMixed, the Dark Knight opens when a unit's Knight and Black Mage reach 8, gets its JP from its level and
+  learns from it like any other job, and those units fight with Darkness: the five men know all of it (ReMixed gives
+  them its whole set), the eight women what their level buys (Night Sword and Summon Demon always, the rest by
+  chance). Seen in the hidden PC game (2026-11-19, `tests/quick/remixed-dark-knight-men.txt` and `-women.txt`). Not
+  seen: a Dark Knight using them, as both rounds crash as their battle starts drawing (a problem of their own). *medium*
+- [x] A performer's song through another action (ported 2026-11-19): in ReMixed a performer that takes an instant
+  action (an item, an attack) goes on performing, the song kept and given back after the action (seen on the PS1: a
+  Potion, then Battle Song landing again). A Math Skill ends the performance, and a spell that charges replaces it, as
+  in vanilla. That's why ReMixed took out its "Performing" notice at the start of a performer's turn. The port now
+  does the same: the song and how long it has left wait through the action and come back as the turn ends, and the
+  remaster's notice ("The unit is performing. Using another ability will cancel the performance.") is gone. Equip
+  Change still ends a performance (in ReMixed it leaves a song that never lands). Seen in the hidden PC game
+  (`tests/quick/performance-through-item.txt`, 2026-11-19): Ramza sang Battle Song, used a Potion with two ticks of
+  it left, had it back in the turn order right after, it landed again, and his next turn's menu came with no notice.
+  *medium*
 - [ ] Event speech boxes that name a portrait rather than a unit may show Ashley's face for Agrias (and ReMixed's
   character on Rafa's second sprite set for Rafa). ReMixed redrew part of the event portraits, so which number means
   whom there, and whether any of the mod's events name one, needs checking before that table is changed. *small*

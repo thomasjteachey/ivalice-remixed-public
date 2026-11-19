@@ -538,6 +538,18 @@ internal static unsafe class Rules
                 game.Log.Error($"rules: riding's mount actions not applied: {e.Message}");
             }
         }
+        if (rules.Remove("persistent-performances"))
+        {
+            try
+            {
+                Performances.Install(game);
+                enabled.Add("persistent performances: a performer's song goes on through an instant action (Math Skill ends it), and the turn-start \"performing\" notice is gone");
+            }
+            catch (Exception e)
+            {
+                game.Log.Error($"rules: persistent performances not applied: {e.Message}");
+            }
+        }
         if (rules.Remove("riding-boarding"))
         {
             try
@@ -1359,6 +1371,14 @@ internal static unsafe class Rules
         {
             RidingActions.Failed("the queue", e);
         }
+        try
+        {
+            Performances.BeforeQueue(record, queued, commit);
+        }
+        catch (Exception e)
+        {
+            Performances.Failed("the queue", e);
+        }
         var queuedOk = _queueAction(record, queued, commit);
         if (ct != null)
         {
@@ -1373,6 +1393,14 @@ internal static unsafe class Rules
         catch (Exception e)
         {
             RidingActions.Failed("the queue", e);
+        }
+        try
+        {
+            Performances.AfterQueue(record, queued, commit, queuedOk);
+        }
+        catch (Exception e)
+        {
+            Performances.Failed("the queue", e);
         }
         try
         {

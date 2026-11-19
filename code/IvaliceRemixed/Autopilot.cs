@@ -427,7 +427,12 @@ internal static unsafe class Autopilot
             var entry = Patches.Nemesis.GetVariable(0x32);
             var index = entry < 0x200 ? entry & 0x7F : entry - 0x200;
             var data = buffer + index * 0x280;
-            Say($"var 0x32 = 0x{entry:X}; its loaded data (buffer 0x{(nint)buffer:X}): "
+            // Right after a scenario starts the buffer can still be another file's or none, and an access violation
+            // isn't an exception .NET can catch: it ended the game (a Depths scenario's units asked for at once).
+            if (!Harness.Readable((nint)data, 0x280))
+                Say($"var 0x32 = 0x{entry:X}; its data isn't loaded (buffer 0x{(nint)buffer:X})");
+            else
+                Say($"var 0x32 = 0x{entry:X}; its loaded data (buffer 0x{(nint)buffer:X}): "
                       + string.Join(" ", Enumerable.Range(0, 16).Where(u => data[u * 40] != 0)
                           .Select(u => $"{data[u * 40]:X2}/{data[u * 40 + 10]:X2}")));
         }

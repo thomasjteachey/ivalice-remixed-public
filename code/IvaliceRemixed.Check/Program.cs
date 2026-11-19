@@ -112,6 +112,7 @@ try
         problems += SelfTest.ErrandRules(game, log);
         problems += SelfTest.RidingBoardingRules(game, log);
         problems += SelfTest.RidingActionRules(game, log);
+        problems += SelfTest.PerformanceRules(game, log);
         problems += SelfTest.HittingBodyRules(game, log);
         problems += SelfTest.ArcObstacleRules(game, log);
         problems += SelfTest.TakenEquipmentRules(game, log);
@@ -3829,6 +3830,143 @@ internal static unsafe class SelfTest
             *(ulong*)battle.Weapon = savedWeapon;
             data[0xC] = savedCt;
             RidingActions.Reset();
+        }
+        return failures;
+    }
+
+    /// <summary>
+    /// Persistent performances: the queue's reset and the battle's step call stubs, the two turn-start notices skip
+    /// "performing"; then a performer (battle slot 3, put back after) through a Potion, Math Skill, a charged spell, a
+    /// failed queue, a second instant action, a status that ends it meanwhile and a simulation, with a stand-in for the
+    /// game's action state.
+    /// </summary>
+    public static int PerformanceRules(Game game, Log log)
+    {
+        var failures = 0;
+        void Check(string name, bool ok)
+        {
+            if (!ok) failures++;
+            log.Info($"self-test: persistent performances, {name}{(ok ? "" : ": WRONG")}");
+        }
+        if (!Performances.On)
+        {
+            Check("aren't installed", false);
+            return failures;
+        }
+        nint Target(nint at) => at + 5 + *(int*)(at + 1);
+        var image = game.Image.ImageStart;
+        Check($"the queue's reset (0x{Performances.ResetAt - image:X}) and the battle's step (0x{Performances.StepAt - image:X}) call stubs that jump on",
+              *(byte*)Performances.ResetAt == 0xE8 && *(ushort*)Target(Performances.ResetAt) == 0x25FF
+              && *(byte*)Performances.StepAt == 0xE8 && *(ushort*)Target(Performances.StepAt) == 0x25FF);
+        var notices = string.Join(", ", Performances.NoticesAt.Select(at => $"0x{at - image:X}: {*(byte*)at:X2} {*(byte*)(at + 1):X2}"));
+        Check($"the turn-start notices skip \"performing\" ({notices})",
+              Performances.NoticesAt.Length == 2 && Performances.NoticesAt.All(at => *(byte*)at == 0x90 && *(byte*)(at + 1) == 0xE9));
+
+        var units = game.TurnCode.Units;
+        const int slot = 3;
+        var unit = units + slot * Battle.UnitSize;
+        var saved = new Span<byte>(unit, Battle.UnitSize).ToArray();
+        var simulating = game.Routines.Simulating;
+        var simBefore = *simulating;
+        var realState = TwoSpells.GameActionState;
+        TwoSpells.GameActionState = &FakeActionState;
+        var queued = unit + 0x1A0;
+        var record = stackalloc byte[20];
+        void Song()
+        {
+            new Span<byte>(queued, 20).Clear();
+            queued[0] = slot; queued[1] = 0x16; *(ushort*)(queued + 2) = 0x059; // Battle Song
+            unit[1] = 0;
+            unit[Battle.UnitIndex] = slot;
+            unit[Battle.UnitStatuses] = Performances.Performing;
+            unit[0x18D] = 3;
+            unit[0x1BD] = 4;
+        }
+        // The game's queue around the hooks: the record copied over the unit's, and for a charge its state.
+        void Queue(int skillset, int ability, int result)
+        {
+            new Span<byte>(record, 20).Clear();
+            record[0] = slot; record[1] = (byte)skillset; *(ushort*)(record + 2) = (ushort)ability;
+            Performances.BeforeQueue(record, queued, 1);
+            if (result >= 0)
+                new Span<byte>(record, 20).CopyTo(new Span<byte>(queued, 20));
+            if (result == 0)
+                unit[Battle.UnitStatuses] = 0x08; // state 5: Charging, no longer Performing
+            Performances.AfterQueue(record, queued, 1, result);
+        }
+        string State() => $"0x{*(ushort*)(queued + 2):X3} countdown {unit[0x18D]} full {unit[0x1BD]} statuses {unit[Battle.UnitStatuses]:X2}";
+        try
+        {
+            *simulating = 0;
+            Performances.Reset();
+            // A Potion: the song kept, Performing through the queue's reset and the action's start, back after.
+            Song();
+            _stateCalls.Clear();
+            Queue(0x06, 0x170, 1);
+            var kept = Performances.Kept(slot);
+            Performances.QueueReset(unit, 0);
+            var afterReset = State();
+            var skipped = TwoSpells.StartAction(unit, 0xFF) == 0;
+            var gameCalls = _stateCalls.Count;
+            Performances.GiveBack();
+            var back = State();
+            TwoSpells.StartAction(unit, 0xFF); // the song's next run: the game's own reload
+            var repeat = string.Join(",", _stateCalls);
+            Check($"a Potion: kept {kept}; after the reset {afterReset}; the action's start skipped {skipped} ({gameCalls} game calls); given back {back}; its next run calls the game's state {repeat}",
+                  kept && afterReset == "0x170 countdown 255 full 4 statuses 01" && skipped && gameCalls == 0
+                  && back == "0x059 countdown 3 full 4 statuses 01" && !Performances.Kept(slot) && repeat == "255");
+            // Math Skill: nothing kept; the reset is the game's (which ends the performance).
+            Song();
+            _stateCalls.Clear();
+            Queue(0x15, 0x10, 1);
+            var mathKept = Performances.Kept(slot);
+            Performances.QueueReset(unit, 0);
+            Check($"Math Skill: kept {mathKept}; the reset calls the game's state {string.Join(",", _stateCalls)}",
+                  !mathKept && _stateCalls.SequenceEqual([0]));
+            // A charged spell replaces the song; a kept song goes too.
+            Song();
+            Queue(0x06, 0x170, 1);
+            Performances.QueueReset(unit, 0);
+            Queue(0x0B, 0x10, 0);
+            var replaced = !Performances.Kept(slot);
+            Song();
+            Queue(0x0B, 0x10, 0);
+            Check($"a charged spell after a Potion drops the kept song {replaced}; one on its own keeps nothing {!Performances.Kept(slot)}",
+                  replaced && !Performances.Kept(slot));
+            // A failed queue leaves a kept song; a second instant action keeps it (and its reset keeps Performing).
+            Song();
+            Queue(0x06, 0x170, 1);
+            Performances.QueueReset(unit, 0);
+            Queue(0x06, 0x171, -1);
+            var afterFail = Performances.Kept(slot);
+            _stateCalls.Clear();
+            Queue(0x01, 0x000, 1);
+            Performances.QueueReset(unit, 0);
+            var afterSecond = $"{Performances.Kept(slot)} {State()} {_stateCalls.Count}";
+            Performances.GiveBack();
+            Check($"a failed queue keeps the song {afterFail}; a second instant action keeps it: {afterSecond}; back {State()}",
+                  afterFail && afterSecond == "True 0x000 countdown 255 full 4 statuses 01 0" && State() == "0x059 countdown 3 full 4 statuses 01");
+            // A status ends the performance meanwhile: the song is dropped, the record left.
+            Song();
+            Queue(0x06, 0x170, 1);
+            Performances.QueueReset(unit, 0);
+            unit[Battle.UnitStatuses] = 0;
+            Performances.GiveBack();
+            Check($"no longer performing when the turn's over: dropped {!Performances.Kept(slot)}, the record {State()}",
+                  !Performances.Kept(slot) && State() == "0x170 countdown 255 full 4 statuses 00");
+            // While the game simulates, nothing is kept.
+            Song();
+            *simulating = 1;
+            Queue(0x06, 0x170, 1);
+            *simulating = 0;
+            Check($"while the game simulates nothing is kept ({Performances.Kept(slot)})", !Performances.Kept(slot));
+        }
+        finally
+        {
+            *simulating = simBefore;
+            TwoSpells.GameActionState = realState;
+            Performances.Reset();
+            saved.CopyTo(new Span<byte>(unit, Battle.UnitSize));
         }
         return failures;
     }
@@ -8347,9 +8485,11 @@ internal static unsafe class SelfTest
         var realTable = JobLevels.Prerequisites;
         var realJobs = JobLevels.JobData;
         var realRandom = JobLevels.RandomJobFunction;
-        var table = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(12 * 20);
+        var table = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(12 * 22);
         table[12 * 13 + 0] = 0x20; table[12 * 13 + 1] = 0x02; table[12 * 13 + 4] = 0x03; // job 13: Squire 2, Archer 2, Thief 3
         table[12 * 4 + 0] = 0x30;                                                   // job 4: Squire 3
+        table[12 * JobLevels.DarkKnight + 1] = 0x80;                                // the Dark Knight: Knight 8, Black Mage 8
+        table[12 * JobLevels.DarkKnight + 3] = 0x80;
         var jobs = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(0x31 * 0xB0);
         for (var j = 0x4A; j < 0x5E; j++)
             jobs[j * 0x31] = (byte)(0x10 + j - 0x4A); // job 0x4A's skillset 0x10, 0x4B's 0x11…
@@ -8467,6 +8607,7 @@ internal static unsafe class SelfTest
               "jobs worked out again",
               record[JobLevels.Secondary] == 0x16 && (record[JobLevels.Levels + 3] >> 4) == 5
               && record[JobLevels.Unlocked] == (byte)(bits >> 16) && record[JobLevels.Unlocked + 2] == (byte)bits);
+        DarkKnightSteps(record, entry, levels, Check);
         JobLevels.RandomJobFunction = realRandom;
         JobLevels.ReadVariable = realReadVariable;
         JobLevels.Prerequisites = realTable;
@@ -8477,6 +8618,95 @@ internal static unsafe class SelfTest
         System.Runtime.InteropServices.NativeMemory.Free(jobs);
         System.Runtime.InteropServices.NativeMemory.Free(table);
         return failures;
+    }
+
+    private static readonly List<string> DarkKnightCalls = [];
+
+    /// <summary>Stands in for the game's step teaching a job's abilities (0x2781A8): records the call.</summary>
+    [System.Runtime.InteropServices.UnmanagedCallersOnly]
+    private static void FakeLearnJob(byte* record, int job, byte* entry, ushort* given, int givenCount, ushort* kept,
+        int keptCount, int givenFree) =>
+        DarkKnightCalls.Add($"learn 0x{job:X2} {givenCount} {keptCount} {givenFree & 0xFF}" +
+                            $" {(given == (ushort*)0x1000 && kept == (ushort*)0x2000 ? "lists" : "other lists")}");
+
+    /// <summary>Stands in for the game's JP from a job's level (0x2770BC): records the call and gives the job's slots
+    /// 1000 + level JP of 2000 + level.</summary>
+    [System.Runtime.InteropServices.UnmanagedCallersOnly]
+    private static void FakeJobJp(byte* record, int gender, int index, int level)
+    {
+        DarkKnightCalls.Add($"jp 0x{gender & 0xFF:X2} {index} {level}");
+        ((ushort*)(record + JobLevels.Jp))[index] = (ushort)(1000 + level);
+        ((ushort*)(record + JobLevels.TotalJp))[index] = (ushort)(2000 + level);
+    }
+
+    /// <summary>
+    /// The Dark Knight in a unit made from battle data (JobLevels.TeachDarkKnight, MeetsRow): unlocked by its row (here
+    /// Knight 8, Black Mage 8), with the remaster's own unlocked jobs kept; after Mime's step its JP from its level (at
+    /// least 1) and its abilities, by the game's steps with the loop's own lists; an override of Darkness known in full.
+    /// </summary>
+    private static void DarkKnightSteps(byte* record, byte* entry, byte* levels, Action<string, bool> Check)
+    {
+        Check("the job loop and its two steps were found in the unit setup",
+              JobLevels.LearnJobAt != 0 && JobLevels.JobJpAt != 0 && JobLevels.LearnJobAt != JobLevels.JobJpAt);
+        new Span<byte>(levels, 12).Clear();
+        levels[1] = 0x81; levels[3] = 0x71;
+        var short1 = JobLevels.MeetsRow(levels, JobLevels.DarkKnight);
+        levels[3] = 0x81;
+        Check("its row: Knight 8 with Black Mage 7 doesn't meet it, Black Mage 8 does",
+              !short1 && JobLevels.MeetsRow(levels, JobLevels.DarkKnight));
+        // The whole step with a Dark Knight at 8 (its prerequisites Knight 8, Black Mage 8): unlocked as well as the
+        // jobs the remaster's routine gives.
+        JobsToPick.Clear();
+        entry[1] = 0x40;
+        entry[8] = JobLevels.DarkKnight;
+        entry[9] = 8;
+        entry[0xA] = JobLevels.DarkKnightJob;
+        entry[0xB] = 0;
+        entry[0x18] = 0;
+        record[6] = 0x40;
+        JobLevels.Apply(record, entry, new Options { JobLevels = Options.JobLevelRule.SpecifiedJob });
+        var remaster = JobLevels.UnlockedFunction(record + JobLevels.Levels, entry[1], record + 0xA2, record[0x1F4]);
+        var unlocked = record[JobLevels.Unlocked] << 16 | record[JobLevels.Unlocked + 1] << 8 | record[JobLevels.Unlocked + 2];
+        Check($"a Dark Knight at 8 is unlocked (0x{unlocked:X6}), with the remaster's own 0x{remaster:X6}",
+              (record[JobLevels.Levels + 10] >> 4) == 8 && (remaster & JobLevels.DarkKnightUnlocked) == 0
+              && unlocked == (remaster | JobLevels.DarkKnightUnlocked));
+        entry[1] = 0x60; // a monster: no jobs
+        JobLevels.Apply(record, entry, new Options());
+        Check("a monster's entry unlocks nothing",
+              record[JobLevels.Unlocked] == 0 && record[JobLevels.Unlocked + 1] == 0 && record[JobLevels.Unlocked + 2] == 0);
+        entry[1] = 0x40;
+        var realLearn = JobLevels.LearnJobFunction;
+        var realJp = JobLevels.JobJpFunction;
+        JobLevels.LearnJobFunction = &FakeLearnJob;
+        JobLevels.JobJpFunction = &FakeJobJp;
+        string Teach(byte level, byte primary)
+        {
+            DarkKnightCalls.Clear();
+            record[JobLevels.Levels + 10] = (byte)(level << 4 | 3); // the Onion Knight's nibble isn't the Dark Knight's
+            entry[JobLevels.PrimaryOverride] = primary;
+            new Span<byte>(record + JobLevels.LearnedBits + 3 * JobLevels.DarkKnight, 3).Fill(0x24);
+            JobLevels.TeachDarkKnight(record, entry, (ushort*)0x1000, 3, (ushort*)0x2000, 2, 1);
+            return string.Join(", ", DarkKnightCalls);
+        }
+        string Learned() => Convert.ToHexString(new ReadOnlySpan<byte>(record + JobLevels.LearnedBits + 3 * JobLevels.DarkKnight, 3));
+        var jp = (ushort*)(record + JobLevels.Jp);
+        var total = (ushort*)(record + JobLevels.TotalJp);
+        jp[0] = 123;
+        total[0] = 456;
+        var steps = Teach(8, 0xFF);
+        Check($"after Mime: the Dark Knight's JP from level 8 by the Squire's slots, then its abilities with the loop's " +
+              $"lists: {steps}; its JP {jp[JobLevels.DarkKnight]} of {total[JobLevels.DarkKnight]}, the Squire's {jp[0]} of {total[0]}",
+              steps == "jp 0x40 0 8, learn 0xA0 3 2 1 lists" && Learned() == "242424"
+              && jp[JobLevels.DarkKnight] == 1008 && total[JobLevels.DarkKnight] == 2008 && jp[0] == 123 && total[0] == 456);
+        steps = Teach(0, 0xFF);
+        Check($"a Dark Knight level of 0 gets level 1's JP, as a PS1 slot is at least 1: {steps}",
+              steps == "jp 0x40 0 1, learn 0xA0 3 2 1 lists" && jp[JobLevels.DarkKnight] == 1001);
+        steps = Teach(4, JobLevels.DarkKnightSkillset);
+        Check($"an override of Darkness is known in full ({Learned()}); another override isn't marked",
+              Learned() == "FFFFFF" && Teach(4, 0x16) != "" && Learned() == "242424");
+        JobLevels.LearnJobFunction = realLearn;
+        JobLevels.JobJpFunction = realJp;
+        entry[JobLevels.PrimaryOverride] = 0;
     }
 
     private static readonly List<byte> PickTried = [];

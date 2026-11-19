@@ -354,13 +354,13 @@ internal static unsafe class TwoSpells
     internal static bool HidesHigh(int ability, int index) =>
         Turns && (uint)index < Battle.UnitCount && Pair[index] != 0 && (ushort)ability != GunSkills.TwoShots;
 
-    private static void AbsoluteJump(List<byte> code, nint target)
+    internal static void AbsoluteJump(List<byte> code, nint target)
     {
         code.AddRange([0xFF, 0x25, 0x00, 0x00, 0x00, 0x00]);
         code.AddRange(BitConverter.GetBytes((ulong)target));
     }
 
-    private static void WriteCall(nint at, nint target)
+    internal static void WriteCall(nint at, nint target)
     {
         var call = new byte[5];
         call[0] = 0xE8;
@@ -598,9 +598,22 @@ internal static unsafe class TwoSpells
     [UnmanagedCallersOnly]
     private static nint ActionStart(byte* unit, int state) => StartAction(unit, state);
 
-    /// <summary>The action's start (0x279370 with 0xFF): with a second spell in the slot the unit keeps Charging.</summary>
+    /// <summary>
+    /// The action's start (0x279370 with 0xFF): with a second spell in the slot the unit keeps Charging; a performer
+    /// whose song <see cref="Performances"/> keeps through an instant action keeps Performing as it was.
+    /// </summary>
     internal static nint StartAction(byte* unit, int state)
     {
+        try
+        {
+            if (Turns && Active && (byte)state == 0xFF && unit != null && (unit[Battle.UnitStatuses] & Performing) != 0
+                && Performances.AtActionStart(IndexOf(unit), unit))
+                return 0;
+        }
+        catch (Exception e)
+        {
+            Performances.Failed("the action's start", e);
+        }
         try
         {
             if (Turns && Active && (byte)state == 0xFF && unit != null && (unit[Battle.UnitStatuses] & Performing) == 0)

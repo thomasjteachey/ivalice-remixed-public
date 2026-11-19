@@ -1,0 +1,13 @@
+# ReMixed's Dark Knights in the Depths (its entry 0x1AD, the port's 0x1EE, scenario 0x332): five men in its Dark Knight
+# slot with its woman's Darkness (0x4E) as their primary, a special skillset its battle menu reads from job index 0,
+# which the unit setup marks all learned for an override (SCUS 0x8005BCAC, BATTLE 0x80152750): they know all of it.
+# The port: Darkness (0xE0) as their primary, known in full (build_mod.py remixed_primary, Patches/JobLevels.cs
+# TeachDarkKnight). Before (2026-11-19): the remaster's story skillset 0x4E as their primary, and no Dark Knight
+# abilities learned. The battle itself crashes about 12 s in (0x216EB4), after these are read.
+name ReMixeds Dark Knight men know all of Darkness
+wait world depth=1 state=0 timeout=20
+scenario 0x332
+wait unit battle_id=0x7F timeout=90
+show units
+expect unit job=0xa0 primary=0xe0 dark_knight_learned=0xffffff count=5
+shot battle

@@ -12,13 +12,15 @@ every case also leaves pass.png (or fail.png) there as it ends. Pictures are evi
 `scenario 0x79 noted` starts a scene-first battle at its battle (its scene counted as seen). `defeat [UNIT...]`
 downs the enemies (or those units); `expect roster name_id=0x76` wants exactly one roster record so, and
 `count=N` another number of them (`count=0`: a recruit turned down on its join screen isn't there).
-`show slots` (or `roster`) prints the battle units' roster slots and ids into the case's output; `copy roster 2 3`
+`show slots` (or `roster`) prints the battle units' roster slots and ids into the case's output, `show units` their
+jobs, skillsets, unlocked jobs and job fields (levels, learned abilities, JP); `copy roster 2 3`
 copies roster slot 2's record into slot 3, a party member more.
 `key K` posts one key to the game's own window (never the desktop's input). `wait log PATTERN press=RETURN every=1`
 confirms through dialogue until a log line comes; `wait world depth=D state=S` waits for a world-map menu.
 A battle unit matches on its listing's fields (index, id, job, team, primary, secondary, battle_id, ...) and on its
 live ones (turn, moved, acted, ability, charge, statuses, hp, right_hand; player and present, 1 or 0):
-`wait unit player=1 present=1 turn=1 timeout=300` waits for a party unit's turn. `poke unit FIELD=VALUE... offset=0x13 hex=08` writes bytes into every matching unit (`or=`
+`wait unit player=1 present=1 turn=1 timeout=300` waits for a party unit's turn; `FIELD&MASK=V` compares only the
+mask's bits (`dark_knight_learned&0xA00000=0xA00000`: those two abilities learned, whatever the rest). `poke unit FIELD=VALUE... offset=0x13 hex=08` writes bytes into every matching unit (`or=`
 ORs them in), to set a unit up for a test: a skillset, a learned ability, a weapon.
 
 Start or restart the hidden game and print strict PASS/FAIL lines:
@@ -61,15 +63,21 @@ def fields(words: list[str]) -> dict[str, int]:
 
 
 def matches(item: dict, wanted: dict[str, int]) -> bool:
-    return all(item.get(key) == value for key, value in wanted.items())
+    """Every field equal; a `field&MASK` key compares only the mask's bits (`dark_knight_learned&0xA00000=0xA00000`)."""
+    def field(key: str) -> int | None:
+        name, _, mask = key.partition("&")
+        value = item.get(name)
+        return value & number(mask) if mask and value is not None else value
+    return all(field(key) == value for key, value in wanted.items())
 
 
 def describe(wanted: dict[str, int]) -> str:
     return " ".join(f"{key}=0x{value:X}" for key, value in wanted.items())
 
 
-# Jobs by the remaster's job index (Squire 0 ... Mime 19) whose learned abilities, JP and total JP are fields.
-JOB_FIELDS = {"archer": 3, "bard": 17, "dancer": 18}
+# Jobs by the remaster's job index (Squire 0 ... Mime 19, the Dark Knight 20) whose learned abilities, JP and total JP
+# are fields.
+JOB_FIELDS = {"archer": 3, "bard": 17, "dancer": 18, "dark_knight": 20}
 # Where a record keeps the unlocked jobs (3 bytes, the high first: 0x800000 the Squire), the learned abilities (3 bytes a
 # job, the high first), the JP and the total JP (halfwords): a roster record's, and a battle unit's (the PS1's +0x96,
 # +0x99, +0xDC and +0x104, moved as the Event Instruction Upgrade's unit fields move them).
@@ -137,6 +145,17 @@ def unit_records() -> list[dict]:
         u.update(job_fields(record, UNIT_JOBS))
         u.update(level_fields(record, UNIT_LEVELS))
     return units
+
+
+def show_units(_: object = None) -> None:
+    """The battle units' jobs as a case's evidence: job, skillsets, unlocked jobs, and the job fields' levels, learned
+    abilities and JP."""
+    for u in unit_records():
+        jobs = " ".join(f"{job} {u.get(f'{job}_level', '-')}/{u.get(f'{job}_learned', 0):06X}/{u.get(f'{job}_jp', 0)}"
+                        for job in JOB_FIELDS)
+        print(f"  unit {u['index']:2} battle id 0x{u['battle_id']:02X} job 0x{u['job']:02X} team 0x{u['team']:02X} "
+              f"skillsets 0x{u['primary']:02X} 0x{u['secondary']:02X} unlocked 0x{u.get('unlocked', 0):06X} "
+              f"(level/learned/JP) {jobs}")
 
 
 def records(kind: str) -> list[dict]:
@@ -272,8 +291,8 @@ def run_case(path: Path) -> None:
                 reply = harness.send(f"poke 0x{base + target * harness.ROSTER_SIZE:X} {record.hex(' ')}")
                 if reply.startswith("error"):
                     raise CaseFailure(reply)
-            elif command == "show":  # a listing into the case's output, as evidence: slots or roster
-                {"slots": harness.cmd_slots, "roster": harness.cmd_roster}[args[0].lower()](None)
+            elif command == "show":  # a listing into the case's output, as evidence: slots, roster or units
+                {"slots": harness.cmd_slots, "roster": harness.cmd_roster, "units": show_units}[args[0].lower()](None)
             elif command == "advance":
                 # advance world|opening|event N [timeout=S] [every=S] [shots=1]: with shots, a frame of the scene
                 # before each press, in the case's folder (advance-NNNN.png, tenths of a second in).

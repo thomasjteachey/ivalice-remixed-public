@@ -221,6 +221,32 @@ def check_places(scenarios: bytes | None = None, remaster: bytes | None = None) 
             f"{REMASTER_PLACES}" + ("" if on else " (marked second groups off)"))
 
 
+FFTPACK = ROOT / "mod" / "fftivc.gameplay.ivaliceremixed" / "FFTIVC" / "data" / "enhanced" / "fftpack"
+ENTD_FILES = ("battle_entd1_ent.bin", "battle_entd3_ent.bin", "battle_entd4_ent.bin",
+              "event_btlevt_bin_entrydata_add_ent.bin")
+UNIT_BYTES, UNIT_JOB, UNIT_PRIMARY = 40, 0x0A, 0x1D
+DARK_KNIGHT, DARKNESS, SING = 0xA0, 0xE0, 0x16
+
+
+def check_primaries() -> str:
+    """ReMixed's primary skillsets as the port gives them (build_mod.py remixed_primary): none names the remaster's
+    story skillsets 0x4D and 0x4E (ReMixed's Bard and woman's Darkness), and no Dark Knight sings."""
+    dark_knights = darkness = 0
+    for name in ENTD_FILES:
+        data = (FFTPACK / name).read_bytes()
+        for at in range(0, len(data) - UNIT_BYTES + 1, UNIT_BYTES):
+            job, primary = data[at + UNIT_JOB], data[at + UNIT_PRIMARY]
+            where = f"{name} unit {at // UNIT_BYTES} (entry 0x{at // (16 * UNIT_BYTES):X})"
+            if primary in (0x4D, 0x4E):
+                raise AssertionError(f"{where}'s primary skillset is the remaster's story skillset 0x{primary:X}")
+            if job == DARK_KNIGHT:
+                dark_knights += 1
+                darkness += primary == DARKNESS
+                if primary == SING:
+                    raise AssertionError(f"{where} is a Dark Knight with the Bard's Sing as its primary")
+    return f"Primary skillsets: {dark_knights} Dark Knights, {darkness} with Darkness known in full, none singing"
+
+
 def preset_sets(number: int) -> list[list[tuple[int, tuple[int, ...]]]]:
     """Condition records in each set of a generated ReMixed preset, excluding its event action only by type."""
     data = PRESETS.read_bytes()[number * PRESET_BYTES:(number + 1) * PRESET_BYTES]
@@ -552,7 +578,7 @@ def check() -> list[str]:
             "scene fade cleared, one victory -> recruitment, stable actors, "
             "four runtime lines valid",
             "Riders: the river camp's battle run seats its five, 0x0FB's battle its three",
-            check_places()]
+            check_places(), check_primaries()]
 
 
 def main() -> None:

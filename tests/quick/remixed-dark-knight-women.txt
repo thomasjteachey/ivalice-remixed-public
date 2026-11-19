@@ -1,0 +1,16 @@
+# ReMixed's Dark Knights in the Depths (its entry 0x1B4, the port's 0x1F5, scenario 0x342): eight women whose primary
+# is its Dark Knight slot's skillset (0x16), read from that slot's learned abilities, which they learn by their Dark
+# Knight level 8 (about 1,550 JP in ReMixed's JP table, 3,000 in the remaster's, for 4,100 JP of abilities, learn
+# rates 32 to 100%) once their levels meet its row (Knight 8, Black Mage 8). The port: Darkness (0xE0), their own
+# skillset, the Dark Knight unlocked by that row and taught after Mime (Patches/JobLevels.cs). Night Sword (slot 0:
+# 100 JP, 100%) and Summon Demon (slot 2: 300 JP, 100%) always fit, and all of it never does. Before (2026-11-19):
+# the Bard's Sing (0x16) as their primary, which a woman never learns, nothing unlocked past the Chemist, and no Dark
+# Knight abilities. The battle itself crashes about 12 s in (0x216EB4), after these are read.
+name ReMixeds Dark Knight women learn Darkness by their level
+wait world depth=1 state=0 timeout=20
+scenario 0x342
+wait unit battle_id=0x80 timeout=90
+show units
+expect unit job=0xa0 primary=0xe0 dark_knight_level=8 unlocked&0x8=0x8 dark_knight_learned&0xA00000=0xA00000 count=8
+expect unit job=0xa0 dark_knight_learned=0xffffff count=0
+shot battle

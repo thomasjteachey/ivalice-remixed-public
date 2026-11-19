@@ -801,7 +801,7 @@ CODE_RULES = ["unevadable", "team-targeting", "auras", "limit-charge", "status-t
               "movement-bonus", "breeding-errands",
               "formation-split", "six-places", "errand-locks",
               "one-handing", "errands", "riding-boarding",
-              "riding-actions", "hitting-bodies", "arc-obstacles",
+              "riding-actions", "persistent-performances", "hitting-bodies", "arc-obstacles",
               "taken-equipment", "victory-bonus",
               "move-find", "nemesis", "separate-saves", "remixed-events", "pack-files", "remixed-sprites",
               "remixed-faces", "old-guests", "remixed-scenarios",
@@ -3160,6 +3160,23 @@ REMASTER_GUEST_REMOVALS = {158: (0x935, 0x34), 281: (0x263, 0x19)}
 # 0x16; Rafa from 0x26 (event 261) until event 281 (progress 0x28; event 298 sets 0x29).
 REMASTER_OLD_GUESTS = {0x34: (0x34, 0x16), 0x19: (0x19, 0x29)}
 REMIXED_UNIT_SKILLSETS = {0x4D: 0x16, 0x16: 0xE0, 0x4E: 0xE0}
+# A unit's primary skillset (battle data +0x1D; 0 and 0xFF none) is a ReMixed skillset like its secondary, and the
+# remaster reads it as vanilla does. ReMixed's battle menu (BATTLE 0x80152750, 0x801818C4) reads its Dark Knight slot's
+# skillset (0x16, and a woman's 0x4E) from that slot's learned abilities, which the unit learns by its Dark Knight level,
+# and a man's 0x4E as a special skillset, from job index 0's, which the unit setup marks all learned for an override
+# (SCUS 0x8005BCAC): its entry 0x1AD's five men know all of Darkness, 0x1B4's eight women what their level 8 buys. The
+# remaster reads Darkness (0xE0) from the Dark Knight's index whatever the override, so on the port's Dark Knight the
+# first is no override (Darkness is its own skillset) and the second an override of Darkness, which the code mod
+# (Patches/JobLevels.cs) marks known in full.
+ENTD_PRIMARY = 0x1D
+DARK_KNIGHT_SLOT_SKILLSETS = {0x16: (ENTD_MAN, ENTD_WOMAN), 0x4E: (ENTD_WOMAN,)}  # read by level, for these genders
+
+
+def remixed_primary(skillset: int, job: int, flags: int) -> int:
+    """ReMixed's primary skillset override as the port's, for a unit whose port job is `job` (REMIXED_UNIT_SKILLSETS)."""
+    if job == DARK_KNIGHT["job"][1] and (flags & (ENTD_MAN | ENTD_WOMAN)) in DARK_KNIGHT_SLOT_SKILLSETS.get(skillset, ()):
+        return 0xFF
+    return REMIXED_UNIT_SKILLSETS.get(skillset, skillset)
 # A unit's job to level (battle data +0x08: that job gets the unit's level, its prerequisites theirs) is a job index,
 # and ReMixed's 17 and 18 are its gendered slots: 17 its Dark Knight (with that row's prerequisites, Knight 8 and Black
 # Mage 8), 18 a woman's Dancer and a man's Bard (with the slot's one row, the Dancer's). Left as they were, the port
@@ -5170,6 +5187,7 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
                     units[at] = sprites
                 units[at + ENTD_JOB] = REMIXED_UNIT_JOBS.get(units[at + ENTD_JOB], units[at + ENTD_JOB])
                 units[at + ENTD_SECONDARY] = REMIXED_UNIT_SKILLSETS.get(units[at + ENTD_SECONDARY], units[at + ENTD_SECONDARY])
+                units[at + ENTD_PRIMARY] = remixed_primary(units[at + ENTD_PRIMARY], units[at + ENTD_JOB], units[at + ENTD_FLAGS])
                 units[at + ENTD_LEVELS_JOB] = remixed_levels_job(units[at + ENTD_LEVELS_JOB], units[at + ENTD_FLAGS])
                 for i in UNIT_RSM_FIELDS:
                     if u16(units, u * UNIT_SIZE + i) in held:
@@ -7202,7 +7220,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata. The title screen's plaque shows it (write_title_screen).
-RELEASE_VERSION = "0.9.20"
+RELEASE_VERSION = "0.9.21"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:

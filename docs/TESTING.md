@@ -257,8 +257,9 @@ record` keeps the party the player's for the rest of the run (before the battle)
 menus, and `send testmode auto` hands it back.
 
 `send act SKILLSET ABILITY TARGET` makes a party unit use an ability without driving the menus: `send act 08 195
-foe` is Two Shots (skillset 0x08, ability 0x195) at the nearest foe's panel (TARGET is also a battle unit's index, or
-`X,Y[,LEVEL]`; a fifth word queues it that many times, for a turn's two actions). Acts are queued (`send act clear`
+foe` is Two Shots (skillset 0x08, ability 0x195) at the nearest foe's panel (TARGET is also `self`, the acting unit's
+panel, a battle unit's index, or `X,Y[,LEVEL]`; an item's ability names its item too, so `send act 06 170 self` is a
+Potion on the unit itself; a fifth word queues it that many times, for a turn's two actions). Acts are queued (`send act clear`
 drops them; `send act menu` logs the menu's state and its action record, as the menus filled it) and taken as a party unit's command menu is about to open, at its turn's start or again after an action
 that leaves the turn going; a turn already at its first command menu gets an F on Move, and the move selection takes
 it. Then the battle
@@ -267,7 +268,8 @@ action marked, queued, the turn going on or ending). The log says `harness: unit
 and charge after each, which a case waits for. Only a fast way into a battle is needed around it: a
 random battle, `--location 24` (Mandalia Plains) and `key RETURN` on the world map, about two minutes to its
 formation. tests/quick/two-shots.txt is the whole pattern: a random battle, a unit given Two Shots by `poke unit`,
-two `act`s, and the mod's lines for both shots.
+two `act`s, and the mod's lines for both shots. tests/quick/performance-through-item.txt gives a unit Don't Move
+(`poke unit`), so each act ends its turn without the menus: a song, then a Potion on its next turn.
 Each `wait log` consumes a matching line logged during the current case, so earlier runs in the same game cannot pass it.
 `wait log PATTERN press=RETURN every=1` confirms through a scene until the line comes. `key K [times=N] [wait=S]`
 posts a key to the game's own window; before each key in a menu, `wait world depth=D state=S` waits for that menu

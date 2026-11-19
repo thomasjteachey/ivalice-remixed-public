@@ -17,6 +17,14 @@ namespace IvaliceRemixed.Patches;
 /// Settings for units off the player's team), works the unlocked jobs out again (0x348684), and gives a
 /// random secondary three tries. ReMixed's own Bard/Dancer remap of the random job waits for its gendered
 /// job slots. The unit setup that learns abilities from the levels (0x2771C8) runs after.
+/// <para>ReMixed's Dark Knight is one of the PS1's 20 job slots (17), so its unit setup (SCUS 0x8005BB40) gives it
+/// JP by its level and teaches its abilities like any other job's, once its levels meet its unlock row (Knight 8,
+/// Black Mage 8). The port's Dark Knight is the remaster's index 20, past the remaster's loop (jobs 0x4A to 0x5D)
+/// and never unlocked by its unlocked-jobs routine for a unit made from battle data, so a Dark Knight enemy knew none
+/// of Darkness. Here the Dark Knight is unlocked by its row, and after Mime's step it gets the same step: its JP
+/// (0x2770BC, by the generic jobs' JP table, as the remaster's has no Dark Knight row) and its abilities (0x2781A8). A
+/// primary override of Darkness is known in full, as ReMixed's override of its woman's Darkness (0x4E, a special
+/// skillset its menu reads from the override's index 0) is.</para>
 /// </remarks>
 internal static unsafe class JobLevels
 {
@@ -24,6 +32,10 @@ internal static unsafe class JobLevels
     private static delegate* unmanaged<byte*, byte*, void*, void> _setup;                 // the original
     private static delegate* unmanaged<byte*, int, byte*, int, int> _unlocked;           // 0x348684
     private static delegate* unmanaged<byte*, byte> _randomJob;                          // 0x276B8C
+    // A job's abilities (0x2781A8: record, job, entry, the abilities it's given and how many, those it keeps unlearned
+    // and how many, a byte for "the given ones cost nothing"); the original.
+    private static delegate* unmanaged<byte*, int, byte*, ushort*, int, ushort*, int, int, void> _learnJob;
+    private static delegate* unmanaged<byte*, int, int, int, void> _jobJp;                // 0x2770BC: record, +6, index, level
     private static byte* _prerequisites; // 12 bytes a job: byte k holds jobs 2k (high nibble) and 2k + 1
     private static byte* _jobs;          // 0x31 bytes a job: +0 its skillset
     private static byte* _roster;        // slot 0: +0 Ramza's sprite set, 1 to 3 by chapter
@@ -38,11 +50,40 @@ internal static unsafe class JobLevels
     /// a woman's Dancer and a man's Bard).
     /// </summary>
     internal const int DarkKnight = 20, MansBard = 0x92, Bard = 17, SharedSlot = 18, DarkKnightJob = 0xA0;
+    /// <summary>The remaster's last job in its unit setup's loop (Mime), the Dark Knight's skillset and unlocked bit
+    /// (0x800000 >> 20), where a record keeps its learned abilities (3 bytes a job index) and the entry's primary
+    /// override.</summary>
+    internal const int LastLoopJob = 0x5D, DarkKnightSkillset = 0xE0, DarkKnightUnlocked = 0x800000 >> DarkKnight,
+        LearnedBits = 0xA2, PrimaryOverride = 0x1D, Gender = 6, Jp = 0xF0, TotalJp = 0x11E; // JP: a halfword a job index
     private const byte RandomSecondary = 0xFE;
     private const int AllJobs = 0xFFFF;
 
+    /// <summary>
+    /// The unit setup's job loop (0x2771C8 from 0x2773B5): for each level byte, the even job's JP from its level
+    /// (0x2770BC, at +0x1A) and its abilities (0x2781A8, at +0x4B), then the odd job's (+0x9A), while esi &lt; 0x15
+    /// (+0xA5): jobs 0x4A to 0x5D. The odd job's JP call is at +0x69.
+    /// </summary>
+    private const string JobLoop =
+        "45 0F B6 65 00 44 8D 46 FF 8A 94 24 ?? ?? ?? ?? 45 8B CC 41 C1 E9 04 48 8B CF E8 ?? ?? ?? ?? " +
+        "8A 84 24 ?? ?? ?? ?? 8D 56 49 88 44 24 38 4D 8B CF 8B 84 24 ?? ?? ?? ?? 4C 8B C5 89 44 24 30 48 8B CF " +
+        "48 89 5C 24 28 44 89 74 24 20 E8 ?? ?? ?? ?? 83 FE 17 73 ?? 8A 94 24 ?? ?? ?? ?? 41 83 E4 0F 45 8B CC " +
+        "44 8B C6 48 8B CF E8 ?? ?? ?? ?? 8A 84 24 ?? ?? ?? ?? 8D 56 4A 88 44 24 38 4D 8B CF 8B 84 24 ?? ?? ?? ?? " +
+        "4C 8B C5 89 44 24 30 48 8B CF 48 89 5C 24 28 44 89 74 24 20 E8 ?? ?? ?? ?? 83 C6 02 49 FF C5 83 FE 15 0F 82";
+
     // For the offline check.
     internal static nint SetupAt { get; private set; }
+    internal static nint LearnJobAt { get; private set; }
+    internal static nint JobJpAt { get; private set; }
+    internal static delegate* unmanaged<byte*, int, byte*, ushort*, int, ushort*, int, int, void> LearnJobFunction
+    {
+        get => _learnJob;
+        set => _learnJob = value;
+    }
+    internal static delegate* unmanaged<byte*, int, int, int, void> JobJpFunction
+    {
+        get => _jobJp;
+        set => _jobJp = value;
+    }
     internal static byte* Roster => _roster;
     internal static byte* Prerequisites
     {
@@ -91,10 +132,73 @@ internal static unsafe class JobLevels
         _randomJob = (delegate* unmanaged<byte*, byte>)GameImage.Rip(secondary + 16, 1, 5);
         _unlocked = (delegate* unmanaged<byte*, int, byte*, int, int>)unlocked[0];
         _roster = game.Units.Roster;
+        var loop = image.FindUnique(JobLoop);
+        var learn = GameImage.Rip(loop + 0x4B, 1, 5);
+        if (GameImage.Rip(loop + 0x9A, 1, 5) != learn || GameImage.Rip(loop + 0x69, 1, 5) != GameImage.Rip(loop + 0x1A, 1, 5))
+            throw new InvalidDataException("the unit setup's job loop isn't the code this DLL expects");
         SetupAt = setup;
+        LearnJobAt = learn;
+        JobJpAt = GameImage.Rip(loop + 0x1A, 1, 5);
+        _jobJp = (delegate* unmanaged<byte*, int, int, int, void>)JobJpAt;
         // Its one caller keeps nothing across it (liveregs) and reloads rcx after.
         _setup = (delegate* unmanaged<byte*, byte*, void*, void>)game.Hooks.Hook(
             setup, (nint)(delegate* unmanaged<byte*, byte*, void*, void>)&Setup, "the job level setup");
+        // Its one caller (the loop's two calls) keeps only callee-saved registers and its stack across it.
+        _learnJob = (delegate* unmanaged<byte*, int, byte*, ushort*, int, ushort*, int, int, void>)game.Hooks.Hook(
+            learn, (nint)(delegate* unmanaged<byte*, int, byte*, ushort*, int, ushort*, int, int, void>)&LearnJob,
+            "a job's abilities for a unit made from battle data");
+    }
+
+    [UnmanagedCallersOnly]
+    private static void LearnJob(byte* record, int job, byte* entry, ushort* given, int givenCount, ushort* kept,
+        int keptCount, int givenFree)
+    {
+        _learnJob(record, job, entry, given, givenCount, kept, keptCount, givenFree);
+        if ((ushort)job != LastLoopJob)
+            return;
+        try
+        {
+            TeachDarkKnight(record, entry, given, givenCount, kept, keptCount, givenFree);
+        }
+        catch (Exception e)
+        {
+            Failed("the Dark Knight's abilities", e);
+        }
+    }
+
+    /// <summary>
+    /// After Mime's step, the Dark Knight's, as ReMixed's loop has it for its slot 17: its JP from its level (at least 1,
+    /// as a PS1 slot's is) and its abilities, by the remaster's own step (which wants it unlocked, and for the unit's
+    /// current job takes its primary). ReMixed's JP for a level is one table for every job; the remaster's (0x2CC008)
+    /// gives each generic job the same, but has no Dark Knight row (index 20 reads 3 to 5, seen in the game), so the
+    /// Dark Knight's JP comes from the same step on the Squire's slots (index 0, never skipped for a gender), moved to
+    /// its own, the Squire's put back. A primary override of Darkness is then known in full: the remaster marks an
+    /// override known in index 0, where its menu reads a special skillset, but reads Darkness from index 20.
+    /// </summary>
+    internal static void TeachDarkKnight(byte* record, byte* entry, ushort* given, int givenCount, ushort* kept,
+        int keptCount, int givenFree)
+    {
+        var level = record[Levels + (DarkKnight >> 1)] >> 4;
+        var jp = (ushort*)(record + Jp);
+        var total = (ushort*)(record + TotalJp);
+        var (squireJp, squireTotal) = (jp[0], total[0]);
+        _jobJp(record, record[Gender], 0, Math.Max(level, 1));
+        (jp[DarkKnight], total[DarkKnight]) = (jp[0], total[0]);
+        (jp[0], total[0]) = (squireJp, squireTotal);
+        _learnJob(record, DarkKnightJob, entry, given, givenCount, kept, keptCount, givenFree);
+        if (entry != null && entry[PrimaryOverride] == DarkKnightSkillset)
+            for (var k = 0; k < 3; k++)
+                record[LearnedBits + 3 * DarkKnight + k] = 0xFF;
+    }
+
+    /// <summary>Whether a unit's levels meet a job's unlock row (each of the 20 nibbles at least the row's).</summary>
+    internal static bool MeetsRow(byte* levels, int job)
+    {
+        var row = _prerequisites + job * JobRow;
+        for (var b = 0; b < 10; b++)
+            if ((levels[b] & 0xF0) < (row[b] & 0xF0) || (levels[b] & 0xF) < (row[b] & 0xF))
+                return false;
+        return true;
     }
 
     [UnmanagedCallersOnly]
@@ -127,6 +231,8 @@ internal static unsafe class JobLevels
             Apply(levels, entry, CurrentJob(record, entry), secondaryJob, mode, enemies);
         }
         var bits = _unlocked(levels, flags, record + 0xA2, record[0x1F4]);
+        if ((flags & 0x20) == 0 && MeetsRow(levels, DarkKnight))
+            bits |= DarkKnightUnlocked; // ReMixed's slot 17 by its row; the remaster's routine never sets it for these
         record[Unlocked] = (byte)(bits >> 16);
         record[Unlocked + 1] = (byte)(bits >> 8);
         record[Unlocked + 2] = (byte)bits;

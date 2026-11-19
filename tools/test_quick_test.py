@@ -82,6 +82,12 @@ class RosterRecords(unittest.TestCase):
         self.assertEqual([(r["slot"], r["sprites"], r["job"], r["name_id"]) for r in found], [(1, 0x82, 0x5E, 0x76)])
         self.assertEqual(quick_test.find("roster", {"name_id": 0x76}, found), found)
 
+    def test_masked_fields_compare_only_their_bits(self):
+        unit = {"dark_knight_learned": 0xA48020, "job": 0xA0}
+        self.assertTrue(quick_test.matches(unit, {"dark_knight_learned&0xA00000": 0xA00000, "job": 0xA0}))
+        self.assertFalse(quick_test.matches(unit, {"dark_knight_learned&0x400000": 0x400000}))
+        self.assertFalse(quick_test.matches(unit, {"unlocked&0x8": 0x8}))  # a field the unit hasn't
+
     def test_reads_job_fields(self):
         # Lorne's record as 0x0ED leaves it: the Squire, the Chemist and the Bard open; Battle Song (the Bard's 4th), 61
         # JP of 161; an Archer's Equip Crossbow (its 3rd reaction/support/movement slot).

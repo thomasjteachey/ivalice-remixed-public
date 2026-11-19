@@ -21,13 +21,15 @@ namespace IvaliceRemixed;
 /// 0x206CE8 once the screen is idle, and 0x206CE8 sets the next state itself. The battle menu's object comes from
 /// 0x2607C0; its +0x148 is the acting unit and +0x178 the 20-byte action record: the unit's index, the skillset, the
 /// ability (16 bits), and from +0xA the target: type 5 (a panel), then the panel's x, level and y as 16-bit values at
-/// +0xC, +0xE and +0x10, as 0x206F90 writes them from the target cursor. A move selection's range stays drawn until the
-/// next one: looks only.
+/// +0xC, +0xE and +0x10, as 0x206F90 writes them from the target cursor. An item (a skillset of type 1, Items) also
+/// names the item at +8, which the queue (0x281488) checks and makes the ability from (the item + 0x80). A move
+/// selection's range stays drawn until the next one: looks only.
 /// </remarks>
 internal static unsafe class BattleAct
 {
     private const int MoveSelection = 0x0D, CommandMenuOpens = 3, TurnStarts = 6, CommandMenu = 4, Confirm = 0x1C;
     private const int UiUnit = 0x148, UiRecord = 0x178, RecordSize = 20, PanelTarget = 5;
+    private const int ItemType = 1, ItemAt = 8, ItemAbilities = 0x80; // an Items skillset's record: the item at +8
     private const int UnitX = 0x4F, UnitY = 0x50, UnitLevelBit = 0x51, UnitIndex = 0x1BC;
 
     private sealed class Request
@@ -72,7 +74,8 @@ internal static unsafe class BattleAct
 
     /// <summary>
     /// <c>act SKILLSET ABILITY TARGET [TIMES]</c> (hex skillset and ability): TARGET is <c>foe</c> (the nearest living unit of
-    /// another team), a battle unit's index (its panel), or <c>X,Y[,LEVEL]</c>; TIMES queues it that often (a turn's two
+    /// another team), <c>self</c> (the acting unit's panel), a battle unit's index (its panel), or <c>X,Y[,LEVEL]</c>; an
+    /// item's ability (Items, 0x06: the item + 0x80, a Potion 0x170) names its item too; TIMES queues it that often (a turn's two
     /// actions in one go, as the second's menu comes moments after the first). Queued, and answered at once: the next party
     /// unit's menu between actions takes it (so a turn's actions are queued before it starts), and the log says
     /// "harness: unit N used ..." once its confirm has run. <c>act clear</c> drops what's queued. <c>act menu</c> logs the
@@ -99,7 +102,7 @@ internal static unsafe class BattleAct
             return line;
         }
         if (parts.Length < 4)
-            return "error: act SKILLSET ABILITY foe|INDEX|X,Y[,LEVEL], or act clear";
+            return "error: act SKILLSET ABILITY foe|self|INDEX|X,Y[,LEVEL], or act clear";
         var times = parts.Length > 4 ? int.Parse(parts[4]) : 1;
         for (var k = 0; k < times; k++)
             Requests.Enqueue(new Request
@@ -179,7 +182,9 @@ internal static unsafe class BattleAct
         }
         else
         {
-            var index = request.Target.Equals("foe", StringComparison.OrdinalIgnoreCase) ? Nearest(units, actor) : int.Parse(request.Target);
+            var index = request.Target.Equals("foe", StringComparison.OrdinalIgnoreCase) ? Nearest(units, actor)
+                : request.Target.Equals("self", StringComparison.OrdinalIgnoreCase) ? actor[UnitIndex]
+                : int.Parse(request.Target);
             if ((uint)index >= Battle.UnitCount)
             {
                 _game.Log.Error("harness: act: no foe on the field");
@@ -195,6 +200,8 @@ internal static unsafe class BattleAct
         record[0] = actor[UnitIndex];
         record[1] = (byte)request.Skillset;
         *(ushort*)(record + 2) = (ushort)request.Ability;
+        if (Patches.TwoSpells.TypeTable != null && (Patches.TwoSpells.TypeTable[(byte)request.Skillset] & 0x0F) == ItemType)
+            *(ushort*)(record + ItemAt) = (ushort)(request.Ability - ItemAbilities);
         record[0xA] = PanelTarget;
         *(ushort*)(record + 0xC) = (ushort)x;
         *(ushort*)(record + 0xE) = (ushort)level;
