@@ -1,0 +1,41 @@
+# Elemental Strike aims with its own range and preview (a player's report, 2026-11-19: on their Ramza it was "a melee
+# ability that has a 0% chance of hitting"; ReMixed's has range 7). Run with
+#   python -I tools/quick_test.py --restart --location 24 --stop tests/quick/elemental-strike.txt
+# A random battle on Mandalia Plains, one unit placed and given Elemental (0x11) as its secondary with Elemental Strike
+# (0x7E, its first ability: bit 0x80 of +0xC6, the Geomancer's learned bits at +0xA2 + 3 x (0x11 - 5)) learned.
+# First the menus, as a player picks it: Act, the secondary (Attack, the primary, then Elemental, labelled "Geomancy"
+# alone, not with the terrain's ability), Strike, framing the lists and the targeting, whose panels are the range the
+# game works out from the menu's action record; `act menu` logs that record, which must hold Strike (the remaster's
+# menu gave Elemental ability 0, the panels round the unit and a 0% preview). Then, back at the command menu, an `act`
+# uses it at the nearest foe through the game's own confirm, and formula 0x24's trace line names the terrain under the
+# target, its status set, element and effect, and the damage.
+name Elemental Strike's range and hit
+send testmode record
+wait world depth=1 state=0 timeout=20
+key RETURN
+wait log "reveal treasures: map" press=RETURN every=3 timeout=180
+formation units=1
+poke unit player=1 present=1 offset=0x13 hex=11
+poke unit player=1 present=1 offset=0xC6 or=80
+wait unit player=1 present=1 turn=1 timeout=240
+wait seconds 3
+shot command-menu
+key DOWN wait=1
+key RETURN wait=1.5
+key DOWN times=2 wait=1
+shot act-list
+key RETURN wait=1.5
+shot elemental-list
+key RETURN wait=2
+shot targeting
+send act menu
+wait log "harness: the menu's state 0x17, its record unit \d+, skillset 0x11, ability 0x07E" timeout=5
+key ESCAPE times=3 wait=1
+# Back at the command menu: the cursor up onto Move, where `act` presses F for the move selection that takes it.
+key UP wait=1
+wait seconds 1
+send act 11 07E foe
+wait log "harness: unit \d+ uses 0x07E" timeout=60
+wait log "formula 0x24, ability 0x07E" timeout=30
+wait log "harness: unit \d+ used 0x07E" timeout=60
+shot struck

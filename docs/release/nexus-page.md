@@ -4,14 +4,14 @@ The mod's page on Nexus Mods: https://www.nexusmods.com/finalfantasytacticstheiv
 (published 2026-11-14 with 0.9.1; the Event Instruction Upgrade has its own page, mod 186). Its text, ready to paste. Nexus's
 description editor takes BBCode. ReMixed's author, Nyzer, gave his permission on 2026-11-12 ("Sure, go nuts", in reply to
 the user on Discord); the credits link ReMixed's thread on FFHacktics.
-Written for release 0.9.19 (2026-11-19); update the "What's in it" and "Not ported yet" lists from
+Written for release 0.9.20 (2026-11-19); update the "What's in it" and "Not ported yet" lists from
 [GAMEPLAY_TODO.md](../GAMEPLAY_TODO.md) for each release.
 
 ## Page fields
 
 - **Name:** Ivalice ReMixed
 - **Category:** Overhauls (or Gameplay)
-- **Version:** 0.9.19
+- **Version:** 0.9.20
 - **Language:** English
 - **Requirements** (Nexus's requirements tab):
   - FFT Mod Loader by Nenkai: https://www.nexusmods.com/finalfantasytacticstheivalicechronicles/mods/4
@@ -42,11 +42,11 @@ All credit for ReMixed's design goes to its authors (see Credits). This port is 
 [*][b]ReMixed's battle rules:[/b] its damage formulas and support abilities; Brave lowering the damage a unit takes; knockback; hitting bodies and shooting past allies; Move-Find's items; stolen equipment coming back after the battle; enemy levels that scale to your deployed units; paying before a battle to have its hidden items marked.
 [*][b]The Dark Knight[/b] as ReMixed has it (its gear, skills and unlock), for men and women. To pick it in the job menu, install [url=https://www.nexusmods.com/finalfantasytacticstheivalicechronicles/mods/34]Dark Knight and Onion Knight (Generic)[/url] too: it adds the job menu's second page, where the Dark Knight is. The rest of the mod works without it.
 [*][b]Extra Options[/b], as in ReMixed: permadeath, JP and EXP rates, spillover JP, JP refunds, a victory bonus, the Nemesis System (downed enemies come back by name), back attacks, Brave and damage, knockback, guest control, poaching, MP and casting options, zodiac compatibility, enemy power and levels, job levels and rare equipment. Set them under Configure Mod in Reloaded-II for new saves, and for each save on the ReMixed tab of the game's Settings.
-[*][b]Missions:[/b] all 31 of ReMixed's Rendezvous battles, Mirror Match too, posted under the Tavern's own Missions button as the story unlocks them, each with ReMixed's scenes and lines. A won mission spins ReMixed's Treasure Wheel.
+[*][b]Missions:[/b] all 31 of ReMixed's Rendezvous battles, Mirror Match too, posted under the Tavern's own Missions button as the story unlocks them, each with ReMixed's scenes and lines; the confirm button on a posting asks whether to accept it. A won mission spins ReMixed's Treasure Wheel.
 [*][b]Side chapter 1-A[/b] (Agrias's story): offered at the end of chapter 1, as in ReMixed; declining it, or finishing it, goes on to chapter 2. Its battles with Bryn and Lorne along deploy ReMixed's second squad, six of your units in all.
 [*][b]Its other characters' stories:[/b] Beowulf and Reis with ReMixed's Bremondt arc, Balthier at Dorter, Luso (met at Mandalia, and again after Araguay Woods), a Lich and his Dark Crusaders, then Ashley, Biggs and Wedge at Gariland, the Nemesis's return, and Zalbag at Eagrose, who can live, as in ReMixed.
 [*][b]ReMixed's own art[/b] for characters and monsters the remaster has none of: the Lich and his Dark Crusaders, Luso, Hirame, Ashley, a dragon, a Lamia and a Tonberry among them, from ReMixed's sprites smoothed to the enhanced sprites' size, with ReMixed's animations and its own portraits in speech boxes and on unit cards.
-[*][b]Dispatch Missions[/b] in the Tavern in place of Errands, as in ReMixed: Propositions (six kinds and their current set), Jobs, Special Training, monthly Contests and Recall, with the remaster's native roster picker, cancellation, timers and reports. It opens once ReMixed posts it (Chocobo Defense's unlock).
+[*][b]Dispatch Missions[/b] in the Tavern in place of Errands, as in ReMixed: Propositions (six kinds and their current set), Jobs, Special Training, monthly Contests and Recall, with the remaster's native roster picker (the confirm button sends the units picked), cancellation, timers and reports. It opens once ReMixed posts it (Chocobo Defense's unlock).
 [*][b]The Argath campaign[/b], ReMixed's secret campaign (there, you name Ramza Algus or Argath; the remaster doesn't allow that, so it's a setting): chapter 1 played as Argath, the Order of the Northern Sky's side of the story, and a final battle and ending of its own, after which you're back on the world map. Turn on Argath campaign under Configure Mod (Story) and start a new game; turn it off again for a normal one. It's ported to its end, but so far it has been played as far as its battle after Eagrose: expect rough edges after that. As in ReMixed, its battles start once every place on the formation is filled.
 [*][b]The Depths of Murond[/b], ReMixed's post-game hub after its endings: its credits and Completion Points rooms, including upgrades, recruits, Reis's Morph, New Game+, Continue+ and the return to the world map. Its main hub, Spend CP, named unit picker and unit upgrade menus have been tested in game; completing purchases and every ending route still needs a full pass.
 [/list]
@@ -90,10 +90,10 @@ Untick Ivalice ReMixed in Reloaded-II. Its saves stay in their own folder.
 
 ## File (the upload)
 
-- **File:** `mod/release/nexus/IvaliceReMixed-0.9.19.zip`: only ReMixed's folder, cut from
-  `mod/release/IvaliceReMixed-0.9.19.zip` (the upgrade's folder goes up on its own page; never the other zips in
+- **File:** `mod/release/nexus/IvaliceReMixed-0.9.20.zip`: only ReMixed's folder, cut from
+  `mod/release/IvaliceReMixed-0.9.20.zip` (the upgrade's folder goes up on its own page; never the other zips in
   `mod/steam-deck/`, which are other people's mods)
-- **Name:** Ivalice ReMixed 0.9.19
+- **Name:** Ivalice ReMixed 0.9.20
 - **Category:** Main file
 - **Description:** Drag onto Reloaded-II with the Event Instruction Upgrade. Needs the FFT Mod Loader. Enhanced mode.
 

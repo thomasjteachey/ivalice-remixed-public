@@ -1,8 +1,11 @@
 # The Tavern's Missions button and Dispatch's controller Back (asked 2026-11-18). Run with --restart --location 2
 # (Eagrose). Missions lists only ReMixed's mission postings, under its own heading, prompt and breadcrumb; Rumors only
-# the ordinary rumors; Dispatch Missions' posting is in neither. In Dispatch, a controller's B in Special Training's
-# roster picker stays in the picker (it used to pull the list back to the main page under the picker's units, seen on
-# the Deck), and B on an empty page (Jobs, before story section 3) still goes back to the main page.
+# the ordinary rumors; Dispatch Missions' posting is in neither. A posting is taken with the confirm button, not Start
+# (asked 2026-11-19): Enter on Chocobo Defense asks "Accept this mission?" in the list's prompt line (the confirm and
+# back buttons' icons for Yes and No), Escape says no and leaves the list as it was, and Enter, then Enter again,
+# accepts it (it would begin on leaving town; the line says so). In Dispatch, a controller's B in Special
+# Training's roster picker stays in the picker (it used to pull the list back to the main page under the picker's
+# units, seen on the Deck), and B on an empty page (Jobs, before story section 3) still goes back to the main page.
 name Tavern Missions and Dispatch Back
 wait world depth=1 state=0 timeout=20
 setvar 0x6E 0x10
@@ -19,6 +22,21 @@ key RETURN
 wait log the Tavern.s Missions chosen timeout=10
 wait seconds 2.5
 shot missions
+key RETURN
+wait log missions: asked whether to accept timeout=10
+wait seconds 1.5
+shot mission-question
+key ESCAPE
+wait log missions: the posting of mission scenario 0x[0-9A-F]+ not accepted timeout=10
+wait seconds 1.5
+shot mission-declined
+key RETURN
+wait log missions: asked whether to accept timeout=10
+wait seconds 1.5
+key RETURN
+wait log missions: Yes to the posting timeout=10
+wait seconds 1.5
+shot mission-accepted
 key ESCAPE
 wait world depth=2 state=5 timeout=10
 wait seconds 1.5

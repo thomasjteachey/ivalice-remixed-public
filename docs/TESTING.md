@@ -205,9 +205,10 @@ after each, with the exe addresses on its stack, for `tools/exe.py func`), and `
 
 The world map reads its buttons from the pad's own words, which Steam Input fills only from a controller, so a key
 sent to the hidden window never reaches them. `send worldpad BITS [FRAMES]` holds buttons there for a few frames
-instead (Start is 0x08000800). A mission's posting is tested that way: in a tavern's Rumors, on the posting, `send
-worldpad 0x08000800 4` accepts it (the log says so), and Escape out of the tavern and the town starts its battle.
-`setvar 0x6E 24` first lists the postings up to Lost Heirloom.
+instead (Start is 0x08000800). A mission's posting no longer needs it: in a tavern's Missions, Enter on a posting
+asks "Accept this mission?", Enter again (Yes) accepts it (the log says so; `tests/quick/tavern-missions.txt`), and
+Escape out of the tavern and the town starts its battle. `setvar 0x6E 24` first lists the postings up to Lost
+Heirloom.
 
 ### Quick checks while developing
 
@@ -258,7 +259,7 @@ menus, and `send testmode auto` hands it back.
 `send act SKILLSET ABILITY TARGET` makes a party unit use an ability without driving the menus: `send act 08 195
 foe` is Two Shots (skillset 0x08, ability 0x195) at the nearest foe's panel (TARGET is also a battle unit's index, or
 `X,Y[,LEVEL]`; a fifth word queues it that many times, for a turn's two actions). Acts are queued (`send act clear`
-drops them) and taken as a party unit's command menu is about to open, at its turn's start or again after an action
+drops them; `send act menu` logs the menu's state and its action record, as the menus filled it) and taken as a party unit's command menu is about to open, at its turn's start or again after an action
 that leaves the turn going; a turn already at its first command menu gets an F on Move, and the move selection takes
 it. Then the battle
 menu's action record is filled and the menu put in its confirm state, so the game's own confirm does the rest (the

@@ -113,6 +113,19 @@ internal static unsafe class TavernStorage
         "B8 4E 07 00 00 39 82 F8 00 00 00 74 0D 89 82 F8 00 00 00 C6 82 3C 01 00 00 01 C3";
     internal const string SetTextPattern =
         "48 89 5C 24 08 57 48 83 EC 20 48 8B D9 49 8B F8 8B CA E8 ?? ?? ?? ?? 48 8B D0 4C 8B C7 48 8B CB";
+    /// <summary>The roster picker's answer to a press (0x1A2E90: rcx the picker, the Tavern screen's +0x80; rdx the
+    /// press its unit view read, which it turns into the Tavern's next state). The press is 0 for Back, 1 for Select
+    /// Unit (the confirm button) and 2 for Confirm Units, which only Start (Space) gave. Select Unit on a unit already
+    /// picked did nothing (0x1A2C80 buzzes); filling every place went on by itself (to the confirmation, state 7), and
+    /// any fewer needed Start. <see cref="OnPickerPress"/> makes Select on a picked unit Confirm Units, so the confirm
+    /// button sends a group of any size; the remaster's own confirmation (its units, then "Dispatch" or "Cancel")
+    /// still follows. The button bar says so (tools/build_mod.py, PICKER_GUIDE).</summary>
+    internal const string PickerPressPattern =
+        "48 89 5C 24 10 48 89 6C 24 18 48 89 74 24 20 57 48 83 EC 30 48 8B F1 48 8D A9 3C 0B 00 00 8B 0A 48 8B FA 85 C9 0F 84";
+    /// <summary>The picker's picked units (their unit view indices, 4 bytes each) and how many; the unit view
+    /// ([[UI root] + 0x10] + 0x58) has the cursor's unit at +0xB4, as the picker's button bar (0x19E1C8) reads it.</summary>
+    internal const int PickedAt = 0xB30, PickedCountAt = 0xB40, MostPicked = 3, UnitViewAt = 0x58, CursorUnitAt = 0xB4,
+                       SelectPress = 1, ConfirmUnitsPress = 2;
 
     internal const int ProfitTable = 0xB6, ListBegin = 0x60, ListEnd = 0x68;
     internal static nint DayChangeAt { get; private set; }
@@ -140,6 +153,7 @@ internal static unsafe class TavernStorage
     internal static nint ProfitMainShowAt { get; private set; }
     internal static nint ProfitHeaderAt { get; private set; }
     internal static nint SetTextAt { get; private set; }
+    internal static nint PickerPressAt { get; private set; }
     internal static byte* Count { get; private set; }
     internal static byte* RecordsAt { get; private set; }
     internal static byte* States { get; private set; }
@@ -173,6 +187,7 @@ internal static unsafe class TavernStorage
     private static delegate* unmanaged<nint, int, void> _profitMainShow;
     private static delegate* unmanaged<nint, nint, void> _profitHeader;
     private static delegate* unmanaged<nint, int, nint, void> _setText;
+    private static delegate* unmanaged<nint, int*, void> _pickerPress;
     private static delegate* unmanaged<nint, nint> _profitRecordInit;
     private static nint* _profitTable;
     private static nint* _tableManager;
@@ -208,6 +223,7 @@ internal static unsafe class TavernStorage
     private static bool _missionsTextsShown;
     private static int _lastCatalogState = -1;
     private static int _missionsHelpText;
+    private static int _missionsQuestionText, _missionsAcceptedText;
     private static bool _uiTextsLoaded;
     private static bool _nativeNumericTextCaptured;
     private static int _nativeCostText;
@@ -263,6 +279,7 @@ internal static unsafe class TavernStorage
         ProfitMainShowAt = image.FindUnique(ProfitMainShowPattern);
         ProfitHeaderAt = image.FindUnique(ProfitHeaderPattern);
         SetTextAt = image.FindUnique(SetTextPattern);
+        PickerPressAt = image.FindUnique(PickerPressPattern);
         if (*(byte*)(SendAt + 0x37) != 0x0F || *(byte*)(SendAt + 0x38) != 0xB7)
             throw new InvalidDataException("the native errand sender's selected row moved");
         SelectedRow = (ushort*)GameImage.Rip(SendAt + 0x37, 3, 7);
@@ -312,6 +329,9 @@ internal static unsafe class TavernStorage
             ProfitHeaderAt, (nint)(delegate* unmanaged<nint, nint, void>)&OnProfitHeader,
             "the Tavern Errands catalog's heading");
         _setText = (delegate* unmanaged<nint, int, nint, void>)SetTextAt;
+        _pickerPress = (delegate* unmanaged<nint, int*, void>)game.Hooks.Hook(
+            PickerPressAt, (nint)(delegate* unmanaged<nint, int*, void>)&OnPickerPress,
+            "the roster picker's presses (confirm on a picked unit)");
 
         _log.Info("dispatch missions: in the Tavern's menu in place of Errands, with Propositions, Jobs, Special " +
                   "Training, Contests and recall/reports in the native view");
@@ -774,6 +794,43 @@ internal static unsafe class TavernStorage
         _workHistoryEvent(addon, node, message);
     }
 
+    /// <summary>The roster picker's press (<see cref="PickerPressPattern"/>): Select Unit on a unit already picked is
+    /// Confirm Units, as Start was.</summary>
+    [UnmanagedCallersOnly]
+    private static void OnPickerPress(nint picker, int* press)
+    {
+        try
+        {
+            if (press != null && *press == SelectPress && PickedUnderCursor(picker))
+            {
+                *press = ConfirmUnitsPress;
+                _log.Info($"dispatch missions: confirm on a picked unit confirms the {*(byte*)(picker + PickedCountAt)} " +
+                          "unit(s) picked");
+            }
+        }
+        catch (Exception e)
+        {
+            _log.Error($"dispatch missions: the roster picker's press couldn't be read ({e.Message})");
+        }
+        _pickerPress(picker, press);
+    }
+
+    /// <summary>Whether the unit under the picker's cursor is one of its picked units.</summary>
+    private static bool PickedUnderCursor(nint picker)
+    {
+        var count = picker == 0 ? 0 : Math.Min((int)*(byte*)(picker + PickedCountAt), MostPicked);
+        var root = _uiRoot == null ? 0 : *_uiRoot;
+        var context = root == 0 ? 0 : *(nint*)(root + 0x10);
+        var view = context == 0 ? 0 : *(nint*)(context + UnitViewAt);
+        if (count == 0 || view == 0)
+            return false;
+        var cursor = *(int*)(view + CursorUnitAt);
+        for (var k = 0; k < count; k++)
+            if (*(int*)(picker + PickedAt + 4 * k) == cursor)
+                return true;
+        return false;
+    }
+
     [UnmanagedCallersOnly]
     private static void OnListDetail(nint addon, int row)
     {
@@ -998,12 +1055,28 @@ internal static unsafe class TavernStorage
         }
     }
 
+    /// <summary>The native sender (0x36A7D8), run by the world map's Tavern state once "Dispatch" is answered: it pays
+    /// the fee, sets the selected errand's nibble (var 0x35F + the errand: |8, then |2), writes the next record (+0 1,
+    /// +1 the errand less one) and counts it. The selected errand (<see cref="SelectedRow"/>) isn't the carrier row
+    /// for Dispatch's rows, whose text records are virtual (<see cref="OnTableRow"/>): Valor, carrier 0 and key 96, was
+    /// sent as errand 90 (seen in the hidden PC game, 2026-11-19). So the group was never marked as ReMixed's (the
+    /// remaster's day change would have reported it as its own errand 90), the native nibble and record went to that
+    /// errand, and an errand past the native 96 would put the nibble past their variables (0x3BF). The row sent is now
+    /// the catalog's focused one (<see cref="FocusedCarrier"/>), which opened the picker; the sender is given that
+    /// carrier's own errand, so what it writes stays in the carrier's nibble and count down, which are put back after,
+    /// and the record is marked as ReMixed's group with the entry's key. Each send is logged.</summary>
     [UnmanagedCallersOnly]
     private static void OnSend()
     {
-        var carrier = SelectedRow == null ? -1 : *SelectedRow - 1;
+        var selected = SelectedRow == null ? -1 : (int)*SelectedRow;
+        var carrier = FocusedCarrier();
         var entry = _dispatchView ? EntryForCarrier(carrier) : null;
-        if (entry == null)
+        var before = Math.Min(*Count, (byte)NativeRecords);
+        _log.Info($"dispatch missions: sending row {carrier} (the game's errand {selected}) " +
+                  (_dispatchView ? $"on {_page}" : "outside the Dispatch view") + " as " +
+                  (entry == null ? "nothing of Dispatch's" : $"{entry.Kind} '{entry.Name}' (key {entry.Key})") +
+                  $"; {before} group(s) out");
+        if (entry == null || SelectedRow == null)
         {
             _send();
             return;
@@ -1011,10 +1084,10 @@ internal static unsafe class TavernStorage
         var variable = FirstState + carrier;
         var savedVariable = Nemesis.GetVariable(variable);
         var savedCountdown = States[carrier];
-        var before = Math.Min(*Count, (byte)NativeRecords);
         var sent = false;
         try
         {
+            *SelectedRow = (ushort)(carrier + 1);
             _send();
             if (*Count == before + 1 && before < NativeRecords)
             {
@@ -1024,6 +1097,8 @@ internal static unsafe class TavernStorage
                 sent = true;
                 _log.Info($"dispatch missions: sent {record[5]} unit(s) on {entry.Kind} '{entry.Name}'");
             }
+            else
+                _log.Warn($"dispatch missions: {entry.Name}'s group wasn't counted (groups {before} -> {*Count})");
         }
         catch (Exception e)
         {
@@ -1031,6 +1106,7 @@ internal static unsafe class TavernStorage
         }
         finally
         {
+            *SelectedRow = (ushort)selected;
             Nemesis.SetVariable(variable, savedVariable, 0);
             States[carrier] = savedCountdown;
         }
@@ -1038,11 +1114,36 @@ internal static unsafe class TavernStorage
             Set(0x35F + entry.Effect, 0xA);
     }
 
+    /// <summary>The carrier of the catalog's focused record, as the remaster's own abandon (0x2EE1C8) finds it: the
+    /// record at the focus (ProfitMain's +0xC0; 0x1A1D28: the records 0x158 bytes each from +0x3E8 to +0x3F0), its row
+    /// at +0x138. The focus is a place in the list, not the carrier: groups out are listed last (seen in the hidden PC
+    /// game, 2026-11-19: Valor out was the 7th place, carrier 0). -1 outside the Dispatch view or past the native rows.</summary>
+    private static int FocusedCarrier()
+    {
+        if (!_dispatchView || _profitMain == 0)
+            return -1;
+        var focused = *(int*)(_profitMain + 0xC0);
+        var begin = *(nint*)(_profitMain + 0x3E8);
+        var end = *(nint*)(_profitMain + 0x3F0);
+        if (begin == 0 || end < begin || focused < 0 || focused >= (end - begin) / 0x158)
+            return -1;
+        var carrier = *(int*)(begin + focused * 0x158L + 0x138);
+        return carrier is >= 0 and < NativeRows ? carrier : -1;
+    }
+
+    /// <summary>The native abandon (0x2EE1C8): it takes the catalog's focused record's row (+0x138, the carrier),
+    /// frees the units of the record whose +1 is that row, closes the records up and clears the row's nibble's bit 2.
+    /// It went by <see cref="SelectedRow"/> here, which is left from the last send (<see cref="OnSend"/>), not the row
+    /// recalled, so a recall from Dispatch found no entry and the native looked for a record by the carrier, which
+    /// ReMixed's group keeps as its key; it goes by the focused record's row now, as the native does (seen in the
+    /// hidden PC game, 2026-11-19: Valor recalled, its unit back).</summary>
     [UnmanagedCallersOnly]
     private static void OnAbandon()
     {
-        var carrier = SelectedRow == null ? -1 : *SelectedRow - 1;
+        var carrier = FocusedCarrier();
         var entry = _dispatchView ? EntryForCarrier(carrier) : null;
+        _log.Info($"dispatch missions: recalling row {carrier} as " +
+                  (entry == null ? "nothing of Dispatch's" : $"{entry.Kind} '{entry.Name}'"));
         if (entry == null)
         {
             _abandon();
@@ -1286,6 +1387,39 @@ internal static unsafe class TavernStorage
         _dispatchEmptyText = Text("empty");
         _missionsText = Text("missions");
         _missionsHelpText = Text("missions_help");
+        _missionsQuestionText = Text("missions_accept");
+        _missionsAcceptedText = Text("missions_accepted");
+    }
+
+    /// <summary>What the Missions list's prompt line says (<see cref="MissionPrompt"/>): its own help, the question
+    /// whether to accept the posting under the cursor, or that one was accepted.</summary>
+    internal enum MissionsPrompt { Help, Question, Accepted }
+
+    /// <summary>Puts <paramref name="prompt"/> in the Missions list's prompt line; false where it can't (no Missions
+    /// list up, or no text for it).</summary>
+    internal static bool ShowMissionsPrompt(MissionsPrompt prompt)
+    {
+        var text = prompt switch
+        {
+            MissionsPrompt.Question => _missionsQuestionText,
+            MissionsPrompt.Accepted => _missionsAcceptedText,
+            _ => _missionsHelpText,
+        };
+        try
+        {
+            if (_missionsScreen == 0 || text <= 0 || _setText == null)
+                return false;
+            var rumors = *(nint*)(_missionsScreen + RumorsAt);
+            if (rumors == 0)
+                return false;
+            SetPrompt(rumors, text);
+            return true;
+        }
+        catch (Exception e)
+        {
+            _log.Error($"remixed scenarios: the Missions list's prompt couldn't change ({e.Message})");
+            return false;
+        }
     }
 
     private static void ApplyProfitHeading(bool dispatch)

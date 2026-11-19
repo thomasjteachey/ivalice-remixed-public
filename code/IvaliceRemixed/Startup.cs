@@ -75,6 +75,15 @@ public class Startup : IMod
                 {
                     log.Error($"reveal treasures: not offered ({e.Message})");
                 }
+            if (File.Exists(page))
+                try
+                {
+                    Patches.MissionPrompt.Install(game);
+                }
+                catch (Exception e)
+                {
+                    log.Error($"missions: the Tavern's postings can't be accepted ({e.Message})");
+                }
             var slots = Path.Combine(modDir, Patches.RemixedText.FileName);
             if (File.Exists(slots))
                 try

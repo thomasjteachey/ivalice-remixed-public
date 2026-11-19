@@ -7991,7 +7991,23 @@ internal static unsafe class SelfTest
                  $"weapon type 5, and ReMixed's monster lists are type 6 in the table " +
                  $"(0x{(table == null ? 0 : (nint)table - game.Image.ImageStart):X}), Jump, Draw Out, Throw and Math Skill as " +
                  $"they were{(ok ? "" : ": WRONG")}");
-        return ok ? 0 : 1;
+
+        // The menus' tests for Elemental's id: the request takes the list's ability for 5–0x11 (Jump's 0x12 still
+        // not), and the label's and info panels' jumps to the ordinary way are always taken, a short one keeping its
+        // displacement and a near one landing close by.
+        var image = game.Image.ImageStart;
+        var request = SkillsetTypes.RequestAt;
+        var label = SkillsetTypes.LabelAt;
+        var info = SkillsetTypes.InfoAt;
+        bool Jumps(nint at) => *(byte*)at == 0xEB
+                               || (*(byte*)at == 0xE9 && *(byte*)(at + 5) == 0x90 && Math.Abs(*(int*)(at + 1)) < 0x400);
+        var menusOk = request != 0 && *(byte*)(request + 6) == 0x0C && *(byte*)(request + 12) == 0x13
+                      && label != 0 && Jumps(label + 3) && info.Count == 6 && info.All(at => Jumps(at + 3));
+        log.Info($"self-test: skillset types, the menus take Elemental's chosen ability (request test at " +
+                 $"0x{request - image:X}: skillsets 5-0x11 and from 0x13), its label and info panels the ordinary way " +
+                 $"(0x{label - image:X}; {string.Join(" ", info.Select(at => $"0x{at - image:X}"))})" +
+                 $"{(menusOk ? "" : ": WRONG")}");
+        return (ok ? 0 : 1) + (menusOk ? 0 : 1);
     }
 
     private static byte* _fakeItems, _fakeWeapons;
@@ -9114,6 +9130,12 @@ internal static unsafe class SelfTest
               && profitUpdate == 0x1A1714 && profitState == 0x1A1848 && profitShow == 0x19F160
               && profitHeader == 0x1A1600 && setText == 0x3F106C
               && profitLoader == 0x3D325C);
+        Check($"the roster picker's presses 0x{Off(TavernStorage.PickerPressAt):X} (confirm on a picked unit is Confirm Units)",
+              Off(TavernStorage.PickerPressAt) == 0x1A2E90);
+        MissionPrompt.Find(game.Image);
+        Check($"the Missions' question: the rumor list's frame 0x{Off(MissionPrompt.ListFrameAt):X}, the action test " +
+              $"0x{Off(MissionPrompt.ActionPressedAt):X}",
+              Off(MissionPrompt.ListFrameAt) == 0x1A0100 && Off(MissionPrompt.ActionPressedAt) == 0xFC598);
         var firstCourse = (byte*)TavernStorage.ProfitRowsAt + TavernStorage.TrainingFirst * TavernStorage.ProfitRowBytes;
         var lastCourse = (byte*)TavernStorage.ProfitRowsAt + TavernStorage.TrainingLast * TavernStorage.ProfitRowBytes;
         Check("native errand rows 89-95 remain byte-for-byte unrepurposed",

@@ -1,5 +1,21 @@
 # Dispatch Missions: porting ReMixed's tavern (plan, 2026-11-11)
 
+> **2026-11-19: the confirm button, not Start.** ReMixed itself sends a group with Start: in its picker (0x0E6)
+> Circle (button word 0x20) adds the unit under the cursor, Cross (0x40) takes one out, Left/Right (0x8000/0x2000)
+> move between the group's places, L1/R1 (0x4/0x8) step through the roster, and Start (0x800) sends the group, after
+> its "Mission cost: N gil. / You have: N gil." No/Yes. Its mission list (WORLD 0x8013E4EC) takes a mission with Start
+> once the mission's text is up, and asks nothing more. The remaster's native picker that Dispatch uses (0x1A2E90)
+> binds Confirm Units to Start (Space) alone; Select on a picked unit only buzzed, and only filling every place went on
+> by itself. Now Select (A, Enter or F) on a unit already picked confirms the units (`TavernStorage.OnPickerPress`; the
+> button bar shows it, the build's PICKER_GUIDE), and the remaster's own confirmation, "Dispatch" or "Cancel", and the
+> days follow on the same button. In the Tavern's Missions, Select on a posting asks "Accept this mission? It begins as
+> you leave town." in the list's prompt line, with the confirm and back buttons' icons for Yes and No (`MissionPrompt`);
+> Start no longer accepts one. Sending and recalling now go by the catalog's focused record (its +0x138, the
+> carrier), as the remaster's abandon does: the sender's selected errand (0xD49434) comes from the row's virtual text
+> record (Valor: 90, not its carrier 0), so sends were never marked as ReMixed's groups and recalls found none
+> (`TavernStorage.OnSend`, `OnAbandon`; seen in the hidden PC game). Recall stays
+> on the remaster's Abandon Errand button (its action 181, pad button 24 and the B key, held), which isn't Start.
+
 > **2026-11-18: in Errands' place.** The Tavern menu is Rumors and Dispatch Missions: the button replaces Errands,
 > as ReMixed's tavern replaces vanilla's errands (the user's call, for a faithful port). It's locked ("???") until
 > ReMixed posts Dispatch Missions, its category pages have no Days or Finder's Fee columns, and the Rumors posting

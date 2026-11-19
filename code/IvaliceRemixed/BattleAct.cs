@@ -75,7 +75,8 @@ internal static unsafe class BattleAct
     /// another team), a battle unit's index (its panel), or <c>X,Y[,LEVEL]</c>; TIMES queues it that often (a turn's two
     /// actions in one go, as the second's menu comes moments after the first). Queued, and answered at once: the next party
     /// unit's menu between actions takes it (so a turn's actions are queued before it starts), and the log says
-    /// "harness: unit N used ..." once its confirm has run. <c>act clear</c> drops what's queued.
+    /// "harness: unit N used ..." once its confirm has run. <c>act clear</c> drops what's queued. <c>act menu</c> logs the
+    /// menu's state and its action record (unit, skillset, ability, target type, x, level, y), as the menus filled it.
     /// </summary>
     public static string Run(string[] parts)
     {
@@ -85,6 +86,17 @@ internal static unsafe class BattleAct
         {
             Requests.Clear();
             return "act: nothing queued";
+        }
+        if (parts.Length == 2 && parts[1].Equals("menu", StringComparison.OrdinalIgnoreCase))
+        {
+            var menu = _battleUi();
+            var line = menu == null
+                ? $"harness: the menu's state 0x{*_state:X}, no battle menu"
+                : $"harness: the menu's state 0x{*_state:X}, its record unit {menu[UiRecord]}, skillset 0x{menu[UiRecord + 1]:X2}, "
+                  + $"ability 0x{*(ushort*)(menu + UiRecord + 2):X3}, target type {menu[UiRecord + 0xA]} at "
+                  + $"({*(ushort*)(menu + UiRecord + 0xC)}, {*(ushort*)(menu + UiRecord + 0x10)}, level {*(ushort*)(menu + UiRecord + 0xE)})";
+            _game.Log.Info(line);
+            return line;
         }
         if (parts.Length < 4)
             return "error: act SKILLSET ABILITY foe|INDEX|X,Y[,LEVEL], or act clear";

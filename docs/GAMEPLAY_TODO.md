@@ -34,8 +34,9 @@ The events, by group:
 
 - **Missions** (31 events, all built; once called location battles): ReMixed's Rendezvous battles, posted under the
   Missions button in every tavern as its story unlocks each (since 2026-11-18; they were among the Rumors as "Mission:
-  Lost Heirloom" and so on before), with ReMixed's text. Start on
-  a posting accepts it, and the battle begins as you leave town. Nobody is lost for good in one (a fallen unit stays
+  Lost Heirloom" and so on before), with ReMixed's text. The confirm
+  button on a posting asks whether to accept it (Start, as in ReMixed, until 2026-11-19), and the battle begins as you
+  leave town. Nobody is lost for good in one (a fallen unit stays
   down for that battle only) and Math Skill can't be brought in, as in ReMixed. Two are fought in rounds: The Shrine
   Knights in four, Brave Story in ten, each round on from the last. Seen on the PC (2026-11-07): Lost Heirloom from
   its posting in Gariland's tavern through its battle and back to the world map, The Shrine Knights' four rounds,
@@ -374,8 +375,8 @@ In the order I'd take them:
    PSX menu flow uses the remaster's own list, roster picker, timers, cancellation and reports: main menu, six
    Proposition kinds, the current unfinished set, Jobs, Special Training, Contests and Recall; its category pages
    have no Days or Finder's Fee columns. Seen in the hidden PC game (`tests/quick/dispatch-button.txt`): the button,
-   the category pages, an empty mission page and the locked button. Left to verify: sending, three daily steps,
-   reporting and returning to the Tavern.
+   the category pages, an empty mission page, a group sent with the confirm button alone and recalled (2026-11-19)
+   and the locked button. Left to verify: three daily steps, reporting and returning to the Tavern.
 
 ## Open
 
@@ -537,6 +538,21 @@ Asked on the Deck (2026-11-18):
   its main page under the picker's units. The mod's Back fallback for empty pages now acts only when the catalog's
   list was on screen as B was pressed; B on an empty page still goes back. Seen in the hidden PC game with a
   controller's B held in the pad words (`tests/quick/tavern-missions.txt`). *small*
+- [x] Dispatch Missions and the Tavern's Missions no longer need Start (asked 2026-11-19; on the Deck Start is held
+  to skip scenes). In Dispatch's unit picker, the confirm button on a unit already picked now sends the units picked
+  (the button bar says "Confirm Units" for it); before, only Start sent fewer units than the places. The remaster's
+  own days and "Dispatch" or "Cancel" still follow, both on the confirm button. In Missions, the confirm button on a
+  posting asks "Accept this mission? It begins as you leave town." in the prompt line, confirm for Yes and back for
+  No; Start no longer accepts one. ReMixed itself used Start for both, its mission list once a mission's text is up.
+  Seen in the hidden PC game (`tests/quick/dispatch-button.txt`, `tests/quick/tavern-missions.txt`): a unit sent on
+  Valor training with Enter alone, its fee paid; a posting declined with Escape, then accepted. *small*
+- [x] A group sent from Dispatch Missions was never kept as ReMixed's (found 2026-11-19 while moving Dispatch off
+  Start): the game names the errand it sends by the row's text, which for Dispatch's rows isn't the row (Valor went
+  as errand 90), so the mod didn't recognise it and left it as one of the remaster's own errands. Its days would have
+  ended in the remaster's report of that errand, not ReMixed's, and an errand number past the remaster's 96 would
+  have written past their storage. Recall had the same mix-up, so it didn't find the group. Both now go by the row
+  chosen in the list. Seen in the hidden PC game (`tests/quick/dispatch-button.txt`): Valor sent and kept as
+  ReMixed's group, its unit away, then recalled with the unit back. *small*
 - Dispatch Missions with nothing to send yet is ReMixed's own design: its catalog opens by the story section (var
   0x6F, which the story's events step and side chapter 1-A restarts at 1): Special Training from the start, Jobs and
   the first Mining and Exploration sets at section 3 (the Wiegraf and Gustav scene in chapter 1, or 1-A's scene at its
@@ -1189,6 +1205,13 @@ In order:
   moved, which a Charge always counts as (a Calculator's second spell after moving too). Fixed the same day and seen
   on the PC (tests/quick/two-shots.txt, the turn's two shots chosen by the harness's act): the second goes to the
   slot as the turn ends, the unit keeps Charging when the first fires, and the second fires on the next tick.
+- [x] Elemental Strike aims at range 7 with its own preview. A player reported it as a melee ability with a 0% hit
+  chance (2026-11-19): the battle menu still handed Geomancy's choice over as "no ability", for the terrain to fill
+  in as in vanilla, so the targeting and the preview were worked out for no ability (the panels round the unit), and
+  the command read "Geomancy: " with the terrain's old ability (Chef's Knife, now). Fixed the same day and seen on the
+  PC (tests/quick/elemental-strike.txt, through the menus): the command reads "Geomancy" with the
+  Geomancer's help, Strike's targeting covers range 7, and its strike lands. The preview's hit chance over a foe
+  isn't framed yet.
 - [ ] Spot-check: Samurai's Two Hands innate, the four Geomancy abilities (each as chosen, on any terrain), and the
   Dark Knight slot's requirement (Knight 8 and Black Mage 8).
 - [x] No "???" in the ability lists (asked 2026-11-12). Seen on the PC the same day: the Monk's Job Abilities and
@@ -1382,7 +1405,8 @@ In order:
   without the break on a target with Maintenance (vanilla missed; the remaster halved the damage with nothing to
   break).
 - Elemental is an ordinary skillset: Geomancers pick Elemental Strike, Lance, Pulse or Wave from the list (the remaster
-  swapped the choice for the terrain's ability, which was often a different skill now).
+  swapped the choice for the terrain's ability, which was often a different skill now), and the battle menu aims the
+  one picked, with its range and preview, under the plain "Geomancy" (2026-11-19).
 - Talk Skills work on monsters with Peacemaker (ReMixed moved that from Monster Talk, now Vehemence).
 - Return 2 misses a target with Maintenance; Worker 8's skills go through the damage rules and can inflict
   statuses (Compress).

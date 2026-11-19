@@ -27,12 +27,12 @@ namespace IvaliceRemixed.Patches;
 /// description window). They aren't world-map locations: an earlier build started entry i on Start at location i,
 /// which gave Lost Heirloom at Gariland just after the second battle, where ReMixed has none (seen in the PS1's, run on
 /// the Deck, 2026-11-06). ReMixed lists the unlocked ones under Bonus Content in its Brave Story, and Start while a
-/// mission's posting shows starts its battle. The mod posts them among the tavern rumors (<see cref="Postings"/>: rows
-/// the build adds to the Gossip table, listed by <see cref="RumorShown"/> once the story has reached the point where
-/// ReMixed unlocks each), and Start on one accepts it (<see cref="PostingAt"/>, from the world map's buttons, 0x2CC980,
-/// which run under the tavern's screens too); its battle starts once the world map is back to itself
-/// (<see cref="Accepted"/>), as the world map starts its story events (<see cref="Begin"/>). In the self-playing test
-/// mode Start on the world map starts the first mission (<see cref="TestMission"/>).</item>
+/// mission's posting shows starts its battle. The mod posts them under the Tavern's Missions (<see cref="Postings"/>:
+/// rows the build adds to the Gossip table, listed by <see cref="RumorShown"/> once the story has reached the point
+/// where ReMixed unlocks each), and the confirm button on one asks whether to accept it (<see cref="MissionPrompt"/>,
+/// asked 2026-11-19 in place of Start, which the Deck holds to skip scenes); its battle starts once the world map is
+/// back to itself (<see cref="Accepted"/>), as the world map starts its story events (<see cref="Begin"/>). In the
+/// self-playing test mode Start on the world map starts the first mission (<see cref="TestMission"/>).</item>
 /// <item>Text: the remaster's MESSAGE names a line by its Id (a u32), looked up in the scenario text its ScenarioId row
 /// gives the event (nxd/text/scenario/scenarioNNNN.en.pzd, listed in ScionFiles). The build writes ReMixed's lines
 /// there from 315160 on, past the remaster's own, converts its MESSAGEs to the remaster's layout naming them (with a
@@ -539,9 +539,8 @@ internal static unsafe class RemixedScenarios
     }
 
     /// <summary>The world map's buttons, each frame there (0x2CC980), which run under its towns' and taverns' screens
-    /// too: Start on a mission's posting in a tavern's rumor list accepts it, as Start on a mission's text does in
-    /// ReMixed's list (<see cref="PostingAt"/>), and the accepted one starts once the world map is back to itself
-    /// (<see cref="Accepted"/>). Also the autopilot's scenario, and in the self-playing test mode Start on the map starts
+    /// too: a mission accepted in the Tavern's Missions (<see cref="MissionPrompt"/>) starts once the world map is back
+    /// to itself (<see cref="Accepted"/>). Also the autopilot's scenario, and in the self-playing test mode Start on the map starts
     /// the first of ReMixed's missions, so it can be tried from any save (<see cref="TestMission"/>). Start on the map
     /// itself does nothing else: it's the remaster's way to skip a scene (the class's remarks). The first presses are
     /// logged.</summary>
@@ -619,21 +618,8 @@ internal static unsafe class RemixedScenarios
                 Begin(asked);
                 return;
             }
-            if ((newly & Start) != 0 && state == RumorListState)
-            {
-                var at = PostingAt();
-                // The Dispatch Missions posting only tells of it: it opens from the Tavern's menu, below Errands.
-                if (at >= 0 && Postings[at].Scenario == TavernStorage.DispatchScenario)
-                    return;
-                if (at >= 0 && at != Accepted)
-                {
-                    Accepted = at;
-                    _log.Info($"remixed scenarios: Start on the posting of mission scenario 0x{Postings[at].Scenario:X} "
-                              + $"(rumor {Postings[at].Rumor}): accepted, to start on the world map");
-                }
-                return;
-            }
-            // The map itself, not one of its towns' or menus' screens, with its buttons on (the world's flag 4 holds
+            // A posting is accepted in the Tavern's Missions with the confirm button and a Yes/No (MissionPrompt), not
+            // Start (asked 2026-11-19). The map itself, not one of its towns' or menus' screens, with its buttons on (the world's flag 4 holds
             // them off, as while a screen opens or closes).
             var onMap = depth == 1 && state == MapState && (*_flags & 4) == 0;
             var accepted = Accepted;
@@ -799,9 +785,9 @@ internal static unsafe class RemixedScenarios
         }
     }
 
-    /// <summary>The posting under the rumor list's cursor (its index in <see cref="Postings"/>), or -1: read only while
-    /// the list is the world map's top state (<see cref="Buttons"/>), and checked readable first, as the list is freed
-    /// when the tavern closes.</summary>
+    /// <summary>The posting under the rumor list's cursor (its index in <see cref="Postings"/>), or -1: read only from
+    /// the list's own frame (<see cref="MissionPrompt"/>), and checked readable first, as the list is freed when the
+    /// tavern closes.</summary>
     internal static int PostingAt()
     {
         var list = RumorList;

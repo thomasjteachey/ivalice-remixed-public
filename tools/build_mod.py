@@ -1089,10 +1089,15 @@ def build_ability_overrides(cfg: dict, scus_old: bytes, scus_new: bytes, empty: 
 # grid with up and down past its edge (the Dark Knight on page two), so the slot shows d-pad up and down (actions 33
 # menu_up and 34 menu_down) with "Change Page" (UI text 3206), as screen 15003 does.
 JOB_MENU_GUIDE = {"Key": 1023, "Key2": 4, "Unknown8": 33, "UnknownC": 3206, "Unknown14": 34, "Unknown25": 1}
+# The Tavern's roster picker (Dispatch Missions) with its cursor on a unit already picked is screen 5023 (B Remove Unit,
+# Change Display, and Start Confirm Units on the left). The code mod makes the confirm button there Confirm Units too
+# (TavernStorage.OnPickerPress, asked 2026-11-19), so its empty slot 0 shows A (action 26) with "Confirm Units" (1969).
+PICKER_GUIDE = {"Key": 5023, "Key2": 0, "Unknown8": 26, "UnknownC": 1969}
 
 
 def build_job_menu_guide(cfg: dict) -> str:
-    """The game's UIButtonGuide table with JOB_MENU_GUIDE's slot filled in. Returns a line for the report."""
+    """The game's UIButtonGuide table with JOB_MENU_GUIDE's and PICKER_GUIDE's slots filled in. Returns a line for the
+    report."""
     work = WORK / "remaster" / "build" / "buttonguide"
     base = WORK / "remaster" / "extract" / "enhanced" / "nxd" / "uibuttonguide.nxd"
     if not base.exists():
@@ -1103,13 +1108,14 @@ def build_job_menu_guide(cfg: dict) -> str:
     shutil.copy(base, work / "in")
     ff16tools(cfg, "nxd-to-sqlite", "-i", work / "in", "-o", work / "table.sqlite")
     db = sqlite3.connect(work / "table.sqlite")
-    key = {"Key": JOB_MENU_GUIDE["Key"], "Key2": JOB_MENU_GUIDE["Key2"]}
-    row = db.execute("select Unknown8, UnknownC from UIButtonGuide where Key = :Key and Key2 = :Key2", key).fetchone()
-    if row is None or row != (0, 0):
-        sys.exit(f"The job menu's button bar slot isn't empty any more: {row}")
-    values = {k: v for k, v in JOB_MENU_GUIDE.items() if k not in key}
-    db.execute(f"update UIButtonGuide set {', '.join(f'{c} = :{c}' for c in values)} where Key = :Key and Key2 = :Key2",
-               JOB_MENU_GUIDE)
+    for slot, name in ((JOB_MENU_GUIDE, "job menu's"), (PICKER_GUIDE, "Tavern's roster picker's")):
+        key = {"Key": slot["Key"], "Key2": slot["Key2"]}
+        row = db.execute("select Unknown8, UnknownC from UIButtonGuide where Key = :Key and Key2 = :Key2", key).fetchone()
+        if row is None or row != (0, 0):
+            sys.exit(f"The {name} button bar slot isn't empty any more: {row}")
+        values = {k: v for k, v in slot.items() if k not in key}
+        db.execute(f"update UIButtonGuide set {', '.join(f'{c} = :{c}' for c in values)} where Key = :Key and Key2 = :Key2",
+                   slot)
     db.commit()
     db.close()
     ff16tools(cfg, "sqlite-to-nxd", "-i", work / "table.sqlite", "-o", work / "out", "-t", "UIButtonGuide")
@@ -1117,7 +1123,8 @@ def build_job_menu_guide(cfg: dict) -> str:
     target = MOD_DIR / "FFTIVC" / "data" / "enhanced" / "nxd" / "uibuttonguide.nxd"
     target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy(built, target)
-    return "the job menu's slot 4: d-pad up and down, \"Change Page\" (for GenericJobs' second page)"
+    return ("the job menu's slot 4: d-pad up and down, \"Change Page\" (for GenericJobs' second page); the Tavern's "
+            "roster picker on a picked unit: the confirm button, \"Confirm Units\"")
 
 
 # ---------------------------------------------------------------- code-dependent abilities
@@ -1580,7 +1587,11 @@ DISPATCH_UI_TEXT = {
     "empty": "No missions available.",
     "missions": "Missions",
     "missions_button": "Rendezvous missions on offer, listed apart from the tavern's rumors.",
-    "missions_help": "Select a mission. Press Start to accept it.",
+    "missions_help": "Select a mission to accept it.",
+    # The Missions list's question (asked 2026-11-19: the confirm button, not Start, takes a mission), in its prompt
+    # line (the code mod's MissionPrompt), with the remaster's own button icons, as its formation's prompts have them.
+    "missions_accept": "Accept this mission? It begins as you leave town.   <keyicon=ok> Yes   <keyicon=cancel> No",
+    "missions_accepted": "Mission accepted. It begins as you leave town.",
 }
 # The Tavern's left menu (UIMenuButtonLeft: labels, descriptions, actions): row 3 Rumors and Errands, row 7 the same
 # with Errands locked ("???"). Dispatch Missions replaces Errands, as ReMixed's replaces vanilla's errands: row 3's
@@ -3216,8 +3227,10 @@ MISSION_RUMORS = 23
 MISSION_TEXTS = 0x5A8  # ReMixed's WORLD/WLDMES.BIN: entry i's posting is message 0x5A8 + i
 MISSION_TITLE = "{}"  # the posting's title in the Tavern's Missions list (it said "Mission: " among the rumors)
 # ReMixed's last line of each posting, and the mod's: its battle starts once the world map is back (the code mod's
-# RemixedScenarios.Accepted), as started under the tavern's screens they stayed drawn over its formation.
-MISSION_ACCEPT = ("(Press Start to accept mission.)", "(Press Start to accept mission. It begins as you leave town.)")
+# RemixedScenarios.Accepted), as started under the tavern's screens they stayed drawn over its formation. ReMixed takes
+# a mission with Start; the mod with the confirm button and a Yes/No (MissionPrompt, asked 2026-11-19), as the Deck
+# holds Start to skip scenes.
+MISSION_ACCEPT = ("(Press Start to accept mission.)", "(Select this mission to accept it. It begins as you leave town.)")
 # Entry 1 of ReMixed's list is its dispatch tavern (TAVERN): its posting has no title line (the list names it; the
 # Preparation Menu calls it Dispatch Missions). It's never listed (RemixedScenarios.RumorShown, asked 2026-11-18): the
 # Tavern menu's Dispatch Missions button (TAVERN_MENU_ROWS) opens the native dispatch view instead.
@@ -7189,7 +7202,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata. The title screen's plaque shows it (write_title_screen).
-RELEASE_VERSION = "0.9.19"
+RELEASE_VERSION = "0.9.20"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:

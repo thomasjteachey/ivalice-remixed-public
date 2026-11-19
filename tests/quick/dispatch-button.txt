@@ -1,8 +1,13 @@
 # Dispatch Missions in the Tavern's menu in Errands' place (asked 2026-11-18). Run with --restart --location 2
 # (Eagrose, which has a tavern). With the story past ReMixed's unlock, the second button is Dispatch Missions and opens
 # the Dispatch view; its category pages have no Days or Finder's Fee and no "-" in their rows; an empty mission page
-# says "No missions available." under the native columns. With the story back before the unlock, the button is the
-# remaster's locked "???" and choosing it does nothing.
+# says "No missions available." under the native columns. A group goes out with the confirm button alone (asked
+# 2026-11-19; Start was the only way to send fewer units than the places): in Special Training's roster picker, Enter
+# picks a unit, Left goes back onto it, and Enter there confirms the units (the button bar says "Confirm Units" for it);
+# the remaster's days and its confirmation, "Dispatch" or "Cancel", follow, both on Enter, and the group is sent (the
+# 2,000 gil fee paid from the fixture's 14,480) as ReMixed's Valor group, its unit away. Its Abandon Errand (the
+# remaster's held button, injected as action 0xB4) asks, and Enter recalls it: the unit back, the record gone.
+# With the story back before the unlock, the button is the remaster's locked "???" and choosing it does nothing.
 name Dispatch Missions in the Tavern
 wait world depth=1 state=0 timeout=20
 setvar 0x6E 0x10
@@ -24,6 +29,43 @@ shot proposition-kinds
 key RETURN wait=3
 shot empty-mission-page
 key ESCAPE wait=2.5
+key ESCAPE wait=2.5
+key DOWN wait=0.6
+key DOWN wait=0.6
+key RETURN
+wait log dispatch missions: opened Training timeout=10
+wait seconds 2
+key RETURN wait=3
+shot picker
+key RETURN wait=1.5
+key LEFT wait=1.5
+shot picker-on-picked
+key RETURN
+wait log dispatch missions: confirm on a picked unit confirms the 1 unit.s. picked timeout=10
+wait seconds 2
+shot days
+key RETURN wait=2.5
+shot dispatch-question
+key RETURN
+wait log dispatch missions: sent 1 unit.s. on Training .Valor. timeout=10
+wait seconds 3
+shot sent
+expect var 0x2C 12480
+expect roster errand=1
+key RETURN wait=3
+shot in-progress
+send action B4
+wait log dispatch missions: catalog requested Tavern state 10 timeout=10
+wait seconds 2
+shot recall-question
+key RETURN
+wait log dispatch missions: recalling row [0-9]+ as Training .Valor. timeout=10
+wait log dispatch missions: recalled Training .Valor. timeout=10
+wait seconds 3
+shot recalled
+expect roster errand=1 count=0
+key RETURN wait=3
+shot after-recall
 key ESCAPE wait=2.5
 key ESCAPE
 wait world depth=2 state=5 timeout=10
