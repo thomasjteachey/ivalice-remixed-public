@@ -39,7 +39,10 @@ FFT Mod Loader, and players get them from Nexus.
    ```
    The public repo's history is one snapshot commit a release: the script puts HEAD's tree on top of its main and
    pushes only that commit and its tag, refusing a tree that holds the game's files (the disc, `FFT_enhanced.exe`,
-   the ReMixed `.ppf`). It makes the release with the zip from step 3, which starts the Nexus upload below. The pages: Ivalice ReMixed https://www.nexusmods.com/finalfantasytacticstheivalicechronicles/mods/187, Event
+   the ReMixed `.ppf`). It makes the public release with the zip from step 3.
+7. Release the same zip on the private repo (thomasjteachey/ivalice-remixed), which holds the Nexus key: an annotated
+   tag `v<version>` on its main, pushed, then a release of that tag with the zip and the notes (made as a draft, the
+   zip uploaded, then published). Publishing it starts the Nexus upload below. The pages: Ivalice ReMixed https://www.nexusmods.com/finalfantasytacticstheivalicechronicles/mods/187, Event
    Instruction Upgrade https://www.nexusmods.com/finalfantasytacticstheivalicechronicles/mods/186 ([nexus-page-eiu.md](nexus-page-eiu.md)).
 
 ## Automated Nexus upload
@@ -49,7 +52,8 @@ new non-prerelease GitHub release, or manually for an existing release version. 
 GitHub release asset, validates its two top-level mod folders, and uploads `fftivc.gameplay.ivaliceremixed` to Nexus
 mod 187 and `fftivc.utility.eventinstructionupgrade` to Nexus mod 186.
 
-Configure an Actions secret named `NEXUSMODS_API_KEY` in the public repository (or its `nexus` environment); without it
+The key is an Actions secret named `NEXUSMODS_API_KEY` in the private repository, where every upload so far has run
+(0.9.14 on); the public repository has none, so its copy of the workflow fails, as expected. Without it
 the workflow fails at "Find Event Instruction Upgrade file". Create a personal
 key on the Nexus Mods API Access page and paste it directly into the GitHub secret; never commit it or put it in a
 release log. The workflow resolves the Event Instruction Upgrade's active file group through the Nexus v3 API and

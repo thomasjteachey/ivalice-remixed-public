@@ -24,6 +24,7 @@ import sqlite3
 import struct
 import subprocess
 import sys
+import textwrap
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable
@@ -4341,8 +4342,28 @@ def remixed_line(message: bytes, slots: bool = False, markup: bool = False) -> t
         return speaker, line
     choices = [" ".join("".join(answer).split()) for answer in answers]
     tag = f'<speaker="{speaker}">' if speaker else ""
-    lead = line + "\n" if line else ""
+    lead = "\n".join(lead_rows(line)) + "\n" if line else ""
     return speaker, tag + lead + "<cursor>" + "\n".join(c for c in choices if c) + "<cursorend><forced>"
+
+
+# A list of answers with a sentence before it (1-A's river camp: Agrias's "Nay. Beasts gather often by the waters..."
+# and her three answers) ran past its box: the remaster wraps a long row itself, but the code mod's tall boxes
+# (Patches/TallMenus.cs) count a text's rows by its line breaks, so the box stayed three rows high with six in it, and
+# the cursor stood two rows up (seen on the PC, 2026-11-19). A lead's rows past MENU_LEAD_CHARS (a speech box takes
+# about 62 beside a portrait) are broken at their spaces here, so every row is one the tall boxes count.
+MENU_LEAD_CHARS = 56
+
+
+def lead_rows(text: str) -> list[str]:
+    """A menu's lead as the rows it shows: each of its own rows longer than MENU_LEAD_CHARS broken at spaces (a row
+    with markup, the tavern's, is left whole)."""
+    rows = []
+    for row in text.split("\n"):
+        if len(row) > MENU_LEAD_CHARS and "<" not in row and "{" not in row:
+            rows += textwrap.wrap(row, MENU_LEAD_CHARS, break_long_words=False, break_on_hyphens=False)
+        else:
+            rows.append(row)
+    return rows
 
 
 def slot_part(message: bytes) -> str:
@@ -7168,7 +7189,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata. The title screen's plaque shows it (write_title_screen).
-RELEASE_VERSION = "0.9.18"
+RELEASE_VERSION = "0.9.19"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:

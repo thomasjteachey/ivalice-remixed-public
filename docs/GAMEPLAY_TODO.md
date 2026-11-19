@@ -5,7 +5,7 @@ is, and what it waits on. The technical details (what ReMixed's code does, where
 [MECHANICS.md](MECHANICS.md) and [REMASTER.md](REMASTER.md); data held back is in
 [the build report](generated/mod-build.md).
 
-**Progress: 95% of gameplay** (106 done, 5 open: 2 small, 3 medium, 0 large). Worked out from this list by
+**Progress: 97% of gameplay** (106 done, 3 open: 1 small, 2 medium, 0 large). Worked out from this list by
 `python -I tools/todo_progress.py`, open items weighted by size (small 1, medium 3, large 15) and done ones at 2 each,
 and updated with every change to the list. Everything outside the story and display ports is ported or settled
 (the formulas ReMixed rewrote in place were the last, 2026-11-12; ReMixed's own battles writing their units back,
@@ -452,8 +452,12 @@ the Lionel scene's event art and Two Shots have sessions of their own):
 - [ ] Event speech boxes that name a portrait rather than a unit may show Ashley's face for Agrias (and ReMixed's
   character on Rafa's second sprite set for Rafa). ReMixed redrew part of the event portraits, so which number means
   whom there, and whether any of the mod's events name one, needs checking before that table is changed. *small*
-- [ ] An answer list with a sentence before it runs past its box: the river camp's "Nay. Beasts gather often..." and
-  its three answers draw their last two rows under the box (seen in the hidden PC game). *small*
+- [x] An answer list with a sentence before it ran past its box: the river camp's "Nay. Beasts gather often..." and
+  its three answers drew their last two rows under the box, and the cursor stood two rows up (seen in the hidden PC
+  game). The remaster wraps a long row itself, but the tall boxes count a text's rows by its line breaks, so the box
+  stayed three rows high. A list's lead is now broken into rows of its own (only the river camp's two versions had a
+  long one). Seen in the hidden PC game (2026-11-19): seven rows in the box, the cursor on "1." and, after two
+  Downs, on "3.". *small*
 - [x] Only four places in 1-A's battles with Bryn and Lorne along (the river camp, 0x0F1): ReMixed deploys a second
   squad of two beside the four, which the port left out because its formation screen wouldn't commence with two
   groups. The remaster takes five of the player's units at most (its formation's list of units placed and its Start
@@ -547,7 +551,7 @@ Reported by a player:
   hold, which Auto-proceed doesn't give. ReMixed's notice is timed, so now it closes when its 400 frames are up
   (TIMED_NOTICES, 2026-11-18). Seen in the hidden PC game with Auto-proceed on and no key pressed
   (`tests/quick/biggs-wedge-notice.txt`): the notice for its 400 frames, then the scene's end and flag 0x92. *medium*
-- [ ] Boco joined with no join screen after Araguay Woods: the scene ended and he was simply in the party (reported
+- [x] Boco joined with no join screen after Araguay Woods: the scene ended and he was simply in the party (reported
   2026-11-18; Luso's join at Mandalia was the same a few releases before). ReMixed shows "JOIN UP!" for each recruit
   in the middle of the scene, and the scene's lines follow whether they joined (Luso: "a nice new entry in my
   Grimoire", or Ramza: "not right now"; after Araguay: "We will take that Chocobo"). The remaster's join screen asks
@@ -557,10 +561,10 @@ Reported by a player:
   without the thanks scene (Boco, when Luso is in the party). All of them keep ReMixed's join now, the remaster's "New
   Party Member" screen; the build checks it stays so (built 2026-11-18). Seen in the hidden PC game (2026-11-19,
   `tests/quick/araguay-boco-join-screen.txt`): on Araguay's world-map way, Boco's screen (him in the middle, Ramza at
-  the side offering Recruit and Refuse), "JOINED!", then Boco in the party. Still to see: Luso's and Boco's screens in
-  the thanks scene and Luso's at Mandalia, turning Luso down, and the scene going on over its map after it
-  (`araguay-thanks-join-screen.txt`, `mandalia-luso-join-screen.txt`, `mandalia-luso-declined.txt`); Zalbag's and the
-  chapter-3 branch's after those. *small*
+  the side offering Recruit and Refuse), "JOINED!", then Boco in the party. Seen too, on the 0.9.18 build: Luso's and
+  Boco's screens in the thanks scene, which goes on over its map (`araguay-thanks-join-screen.txt`), Luso's at Mandalia
+  (`mandalia-luso-join-screen.txt`) and turning him down (`mandalia-luso-declined.txt`). Not seen yet: Zalbag's and the
+  chapter-3 branch's. *small*
 
 
 ReMixed's in-place patches are all reviewed: BATTLE.BIN, SCUS, WORLD and the EVENT overlays (analysis/
