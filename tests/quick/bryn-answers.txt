@@ -1,0 +1,31 @@
+# Bryn and Lorne's scene (ReMixed's 0x0ED, the mod's 0x194) in the script the port shows, ReMixed's PSP one (its
+# messages from 33): Agrias's first answers, "Make way" (1), Bryn's plea (the Dancer's, nameless before), Agrias's
+# second answers, which had no speaker and took no cursor (testers, 2026-11-18), "Very well" (2, so Bryn and Lorne come
+# along), then the money question, "Aye" (1). A box is closed once its text is out (a press while it types shows the
+# rest).
+name Bryn answers and speakers
+scenario 0x194
+wait log "loaded event 404" timeout=25
+wait log "event 404's message 34 shown" press=RETURN every=1.5 timeout=150
+wait seconds 2
+shot first-answers
+key RETURN wait=1
+wait log "event 404's message 36 shown" press=RETURN every=1.5 timeout=40
+wait seconds 10
+shot bryn-plea
+key RETURN wait=1
+wait log "event 404's message 37 shown" timeout=20
+wait seconds 10
+shot second-answers
+key DOWN wait=1
+shot second-answers-second
+key RETURN wait=1
+wait log "event 404's message 40 shown" timeout=20
+wait log "event 404's message 51 shown" press=RETURN every=1.5 timeout=150
+wait seconds 10
+key RETURN wait=1
+wait log "event 404's message 52 shown" timeout=20
+wait seconds 10
+shot money-answers
+key RETURN wait=1
+advance world timeout=240

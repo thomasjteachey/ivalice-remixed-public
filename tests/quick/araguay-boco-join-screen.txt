@@ -1,0 +1,38 @@
+# Boco's join screen after Araguay by its world-map way (reported 2026-11-18: the battle ended and Boco was simply in
+# the party). As araguay-battle.txt: Luso in the party, the scene skipped, flag 0x93 clear, so no thanks scene. The
+# victory's results, then display state 7 queues Boco (battle id 0x80) for the join screen: its choice (join-screen),
+# Accept, "JOINED!" (joined); then the world map at story 0x11 with Boco in the roster once. Needs a fresh save (--restart).
+name Araguay's world-map way shows Boco's join screen
+wait world depth=1 state=0 timeout=20
+send poke +0x11A8D78 12
+send poke +0x11A8D7A 12
+send poke +0x11A8FA8 38 00
+setvar 0x6E 0x10
+setvar 0xC0 1
+setvar 0xC1 1
+setvar 0xC2 1
+setvar 0xC3 1
+setvar 0xC4 1
+setvar 0xC5 1
+setvar 0xC6 1
+setvar 0xC7 1
+setvar 0xC8 1
+setvar 0x98 1
+scenario 0x79 noted
+wait log "sets its battle up after event 0x79's scene" timeout=30
+wait log "reveal treasures: map 80" press=RETURN every=1 timeout=120
+formation units=1
+wait log "condition set 0 fires" timeout=60
+wait unit battle_id=0x80 job=0x5e timeout=20
+defeat
+wait log "condition set 5 fires" press=RETURN every=3 timeout=60
+wait log "to the join screen" press=RETURN every=3 timeout=90
+wait seconds 5
+shot join-screen
+key RETURN
+wait log "join screen: battle id" timeout=30
+wait seconds 2
+shot joined
+advance world timeout=200
+expect var 0x6E 0x11
+expect roster name_id=0x76

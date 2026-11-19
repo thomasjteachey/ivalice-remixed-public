@@ -1,0 +1,28 @@
+# Agrias's and Ashley's faces on the party menu's unit screen (a tester saw Agrias with Ashley's face, 0.9.17), without
+# playing to them: the save's generics David (slot 7) and Alexis (slot 8) get Ashley's record (sprite set and job 0x34,
+# name 0x42) and Agrias's (sprite set, job and name 0x1E), then the Units screen and each one's status and equipment.
+name Agrias's and Ashley's faces in the party menu
+wait world depth=1 state=0 timeout=20
+send poke +0x11A8D78 34
+send poke +0x11A8D7A 34
+send poke +0x11A8FA8 42 00
+send poke +0x11A8FD0 1E
+send poke +0x11A8FD2 1E
+send poke +0x11A9200 1E 00
+key ESCAPE wait=1.5
+wait world depth=2 state=1 timeout=10
+shot units
+key RIGHT wait=0.8
+key F wait=1.5
+shot ashley-status
+key F wait=1.5
+shot ashley-equipment
+key ESCAPE times=2 wait=1.2
+wait world depth=2 state=1 timeout=10
+key RIGHT wait=0.8
+key F wait=1.5
+shot agrias-status
+key F wait=1.5
+shot agrias-equipment
+key ESCAPE times=2 wait=1.2
+wait world depth=2 state=1 timeout=10

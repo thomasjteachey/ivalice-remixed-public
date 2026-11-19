@@ -1,0 +1,24 @@
+# Turning Luso down on his join screen at Mandalia (ReMixed's 0x0EB, here event 124). As mandalia-luso-join-screen.txt
+# up to the screen's choice, then Down to its second answer and Enter: Luso isn't written into the party, and the scene
+# takes ReMixed's way for that (message 22, Ramza: "Your offer is appreciated, but... not right now. Sorry.") over the
+# map. Then the world map with no Luso in the roster and flag 0x93 set all the same. Needs a fresh save (--restart).
+name Mandalias join screen can turn Luso down
+wait world depth=1 state=0 timeout=20
+scenario 0x34D
+formation units=1
+wait log "condition set 0 fires" press=RETURN every=2 timeout=90
+wait unit battle_id=0x86 timeout=20
+defeat
+wait log "loading event 124" press=RETURN every=3 timeout=120
+wait log "to the join screen" press=RETURN every=3 timeout=240
+wait seconds 5
+shot join-screen
+key DOWN wait=1
+shot decline-chosen
+key RETURN
+wait log "event 124's message (22|51) shown" press=RETURN every=2 timeout=60
+wait seconds 4
+shot declined-line
+advance world timeout=200
+expect var 0x93 1
+expect roster name_id=0x38 count=0

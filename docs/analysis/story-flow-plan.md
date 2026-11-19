@@ -1123,21 +1123,21 @@ played the scene inside the battle, which left the scene's actors on the field (
   game has them (0 in every PS1 state here) and in the port, which has its own options; the build read only the sets
   outside IFs, so the port deployed one group where ReMixed deploys two (seen on the PS1: 0x0F1's formation, Squad 1
   of 4 and Squad 2 of 2). The build ships that group with the battle, marked (`MENU_SECOND_GROUP`), and the code mod
-  can take it when the scene's run left var 0x36 set, as ReMixed's menu reads it (`RemixedScenarios.SecondGroup`;
-  self-tested offline). **Off for now** (`SecondGroupsOn`): with two groups put in for the battle's run, the
-  remaster's formation screen showed both (Group 1 of 4, Group 2 of 2) and took units in both, but Space never
-  commenced, with group 2 full or not (0x0F0's, seen on the PC); one group commences. ReMixed's missions with two
-  groups in their records from the start commence (TESTING.md), so what the remaster wants for a second group put in
-  at the battle's setup is still to find. vars 0x34-0x36 aren't ReMixed's alone: the remaster's setup writes the
-  record's group count and formations there (0x34 = 2, 0x35 and 0x36 the formations, seen). Read in the exe since
-  (no game runs left): the formation screen (0x2FC870) takes its group count from var 0x34 and group k's formation
-  from var 0x35 + k, and steps to the next group on Start until the last, where it asks to commence; the setup
-  (0x2FB4F8) puts var 0x35 in for a story battle, and for a random one finds the first formation whose byte 9 is the
-  map (var 0x33), with the next one as the second group. Byte 9 is a formation's map in vanilla and the remaster
-  (0x22 for map 34's 0x104 and 0x105, 0x31 for map 49's); ReMixed zeroed it in vanilla's records and wrote the unit
-  count there in its own (0x155: 2). ReMixed's missions with two groups commence with the same keys (TESTING.md), so
-  whether the failed run was the setup or that run's key presses (it had gone off its script) is for the regression
-  pass: switch SecondGroupsOn on in a build, play 0x0F1 with Bryn and Lorne along, both groups placed, Space.
+  takes it when the scene's run left var 0x36 set, as ReMixed's menu reads it (`RemixedScenarios.SecondGroup`;
+  self-tested offline). It was off at first: with two groups put in for the battle's run the remaster's formation
+  screen showed both (Group 1 of 4, Group 2 of 2) and took units in both, but Space never commenced (0x0F0's, seen on
+  the PC 2026-11-12). Found in the exe (2026-11-18): the remaster takes five places at most. As its formation opens
+  (0x1EF0D8) it counts both groups' places into the formation's +0x40, its list of units placed (+0x44) holds five,
+  and Start asks "Commence battle?" only for 1 to 5 places (0x1EE890); with six it does nothing. Every two-group
+  battle in vanilla's and ReMixed's records has five or fewer; ReMixed's own events set six (4 + 2 in 1-A's
+  battles, 2 + 4 in the Argath campaign's 0x0FF-0x101), which the PS1 deploys, its party past five in the battle's
+  last slots. Since 2026-11-19 the code mod's "six-places" (`Patches/SixPlaces.cs`) lets the remaster take six
+  (a sixth list entry, the limits six, a sixth unit in a free battle slot from 15 down) and the marked groups are on
+  (`SecondGroupsOn`). 0x0F4's and 0x0F8's battles, with their formation first, get their second group in their
+  records, as their code sets it in the port (only var 0x6C's ELSE around it; `second_group_conditions`), where the
+  build had left it out. `tools/check_story_regressions.py` checks that no battle has more than six places, and the
+  build stops on a second group it would leave out. vars 0x34-0x36 aren't ReMixed's alone: the remaster's setup
+  writes the record's group count and formations there (0x34 = 2, 0x35 and 0x36 the formations, seen).
 - **ReMixed's own battle conditions** (analysis/remixed-event-opcodes.md, "ReMixed's battle-condition types"): 0x0F0's
   in-battle scenes wait on Hirame's status (type 0x15: no longer Dead, so revived; 0x14: Crystal or Treasure, too late),
   which the remaster's checker doesn't have, so neither ever fired and the post-battle scene always took its "too
@@ -1549,6 +1549,16 @@ ReMixed's Nemesis System (docs/MECHANICS.md; its name's return ported in `Patche
   all same-map battle returns now use the synchronous live write-back described above. The hidden real-victory run on
   2026-11-16 captured messages 30, 35, 40, 45 and 49 across natural event 124 plus its post-event frame: map 85 stayed
   rendered, all four actors remained coherent and coloured, and the game logged no crash.
+  Correction (2026-11-18): Join Now (0x43 1, 0x227458) writes the flagged units into the roster with no screen, so
+  from then on Luso at Mandalia, Luso and Boco after Araguay, Zalbag at Eagrose and 0x11B's recruit joined silently
+  (reported for Boco: "scene ends, boom, he's in your party"). The remaster's join screen is display state 7 itself:
+  0x2C8818 runs the write-back 0x2C60E4, which queues each joiner the roster hasn't yet (0x14376CD40, count
+  0x14376CC68) and returns how many; with none the task ends there, with some it saves and deactivates task 1, plays
+  the join fanfare, shows each one's "New Party Member" screen with Accept (written by 0x274EB8) and restores task 1.
+  The black map of the 11-16 victory pass came when generated exits still jumped to state 7 without the results
+  states 2-6 (fixed 2026-11-17). The six recruitment sites keep ReMixed's state 7 again, as does Araguay's world-map
+  way for Boco (`build_mod.py` MIDSCENE_JOIN_SCREENS); the logs name each join screen's unit (`BattleEnd`,
+  `RosterGuard`).
 
 ## ReMixed's menus (2026-11-06)
 

@@ -24,6 +24,15 @@ internal static unsafe class BattleEnd
     /// <summary>The write-back's entry, for the offline check.</summary>
     internal static nint WriteBackAt { get; private set; }
 
+    /// <summary>
+    /// The units display state 7's write-back left for the join screen. The write-back (0x2C60E4) writes the units
+    /// already in the roster and queues each new joiner (+6 &amp; 0x10, or Invited) that the roster hasn't yet, returning
+    /// how many; 0x2C8818 then shows each one's "New Party Member" screen and writes it on Accept (0x274EB8, where
+    /// <see cref="RosterGuard"/> names it). Called directly (<see cref="RemixedEvents.LiveBattleWriteBack"/>), the queue
+    /// has no screen to show it, and its units never join.
+    /// </summary>
+    internal static int JoinScreenPending { get; set; }
+
     /// <summary>Install the write-back hook even when no optional after-battle rule is enabled.</summary>
     internal static void Install(Game game) => Hook(game);
 
@@ -73,8 +82,16 @@ internal static unsafe class BattleEnd
         BattleEvents.OnStart(game, "the battle end", () => Armed = true);
     }
 
+    /// <summary>The game's own call: display state 7 (0x2C8818), whose join screen follows for what it returns.</summary>
     [UnmanagedCallersOnly]
-    private static int WriteBack() => WriteBackNow();
+    private static int WriteBack()
+    {
+        var joiners = WriteBackNow();
+        JoinScreenPending = Math.Max(joiners, 0);
+        if (joiners > 0)
+            _log.Info($"battle end: {joiners} unit(s) to the join screen");
+        return joiners;
+    }
 
     private static void Run(List<(string Name, Action Run)> steps, string when)
     {

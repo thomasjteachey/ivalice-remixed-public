@@ -28,6 +28,10 @@ namespace IvaliceRemixed;
 /// argument may be an address: <c>[+0x3CD9DB8]</c>), its result (and the text there, if any); for lookups only.</item>
 /// <item><c>watch ADDR [LEN]</c>: a hardware write watch on the address (up to four; <see cref="Watch"/>), <c>watch</c>
 /// the writes caught (each with the exe addresses on its stack), <c>watch off</c>.</item>
+/// <item><c>testmode record</c> / <c>testmode auto</c>: the test mode's Record or RecordAndAutoBattle for the rest of
+/// the run, so a test can play the party's own battle menus.</item>
+/// <item><c>act SKILLSET ABILITY foe|INDEX|X,Y[,LEVEL]</c>: queued for the party's next turn menus, where a unit uses that
+/// ability through the game's own confirm (<see cref="BattleAct"/>), without driving the menus; <c>act clear</c>.</item>
 /// </list>
 /// </summary>
 internal static unsafe class Harness
@@ -56,6 +60,14 @@ internal static unsafe class Harness
     {
         _log = game.Log;
         _game = game;
+        try
+        {
+            BattleAct.Install(game);
+        }
+        catch (Exception e)
+        {
+            _log.Error($"harness: act isn't available: {e.Message}");
+        }
         new Thread(Serve) { IsBackground = true, Name = "harness" }.Start();
         // The image base too: tools/harness.py `crashes` turns a crash report's address into an RVA with it.
         _log.Info($@"harness: listening on \\.\pipe\{PipeName} (the exe at 0x{game.Image.ImageStart:X})");
@@ -226,6 +238,16 @@ internal static unsafe class Harness
             case "trace":
                 Patches.RemixedEvents.TraceSteps = parts.Length > 1 && parts[1] == "on";
                 return $"tracing ReMixed events' instructions: {Patches.RemixedEvents.TraceSteps}";
+            case "act":
+                return BattleAct.Run(parts);
+            case "testmode":
+                // testmode record: the party's units stay the player's (a test that drives the battle menus); testmode
+                // auto: the AI plays them again. For this run only; the settings stay as they are.
+                return parts.Length > 1 && parts[1].Equals("record", StringComparison.OrdinalIgnoreCase)
+                    ? TestRecorder.SetMode(Options.TestModeRule.Record)
+                    : parts.Length > 1 && parts[1].Equals("auto", StringComparison.OrdinalIgnoreCase)
+                        ? TestRecorder.SetMode(Options.TestModeRule.RecordAndAutoBattle)
+                        : "error: testmode record|auto";
             case "snap":
             {
                 // A copy of a range, for "diff" to compare with later.
@@ -260,7 +282,8 @@ internal static unsafe class Harness
             case "help":
                 return "state | peek ADDR [N] | poke ADDR HEX | var ID | setvar ID VALUE | event HEX PHASE | "
                        + "entries | dispatch KIND [STORY] [MONTH] | dispatchinfo | find text T | find hex H | call ADDR ARGS | "
-                       + "snap ADDR N | diff [OLD NEW] | worldpad BITS [FRAMES] | code | line ID [TEXT] | "
+                       + "snap ADDR N | diff [OLD NEW] | worldpad BITS [FRAMES] | code | line ID [TEXT] | testmode record|auto | "
+                       + "act SKILLSET ABILITY foe|INDEX|X,Y[,LEVEL] [TIMES] | act clear | "
                        + "an autopilot step (key K, press B, scenario S, units, action A, ui0-2 A, pad BITS, log T, quit)";
             default:
                 return Autopilot.Step(line);

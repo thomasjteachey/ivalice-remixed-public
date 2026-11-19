@@ -48,7 +48,17 @@ internal static unsafe class OldGuests
     /// <summary>Araguay's chocobo: a monster (sprite set 0x82) named Boco, whose record asks for him from the roster.</summary>
     internal const byte Monster = 0x82, BocoName = 0x76;
     internal const int EntryName = 2;
-    internal const int Lorne = 0x6A, Whitney = 0x6C, Lavian = 0x78, Alicia = 0x79;
+    internal const int Lorne = 0x6A, Elias = 0x6B, Whitney = 0x6C, Lavian = 0x78, Alicia = 0x79;
+    /// <summary>The roster-state bit 1-A's 0x0F3 gives Elias as he joins (PS1 +0xD0 0x80), which nothing of ReMixed's
+    /// reads back and the remaster displays as an errand (Days Remaining: -1); the build leaves the write out.</summary>
+    internal const byte EliasJoinBit = 0x80;
+    /// <summary>Bryn and Lorne leave at 1-A's river camp (0x0F1, 0x113, 0x0F2: DismissUnit by name), before 0x0F3 sets
+    /// the story progress (var 0x6E) to 7; from 1-A's start (0) they're in the roster only between 0x0ED (2) and then,
+    /// and after 1-A (0xE on) never. A save made with a build whose DismissUnit missed them (before 0.9.18) still has them.
+    /// </summary>
+    internal const int Bryn = 0x69, PerformersGone = 7;
+    internal const int Equipment = 0x0E, EquipmentSlots = 7, Items = 0x105, MaxOwned = 99;
+    private static byte* _inventory;
     internal const int StoryProgress = 0x6E, ScenarioVar = 0x27, RosterSlots = 0x32;
     // The guest lookup (0x2766C8): test byte [rdx+1], 8; mov rbx, rdx; movzx ecx, byte [rdx]; je; lea eax, [r9+0x33];
     // lea r8, [the first guest slot] (roster slot 0x32). Read here rather than through UnitTables.Find, whose
@@ -74,6 +84,7 @@ internal static unsafe class OldGuests
         Guests = data.EnumerateArray().Select(row => new Guest((byte)row[0].GetInt32(), (byte)row[1].GetInt32(),
             (byte)row[2].GetInt32(), row[3].GetInt32(), row[4].GetInt32())).ToArray();
         _roster = FindRoster(game.Image);
+        _inventory = (byte*)IvaliceCore.Inventory.FindCount(game.Image).Inventory;
         RepairLoadedSideChapterRoster();
         _units = game.TurnCode.Units;
         _getVariable = (delegate* unmanaged<int, int>)EventVariables.Find(game.Image).Get;
@@ -283,7 +294,8 @@ internal static unsafe class OldGuests
 
     /// <summary>Repair records already saved by builds before 0.9.5: Lorne's PS1 Bard job, the three Lionsguard
     /// recruits' 1-A party-state bit (which the remaster displays as an errand), and Agrias on the sprite set now used
-    /// by Ashley. Ashley's distinct name id (0x42) keeps her record out of the Agrias conversion.</summary>
+    /// by Ashley. Ashley's distinct name id (0x42) keeps her record out of the Agrias conversion. And by builds before
+    /// 0.9.18: Elias's join bit (<see cref="EliasJoinBit"/>), shown as an errand too.</summary>
     internal static int RepairSideChapterRoster(byte* roster)
     {
         if (roster == null)
@@ -306,6 +318,11 @@ internal static unsafe class OldGuests
                 record[RosterErrand] &= unchecked((byte)~SideChapterParty);
                 changed = true;
             }
+            if (name == Elias && (record[RosterErrand] & EliasJoinBit) != 0)
+            {
+                record[RosterErrand] &= unchecked((byte)~EliasJoinBit);
+                changed = true;
+            }
             if (record[0] == OldAgrias && name is Agrias or OldAgrias)
             {
                 record[0] = Agrias;
@@ -325,6 +342,38 @@ internal static unsafe class OldGuests
         var repaired = RepairSideChapterRoster(_roster);
         if (repaired != 0)
             _log.Info($"old guests: repaired {repaired} side chapter 1-A roster record(s) from an earlier build");
+        if (_getVariable == null)
+            return; // at install: the title screen's roster, no save's variables yet
+        var gone = DismissDepartedPerformers(_roster, _inventory, _getVariable(StoryProgress));
+        if (gone != 0)
+            _log.Info($"old guests: dismissed {gone} of Bryn and Lorne, who left at 1-A's river camp (an earlier build missed them)");
+    }
+
+    /// <summary>
+    /// Bryn and Lorne still in the roster past 1-A's river camp (<see cref="PerformersGone"/>) dismissed as DismissUnit
+    /// does (the remaster's, in its event runner from 0x23D579): their equipment back to the inventory (an item under
+    /// 0x105, up to 99 owned) and the slot emptied. Returns how many.
+    /// </summary>
+    internal static int DismissDepartedPerformers(byte* roster, byte* inventory, int progress)
+    {
+        if (roster == null || progress < PerformersGone)
+            return 0;
+        var gone = 0;
+        for (var slot = 1; slot < UnitTables.RosterSlots; slot++)
+        {
+            var record = roster + slot * UnitTables.RosterSize;
+            if (record[1] == 0xFF || *(int*)(record + RosterName) is not (Bryn or Lorne))
+                continue;
+            for (var k = 0; k < EquipmentSlots && inventory != null; k++)
+            {
+                var item = *(ushort*)(record + Equipment + 2 * k);
+                if (item is not 0 and not 0xFF && item < Items && inventory[item] < MaxOwned)
+                    inventory[item]++;
+            }
+            record[1] = 0xFF;
+            gone++;
+        }
+        return gone;
     }
 
     /// <summary>The guest slots of <paramref name="roster"/> that hold one of <paramref name="guests"/> on its old

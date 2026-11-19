@@ -117,6 +117,21 @@ internal static class TestRecorder
         log.Info($"test mode: {mode}; results go to {Path.Combine(folder, ReportFile)}");
     }
 
+    /// <summary>
+    /// For a test run (<see cref="Harness"/>' <c>testmode</c>): Record or RecordAndAutoBattle from now on, so a test that
+    /// plays the party's own menus needn't change the settings. Units already handed to the AI stay the AI's.
+    /// </summary>
+    internal static string SetMode(Options.TestModeRule mode)
+    {
+        if (!Enabled)
+            return "error: the test mode is off in the settings";
+        if (mode == Options.TestModeRule.Off)
+            return "error: only Record or RecordAndAutoBattle";
+        Mode = mode;
+        _log?.Info($"test mode: {mode} for this run (from the harness)");
+        return $"test mode {mode}";
+    }
+
     /// <summary>The battle hooks (from <see cref="Startup"/>, after the patches).</summary>
     public static void Install(Game game)
     {

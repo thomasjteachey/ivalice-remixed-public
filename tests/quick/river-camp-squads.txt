@@ -1,0 +1,56 @@
+# 1-A's river camp battle (ReMixed's 0x0EE, the mod's 0x1FE) with Bryn and Lorne along: ReMixed's squad of 4 and
+# squad of 2, six places, which the remaster takes with the code mod's "six-places" (Patches/SixPlaces.cs); before it,
+# Space never commenced with both groups (0x0F0's, 2026-11-12). Its scene is skipped: 1-A's Agrias in roster slot 0
+# (river-camp-start.txt, placed by the formation itself), a sixth party member (the test save has five: Tony copied
+# into slot 3), Bryn and Lorne in the party with the records 0x0ED leaves (party-looks.txt: Lorne on slot 7, Bryn on
+# slot 8), flag 0xAD (they came along) and var 0x36 as the scene's run leaves it (ReMixed's code sets its second
+# group, 0x151, with flag 0xAD and var 0x6C 0), then the battle's run. The formation lists Lorne and Bryn after Agrias,
+# so the first group is Agrias, Lorne, Bryn and Rachel, the second Tony and his copy; the sixth placed (the copy) takes
+# battle slot 15. Its EXP is set there and read back from its roster record after the battle (the write-back finds a
+# roster slot's unit in all 21). Bryn's line (message 17) is shot for her face. About 5 minutes from a warm game.
+name River camp with Bryn and Lorne's squad of two
+wait world depth=1 state=0 timeout=20
+send poke +0x11A7D10 1E
+send poke +0x11A7D12 1E
+send poke +0x11A7F40 1E 00
+copy roster 2 3
+send poke +0x11A8D78 B4
+send poke +0x11A8D7A 5B
+send poke +0x11A8FA8 6A 00
+send poke +0x11A8FD0 B5
+send poke +0x11A8FD2 5C
+send poke +0x11A9200 69 00
+show roster
+setvar 0xAD 1
+setvar 0x36 0x151
+scenario 0x1FE noted
+wait log "scenario 0x1FE sets its battle up after event 0x1FE's scene \(formations 0x150, 0x151\)" timeout=30
+wait log "formation: screen open, 6 place\(s\) in 2 group\(s\)" timeout=150
+wait seconds 4
+shot formation-open
+formation units=3 second=2
+show slots
+wait log "condition set 0 fires" press=RETURN every=2 timeout=90
+wait seconds 6
+shot battle-start
+show slots
+# Six of the party: slots 0x10-0x14 numbered 0x78-0x7C as Commence is answered, the sixth (in slot 15) 0x7D after them.
+expect unit battle_id=0x78
+expect unit battle_id=0x7C
+expect unit battle_id=0x7D
+# The sixth's battle unit (slot 15, roster slot 3): EXP 77 (+0x28), for the write-back (its record has 95).
+send poke +0x1855B08 4D
+send event 1FE 1
+wait log "event 510's message 17 shown" timeout=60
+wait seconds 10
+shot bryn-line
+key RETURN wait=1
+wait log "event 510's message 18 shown" press=RETURN every=4 timeout=60
+wait seconds 4
+key RETURN wait=1
+wait seconds 6
+defeat
+wait log "event 510's message 22 shown" press=RETURN every=3 timeout=150
+advance world timeout=240
+show roster
+expect roster slot=3 exp=77

@@ -803,6 +803,18 @@ internal static unsafe class Rules
                 game.Log.Error($"rules: the split formation's empty group not applied: {e.Message}");
             }
         }
+        if (rules.Remove("six-places"))
+        {
+            try
+            {
+                SixPlaces.Install(game);
+                enabled.Add($"up to {SixPlaces.Places} of the player's units in a battle with two groups");
+            }
+            catch (Exception e)
+            {
+                game.Log.Error($"rules: six places not applied: {e.Message}");
+            }
+        }
         if (rules.Remove("breeding-errands"))
         {
             try

@@ -5,7 +5,7 @@ is, and what it waits on. The technical details (what ReMixed's code does, where
 [MECHANICS.md](MECHANICS.md) and [REMASTER.md](REMASTER.md); data held back is in
 [the build report](generated/mod-build.md).
 
-**Progress: 100% of gameplay** (107 done, 0 open: 0 small, 0 medium, 0 large). Worked out from this list by
+**Progress: 95% of gameplay** (106 done, 5 open: 2 small, 3 medium, 0 large). Worked out from this list by
 `python -I tools/todo_progress.py`, open items weighted by size (small 1, medium 3, large 15) and done ones at 2 each,
 and updated with every change to the list. Everything outside the story and display ports is ported or settled
 (the formulas ReMixed rewrote in place were the last, 2026-11-12; ReMixed's own battles writing their units back,
@@ -338,8 +338,8 @@ What the events need:
   PC with 0x0F0's rescue and 0x0F1's battle, start to finish (no more black scenes inside the battle, no crash on its
   first turn). A scene answered "no" and started again plays again rather than going straight to the battle. Its
   Agrias is the remaster's, under another number: the conditions on her are built to find her again (her turn in
-  0x0F1 not seen yet; under Next up). ReMixed's second formation group (Bryn and Lorne's) is built
-  but off: the port's formation screen wouldn't commence with two groups added this way.
+  0x0F1 not seen yet; under Next up). ReMixed's second formation group (Bryn and Lorne's) is on since 2026-11-19
+  (Open: "Only four places in 1-A's battles").
 
 ## Next up
 
@@ -382,6 +382,107 @@ In the order I'd take them:
 Everything else ReMixed's gameplay changes is ported or settled (Done), or waits for the display, text and art port
 or the story port (below). The formulas ReMixed rewrote in place were ported on 2026-11-12 (Done; to see in a
 battle, Testing).
+
+From the testers' 0.9.17 playthrough (2026-11-18, evening: chapter 2 cleared with no crashes, then side chapter 1-A;
+the Lionel scene's event art and Two Shots have sessions of their own):
+
+- [x] ReMixed's lines with no speaker's name: in 1-A's scenes most boxes showed an empty name tab. The port shows
+  ReMixed's PSP script, which leaves most speakers' names out of its lines where its PSX script has them. Each such
+  line now takes the name its PSX copy has (558 lines in 50 events; the 11 left are narration and the Lucavi, nameless
+  in both), and a list of answers its speaker, as the remaster's own have. Seen in the hidden PC game (2026-11-18,
+  `tests/quick/bryn-answers.txt`): Bryn's lines under "Dancer" with her face, Agrias's answers under her name. *small*
+- [x] Answer lists that took no answer: in Bryn and Lorne's scene Agrias's second answers to Bryn ("1. I said, make
+  way.") came and went unseen, so the event read the last answer and turned them away, and her answers to the money
+  ("1. Aye, that shall suffice. 2. Nay, keep your coin.") showed with no cursor; only Cancel answered (testers,
+  2026-11-18). ReMixed shows such a list by swapping it into the box already open, which on the PS1 takes an answer;
+  the remaster makes a box a menu only as it opens. A swap to a list of answers, or from one, now opens the box again
+  (eight swaps across ReMixed's events). Seen in the hidden PC game: both lists wait, with Agrias's name, face and a
+  cursor; Down and Enter took "2. Very well. What troubles you?" and Bryn and Lorne came along. *small*
+- [x] Riders: the river camp's Mindflayers began its battle off their chocobos, though its scene had seated them.
+  ReMixed seats a battle's riders (battle ids 0xC0, 0xC2, ... on the next id) as it begins, by its random battles'
+  setup (0x191), once the formation has set the units up afresh; the port never ran that there. A battle's run now
+  seats the pairs its battle has, as 0x191 does: the river camp's five and 0x0FB's three goblins on chocobos
+  (`tools/check_story_regressions.py` checks both). Seen in the hidden PC game (`tests/quick/river-camp-start.txt`):
+  all five linked to their chocobos as the battle begins and riding them through its turns. 0x0FB's not seen in the
+  game (its battle started on its own won't take a placement in the harness). *small*
+- [x] 1-A's Agrias with no face in its battles (the thief battle's "This chase is ended.", the river camp's closing
+  line, testers 2026-11-18): ReMixed's events name her by its sprite set for her, 0x22, in some 320 instructions (her
+  lines' boxes, poses, walks), which in its battles finds no one, as she's the remaster's Agrias (0x1E) from the
+  formation. Its conditions already took 0x22 as her; the event unit lookup now does too. Seen in the hidden PC game
+  (`tests/quick/river-camp-lines.txt`): her answers to how the chocobos take the Mindflayers' fall, and her closing
+  line, with her face and a tail to her. The thief battle's lines are the same lookup; not seen (as 0x0FB's). *small*
+- [x] Bryn's and Lorne's abilities as they join (fixed 2026-11-18): a tester found Lorne's Bard with no songs, and
+  neither could go back to their own job once they changed. In ReMixed (its scene played on the PS1 and their records
+  read once they joined) Bryn knows Slow Dance and an Archer's Concentrate, with 11 JP in the Dancer; Lorne knows
+  Battle Song and an Archer's Equip Crossbow, with 61 JP in the Bard; both have the Squire, the Chemist and their own
+  job open, and keep that job open for good by name, however their job levels go. The port gave Lorne's song and JP
+  to a man's Dancer slot (ReMixed keeps its man's Bard there), and the remaster opened only the Squire and the
+  Chemist. Lorne's song and JP now go to the Bard, and Bryn and Lorne keep the Dancer and the Bard open, in the party
+  menu and in battle. Bryn was already right. Checked offline; not seen in the game yet. *small*
+- [x] The same mix-up elsewhere (found checking every ReMixed scene that joins a unit, gives a locked look or writes
+  a job or what a unit has learned, 2026-11-18): two more scenes put a man's Bard abilities in the Dancer. Ashley's
+  scene with the Lich gives him five songs (as ReMixed does, though five is the count of his Dark Knight skills),
+  and the Argath campaign's scene before its last battles marks a man's Face Up learned; both now go to the Bard. The
+  other joins and looks (Luso, 1-A's later recruits and its locked Black Mage look, the Argath campaign's units, Reis's
+  two forms, Mirror Match's copies) write nothing a gendered slot holds. Checked offline; not seen in the game. *small*
+- [x] ReMixed's Dark Knights and men's Bards made from battle data levelled the wrong job (fixed 2026-11-18): its
+  battle data names the job a unit's level goes to, and ReMixed's Dark Knight and a man's Bard share slots with the
+  Bard and the Dancer. 51 units in 11 of the port's battles had theirs moved (the Dark Knights of two of ReMixed's
+  battles, the men's Bards of another, and story characters ReMixed builds with those levels), so their other jobs'
+  levels and what they've learned came out otherwise. They now level the Dark Knight (with its Knight 8 and Black
+  Mage 8) and a man's Bard as in ReMixed. Checked offline; not seen in the game. *small*
+- [x] Bryn and Lorne stayed after 1-A's river camp, and Elias was stuck "On Errand" (a tester on 0.9.17; fixed
+  2026-11-18): in ReMixed the two leave there and Valmafra and Elias join as guests (played on the PS1: their slots
+  emptied, then the two guests in the formation, Elias a Lv 4 Wizard). ReMixed dismisses a unit by its name, and the
+  remaster looked only at its look, which Bryn's, Lorne's and Elias's locked looks never match; it now looks at the
+  name when no look matches. The same goes for those 1-A's end sends away (Lavian, Alicia, Whitney) and the Argath
+  campaign's. Elias's join also set a roster byte ReMixed never reads back, which the remaster shows as an errand; it's
+  left out. A save that's already past the river camp is put right as it loads (Bryn and Lorne leave, their gear back
+  in the inventory; Elias back from his "errand"). Checked offline; not seen in the game yet. *small*
+- [ ] ReMixed's Dark Knight enemies may know none of their own skills: ReMixed teaches a unit made from battle data
+  the abilities of each job by its level, its Dark Knight among them, and the remaster's step stops before its Dark
+  Knight, so a Dark Knight enemy's Darkness list could be empty. Found reading the code; to see in one of those
+  battles, then teach it as ReMixed does. *medium*
+- [ ] A performer's song through another action: in ReMixed a performer that takes an instant action (an item, an
+  attack) goes on performing, the song kept and given back after the action (seen on the PS1: a Potion, then Battle
+  Song landing again). A Math Skill ends the performance, and a spell that charges replaces it, as in vanilla. That's
+  why ReMixed took out its "Performing" notice at the start of a performer's turn. In the port the song still stops,
+  so the remaster's notice ("Using another ability will cancel the performance") is still true and stays until the
+  song is kept the same way, the way a rider's charge is kept while its mount acts. *medium*
+- [ ] Event speech boxes that name a portrait rather than a unit may show Ashley's face for Agrias (and ReMixed's
+  character on Rafa's second sprite set for Rafa). ReMixed redrew part of the event portraits, so which number means
+  whom there, and whether any of the mod's events name one, needs checking before that table is changed. *small*
+- [ ] An answer list with a sentence before it runs past its box: the river camp's "Nay. Beasts gather often..." and
+  its three answers draw their last two rows under the box (seen in the hidden PC game). *small*
+- [x] Only four places in 1-A's battles with Bryn and Lorne along (the river camp, 0x0F1): ReMixed deploys a second
+  squad of two beside the four, which the port left out because its formation screen wouldn't commence with two
+  groups. The remaster takes five of the player's units at most (its formation's list of units placed and its Start
+  check: with 4 + 2 Start did nothing), and ReMixed's events set six in all of 1-A's battles and in the Argath
+  campaign's three Hokuten battles (2 + 4, which couldn't commence at all). Now it takes six, the sixth in a free battle
+  slot from 15 down as ReMixed puts its party past five, with the battle id after the party's; the second squads are
+  on, 0x0F4's and 0x0F8's too (the build had left theirs out), and a second group can be left empty, as in ReMixed
+  (the remaster's own Start check refused that). `tools/check_story_regressions.py` checks every battle's places
+  (34 with two groups, 13 of them six). Seen in the hidden PC game (`tests/quick/river-camp-squads.txt`, 2026-11-19):
+  the river camp with Bryn and Lorne along, Group 1 of 4 and Group 2 of 2 placed, Commence, the battle with six of
+  the party (the sixth in slot 15), Bryn's and Agrias's lines, the victory and the world map, and the sixth's record
+  written back. Not seen in the game: the other 1-A battles with two squads and the Argath campaign's 2 + 4. *medium*
+- [x] Agrias, once she joins for good, showed Ashley's face in the party menu's unit screen (her sprite there was
+  hers; a tester, 0.9.17). The world menus find a roster unit's face through the PS1's portrait numbers, and both of
+  Agrias's sprite sets share one portrait, which led to the face the mod gives Ashley; Rafa's was shared the same way
+  with ReMixed's character on Rafa's second sprite set. Ashley and the others ReMixed put on story characters' second
+  sprite sets now have portraits of their own, and the shared ones lead back to the story characters, so Agrias and
+  Rafa show their own faces there (and on the formation and join screens and in the party menu's dialogs) while
+  Ashley keeps hers. Checked offline through the game's own code; not seen in the game yet. *medium*
+- [x] Brave Story's pages for Gafgarion and Malak showed the faces of ReMixed's characters that share their numbers
+  (ReMixed's character on Gafgarion's second sprite set, and Luso). Brave Story lists only the remaster's people, so it
+  now gets their own faces back. Checked offline; not seen in the game yet. *small*
+- [x] Bryn's in-battle line with no face, and Agrias's choice at the river camp never coming up by itself (testers,
+  2026-11-18): as 1-A's battles begin ReMixed's 0x191 gives the party's Bryn or Valmafra battle id 0x9A, Lorne or
+  Elias 0x9B, by name, and its lines and conditions name them so (Agrias's choice waits on 0x9A and 0x22). The port
+  never runs 0x191 there, so no unit had them. The event unit lookup and the conditions now take 0x9A and 0x9B as the
+  party unit of those names, and a battle-data place off the field (0x91, 0x92) as the party unit of its name. Seen
+  in the hidden PC game (2026-11-19, the river camp with both squads): the choice's condition set fires by itself,
+  and Bryn's line shows her face with a tail to her. *small*
 
 Fixed from a 0.9.7 playthrough on the PC (2026-11-18; Luso's recruitment screen and the 1-A save repair are under Testing and
 side chapter 1-A above):
@@ -446,6 +547,20 @@ Reported by a player:
   hold, which Auto-proceed doesn't give. ReMixed's notice is timed, so now it closes when its 400 frames are up
   (TIMED_NOTICES, 2026-11-18). Seen in the hidden PC game with Auto-proceed on and no key pressed
   (`tests/quick/biggs-wedge-notice.txt`): the notice for its 400 frames, then the scene's end and flag 0x92. *medium*
+- [ ] Boco joined with no join screen after Araguay Woods: the scene ended and he was simply in the party (reported
+  2026-11-18; Luso's join at Mandalia was the same a few releases before). ReMixed shows "JOIN UP!" for each recruit
+  in the middle of the scene, and the scene's lines follow whether they joined (Luso: "a nice new entry in my
+  Grimoire", or Ramza: "not right now"; after Araguay: "We will take that Chocobo"). The remaster's join screen asks
+  it: "A unit wishes to join your party", Recruit or Refuse. The port had swapped that for the remaster's silent join,
+  which asked nothing and always took them, in Luso's thanks after Araguay (Luso and Boco: it plays when Luso isn't in
+  the party), Luso's recruitment at Mandalia, Zalbag's at Eagrose and the chapter-3 branch's, and in Araguay's ending
+  without the thanks scene (Boco, when Luso is in the party). All of them keep ReMixed's join now, the remaster's "New
+  Party Member" screen; the build checks it stays so (built 2026-11-18). Seen in the hidden PC game (2026-11-19,
+  `tests/quick/araguay-boco-join-screen.txt`): on Araguay's world-map way, Boco's screen (him in the middle, Ramza at
+  the side offering Recruit and Refuse), "JOINED!", then Boco in the party. Still to see: Luso's and Boco's screens in
+  the thanks scene and Luso's at Mandalia, turning Luso down, and the scene going on over its map after it
+  (`araguay-thanks-join-screen.txt`, `mandalia-luso-join-screen.txt`, `mandalia-luso-declined.txt`); Zalbag's and the
+  chapter-3 branch's after those. *small*
 
 
 ReMixed's in-place patches are all reviewed: BATTLE.BIN, SCUS, WORLD and the EVENT overlays (analysis/
@@ -566,17 +681,19 @@ or new art, none of which the offline check can exercise; the rules behind them 
   branch. Checked offline; not seen in the game yet. *small*
 - [ ] The remaster's join screen ("New Party Member", "JOINED!") draws Ramza on its pedestal for Ashley (seen on the
   PC, 2026-11-13; her name, face and level on it are hers). The PS1 has no such sprite (its "JOIN UP!" is over her
-  status screen). Not checked yet for the other joins ReMixed's events make (Luso's). *medium*
+  status screen). Not checked yet for the other joins ReMixed's events make (Luso's, Boco's: the screen shows for them
+  from 2026-11-18). Boco's (seen 2026-11-19) shows the stock layout: the joiner in the middle, Ramza at the side
+  offering Recruit and Refuse; so Ramza is as the remaster has him, and what Ashley's lacked was her own sprite in the
+  middle. *medium*
 - [x] ReMixed's redraws of the ten vanilla event graphics its currently shipped scenes load (built 2026-11-15; 0x10
-  seen in Mandalia on 2026-11-16): each has a private event-graphic slot, and the port rewrites only ReMixed's LoadEVTCHR
-  instructions to it, so the remaster's own scenes keep their art. All ten have doubled enhanced textures; the
-  heavily-used 0x10 takes native event slot 0x1E and texture 0x49B (unused by all 560 stock enhanced scripts); 0x79's
-  appended alias alone takes an otherwise-unused PSP texture stub and explicitly takes an event graphic's neutral
-  palette texture (the PSP number plus the event texture's ordinary 0x8C stride is an unrelated event picture).
-  The build resolves every shipped custom pose to its frame and texture cell, and checks the doubled pixels. This includes
-  0x1B in Algus's tunnel ambush, the likely source of the black figures seen
-  there. The build checked 35 loads rerouted, all ten original slots unchanged, and the private copies byte-for-byte
-  against ReMixed's disc. *medium*
+  seen in Mandalia on 2026-11-16): each goes where none of the remaster's own scenes looks for it, so those scenes
+  keep their art. 0x10 (Luso's scenes) ships under its own number, which no remaster scene loads; the other nine
+  have private slots, and the port rewrites only ReMixed's own scenes to load them there. All ten have their art at
+  twice the size for the enhanced sprites. The build checks every pose ReMixed's shipped scenes show against its art,
+  and that no remaster scene loads any slot ReMixed's art is in. Fixed 2026-11-18: 0x10 had been put in a slot the
+  remaster's chapter 2 scene of Agrias and Ovelia with Lionel in sight uses, so Agrias's hand-to-brow pose and
+  Ovelia's reach for the tree drew in ReMixed's art (an orange-haired man in her place). Not seen in the game yet.
+  *medium*
 - [ ] ReMixed's remaining vanilla event-graphic redraw, 0x7A: only its event 0x09F loads it, and that event isn't in
   the currently shipped scenarios. Give it a private enhanced-texture slot when that scene is ported (0x7A shares
   vanilla's texture with ReMixed's already-custom 0x6F, so it can't replace that texture in place). *small*
@@ -892,10 +1009,10 @@ In order:
   victory showed “THE ENEMY IS VANQUISHED”, Spoils of War and gil over the still-rendered battlefield.
 - [x] The end of chapter 1 offers a save before the 1-A / chapter-2 decision (built 2026-11-17). Event 0x0EC invokes
   the remaster's native save display state 8 immediately before the choice and closes it with state 0 afterward.
-- [x] Luso's Mandalia/Araguay return scenes can show the remaster's recruitment presentation (fixed 2026-11-17).
-  Their generated handoff had written Luso into the roster before source event CallFunction 1, so the joiner saw him
-  already present and silently skipped. Those two paths defer their roster writer until immediately after the join
-  call; the global story audit enforces that ordering.
+- [x] Luso's Mandalia/Araguay return scenes defer their roster writer to the scene's join (2026-11-17). This was
+  meant to let the remaster's join screen show him, but the join it used then never shows one (found 2026-11-18, when
+  Boco was reported joining with no screen); the scenes keep ReMixed's own join now, which does (Reported by a
+  player, above).
 
 - [x] Retest Luso's Mandalia encounter from the choice through combat and recruitment (fixed and seen on the PC,
   2026-11-15): scenario 0x7B hands to split battle 0x34D and its formation screen appears. The split originally reused
@@ -1063,6 +1180,11 @@ In order:
 - [ ] Algus's "Reinforcements? Thank God!" in the Argath campaign's second battle, beside the PS1. *small*
 - [ ] Two Spells: a Calculator casts two cheap spells in one turn (Act stays open after the first), the second
   fires right after the first, and an enemy Calculator casts each spell twice.
+- [x] Two Shots: an Archer queues it twice in one turn and both shots fire, the second right after the first. A
+  player reported only one firing (2026-11-18): the second shot replaced the first whenever the unit had already
+  moved, which a Charge always counts as (a Calculator's second spell after moving too). Fixed the same day and seen
+  on the PC (tests/quick/two-shots.txt, the turn's two shots chosen by the harness's act): the second goes to the
+  slot as the turn ends, the unit keeps Charging when the first fires, and the second fires on the next tick.
 - [ ] Spot-check: Samurai's Two Hands innate, the four Geomancy abilities (each as chosen, on any terrain), and the
   Dark Knight slot's requirement (Knight 8 and Black Mage 8).
 - [x] No "???" in the ability lists (asked 2026-11-12). Seen on the PC the same day: the Monk's Job Abilities and
@@ -1185,8 +1307,6 @@ In order:
 - Hitting bodies: a melee or spear strike aimed at a dead unit's panel reaches the body, and so does a bow shot
   (the body stands full height on the aimed panel, and blocks nothing elsewhere); sprite sets 0x4A and 0x4B are 24
   high for weapon paths, not 36.
-- A performer through an instant action, settled: in ReMixed too the song stops (its record is emptied), only the
-  Performing status lingers, so the remaster's own reset is kept and nothing is ported.
 - Brave lowers damage taken: a physical attack on a target under 50 Brave loses (50 − Brave)% (Bravery/Wariness
   setting).
 - Knockback: Immortal units and the party leader can be knocked back (Knockback setting), only an attack's last strike
@@ -1235,7 +1355,8 @@ In order:
 - Zodiac compatibility by gender, as on the PS1 (Sexuality and Zodiac compatibility settings).
 - Poach odds by Brave: a low-Brave poacher gets the rare item more often (Poaching odds setting).
 - Learning an ability on hit through the secondary skillset, and a unit the action reaches again keeps its chance
-  to learn.
+  to learn. Seen on the Deck (2026-11-18): Blue Magic learned by a unit that isn't a Blue Mage, with Blue Magic as its
+  secondary.
 
 **Abilities, jobs and supports**
 

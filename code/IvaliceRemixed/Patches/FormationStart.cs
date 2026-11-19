@@ -10,6 +10,11 @@ namespace IvaliceRemixed.Patches;
 /// start, else message 0x900B). Those 9 bytes jump to a stub that ORs in the group's index (the dword the start
 /// compares with var 0x34 − 1 at 0x2FD432); both are at least 0, so OR gives ReMixed's sum's zero test. It applies to the
 /// remaster's own split battles too, as ReMixed's does to vanilla's.
+/// <para>The remaster's own formation screen (its GenerateAttackTeamManager) asks its own question on Start (0x1EE890):
+/// with two groups and none placed in the second, it refuses (messages 0x79 and 0x7C) unless every unit that can be
+/// placed is in the first, so a mission wouldn't start with its second group empty (the harness placed one there,
+/// TESTING.md). Its jne past that refusal (0x1EE928) becomes a jmp: the first group still has to have a unit
+/// (message 0x78), as ReMixed's sum does on the first group.</para>
 /// </remarks>
 internal static unsafe class FormationStart
 {
@@ -20,8 +25,19 @@ internal static unsafe class FormationStart
     internal static int* Group { get; private set; }
     internal static nint Stub { get; private set; }
 
+    /// <summary>The remaster's own Start check: after the second group's count (call 0x1EE830 with group 1), test eax, eax;
+    /// jne to the commence (75 24, made EB 24); then the refusal unless +0x724 equals the first group's count.</summary>
+    internal const string SecondGroupTest = "41 8B D7 E8 ?? ?? ?? ?? 85 C0 75 24 8B 83 24 07 00 00 3B C5 74 1A";
+    internal const int SecondGroupJump = 10;
+    internal static nint SecondGroupAt { get; private set; }
+
     public static void Install(Game game)
     {
+        var test = game.Image.FindUnique(SecondGroupTest) + SecondGroupJump;
+        if (*(byte*)test != 0x75)
+            throw new InvalidDataException("the formation's Start check isn't laid out as this DLL expects");
+        GameImage.WriteCode(test, [0xEB]);
+        SecondGroupAt = test;
         // xor ebx, ebx; test r12d, r12d; jne start; mov r11, [rsp+0x20]; lea edi, [rbx+0xD]; mov eax, 0xFFFF900B.
         var site = game.Image.FindUnique("33 DB 45 85 E4 0F 85 ?? ?? ?? ?? 4C 8B 5C 24 20 8D 7B 0D B8 0B 90 FF FF") + 2;
         var start = GameImage.Rip(site + 3, 2, 6);

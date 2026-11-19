@@ -1,0 +1,32 @@
+# Two Shots fires both of its shots (a player's report, 2026-11-18: the second replaced the first, as marking the
+# second's action ended the turn before its queue). Run with
+#   python -I tools/quick_test.py --restart --location 24 --stop tests/quick/two-shots.txt
+# A random battle on Mandalia Plains (Enter on the field; it takes up to two minutes to come up), the party kept the
+# player's (the PC's settings let the AI play it), one unit placed and given Two Shots: Charge (0x08) as its secondary,
+# Two Shots (its sixth ability, bit 0x04 of +0xAB) learned, a Hunting Bow (0x51) in the right hand. Two `act`s queued
+# before its turn use Two Shots twice at the nearest foe through the game's own confirm (no menus driven), then the
+# mod's lines for
+# each step: the first keeps the action, the second's marking ends the turn and still goes to the slot, the unit keeps
+# Charging when the first fires, the slot takes over, and the second fires (its action start clears Charging).
+name Two Shots fires both shots
+send testmode record
+wait world depth=1 state=0 timeout=20
+key RETURN
+wait log "reveal treasures: map" press=RETURN every=3 timeout=180
+formation units=1
+poke unit player=1 present=1 offset=0x13 hex=08
+poke unit player=1 present=1 offset=0xAB or=04
+poke unit player=1 present=1 offset=0x20 hex=5100
+send act 08 195 foe 2
+wait log "harness: unit \d+ used 0x195" timeout=240
+wait log "first spell 0x195 keeps the action" timeout=10
+wait log "harness: unit \d+ used 0x195" timeout=30
+wait log "turn ends as its second action is marked; the second still goes to the slot" timeout=10
+wait log "second slot holds the second, 0x195 at CT" timeout=10
+shot queued
+# The turn ends with the facing choice, which F confirms (pressed until the first shot fires, long before the unit's
+# next turn).
+wait log "keeps charging its second spell" press=F every=2 timeout=300
+wait log "second spell 0x195 takes the charge" timeout=60
+wait unit player=1 present=1 ability=0x195 charge=0xFF statuses=0 timeout=60
+shot fired

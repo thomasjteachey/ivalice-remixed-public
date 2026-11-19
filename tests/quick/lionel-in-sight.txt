@@ -1,0 +1,12 @@
+# The remaster's own chapter 2 scene of Agrias and Ovelia with Lionel in sight (event 149, after the battle of its
+# scenario 0x94), straight from the test save's world map. It loads event graphic 0x1E into slot 1 for Agrias's
+# hand-to-brow pose and Ovelia's reach for the tree. ReMixed's 0x10 redraw sat in that slot from 2026-11-16 to
+# 2026-11-18 and drew them in Luso's art (an orange-haired man at the wall). A requested scenario 0x95 sets up the
+# scene's map and units but loads event 2 (the prologue, which then crashed), so event=0x95 makes it load 149.
+# A frame before each Enter, every 1.5 s, from the scene's start to the world map: Agrias's pose is up through "He also
+# has the ear of High Confessor Marcel", which waits for its press.
+name Lionel in sight
+wait world depth=1 state=0 timeout=20
+scenario 0x95 event=0x95
+wait log "loads event 149 in place of event" timeout=40
+advance world every=1.5 shots=1 timeout=180

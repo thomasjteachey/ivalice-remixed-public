@@ -160,6 +160,14 @@ internal static unsafe class RemixedScenarios
     internal static delegate* unmanaged<long> GameSetup;
     internal static delegate* unmanaged<void> GameButtons;
     internal static delegate* unmanaged<int, void> GameLoadEvent;
+    /// <summary>An event instruction's unit lookup (0x226A18: ecx the id; the battle events' copy, which their runner
+    /// 0x23A868 and their box layout 0x221C00 call): by battle id (0x27260C), else for a sprite set (1-0x49) the
+    /// formation's unit of it (0x272538, battle id 0x78-0x7C). The world events have a copy of their own (0x2DE204),
+    /// the second match of the pattern.</summary>
+    internal const string UnitLookupPattern = "48 8B C4 48 89 58 18 88 50 10 41 56 48 83 EC 20 83 60 08 00 48 8D 50 08 8B D9 E8";
+    internal static delegate* unmanaged<uint, byte, ulong> GameUnitLookup;
+    internal static nint UnitLookupAt;
+    private static int _lookupsAliased;
     /// <summary>Breadcrumbs while one of ReMixed's scenarios starts (the first tests crashed after its units were
     /// built): each file the game reads and each event it loads, up to <see cref="WatchLines"/> lines.</summary>
     private static int _watch;
@@ -170,6 +178,10 @@ internal static unsafe class RemixedScenarios
     /// <summary>For the harness: the scene a requested scenario's start notes as seen (var 0x3E), so a scene-first battle
     /// (MenuBattles) starts at its battle's run. Set as the request starts, after the world map's stale-note clear.</summary>
     internal static int RequestedNote;
+    /// <summary>For the harness: the event the next event load takes instead of the game's choice (-1 none), once. A
+    /// requested stock scenario sets up its own map and units, but the game loads another event for it (0x95, the
+    /// remaster's Lionel-in-sight scene, loaded event 2, the prologue, and crashed; seen on the PC, 2026-11-18).</summary>
+    internal static int RequestedEvent = -1;
     /// <summary>A note the harness set, held from the stale-note clear until the scenario's setup has read it.</summary>
     private static int NoteHeld;
     /// <summary>An event phase the private harness asks the battle condition walker to run. The walker consumes both
@@ -331,6 +343,7 @@ internal static unsafe class RemixedScenarios
         RumorUnread = (byte*)GameImage.Rip(BarListEventAt + 0x44, 3, 7) + 0x19;
         ButtonsAt = buttons - 0x40;
         LoadEventAt = image.FindUnique(LoadEventPattern) - 0x18;
+        UnitLookupAt = image.FindExactly(UnitLookupPattern, 2)[0];
         EntryRecordsAt = image.FindUnique(EntryRecordsPattern);
         if (*(uint*)ButtonsAt != 0xC1058B48)  // mov rax, [first pad]
             throw new InvalidDataException("the world's button function isn't laid out as this DLL expects");
@@ -372,6 +385,8 @@ internal static unsafe class RemixedScenarios
         PackFiles.Watch = WatchRead;
         GameLoadEvent = (delegate* unmanaged<int, void>)game.Hooks.Hook(
             LoadEventAt, (nint)(delegate* unmanaged<int, void>)&LoadEvent, "the event loader");
+        GameUnitLookup = (delegate* unmanaged<uint, byte, ulong>)game.Hooks.Hook(
+            UnitLookupAt, (nint)(delegate* unmanaged<uint, byte, ulong>)&UnitLookup, "the event unit lookup");
         if (Postings.Count > 0 || ConditionalRumors.Count > 0)
         {
             GameRumorShown = (delegate* unmanaged<int, int, byte>)game.Hooks.Hook(
@@ -393,6 +408,7 @@ internal static unsafe class RemixedScenarios
     private static long Setup()
     {
         ResetVictoryObservation();
+        _lookupsAliased = 0;
         try
         {
             PrepareSplitBattle(Nemesis.GetVariable(0x27));
@@ -671,9 +687,43 @@ internal static unsafe class RemixedScenarios
         }
     }
 
+    /// <summary>The event unit lookup (<see cref="UnitLookupPattern"/>): in one of ReMixed's scenarios, an id of
+    /// <see cref="UnitAliases"/> no battle unit has is looked up as the port's number (<see cref="EventUnitId"/>).
+    /// 1-A's events name its Agrias 0x22, ReMixed's sprite set for her, in some 320 instructions (her lines' boxes,
+    /// her poses, walks and turns); in its battles she's the formation's unit of the remaster's Agrias, 0x1E, so they
+    /// found no one, and her boxes there had no face (a tester, 2026-11-18: "This chase is ended." in 0x0EF's battle,
+    /// and the river camp's closing lines).</summary>
+    [UnmanagedCallersOnly]
+    private static ulong UnitLookup(uint id, byte flag)
+    {
+        try
+        {
+            if (id < 0x100 && (id >= 0x80 || UnitAliases.ContainsKey((int)id)) && _battleUnits != null
+                && Presets.ContainsKey(Nemesis.GetVariable(0x27)))
+            {
+                var now = (uint)EventUnitId(_battleUnits, (int)id);
+                if (now != id && _lookupsAliased++ < 8)
+                    _log.Info($"remixed scenarios: event unit 0x{id:X} looked up as 0x{now:X} (UnitAliases)");
+                id = now;
+            }
+        }
+        catch (Exception e)
+        {
+            if (_lookupsAliased++ < 8)
+                _log.Warn($"remixed scenarios: the event unit lookup's alias failed: {e.Message}");
+        }
+        return GameUnitLookup(id, flag);
+    }
+
     [UnmanagedCallersOnly]
     private static void LoadEvent(int number)
     {
+        var asked = Interlocked.Exchange(ref RequestedEvent, -1);
+        if (asked >= 0)
+        {
+            _log.Info($"remixed scenarios: the autopilot loads event {asked} in place of event {number}");
+            number = asked;
+        }
         if (_watch > 0)
         {
             _watch--;
@@ -1064,6 +1114,8 @@ internal static unsafe class RemixedScenarios
             if (unit[0] != 0 && (unit[0x191] == id || unit[0] == id))
                 return k;
         }
+        if (NameAliases.TryGetValue(id, out var names))
+            return NamedPartyUnit(units, names);
         return UnitAliases.TryGetValue(id, out var alias) ? AliasUnit(units, alias) : -1;
     }
 
@@ -1074,6 +1126,94 @@ internal static unsafe class RemixedScenarios
     /// type 5: HP at least 1).</summary>
     internal static readonly Dictionary<int, int> UnitAliases = new() { [0x22] = 0x1E };
 
+    /// <summary>Battle ids ReMixed's random battles' setup (0x191) gives party units by name as 1-A's battles begin
+    /// (battle entries 0x1D7–0x1E0): Bryn or Valmafra (name ids 0x69, 0x21) 0x9A, Lorne or Elias (0x6A, 0x6B) 0x9B. Its
+    /// lines and conditions name them so (the river camp's Bryn line and Agrias's choice, set 1: 0x9A and 0x22). The
+    /// port never runs 0x191 there, so no unit had them; an id here that no unit has is the party unit of one of its
+    /// names (<see cref="NamedPartyUnit"/>).</summary>
+    internal static readonly Dictionary<int, ushort[]> NameAliases = new()
+    {
+        [0x9A] = [0x69, 0x21],
+        [0x9B] = [0x6A, 0x6B],
+    };
+
+    /// <summary>The party unit on the field (battle id 0x78–0x7F) with one of the name ids, or −1.</summary>
+    internal static int NamedPartyUnit(byte* units, ushort[] names)
+    {
+        for (var k = 0; k < Battle.UnitCount; k++)
+        {
+            var unit = units + k * Battle.UnitSize;
+            if (unit[0] != 0 && unit[1] != 0xFF && unit[0x191] is >= FirstPartyId and <= LastPartyId
+                && Array.IndexOf(names, *(ushort*)(unit + 0x1FC)) >= 0)
+                return k;
+        }
+        return -1;
+    }
+
+    /// <summary>Whether some unit has <paramref name="id"/> as its battle id or sprite set.</summary>
+    private static bool AnyUnit(byte* units, int id)
+    {
+        for (var k = 0; k < Battle.UnitCount; k++)
+        {
+            var unit = units + k * Battle.UnitSize;
+            if (unit[0] != 0 && (unit[0x191] == id || unit[0] == id))
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>The id an event instruction's unit lookup takes for <paramref name="id"/> in one of ReMixed's scenarios:
+    /// <list type="bullet">
+    /// <item>a unit on the field (+1 not 0xFF) with that battle id or sprite set: the id itself;</item>
+    /// <item>else a battle-data unit of that battle id off the field whose name a party unit on the field has
+    /// (battle id 0x78-0x7F): that unit's battle id. ReMixed's Preparation Menu puts its second squad in the battle
+    /// data's places (1-A's Bryn and Lorne, 0x91 and 0x92), where the remaster's formation gives them party ids, so
+    /// their lines named the place-holder and showed no face (seen on the PC, 2026-11-19);</item>
+    /// <item>else an id of <see cref="UnitAliases"/>: the battle id of the formation's unit of the port's number
+    /// (<see cref="AliasUnit"/>), as the conditions take it; not the battle data's own unit of it (in 1-A's river
+    /// camp a place-holder off the field, battle id 0x90);</item>
+    /// <item>else the id itself.</item>
+    /// </list></summary>
+    internal static int EventUnitId(byte* units, int id)
+    {
+        byte* placeHolder = null;
+        for (var k = 0; k < Battle.UnitCount; k++)
+        {
+            var unit = units + k * Battle.UnitSize;
+            if (unit[0] == 0 || (unit[0x191] != id && unit[0] != id))
+                continue;
+            if (unit[1] != 0xFF)
+                return id;
+            if (unit[0x191] == id)
+                placeHolder = unit;
+        }
+        if (placeHolder != null)
+        {
+            var name = *(ushort*)(placeHolder + 0x1FC);
+            for (var k = 0; name != 0 && k < Battle.UnitCount; k++)
+            {
+                var unit = units + k * Battle.UnitSize;
+                if (unit[0] != 0 && unit[1] != 0xFF && unit[0x191] is >= FirstPartyId and <= LastPartyId
+                    && *(ushort*)(unit + 0x1FC) == name)
+                    return unit[0x191];
+            }
+            return id;
+        }
+        if (NameAliases.TryGetValue(id, out var names))
+        {
+            var named = NamedPartyUnit(units, names);
+            return named >= 0 ? units[named * Battle.UnitSize + 0x191] : id;
+        }
+        if (!UnitAliases.TryGetValue(id, out var alias))
+            return id;
+        var stands = AliasUnit(units, alias);
+        return stands >= 0 ? units[stands * Battle.UnitSize + 0x191] : id;
+    }
+
+    /// <summary>The battle ids the remaster's formation gives the party's units (0x78 on; a sixth after them,
+    /// <see cref="SixPlaces"/>).</summary>
+    internal const byte FirstPartyId = 0x78, LastPartyId = 0x7F;
+
     /// <summary>The formation's unit of sprite set <paramref name="sprites"/>: a roster unit (+1, its roster slot, not
     /// 0xFF as the battle data's units have) with a formation's battle id (0x78–0x7C, as the remaster's lookup 0x239144
     /// wants for a sprite set); not a scene's actor of the same sprite set (1-A's Agrias, battle id 0x90) or a battle
@@ -1083,7 +1223,7 @@ internal static unsafe class RemixedScenarios
         for (var k = 0; k < Battle.UnitCount; k++)
         {
             var unit = units + k * Battle.UnitSize;
-            if (unit[1] != 0xFF && unit[0] == sprites && unit[0x191] is >= 0x78 and <= 0x7C)
+            if (unit[1] != 0xFF && unit[0] == sprites && unit[0x191] is >= FirstPartyId and <= LastPartyId)
                 return k;
         }
         return -1;
@@ -1096,7 +1236,16 @@ internal static unsafe class RemixedScenarios
     /// battle data's unit of 0x0F1's has the young Agrias's) and which type 0xB compares with the acting unit's first.</summary>
     internal static int GameUnitId(byte* units, int type, int id)
     {
-        if (type is < 4 or > 8 and not 0xB || !UnitAliases.TryGetValue(id, out var alias))
+        if (type is < 4 or > 8 and not 0xB)
+            return id;
+        if (NameAliases.TryGetValue(id, out var names))
+        {
+            if (AnyUnit(units, id))
+                return id;
+            var named = NamedPartyUnit(units, names);
+            return named >= 0 ? units[named * Battle.UnitSize + 0x191] : id;
+        }
+        if (!UnitAliases.TryGetValue(id, out var alias))
             return id;
         for (var k = 0; k < Battle.UnitCount; k++)
         {
@@ -1276,11 +1425,11 @@ internal static unsafe class RemixedScenarios
                    + "wasn't set up after it");
     }
 
-    /// <summary>Whether a marked second group is put in when the scene's run set it: off, as with two groups put in for
-    /// the battle's run the remaster's formation screen showed both and took units in both, but Space never commenced
-    /// (0x0F0's, seen on the PC 2026-11-12; with one group it commences). So 1-A's battles deploy one group for now, where
-    /// ReMixed (its options as a new game has them) deploys a second (0x0F1's, seen on the PS1).</summary>
-    internal static bool SecondGroupsOn;
+    /// <summary>Whether a marked second group is put in when the scene's run set it, as ReMixed's Preparation Menu does
+    /// (0x0F1's, seen on the PS1: a squad of 4 and one of 2). It was off while two groups put in for the battle's run
+    /// never commenced (0x0F0's, seen on the PC 2026-11-12): 4 + 2 is six places, and the remaster took five at most;
+    /// <see cref="SixPlaces"/> lets it take six (tools/check_story_regressions.py checks every battle's places).</summary>
+    internal static bool SecondGroupsOn = true;
 
     /// <summary>The build's mark on a battle's second group that ReMixed's code sets only under an IF (0x0EE's with Bryn
     /// and Lorne along, 0x0F1's): the build's MENU_SECOND_GROUP.</summary>

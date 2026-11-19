@@ -48,6 +48,19 @@ class QuickCaseTests(unittest.TestCase):
             with self.assertRaisesRegex(quick_test.CaseFailure, "found 0"):
                 quick_test.run_case(path)
 
+    def test_name_keeps_an_apostrophe(self) -> None:
+        path = self.case("name Mandalia's join screen\nexpect unit battle_id=0x91 count=0\n")
+        with mock.patch.object(quick_test.harness, "send", return_value=UNITS):
+            with self.assertRaisesRegex(quick_test.CaseFailure, r"^Mandalia's join screen:2: unit battle_id=0x91"):
+                quick_test.run_case(path)
+
+    def test_expect_count_zero_wants_none(self) -> None:
+        path = self.case("expect unit battle_id=0x92 count=0\nexpect unit battle_id=0x91 count=0\n")
+        with mock.patch.object(quick_test.harness, "send", return_value=UNITS):
+            with self.assertRaisesRegex(quick_test.CaseFailure, r"case:2: unit battle_id=0x91 count=0: "
+                                                                r"expected 0, found 1"):
+                quick_test.run_case(path)
+
     def test_log_waits_ignore_old_lines_and_consume_each_new_match_once(self) -> None:
         path = self.case('wait log "loaded event 404" timeout=1\nwait log "loaded event 404" timeout=1\n')
         self.logs.return_value = ["loaded event 404"]
@@ -66,8 +79,32 @@ class RosterRecords(unittest.TestCase):
         data[size:size + 4] = bytes([0x82, 0x01, 0x5E, 0x00])
         data[size + name_at:size + name_at + 4] = (0x76).to_bytes(4, "little")
         found = quick_test.roster_records(bytes(data))
-        self.assertEqual(found, [{"slot": 1, "sprites": 0x82, "name_id": 0x76}])
+        self.assertEqual([(r["slot"], r["sprites"], r["job"], r["name_id"]) for r in found], [(1, 0x82, 0x5E, 0x76)])
         self.assertEqual(quick_test.find("roster", {"name_id": 0x76}, found), found)
+
+    def test_reads_job_fields(self):
+        # Lorne's record as 0x0ED leaves it: the Squire, the Chemist and the Bard open; Battle Song (the Bard's 4th), 61
+        # JP of 161; an Archer's Equip Crossbow (its 3rd reaction/support/movement slot).
+        size = quick_test.harness.ROSTER_SIZE
+        data = bytearray(size)
+        data[0:4] = bytes([0xB4, 0x01, 0x5B, 0x80])
+        unlocked, learned, jp, total = quick_test.ROSTER_JOBS
+        data[unlocked:unlocked + 3] = bytes([0xC0, 0x00, 0x40])
+        data[learned + 3 * 17] = 0x10
+        data[learned + 3 * 3 + 2] = 0x20
+        data[jp + 2 * 17:jp + 2 * 17 + 2] = (61).to_bytes(2, "little")
+        data[total + 2 * 17:total + 2 * 17 + 2] = (161).to_bytes(2, "little")
+        data[quick_test.ROSTER_LEVELS + 8] = 0x41  # job 16 at 4, the Bard (17) at 1
+        data[quick_test.ROSTER_LEVELS + 10] = 0x80  # the Dark Knight (20) at 8
+        data[quick_test.ROSTER_ERRAND] = 0x80
+        found = quick_test.roster_records(bytes(data))
+        wanted = {"job": 0x5B, "unlocked": 0xC00040, "bard_learned": 0x100000, "bard_jp": 61, "bard_total": 161,
+                  "archer_learned": 0x20, "dancer_learned": 0, "dancer_jp": 0, "bard_level": 1, "dark_knight_level": 8,
+                  "errand": 0x80}
+        self.assertEqual(quick_test.find("roster", wanted, found), found)
+        quick_test.expect_record("roster", {"name_id": 0x69, "count": 0}, "case", 1, found)
+        with self.assertRaises(quick_test.CaseFailure):
+            quick_test.expect_record("roster", {"job": 0x5B, "count": 0}, "case", 1, found)
 
 
 if __name__ == "__main__":

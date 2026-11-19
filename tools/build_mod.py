@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import collections
+import difflib
 import json
 import re
 import shutil
@@ -797,7 +798,7 @@ CODE_RULES = ["unevadable", "team-targeting", "auras", "limit-charge", "status-t
               "job-change-innates", "dismissal-poach", "unlearn", "charge-lock",
               "guest-control", "pass", "movement-mode", "cone-area", "start-statuses",
               "movement-bonus", "breeding-errands",
-              "formation-split", "errand-locks",
+              "formation-split", "six-places", "errand-locks",
               "one-handing", "errands", "riding-boarding",
               "riding-actions", "hitting-bodies", "arc-obstacles",
               "taken-equipment", "victory-bonus",
@@ -1676,7 +1677,11 @@ TAVERN_MENU_XY = (237, 370)
 # longer than the one the box opened with closes the box (0x51 with no message, as ReMixed's own skip on Start closes
 # them) and opens it again with that line, by a MESSAGE like the one that opened it (its place, style and unit), with
 # the swap's portrait row: a box of the line's own size, as the remaster's own scenes give each line. A PATCH_NEXT
-# that writes the swap's message number in as it runs writes the MESSAGE's.
+# that writes the swap's message number in as it runs writes the MESSAGE's. A swap to a list of answers, or from one,
+# opens the box again too: the remaster makes a box a menu only as a MESSAGE opens it, so a list swapped in showed its
+# rows and took no answer, and the event read the last one (1-A's 0x0ED: Agrias's second answers to Bryn, "1. I said,
+# make way.", came and went unseen and turned Bryn and Lorne away; its money question showed with no cursor, testers,
+# 2026-11-18), and a line swapped into a menu's box stayed a menu.
 CLOSE_BOX = 0xFFFF
 # ReMixed's lines run to 815 characters (its PS1 boxes paged them); a remaster speech box holds three rows of about 62
 # (seen on the PC). So a line longer than PAGE_CHARS is shown in pages (split_pages), each a line of its own after the
@@ -1734,13 +1739,16 @@ def paged_lines(lines: list[tuple[str, str]], menus: set[int],
     return out, pages
 
 
-def message_numbers(code: bytes, lengths: bytes) -> dict[int, int | None]:
+def message_numbers(code: bytes, lengths: bytes,
+                    shown: list[tuple[int, int | None]] | None = None) -> dict[int, int | None]:
     """The message shown by each MESSAGE (0x10) and 0x51 whose number ReMixed's code writes in as it runs (0xE6), by its
     offset in code (the PS1 layout, SCRIPT_VERSION applied): the constants SET (0xAE), ADD (0xB0) and ZERO (0xBE) put in
     the variable the 0xE6 names, followed through IF/ELSE on a var 0 just set to a constant (both ways after any other
     test) and through CALLs to the event's FUNCTIONs; None where it isn't a constant. ReMixed's events pick their script
     so in many ways: var 0x71 raised by the other script's count for the PSP one (0x0F6) or for the PSX one (0x0F5,
-    0x0F9, which put the PSP script first), the test inline or in a FUNCTION, var 0x78 (0x115)."""
+    0x0F9, which put the PSP script first), the test inline or in a FUNCTION, var 0x78 (0x115). shown, when given, gets
+    each MESSAGE and 0x51 the run reaches (not in an IF it knows is skipped), in turn: (its offset, the number it shows:
+    its own where nothing writes it in)."""
     starts, at = [], 0
     while at < len(code):
         starts.append(at)
@@ -1779,9 +1787,13 @@ def message_numbers(code: bytes, lengths: bytes) -> dict[int, int | None]:
             elif op == 0x0C and active and depth < 4 and code[at + 1] in bodies:  # CALL
                 run(bodies[code[at + 1]], depth + 1, True)
             elif op in (0x10, 0x51):
+                patched = False
                 for offset, var in pending:
                     if offset == (2 if op == 0x10 else 1):
                         numbers[at] = values.get(var)
+                        patched = True
+                if shown is not None and active:
+                    shown.append((at, numbers[at] if patched else u16(code, at + (3 if op == 0x10 else 2))))
             elif 0xAC <= op <= 0xBE and active:  # the variable operations
                 var = u16(code, at + 1)
                 if op == 0xAE:
@@ -1802,13 +1814,59 @@ def message_numbers(code: bytes, lengths: bytes) -> dict[int, int | None]:
     return numbers
 
 
+# ReMixed's PSP script (the one the port shows, SCRIPT_VERSION) leaves most of its speakers' names out of its lines,
+# where its PSX script names them (E3 08 <name> E3 00): in 1-A's 0x0ED, Bryn's "I... I beg of you!" is the PSX's
+# "Dancer" line, and only some of its lines name anyone. The remaster draws a line with no speaker under an empty name
+# plate, and its list of answers took no cursor (testers, 2026-11-18: "No way to select an option. But hitting the
+# cancel button works to say no", on Agrias's "1. Aye, that shall suffice. 2. Nay, keep your coin."; "a number of text
+# blocks without a name associated... this weird shadow where a name would go"). Each such line takes the name its PSX
+# twin has: the message the same MESSAGE shows with flag 0xB2 at 0.
+def script_twins(code: bytes, lengths: bytes) -> dict[int, int]:
+    """Each PSP-script message ReMixed's event code shows -> the PSX-script message its MESSAGE (or 0x51) shows instead
+    with flag 0xB2 at 0 (code in the PS1 layout, as ReMixed has it). Runs of the two that don't reach the same
+    instructions are paired where they do."""
+    runs = []
+    for version in (SCRIPT_VERSION, (SCRIPT_VERSION[0], bytes([0xAE, 0x00, 0x00, 0x00, 0x00]))):
+        shown: list[tuple[int, int | None]] = []
+        message_numbers(code.replace(*version), lengths, shown)
+        runs.append(shown)
+    psp, psx = runs
+    twins: dict[int, int] = {}
+    matcher = difflib.SequenceMatcher(None, [at for at, _ in psp], [at for at, _ in psx], autojunk=False)
+    for a, b, size in matcher.get_matching_blocks():
+        for (_, mine), (_, theirs) in zip(psp[a:a + size], psx[b:b + size]):
+            if mine is not None and theirs is not None and mine != theirs:
+                twins.setdefault(mine, theirs)
+    return twins
+
+
+def twin_speakers(lines: list[tuple[str, str]], twins: dict[int, int],
+                  pages: dict[int, list[int]]) -> tuple[list[tuple[str, str]], int]:
+    """lines with each nameless one taking its PSX twin's speaker (script_twins), its later pages too, and a list of
+    answers its <speaker> tag; and how many took one."""
+    out, named = list(lines), 0
+    for mine, theirs in sorted(twins.items()):
+        if not (0 < mine <= len(out) and 0 < theirs <= len(out)) or out[mine - 1][0] or not out[theirs - 1][0]:
+            continue
+        speaker = out[theirs - 1][0]
+        for k in [mine, *pages.get(mine, [])]:
+            text = out[k - 1][1]
+            if "<cursor>" in text and not text.startswith(("<speaker=", "<hidespeaker>")):
+                text = f'<speaker="{speaker}">{text}'
+            out[k - 1] = (speaker, text)
+        named += 1
+    return out, named
+
+
 def fitted_boxes(code: bytes, lengths: bytes, sizes: dict[int, int],
-                 pages: dict[int, list[int]]) -> tuple[bytes, int, int]:
+                 pages: dict[int, list[int]], menus: set[int] | frozenset[int] = frozenset()) -> tuple[bytes, int, int]:
     """ReMixed's event code (the PS1 layout) with its swaps to longer lines made boxes of their own (see CLOSE_BOX) and
     its long lines' later pages shown after their first (PAGE_CHARS), and how many of each. sizes: each message's
-    length (its line's characters), by number. A number ReMixed writes in as it runs is the one message_numbers works
-    out for the PSP script, which the port always reads (SCRIPT_VERSION); where it can't, the box is left as it is."""
+    length (its line's characters), by number; menus, the messages that are lists of answers (a swap to or from one
+    opens its box again). A number ReMixed writes in as it runs is the one message_numbers works out for the PSP
+    script, which the port always reads (SCRIPT_VERSION); where it can't, the box is left as it is."""
     out, at, openers, pending, reopened, paged = bytearray(), 0, {}, [], 0, 0
+    menu_open: dict[int, bool] = {}  # each box: whether a list of answers holds it
     numbers = message_numbers(code, lengths)
 
     def box(opener: bytes, message: int, portrait: int) -> bytes:
@@ -1840,6 +1898,7 @@ def fitted_boxes(code: bytes, lengths: bytes, sizes: dict[int, int],
             pending = []
             kind = ins[2] & 0x0F
             openers[kind] = (ins, None if message is None else sizes.get(message, 0))
+            menu_open[kind] = message in menus
             if kind in SPEECH_BOXES and message is not None:
                 later_pages(kind, message, ins[7])
             continue
@@ -1847,11 +1906,13 @@ def fitted_boxes(code: bytes, lengths: bytes, sizes: dict[int, int],
                 and ins[1] in SPEECH_BOXES and all(p[1] & 0x3F == 1 for p in pending)):
             opener, size = openers[ins[1]]
             message = numbers[start] if start in numbers else u16(ins, 2)
-            if message is not None and size is not None and sizes.get(message, 0) > size:
+            menu_swap = message is not None and (message in menus) != menu_open.get(ins[1], False)
+            if message is not None and (menu_swap or size is not None and sizes.get(message, 0) > size):
                 again = box(opener, u16(ins, 2), ins[4])
                 # the message's offset in a 0x51 (1) is 2 in a MESSAGE: its PATCH_NEXTs go right before the MESSAGE
                 out += again[:6] + b"".join(bytes([0xE6, p[1] + 1]) + p[2:] for p in pending) + again[6:]
                 openers[ins[1]] = (again[6:], sizes.get(message, 0))
+                menu_open[ins[1]] = message in menus
                 reopened += 1
             else:
                 out += b"".join(pending) + ins
@@ -2008,14 +2069,19 @@ def route_event_graphics(code: bytes, lengths: bytes) -> tuple[bytes, int]:
 
     The remaster's own events share the original graphic numbers, so replacing those graphics in place would change
     its scenes too.  EVENT_GRAPHIC_ALIASES are slots no stock event loads; only ReMixed's marked scripts are rewritten
-    to name them.  The instruction is LoadEVTCHR (0x58): slot, graphic, unknown.
+    to name them.  The instruction is LoadEVTCHR (0x58): slot, graphic, unknown.  A ReMixed event that loads one of
+    those slots itself would get another redraw's art there, so that stops the build.
     """
     out, at, changed = bytearray(code), 0, 0
+    taken = {alias: graphic for graphic, alias in EVENT_GRAPHIC_ALIASES.items()}
     while at < len(out):
         op = out[at]
         size = 1 + lengths[op]
         if at + size > len(out):
             raise ValueError(f"event instruction 0x{op:02X} at 0x{at:X} runs past its code")
+        if op == 0x58 and size >= 4 and out[at + 2] in taken:
+            sys.exit(f"a ReMixed event loads event graphic 0x{out[at + 2]:X} at 0x{at:X}, the slot ReMixed's "
+                     f"0x{taken[out[at + 2]]:X} redraw takes (EVENT_GRAPHIC_ALIASES): give that redraw another slot")
         if op == 0x58 and size >= 4 and out[at + 2] in EVENT_GRAPHIC_ALIASES:
             out[at + 2] = EVENT_GRAPHIC_ALIASES[out[at + 2]]
             changed += 1
@@ -2203,10 +2269,13 @@ REUSED_SCENARIO_NUMBERS |= {0x1C3, 0x1C4}
 # Luso at Araguay Woods (docs/analysis/story-flow-plan.md, "Luso at Araguay Woods"): ReMixed's 0x01D is the
 # remaster's Araguay Woods (its 121-127: the goblins, the chocobo saved), started the same way (location 32, story
 # 0x10) and ending the same (story 0x11, flag 0x287), with Luso riding the chocobo, rescued with it, and the party's
-# comments on him. Its scene comes first, then the battle (MENU_BATTLES). At the victory, with flag 0x93 (Luso met at
-# location 24, ReMixed's 0x0EA-0x0EB) the battle returns to its conditions (preset 0x1C) for 0x107, his thanks
-# ("It's been a couple weeks... It's been over a year"), chosen as it runs (RETURN_CHOSEN); without it the flag is
-# set and the world map follows. So it takes the remaster's 121 (which its start runs) and 0x107 its 122; the
+# comments on him. Its scene comes first, then the battle (MENU_BATTLES). Its start (on the battle's run too) clears
+# flags 0x93 and 0xC9 and, when Luso isn't in the party and his state (0x3F6, which Mandalia's 0x0EB sets) is under
+# 12, sets both: he rides the chocobo (0xC9 includes his unit) and at the victory the battle returns to its conditions
+# (preset 0x1C) for 0x107, his thanks ("It's been a couple weeks... It's been over a year", met at Mandalia or not),
+# chosen as it runs (RETURN_CHOSEN), where he and Boco join. With Luso in the party the flag stays clear, the victory
+# sets it and the world map follows, Boco joining at the hand-off (read 2026-11-19, when a test with Luso in the
+# party and flag 0x93 set by hand took that way). So it takes the remaster's 121 (which its start runs) and 0x107 its 122; the
 # remaster's voiced 122-127 go (the user's rule: ReMixed's story where it differs). ReMixed's chapter-2 battles also
 # mark Agrias and Gafgarion's errand byte (3) until its 0x025 clears it; the remaster's battles around this one don't,
 # so that's left out (EVENT_CODE_PATCHES). Not seen in the game yet; 0x107 waits on 0x0EA-0x0EB to be reached.
@@ -2408,10 +2477,33 @@ EVENT_CODE_PATCHES: dict[int, list[tuple[bytes, bytes]]] = {
     # REMIXED_SPRITE_ALIASES): graphic 0x5B is a Squire copy whose texture 0x5E's grave swords now use, so Lorne stood
     # in the scene as the swords with a Squire's face (seen on the PC, 0.9.7). His block's next instruction (SETHI var
     # 0x70, 0x20; Bryn's is 0x10, and the two POKEs are byte-for-byte hers) writes 0x38 back to the graphic first.
+    # Each block then writes what its performer has learned and earned, by raw PS1 offsets: an Archer's (job index 3)
+    # and, at index 18, ReMixed's slot 0x5C, a woman's Dancer and a man's Bard (Bryn: Slow Dance, 11 JP of 111;
+    # Lorne: Battle Song, 61 of 161; read in the PS1's RAM after the scene, 2026-11-18). The port's man's Bard is the
+    # remaster's Bard, index 17, so Lorne's three writes there (learned +0xCF, JP +0x100, total JP +0x128; the SETs
+    # before them are his block's alone) go to index 17 (+0xCC, +0xFE, +0x126) and leave a man's Dancer empty: he had
+    # joined with no songs (a tester on 0.9.17), the 61 JP on the Dancer.
     0x0ED: [(bytes([0xAE, 0x70, 0x00, 0x38, 0x00]),
              bytes([0xAE, 0x70, 0x00, BARD["job"][1], 0x00])),
             (bytes([0xAC, 0x70, 0x00, 0x20, 0x00]),
-             bytes([0xAE, 0x70, 0x00, 0x38, 0x00, 0xC4, 0x70, 0x5F, 0x01, 0x00, 0x01, 0xAC, 0x70, 0x00, 0x20, 0x00]))],
+             bytes([0xAE, 0x70, 0x00, 0x38, 0x00, 0xC4, 0x70, 0x5F, 0x01, 0x00, 0x01, 0xAC, 0x70, 0x00, 0x20, 0x00])),
+            *((bytes([0xAE, 0x70, 0x00, value, 0x00]),
+               bytes([0xAE, 0x70, 0x00, value, 0x00, 0xC4, 0x70, *bard.to_bytes(2, "little"), 0x00, size, 0xBE, 0x70, 0x00]))
+              for value, bard, size in ((0x10, 0xCC, 3), (0x3D, 0xFE, 2), (0xA1, 0x126, 2)))],
+    # 0x0C5 (Ashley and the Lich) marks five actions of Ashley's slot 18 learned (+0xCF = 0xF8). For a man ReMixed's
+    # ability lists read slot 18 for its man's Bard's songs (BATTLE 0x80152750: skillset 0x4D, job 0x38's) and slot 17
+    # for the Dark Knight's (0x16, his secondary), so in ReMixed he knows five songs he has no command for; five is the
+    # Dark Knight's count, but the port keeps what ReMixed does: the songs, in the port's Bard (+0xCC).
+    0xC5: [(bytes([0xC4, 0x73, 0xCF, 0x00, 0x70, 0x01]), bytes([0xC4, 0x73, 0xCC, 0x00, 0x70, 0x01]))],
+    # 0x0F3 joins Valmafra and Elias as guests and gives Elias a locked Black Mage look (0x9C) and roster-state bit 0x80
+    # (+0xD0), which nothing of ReMixed's reads back (its formation shows him as a guest, seen on the PS1, 2026-11-18;
+    # 1-A's end clears all but bit 0). The remaster takes any of that byte (+0x11E) for an errand, so Elias showed "On
+    # Errand, Days Remaining: -1" and sat out the formation (a tester on 0.9.17): the write becomes a read, as 0x0EA's.
+    0xF3: [(bytes([0xC4, 0x01, 0xD0, 0x00, 0x00, 0x01]), bytes([0xC1, 0x01, 0xD0, 0x00, 0x00, 0x01]))],
+    # 0x0FE marks its man's equipped reaction, support and movement learned, by raw PS1 offsets: a Calculator's
+    # (+0xCB), slot 18's (+0xD1: Face Up, a man's Bard's in ReMixed) and an Oracle's (+0xBC). The port's man's Bard is
+    # the remaster's Bard, index 17 (BARD), so slot 18's goes to the Bard's third byte (+0xCE), not a man's Dancer's.
+    0x0FE: [(bytes([0xC4, 0x01, 0xD1, 0x00, 0x00, 0x01]), bytes([0xC4, 0x01, 0xCE, 0x00, 0x00, 0x01]))],
     # 0x008 opens with ReMixed's after-battle switch (var 1 set: on to its block 0xFE, AFTER_BATTLE_EVENT). The mod
     # runs it only as Dycedarg's scene, from the world map, where var 1 holds whatever was left there, so its jump
     # becomes a label no code uses (a no-op of the same length).
@@ -3056,6 +3148,26 @@ REMASTER_GUEST_REMOVALS = {158: (0x935, 0x34), 281: (0x263, 0x19)}
 # 0x16; Rafa from 0x26 (event 261) until event 281 (progress 0x28; event 298 sets 0x29).
 REMASTER_OLD_GUESTS = {0x34: (0x34, 0x16), 0x19: (0x19, 0x29)}
 REMIXED_UNIT_SKILLSETS = {0x4D: 0x16, 0x16: 0xE0, 0x4E: 0xE0}
+# A unit's job to level (battle data +0x08: that job gets the unit's level, its prerequisites theirs) is a job index,
+# and ReMixed's 17 and 18 are its gendered slots: 17 its Dark Knight (with that row's prerequisites, Knight 8 and Black
+# Mage 8), 18 a woman's Dancer and a man's Bard (with the slot's one row, the Dancer's). Left as they were, the port
+# gave those Dark Knight levels to the Bard and a man's Bard levels to the Dancer (2026-11-18: 51 of the shipped units in
+# 11 battles, among them the Dark Knights of ReMixed's entries 0x1AD and 0x1B4 and the story characters of 0x1A8). The
+# port's Dark Knight is the remaster's index 20, and its man's Bard index 17; JobLevels reads 0x92 as a man's slot 18
+# (the Bard's level, row 18's prerequisites), which the remaster's own setup, taking only indexes under 20, leaves to it.
+ENTD_LEVELS_JOB = 8
+LEVELS_JOB_DARK_KNIGHT, LEVELS_JOB_MANS_BARD = 0x14, 0x92
+
+
+def remixed_levels_job(index: int, flags: int) -> int:
+    """ReMixed's job-to-level index as the port's (ENTD_LEVELS_JOB): its gendered slots 17 and 18 moved."""
+    if index == 17:
+        return LEVELS_JOB_DARK_KNIGHT
+    if index == 18 and flags & ENTD_GENDER == ENTD_MAN:
+        return LEVELS_JOB_MANS_BARD
+    return index
+
+
 ADDED_ENTRIES_FILE = "event_btlevt_bin_entrydata_add_ent.bin"  # entries from 0x200; shipped by earlier builds
 REMIXED_SCENARIOS_FILE = "remixed-scenarios.bin"
 # ReMixed's missions (its WORLD.BIN, 24 halfwords): entry i's battle (0xFFFF none). Not world-map locations: ReMixed
@@ -3322,7 +3434,7 @@ AFTER_BATTLE_VARS = (0x3A, 0x3B, 0x3C)
 # IF), with the world map after an ELSE; set unconditionally, the hand-off is fixed as before.
 AFTER_BATTLE_CHOSEN = bytes([0xAF, 0x00, 0x00, AFTER_BATTLE_VARS[0], 0x00, 0xAE, 0x01, 0x00, 0x81, 0x00, 0xA2, 0x01])
 # Likewise a return to the battle's conditions (AFTER_BATTLE_RETURN) set under an IF, with the world map on the other
-# path (0x01D: Luso met before or not): the preset loaded, and the word, are chosen by var 0x3C (SET_VAR var 0, var
+# path (0x01D: Luso not in the party or in it): the preset loaded, and the word, are chosen by var 0x3C (SET_VAR var 0, var
 # 0x3C; SET var 1, 0xFFFF; EQ; IF).
 RETURN_CHOSEN = bytes([0xAF, 0x00, 0x00, AFTER_BATTLE_VARS[2], 0x00, 0xAE, 0x01, 0x00, 0xFF, 0xFF, 0xA2, 0x01])
 # ReMixed's battles hand on to its after-battle event 8 (results and loot), which the mod doesn't ship. Where event 8
@@ -3386,9 +3498,8 @@ AFTER_BATTLE_HOME = AFTER_BATTLE_RESULTS + AFTER_BATTLE_WRITE_BACK + TAVERN_HOME
 LIVE_BATTLE_WRITE_BACK_ADDRESS = 0x000000C5
 AFTER_BATTLE_LIVE_WRITE_BACK = bytes([0xCF]) + LIVE_BATTLE_WRITE_BACK_ADDRESS.to_bytes(4, "little")
 AFTER_BATTLE_RETURN_HOME = AFTER_BATTLE_RESULTS + AFTER_BATTLE_LIVE_WRITE_BACK + TAVERN_HOME
-# Luso's two battles return to a recruitment scene. Writing the battle back before that scene puts Luso in the roster
-# before its CallFunction 1 can offer him, so the scene silently ends with him already present. Show the results but
-# defer the writer to the source-authored join point instead.
+# Luso's two battles return to a recruitment scene, whose own display state 7 (MIDSCENE_JOIN_SCREENS) writes the
+# battle back and shows each joiner's join screen. Show the results at the victory, but leave the writer to that join.
 AFTER_BATTLE_DEFERRED_HOME = AFTER_BATTLE_RESULTS + TAVERN_HOME
 DEFER_RETURN_WRITE_BACK = {0x01D, 0x0EA}
 # A battle unit the write-back saves for a later scene (ENTD flags: 0x10 joins, 0x01 saves it, into the roster's guest
@@ -3423,8 +3534,8 @@ MENU_BATTLES = {0xEE: 0xEE, 0xEF: 0xEF, 0xF0: 0xF0, 0xF1: 0xF1, 0x113: 0xF1, 0xF
                 0x116: 0x116}
 # The Zalbag and Algus campaign's battles have the same scene, hand-off and check, on the scene's own map (none sets
 # another battle entry or map in vars 0x32/0x33): 0x00A, 0x00B, 0x00D, 0x010, 0x0FF-0x102 (0x104, the same, isn't
-# shipped yet). Those with one group here; 0x00D and 0x0FF-0x101 have two, and a battle's run set up with two groups
-# wouldn't commence (see MENU_SECOND_GROUP), so they keep the formation first for now.
+# shipped yet). 0x0FF-0x101 have two groups, 2 + 4: six places, which the remaster takes with the code mod's
+# "six-places" (see MENU_SECOND_GROUP). 0x00D (2 + 2) keeps its formation first.
 MENU_BATTLES |= {e: e for e in (0x00A, 0x00B, 0x010, 0x0FF, 0x100, 0x101, 0x102)}
 MENU_BATTLES |= {0x01D: 0x01D}  # Luso at Araguay Woods (ARAGUAY_LUSO): one group, formation 0x10D
 # Where the scene's hand-off goes: ReMixed's comes before its check (var 0x18 = var 0x27: GOTO ff), so its battle run
@@ -3441,57 +3552,68 @@ MENU_NOTE = bytes([0xAF, 0x3E, 0x00, 0x27, 0x00])
 # unit; three runs of 0x0F0's battle, never without the fade-in): so it waits out the fade (0xF1, 30 frames) first.
 MENU_CHECK = bytes([0xAF, 0x00, 0x00, 0x18, 0x00, 0xAF, 0x01, 0x00, 0x27, 0x00, 0xA2, 0x01])
 MENU_FADE_IN = bytes([0x4D, 0x1E, 0xF1, 0x1E, 0x00])
-JOIN_NOW = bytes([0x43, 0x01])
-# CallFunction 1 owns the remaster's recruitment presentation. Once it has accepted or declined the candidate, write
-# the surviving battle records back without display-state-7's map teardown. This is intentionally after the call: a
-# pre-write makes the candidate look already recruited and suppresses the screen.
-JOIN_NOW_AND_WRITE_BACK = JOIN_NOW + AFTER_BATTLE_LIVE_WRITE_BACK + TAVERN_HOME
-# These scenes invite a unit, update the roster, and then continue acting and speaking on the same map. ReMixed uses
-# DisplayConditions state 7, the PS1 battle-end writer. In the remaster that state also destroys the live map, while
-# its CallFunction 1 is the purpose-built mid-event join operation. RosterGuard makes that operation idempotent.
-MIDSCENE_JOINS = {0x107: 1, 0x0EB: 1, 0x06E: 3, 0x11B: 1}
+# ReMixed's riders: in its battles a unit with battle id 0xC0, 0xC2, ... 0xCE rides the one numbered after it (its
+# mount), seated by ReMixed's random battles' setup (0x191), which runs as such a battle begins (one handed to its
+# Preparation Menu, 0x192, has no conditions of its own then): it reads each mount's tile (UNIT_ADDRESS mount -> var
+# 0x70, PEEK var n = its +0x47, x and y) and walks each rider onto it (PATCH_NEXT those into a WalkTo, 0x28, speed
+# 0x63). A scene may seat them too (1-A's river camp, 0x0EE), but the formation sets the battle's units up afresh,
+# unmounted ("Intro event > deployment > random battle event, normally. They have to mount twice", ReMixed's
+# author). The port never runs 0x191 there, so the river camp's Mindflayers began its battle off their chocobos (a
+# tester, 2026-11-18), and 0x0FB's goblins theirs. The battle's run (MENU_BATTLES' check, BATTLE_SPLITS' battle copy)
+# now seats the pairs its battle entry has, as 0x191 does, and zeroes the variables, as 0x191 leaves them.
+UNIT_ADDRESS, PEEK, PATCH_NEXT, WALK_TO, ZERO_VAR = 0xC2, 0xC1, 0xE6, 0x28, 0xBE
+RIDERS = range(0xC0, 0xD0, 2)
+SEAT_SPEED = 0x63
 
 
-def join_now_without_map_teardown(code: bytes, lengths: bytes, expected: int = 0) -> tuple[bytes, int]:
-    """Use the remaster's mid-event joiner in audited recruitment scenes.
+def seat_riders(battle_ids: set[int]) -> bytes:
+    """ReMixed's 0x191's seating of riders on their mounts (RIDERS), for the pairs among battle_ids; b"" for none."""
+    pairs = [(rider, rider + 1) for rider in RIDERS if rider in battle_ids and rider + 1 in battle_ids]
+    read = b"".join(bytes([UNIT_ADDRESS, mount, 0x70, PEEK, 0x71 + k, 0x47, 0, 0x70, 2])
+                    for k, (_, mount) in enumerate(pairs))
+    walk = b"".join(bytes([PATCH_NEXT, 0x42, 0x71 + k, WALK_TO, rider, 0, 0, 0, 0, 0, SEAT_SPEED, 1])
+                    for k, (rider, _) in enumerate(pairs))
+    zero = b"".join(bytes([ZERO_VAR, var, 0]) for var in [0x70, *range(0x71, 0x71 + len(pairs))])
+    return read + walk + zero if pairs else b""
 
-    Only state-7 displays enclosed by DarkScreen/RemoveDarkScreen are candidates. The source allowlist and exact count
-    keep ordinary end-of-battle write-backs untouched.
-    """
-    if not expected:
-        return code, 0
-    instructions: list[tuple[int, int, int, bytes]] = []
+
+# Who joins, and the join screen. The remaster has two ways to make a battle's flagged units (+6 & 0x10) join:
+# - Event instruction 0x43 1 (vanilla's CallFunction 1; 0x227458, RosterGuard): writes each one into the roster at
+#   once, silently. ReMixed uses it where it means to (0x006's Delita).
+# - Display state 7 (0x78 7, then the wait 0xE5 0x38: 0x2CB9E8 -> 0x2C8818). It writes the battle back (0x2C60E4),
+#   which queues the joiners not in the roster yet and returns how many. With none it ends there. With some it parks
+#   task 1 (its 0x800-byte context saved, the task made inactive), plays the join fanfare, shows each joiner's "New
+#   Party Member" screen (the PS1's "JOIN UP!" over the unit's status) and writes them on Accept, then restores task 1
+#   and makes it active again. Nothing in it tears the map down (read from the decompile, 2026-11-18).
+# ReMixed makes its recruits join through state 7 in a dark screen, then goes on talking on the same map: Luso at
+# Mandalia (0x0EB), Luso and Boco after Araguay (0x107), Zalbag at Eagrose (0x06E: three), the chapter-3 branch's
+# 0x11B. From 2026-11-16 the build made those 0x43 1 and the live writer instead, on the belief that state 7 destroys
+# the map; that was seen while battles' exits still jumped to state 7 without the results states 2-6 first
+# (AFTER_BATTLE_RESULTS, fixed 2026-11-17). Every recruit then joined with no screen: the scene ended and the unit was simply in the party
+# (reported 2026-11-18, Boco; Luso's before). ReMixed's own state 7 stays now, as on the PS1, and each scene's count of
+# them is checked, so a later change can't quietly make those joins silent again.
+MIDSCENE_JOIN_SCREENS = {0x107: 1, 0x0EB: 1, 0x06E: 3, 0x11B: 1}
+
+
+def midscene_join_screens(code: bytes, lengths: bytes) -> int:
+    """The join screens (display state 7, then its wait) a scene shows inside a dark screen (0x76 ... 0x77)."""
+    instructions: list[tuple[int, bytes]] = []
     at = 0
     while at < len(code):
         op = code[at]
         end = at + 1 + lengths[op]
         if end > len(code):
             break
-        instructions.append((at, end, op, code[at + 1:end]))
+        instructions.append((op, code[at + 1:end]))
         at = end
-
-    replacements: list[tuple[int, int]] = []
-    for dark, (_, _, op, _) in enumerate(instructions):
+    found = 0
+    for dark, (op, _) in enumerate(instructions):
         if op != 0x76:
             continue
-        remove = next((n for n in range(dark + 1, len(instructions)) if instructions[n][2] == 0x77), None)
-        if remove is None:
-            continue
-        for n in range(dark + 1, remove):
-            start, end, candidate, params = instructions[n]
-            if candidate != 0x78 or params != bytes([0x07, 0x3C]):
-                continue
-            # The PS1 waits for the display immediately afterwards. With no display state entered that wait would
-            # never complete, so consume it together with the state-7 instruction.
-            if n + 1 >= remove or instructions[n + 1][2:] != (0xE5, bytes([0x38, 0x00])):
-                raise ValueError(f"mid-scene DisplayConditions 7 at 0x{start:X} lacks WaitCondition 0x38")
-            replacements.append((start, instructions[n + 1][1]))
-
-    if len(replacements) != expected:
-        raise ValueError(f"mid-scene join count is {len(replacements)}, expected {expected}")
-    for start, end in reversed(replacements):
-        code = code[:start] + JOIN_NOW_AND_WRITE_BACK + code[end:]
-    return code, len(replacements)
+        remove = next((n for n in range(dark + 1, len(instructions)) if instructions[n][0] == 0x77), len(instructions))
+        found += sum(instructions[n] == (0x78, bytes([0x07, 0x3C])) and instructions[n + 1] == (0xE5, bytes([0x38, 0x00]))
+                     for n in range(dark + 1, remove - 1))
+    return found
 
 
 # Source-authored post-battle cast resets. ReMixed's cleanup runs remove the battle actors before adding the scene's
@@ -3664,13 +3786,14 @@ def location_scenario_code(code: bytes, lengths: bytes, unsafe: set[int], empty:
         elif op == 0xCE and u16(ins, 1) in unsafe and chosen and return_preset is not None:
             back = (return_presets or {}).get(return_preset, return_preset)  # the return on one path only
             if defer_return_writeback:
-                # Only the return goes on to the source's join (Araguay's 122, Luso's thanks, joins and writes the
-                # battle back right after it). The other way ends at the world map with no join of its own, so it joins
-                # and writes back itself: Boco, whose record joins when the roster hasn't him yet. Deferring both left
-                # Araguay's results unsaved and Boco unjoined when Luso was already in the party (seen in the hidden PC
-                # game, 2026-11-18).
+                # Only the return goes on to the source's join (Araguay's 122, Luso's thanks, whose join screen writes
+                # the battle back). The other way ends at the world map with no scene, so it writes back here as event 8
+                # would, with the join screen (display state 7, MIDSCENE_JOIN_SCREENS): Boco, whose record joins when
+                # the roster hasn't him yet. Deferring both left Araguay's results unsaved and Boco unjoined when Luso
+                # was already in the party (seen in the hidden PC game, 2026-11-18); a silent join (0x43 1) there put
+                # him in the party with no screen (reported the same day).
                 ins = bytearray(AFTER_BATTLE_DEFERRED_HOME + RETURN_CHOSEN + bytes([0xCE]) + back.to_bytes(2, "little")
-                                + bytes([0x03]) + JOIN_NOW_AND_WRITE_BACK
+                                + bytes([0x03]) + AFTER_BATTLE_WRITE_BACK
                                 + bytes([0xCE]) + empty.to_bytes(2, "little") + bytes([0x04]))
             else:
                 ins = bytearray(AFTER_BATTLE_RETURN_HOME + RETURN_CHOSEN + bytes([0xCE]) + back.to_bytes(2, "little")
@@ -3822,15 +3945,43 @@ def opening_formations(code: bytes, lengths: bytes) -> list[int]:
 # Lorne along, and var 0x6C 0; 0x0F1: var 0x6C 0. var 0x6C holds ReMixed's Extra Options bits, 0 as a new game has them
 # and in the port, which has its own options; seen on the PS1: 0x0F1's formation has a second squad of two). The scene's
 # run sets var 0x36 as ReMixed's code decides, so the build ships that group with the battle and marks it
-# (MENU_SECOND_GROUP | formation in the scenarios file); the code mod would take it when var 0x36 is set. Off for now
-# (RemixedScenarios.SecondGroupsOn): with two groups put in for the battle's run the remaster's formation screen showed
-# both and took units in both, but Space never commenced (0x0F0's, seen on the PC 2026-11-12; one group commences).
+# (MENU_SECOND_GROUP | formation in the scenarios file); the code mod takes it when var 0x36 is set
+# (RemixedScenarios.SecondGroupsOn). 4 + 2 is six places, which the remaster takes with the code mod's "six-places"
+# (Patches/SixPlaces.cs): without it Space never commenced (0x0F0's, seen on the PC 2026-11-12).
 MENU_SECOND_GROUP = 0x8000
+# A battle with its formation first (0x0F4's, 0x0F8's) has no run before its formation to decide its second group, so
+# the build decides: it ships the group when every IF around its SET holds in the port (CONDITIONS_IN_PORT: the ELSE of
+# "IF var 0x6C", the Extra Options being 0), and stops on any other (write_remixed_scenarios' dropped groups).
+EXTRA_OPTIONS_VAR = 0x6C
+CONDITIONS_IN_PORT = {(EXTRA_OPTIONS_VAR, "else")}
 
 
 def conditional_second_group(code: bytes, lengths: bytes) -> int:
     """The formation a ReMixed battle's code sets for its second group under an IF (FORMATION_VARS' second), or 0."""
     return opening_sets(code, lengths, FORMATION_VARS, inside=True).get(FORMATION_VARS[1], 0)
+
+
+def second_group_conditions(code: bytes, lengths: bytes) -> list[tuple[int, str]]:
+    """The IFs around the first SET of a ReMixed battle's second group (FORMATION_VARS' second) before its first END,
+    outermost first: (the variable its var 0 was set from, "then" or "else"). 0x0F4: [(0x6C, "else")]; 0x0EE:
+    [(0xAD, "then"), (0x6C, "else")]."""
+    at, source, stack = 0, None, []
+    while at < len(code):
+        op = code[at]
+        if op == 0xAF and u16(code, at + 1) == 0:  # SET_VAR var 0, var N: what the next IF tests
+            source = u16(code, at + 3)
+        elif op == 0x01:  # IF var 0
+            stack.append([source, "then"])
+        elif op in (0x02, 0x03) and stack:  # ELSE IF, ELSE
+            stack[-1][1] = "else"
+        elif op == 0x04 and stack:  # ENDIF
+            stack.pop()
+        elif op == 0xAE and u16(code, at + 1) == FORMATION_VARS[1] and u16(code, at + 3) and stack:
+            return [(var, branch) for var, branch in stack]
+        elif op == 0xDB:
+            break
+        at += 1 + lengths[op]
+    return []
 
 def nxd_sqlite(cfg: dict, file: str, pack_name: str = "0004.pac") -> Path:
     """The game's nxd/<file>.nxd (extracted once) as a fresh SQLite file in work/."""
@@ -4881,6 +5032,8 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
     pages_shown = 0  # long lines' later pages shown after their first (PAGE_CHARS)
     objects_dropped = 0  # 3D-object instructions on maps the build makes looks for (MAP_OBJECT_USE)
     graphics_rerouted = 0  # LoadEVTCHR instructions moved to ReMixed-only copies of redrawn graphics
+    twin_named = 0  # PSP-script lines named from their PSX twins (script_twins)
+    remounted = 0  # battles whose run seats ReMixed's riders on their mounts (seat_riders)
     messages_audited = dynamic_messages = message_closes = midscene_joins = postbattle_erases = 0
     write_backs: dict[int, int] = {}  # event -> ordinary exit hand-offs using display state 7 (AFTER_BATTLE_HOME)
     live_write_backs: dict[int, int] = {}  # event -> same-map returns using the synchronous native roster writer
@@ -4914,6 +5067,7 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
     unit_presets: dict[int, bytes] = {}  # the mod's scenario -> its 16 units' presets (UNIT_PRESETS_FILE)
     menu_scenarios = {REMIXED_SCENARIOS[s] for s in MENU_BATTLES.values()}
     menu_battles: dict[int, tuple[int, int]] = {}  # the mod's scenario -> its battle's formations (MENU_BATTLES)
+    dropped_groups: list[int] = []  # ReMixed's battles whose second group the mod would leave out
     for theirs, ours, scene in jobs:
         record = bytearray(SCENARIO_SIZE if theirs in TAVERN_EVENTS else records[theirs])
         record[0:2] = ours.to_bytes(2, "little")
@@ -4952,8 +5106,10 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
         # Its battle entry, into the added entries, with abilities the mod holds back left to chance.
         entry = u16(record, 7)
         saves_guest = False  # a unit the write-back saves for a later scene (ENTD_JOINS and ENTD_SAVES)
+        battle_ids: set[int] = set()  # its units' battle ids (seat_riders)
         if entry:
             units = bytearray(entd[entry * entry_bytes:(entry + 1) * entry_bytes])
+            battle_ids = {units[u * UNIT_SIZE + ENTD_BATTLE_ID] for u in range(UNITS_PER_EVENT) if units[u * UNIT_SIZE]}
             saves_guest = any(units[u * UNIT_SIZE] and units[u * UNIT_SIZE + ENTD_FLAGS] & (ENTD_JOINS | ENTD_SAVES)
                               == ENTD_JOINS | ENTD_SAVES for u in range(UNITS_PER_EVENT))
             # ReMixed's unit presets go in a file of their own (UNIT_PRESETS_FILE), for the code mod.
@@ -4980,6 +5136,7 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
                     units[at] = sprites
                 units[at + ENTD_JOB] = REMIXED_UNIT_JOBS.get(units[at + ENTD_JOB], units[at + ENTD_JOB])
                 units[at + ENTD_SECONDARY] = REMIXED_UNIT_SKILLSETS.get(units[at + ENTD_SECONDARY], units[at + ENTD_SECONDARY])
+                units[at + ENTD_LEVELS_JOB] = remixed_levels_job(units[at + ENTD_LEVELS_JOB], units[at + ENTD_FLAGS])
                 for i in UNIT_RSM_FIELDS:
                     if u16(units, u * UNIT_SIZE + i) in held:
                         units[u * UNIT_SIZE + i:u * UNIT_SIZE + i + 2] = ABILITY_RANDOM.to_bytes(2, "little")
@@ -5048,6 +5205,14 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
         if ours in menu_scenarios and scene is None and u16(record, 9) and not u16(record, 11):
             second_group = conditional_second_group(raw_code, lengths)
             record[11:13] = second_group.to_bytes(2, "little")
+        elif (u16(record, 9) and not u16(record, 11) and MENU_BATTLES.get(theirs, theirs) == theirs
+              and set(second_group_conditions(raw_code, lengths)) <= CONDITIONS_IN_PORT):
+            # Its formation first (CONDITIONS_IN_PORT): its second group as ReMixed's code sets it in the port.
+            record[11:13] = conditional_second_group(raw_code, lengths).to_bytes(2, "little")
+        # A second group ReMixed's code sets that no run of the battle puts in (not 0x113's: its battle is 0x0F1's).
+        if (u16(record, 9) and not u16(record, 11) and MENU_BATTLES.get(theirs, theirs) == theirs
+                and conditional_second_group(raw_code, lengths)):
+            dropped_groups.append(theirs)
         # Where the remaster's records are empty, at their own numbers; where the remaster uses one, at a number it
         # leaves empty (from the table's end down).
         for at in (9, 11):
@@ -5102,6 +5267,9 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
             # the fifth row was lost (seen on the PC in the regression pass, 2026-11-12: Mission 17's last sentence).
             whole = set(range(1, len(lines) + 1)) if theirs in KIND_EVENTS or theirs == TRAINING_EVENT else menus
             lines, pages = paged_lines(lines, whole, len(messages))
+            if theirs not in SLOTTED:
+                lines, made = twin_speakers(lines, script_twins(raw_code, lengths), pages)
+                twin_named += made
         templated: dict[int, str] = {}
         twins: dict[int, int] = {}
         laid_out: list[int] = []  # templated lines no one speaks: their line breaks kept as they fill in
@@ -5164,8 +5332,10 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
             if bytes([0x0E, 0xFF, 0xDB]) not in raw_code:
                 sys.exit(f"ReMixed's event 0x{theirs:X} doesn't end at LABEL ff (BATTLE_SPLITS)")
             battle = BATTLE_SPLITS[theirs]
-            battle_start = (MANDALIA_BATTLE_ACTIVATE + GOTO_END
-                            if theirs == 0xEA and scene is not None else GOTO_END)
+            seats = seat_riders(battle_ids) if scene is not None else b""
+            remounted += bool(seats)
+            battle_start = seats + (MANDALIA_BATTLE_ACTIVATE + GOTO_END
+                                    if theirs == 0xEA and scene is not None else GOTO_END)
             patches.append((bytes([0xCD, 0x81, PREPARATION_MENU & 0xFF, PREPARATION_MENU >> 8]),
                             battle_start if scene is not None else bytes([0xCD, 0x81, battle & 0xFF, battle >> 8])))
             if own_preset is not None:  # the conditions its opening loads: its own (see above)
@@ -5191,7 +5361,9 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
             ps1 = insert_code(ps1, lengths, [(MENU_NOTE, bytes([0xCD, 0x81, back & 0xFF, back >> 8]))])
             if ps1.count(MENU_CHECK + GOTO_END) != 1:
                 sys.exit(f"ReMixed's event 0x{theirs:X} hasn't its check where the build expects it (MENU_CHECK)")
-            ps1 = ps1.replace(MENU_CHECK + GOTO_END, MENU_CHECK + MENU_FADE_IN + GOTO_END)
+            seats = seat_riders(battle_ids)
+            ps1 = ps1.replace(MENU_CHECK + GOTO_END, MENU_CHECK + seats + MENU_FADE_IN + GOTO_END)
+            remounted += bool(seats)
         ps1 = move_block(ps1, lengths, EVENT_CODE_MOVES.get(theirs))
         ps1 = question_box(ps1, lengths, QUESTION_BOXES.get(theirs))
         ps1 = notice_boxes(ps1, lengths, NOTICE_MESSAGES.get(theirs))
@@ -5199,8 +5371,12 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
         ps1 = insert_code(ps1, lengths, EVENT_CODE_INSERTS.get(theirs))
         ps1, made = erase_postbattle_cleanup(ps1, POSTBATTLE_CLEANUP.get(theirs))
         postbattle_erases += made
-        ps1, made = join_now_without_map_teardown(ps1, lengths, MIDSCENE_JOINS.get(theirs, 0))
-        midscene_joins += made
+        made = midscene_join_screens(ps1, lengths)
+        if made != MIDSCENE_JOIN_SCREENS.get(theirs, made):
+            sys.exit(f"ReMixed's 0x{theirs:X} shows {made} join screen(s) in a dark screen, expected "
+                     f"{MIDSCENE_JOIN_SCREENS[theirs]} (MIDSCENE_JOIN_SCREENS)")
+        if theirs in MIDSCENE_JOIN_SCREENS:
+            midscene_joins += made
         ps1, made = route_event_graphics(ps1, lengths)
         graphics_rerouted += made
         if info_box is not None:  # closed after each press it waits for (KIND_BOX_CLOSE)
@@ -5222,7 +5398,8 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
             if made != expected:
                 sys.exit(f"ReMixed's event 0x{theirs:X} has {made} dynamic menu placeholder(s), expected {expected}")
         ps1, made, paged = fitted_boxes(ps1, lengths, {n: len(text) for n, (_, text) in enumerate(lines, 1)},
-                                        pages)
+                                        pages, menus if theirs not in SLOTTED and theirs not in DYNAMIC_MENU_PLACEHOLDERS
+                                        else frozenset())  # the tavern's menus are its own (TallMenus)
         boxes_reopened += made
         pages_shown += paged
         if record[2] in set(NEW_LOOKS) | set(REMIXED_MAPS) | set(REMIXED_MAP_EDITS):
@@ -5264,7 +5441,9 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
     done.append(f"{boxes_reopened} swap(s) to a longer line made boxes of their own, {pages_shown} later page(s) of long lines shown in boxes of their own")
     done.append(f"{objects_dropped} 3D-object instruction(s) on the build's own map looks made waits")
     done.append(f"{graphics_rerouted} LoadEVTCHR instruction(s) routed to ReMixed-only redraws")
-    done.append(f"{midscene_joins} mid-scene recruit(s) use Join Now without tearing down the map")
+    done.append(f"{twin_named} PSP-script line(s) named from their PSX twins")
+    done.append(f"{remounted} battle(s) seating ReMixed's riders on their mounts as they begin (seat_riders)")
+    done.append(f"{midscene_joins} mid-scene recruit(s) keep ReMixed's join screen (display state 7)")
     done.append(f"{postbattle_erases} post-battle actor removal(s) erase corpse/crystal drawables first")
     done.append(f"{messages_audited} real MESSAGE/ChangeDialog instruction(s) audited against their text rows "
                 f"({dynamic_messages} runtime-selected, {message_closes} intentional closes)")
@@ -5279,6 +5458,13 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
         sys.exit(f"same-map battle returns are not the exact audited set: missing {missing}, extra {extra}, counts {wrong}")
     done.append(f"{len(live_write_backs)} same-map post-battle return(s) use the synchronous roster write-back "
                 "without display-state-7 teardown (AFTER_BATTLE_RETURN_HOME)")
+    # A second group ReMixed's code sets only under an IF goes with a battle played after its scene (MENU_SECOND_GROUP);
+    # one set so in a battle with its formation first would be left out without a word (0x0F4's and 0x0F8's, var 0x6C
+    # 0: on the PS1 they deploy a second squad of two). The places the remaster takes are checked from the built file
+    # (check_story_regressions.check_places).
+    if dropped_groups:
+        sys.exit("second formation group(s) ReMixed's code sets that the mod leaves out: "
+                 + ", ".join(f"0x{e:X}" for e in sorted(set(dropped_groups))))
     data = (len(scenarios).to_bytes(2, "little") + b"".join(scenarios)
             + len(formations).to_bytes(2, "little") + b"".join(formations)
             + len(places).to_bytes(2, "little") + b"".join(k.to_bytes(2, "little") + s.to_bytes(2, "little")
@@ -5430,13 +5616,16 @@ def fitted_mesh(mesh: bytes, room: int) -> bytes:
 # fftpack/event_evtchr_bin.bin (0x233EA0), a copy of vanilla's with six graphics more, taking the pixels of five (0x23,
 # 0x3D, 0x60, 0x70, 0x87) from fftpack/spr/evtchr/evtchr_NNN.tex instead. ReMixed redrew twelve graphics, and 0x6F is
 # all its own (where vanilla keeps an unused copy of 0x7A): the Treasure Wheel's chests and the arrows its Preparation
-# Menu stands over hidden items. The mod ships 0x6F in place because no stock event loads it. Ten redraws used by the
-# port get private slots: nine unused slots already in the file and one appended one. The latter has no stock
-# enhanced-texture mapping; the code mod points it at an unused PSP texture stub, filled below with ReMixed's art.
-# ReMixed's unused 0x7A redraw remains held back until one of its events that loads it is shipped.
+# Menu stands over hidden items. The mod ships 0x6F and 0x10 in place because no stock event loads them
+# (audit_stock_event_graphics). Nine other redraws used by the port get private slots: eight unused slots already in
+# the file and one appended one. ReMixed's unused 0x7A redraw remains held back until one of its events that loads it is
+# shipped. 0x10 took native slot 0x1E from 2026-11-16 until 2026-11-18: the scan that picked it read the remaster's own
+# instruction 0xC5 (8 parameter bytes, which the PS1's table doesn't have) as no longer than its opcode, stepped over
+# event 149's LoadEVTCHR(1, 0x1E), and that scene (Agrias and Ovelia with Lionel in sight, chapter 2) drew Agrias's
+# shading pose and Ovelia's reach for the tree in ReMixed's 0x10 art (seen on the PC, 2026-11-18).
 EVTCHR_FILE, EVTCHR_BYTES, EVTCHR_PIXELS = "EVENT/EVTCHR.BIN", 0x7800, 0x980
+EVENT_GRAPHICS_IN_PLACE = (0x6F, 0x10)
 EVENT_GRAPHIC_ALIASES = {
-    0x10: 0x1E,
     0x12: 0x0A,
     0x14: 0x78,
     0x19: 0x89,
@@ -5447,7 +5636,7 @@ EVENT_GRAPHIC_ALIASES = {
     0x67: 0x8E,
     0x79: 0xF2,
 }
-REMIXED_EVENT_GRAPHICS = (0x6F, *EVENT_GRAPHIC_ALIASES)
+REMIXED_EVENT_GRAPHICS = (*EVENT_GRAPHICS_IN_PLACE, *EVENT_GRAPHIC_ALIASES)
 # With the enhanced sprites on, the remaster draws an event graphic from a texture of its own instead of its pixels: the
 # entry of system/ffto/g2d.dat that op 0x58 names for it (the table at 0x714490: 1242 for 0x6F), the graphic's own art
 # redrawn at twice the size, sampled where the graphic's frames say. 1242 is vanilla's 0x6F (a copy of 0x7A, figures
@@ -5456,12 +5645,12 @@ REMIXED_EVENT_GRAPHICS = (0x6F, *EVENT_GRAPHIC_ALIASES)
 # twice the size, 512 x 442, in the same palettes; the code mod's loader (fftivc.utility.modloader) gives the game an
 # entry of its own from system/ffto/g2d/tex_<entry>.bin, as the game has it once decoded. So ReMixed's private copies
 # ship their pixels doubled under the otherwise-unused alias slot's texture. Values are alias -> (source graphic,
-# g2d entry). Graphic 0x1E is the one remaining native event slot no stock enhanced script loads, with event texture
-# 0x49B. The remaster's table gives appended alias 0xF2 -1; RemixedEventGraphics.cs points it at 0x46A, the unused
-# stub texture of PSP graphic 0xA9. Nothing can draw that graphic (its sheet isn't in the remaster), and
-# ReMixedSprites deliberately uses only the earlier PSP stubs.
+# g2d entry). Every event texture (0x47A-0x505) belongs to a graphic, so the two with none of their own borrow PSP
+# stubs: the remaster's table gives 0x10 and appended alias 0xF2 -1, and RemixedEventGraphics.cs points them at 0x468
+# and 0x46A, the unused stub textures of PSP graphics 0xA8 and 0xA9. Nothing can draw those graphics (their sheets
+# aren't in the remaster), and ReMixedSprites deliberately uses only the earlier PSP stubs.
 EVENT_TEXTURES = {
-    0x1E: (0x10, 0x49B),
+    0x10: (0x10, 0x468),
     0x0A: (0x12, 0x489),
     0x78: (0x14, 0x4DD),
     0x89: (0x19, 0x502),
@@ -5473,12 +5662,15 @@ EVENT_TEXTURES = {
     0x6F: (0x6F, 0x4DA),
     0xF2: (0x79, 0x46A),
 }
-# The appended alias's base entry is a PSP-unit stub, not an event texture: base + the event renderer's 0x8C stride
-# would land on unrelated event picture 0x4F6 and make its actors black silhouettes. The code patch gives it the
+# Their base entries are PSP-unit stubs, not event textures: base + the event renderer's 0x8C stride would land on
+# unrelated event pictures 0x4F4 and 0x4F6 and make their actors black silhouettes. The code patch gives them the
 # neutral all-zero palette texture paired with the ordinary event texture 0x489 instead.
-APPENDED_EVENT_TEXTURE_ALIASES = (0xF2,)
+STUB_EVENT_TEXTURE_GRAPHICS = (0x10, 0xF2)
 EVENT_NEUTRAL_PALETTE_TEXTURE = 0x515
-NATIVE_EVENT_GRAPHIC_ALIAS = 0x1E
+# The textures the event graphics can be given: the remaster's event range and PSP graphics 0xA8 and 0xA9's stubs. Any
+# of them the build doesn't write this time is taken out of the mod, so a texture an earlier build gave a redraw
+# doesn't stay over the remaster's own art (0x49B, 0x1E's, did after 0x10 left that slot).
+EVENT_TEXTURE_RANGE = (*range(0x47A, 0x506), *range(0x468, 0x46C))
 
 
 def event_texture(graphic: bytes) -> bytes:
@@ -5577,8 +5769,38 @@ def audit_event_graphic_animations(graphics: bytes, textures: Path) -> tuple[int
     return len(uses), len(unique)
 
 
-def audit_native_event_alias(cfg: dict, alias: int) -> int:
-    """Prove a native private EVTCHR slot is not loaded by any stock enhanced event script."""
+# The remaster's event instructions are as long as its own length helper (0x2CBE2C) says: its byte table (.rdata
+# 0x680F00, found from the helper's code, which loads it right after these bytes) plus one; 0xE6, its next byte plus
+# two; and with the enhanced build on, 0x10, 0x51 and 0xEB longer by 3, 2 and 4 (32-bit text ids). The remaster adds
+# instructions of its own, so the PS1's table misreads its scripts: it gives 0xC5 (8 parameter bytes) none, which hid
+# event 149's LoadEVTCHR(1, 0x1E) from the build until 2026-11-18. Read this way, all 560 stock scripts end at an END.
+REMASTER_LENGTH_HELPER = bytes.fromhex("8039E675090FB6410183C002EB100FB601488D15")
+REMASTER_ENHANCED_LENGTHS = {0x10: 3, 0x51: 2, 0xEB: 4}
+
+
+def remaster_length_table(cfg: dict) -> bytes:
+    """The remaster's event-instruction length table, from its exe."""
+    from exe import Exe  # noqa: PLC0415
+    image = Exe(Path(cfg["target"]["tic_dir"]) / "FFT_enhanced.exe")
+    at = image.data.find(REMASTER_LENGTH_HELPER)
+    if at < 0 or image.data.find(REMASTER_LENGTH_HELPER, at + 1) >= 0:
+        sys.exit("the remaster's event length helper isn't found once in its exe")
+    disp = at + len(REMASTER_LENGTH_HELPER)
+    rva = next(va + disp - raw for _, va, _, raw, size in image.sections if raw <= disp < raw + size)
+    return image.read(rva + 4 + struct.unpack_from("<i", image.data, disp)[0], 256)
+
+
+def remaster_instruction_size(table: bytes, code: bytes, at: int) -> int:
+    """An enhanced event instruction's length, opcode included, as the remaster's length helper works it out."""
+    op = code[at]
+    if op == 0xE6:
+        return code[at + 1] + 2 if at + 1 < len(code) else 1
+    return table[op] + 1 + REMASTER_ENHANCED_LENGTHS.get(op, 0)
+
+
+def audit_stock_event_graphics(cfg: dict, graphics: set[int]) -> int:
+    """Prove no stock enhanced event script loads any of these event graphics (the slots ReMixed's art takes): each is
+    read instruction by instruction as the game reads it, to its END, and a script that can't be read so fails too."""
     extract = WORK / "remaster" / "extract" / "enhanced"
     scripts = extract / "script" / "enhanced"
     paths = sorted(scripts.glob("event*.e"))
@@ -5588,21 +5810,22 @@ def audit_native_event_alias(cfg: dict, alias: int) -> int:
         paths = sorted(scripts.glob("event*.e"))
     if len(paths) != 560:
         raise ValueError(f"the enhanced script pack has {len(paths)} event files, expected 560")
-    battle = (WORK / "files" / "vanilla" / "BATTLE.BIN").read_bytes()
-    lengths = eiu_events.remaster_lengths(eiu_events.read_lengths(battle))
-    found = []
+    table = remaster_length_table(cfg)
+    found, unread = [], []
     for path in paths:
         code, at = path.read_bytes(), 0
-        while at < len(code):
-            op = code[at]
-            end = at + 1 + lengths[op]
-            if end > len(code):  # a few native files end in trailing bytes outside their valid instruction prefix
-                break
-            if op == 0x58 and code[at + 2] == alias:
-                found.append((path.name, at))
-            at = end
+        while at < len(code) and code[at] != 0xDB:
+            size = remaster_instruction_size(table, code, at)
+            if code[at] == 0x58 and at + 2 < len(code) and code[at + 2] in graphics:
+                found.append(f"{path.name}:0x{at:X} loads 0x{code[at + 2]:X} into slot {code[at + 1]}")
+            at += size
+        if at >= len(code):
+            unread.append(path.name)
+    if unread:
+        raise ValueError("stock enhanced events that can't be read to their END (an instruction of the remaster's "
+                         "the build doesn't know?), so their event graphics can't be checked: " + ", ".join(unread))
     if found:
-        raise ValueError(f"native event-graphic alias 0x{alias:X} is loaded by stock enhanced events: {found}")
+        raise ValueError("ReMixed's event art takes graphics stock enhanced events load: " + ", ".join(found))
     return len(paths)
 
 
@@ -5631,7 +5854,7 @@ def write_event_graphics(cfg: dict) -> str:
     out = MOD_DIR / "FFTIVC" / "data" / "enhanced" / "fftpack" / "event_evtchr_bin.bin"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_bytes(graphics)
-    expected_textures = set(EVENT_GRAPHIC_ALIASES.values()) | {0x6F}
+    expected_textures = set(EVENT_GRAPHIC_ALIASES.values()) | set(EVENT_GRAPHICS_IN_PLACE)
     if set(EVENT_TEXTURES) != expected_textures:
         missing = expected_textures - set(EVENT_TEXTURES)
         extra = set(EVENT_TEXTURES) - expected_textures
@@ -5652,13 +5875,13 @@ def write_event_graphics(cfg: dict) -> str:
     if len(neutral) != 512 * 442 or any(neutral):
         sys.exit(f"event palette texture 0x{EVENT_NEUTRAL_PALETTE_TEXTURE:X} isn't the expected neutral 512x442 map")
     for alias, (_, entry) in EVENT_TEXTURES.items():
-        if alias in APPENDED_EVENT_TEXTURE_ALIASES:
+        if alias in STUB_EVENT_TEXTURE_GRAPHICS:
             continue
         base, palette = sprites.g2d_entry(g2d, entry), sprites.g2d_entry(g2d, entry + 0x8C)
         if len(base) != 256 * 442 or len(palette) != 512 * 442 or any(palette):
             sys.exit(f"event graphic 0x{alias:X}'s native texture pair 0x{entry:X}/0x{entry + 0x8C:X} "
                      "isn't an event-sized base with a neutral palette map")
-    for alias in APPENDED_EVENT_TEXTURE_ALIASES:
+    for alias in STUB_EVENT_TEXTURE_GRAPHICS:
         entry = EVENT_TEXTURES[alias][1]
         if entry + 0x8C == EVENT_NEUTRAL_PALETTE_TEXTURE:
             sys.exit(f"event graphic 0x{alias:X} no longer needs its explicit neutral-palette routing")
@@ -5668,6 +5891,12 @@ def write_event_graphics(cfg: dict) -> str:
                      "unrelated non-neutral event picture")
     textures = MOD_DIR / "FFTIVC" / "data" / "enhanced" / "system" / "ffto" / "g2d"
     textures.mkdir(parents=True, exist_ok=True)
+    stale = []
+    for entry in sorted(set(EVENT_TEXTURE_RANGE) - set(entries) - sprite_entries):
+        path = textures / f"tex_{entry}.bin"
+        if path.exists():
+            path.unlink()
+            stale.append(path.name)
     for alias, (source_graphic, entry) in EVENT_TEXTURES.items():
         source_at = slice(source_graphic * EVTCHR_BYTES, (source_graphic + 1) * EVTCHR_BYTES)
         texture = event_texture(theirs[source_at])
@@ -5676,16 +5905,18 @@ def write_event_graphics(cfg: dict) -> str:
         if path.read_bytes() != texture:
             sys.exit(f"event graphic 0x{alias:X}'s enhanced texture wasn't written intact as {path.name}")
     try:
-        stock_events = audit_native_event_alias(cfg, NATIVE_EVENT_GRAPHIC_ALIAS)
+        stock_events = audit_stock_event_graphics(cfg, set(EVENT_TEXTURES))
         animation_uses, unique_animations = audit_event_graphic_animations(bytes(graphics), textures)
     except ValueError as error:
         sys.exit(str(error))
     own = ", ".join(f"0x{n:X}" for n in REMIXED_EVENT_GRAPHICS)
     textured = ", ".join(f"0x{source:X}->0x{alias:X} (g2d {entry})"
                          for alias, (source, entry) in EVENT_TEXTURES.items())
-    return (f"{len(REMIXED_EVENT_GRAPHICS)} of ReMixed's ({own}), ten redraws in private slots; enhanced textures for "
-            + textured + f"; 0x{NATIVE_EVENT_GRAPHIC_ALIAS:X} unused by {stock_events} stock scenes; "
-            f"{animation_uses} pose use(s), {unique_animations} unique alias/animation pairs audited")
+    return (f"{len(REMIXED_EVENT_GRAPHICS)} of ReMixed's ({own}), {len(EVENT_GRAPHICS_IN_PLACE)} in place and "
+            f"{len(EVENT_GRAPHIC_ALIASES)} in private slots; enhanced textures for " + textured
+            + f"; none of their slots loaded by the {stock_events} stock scenes; "
+            + (f"old texture(s) taken out: {', '.join(stale)}; " if stale else "")
+            + f"{animation_uses} pose use(s), {unique_animations} unique alias/animation pairs audited")
 
 
 # ReMixed rebuilt E331 for Cleave and Scratch, and changed E306 for Rally and Composure. The enhanced remaster's two
@@ -6937,7 +7168,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata. The title screen's plaque shows it (write_title_screen).
-RELEASE_VERSION = "0.9.17"
+RELEASE_VERSION = "0.9.18"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:

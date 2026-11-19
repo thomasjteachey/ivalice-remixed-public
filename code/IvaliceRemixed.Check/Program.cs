@@ -106,6 +106,7 @@ try
         problems += SelfTest.ErrandAndListRules(game, log);
         problems += SelfTest.MonsterWriteBackRule(game, log);
         problems += SelfTest.FormationStartRule(game, log);
+        problems += SelfTest.SixPlacesRule(game, log);
         problems += SelfTest.ErrandLockRules(game, log);
         problems += SelfTest.OneHandingRules(game, log);
         problems += SelfTest.ErrandRules(game, log);
@@ -125,6 +126,8 @@ try
         problems += SelfTest.EventLogStub(game, log);
         problems += SelfTest.RemixedEventScripts(game, log);
         problems += SelfTest.UnitLooksRule(game, log);
+        problems += SelfTest.PerformerJobRules(game, log);
+        problems += SelfTest.DismissByNameRule(game, log);
         problems += SelfTest.SideChapterRepair(log);
         problems += SelfTest.EventUnitNumbers(game, log);
         problems += SelfTest.RemixedScenarioTables(game, log);
@@ -132,6 +135,7 @@ try
         problems += SelfTest.UnitSprites(game, log);
         problems += SelfTest.EventGraphicTextures(game, log);
         problems += SelfTest.FaceFold(log);
+        problems += SelfTest.FacePortraits(game, log);
         problems += SelfTest.OldGuestMoves(game, log);
         problems += SelfTest.RemixedMessageMoving(log);
         problems += SelfTest.RemixedConditionTypes(log);
@@ -152,6 +156,7 @@ try
         problems += SelfTest.Unlearning(game, log);
         problems += SelfTest.ChargeLocks(game, log);
         problems += SelfTest.TwoShotsLists(game, log);
+        problems += SelfTest.HarnessAct(game, log);
         problems += SelfTest.GuestControls(game, log);
         problems += SelfTest.ReflectBounces(game, log);
         problems += SelfTest.GunSkillRules(game, log);
@@ -2511,6 +2516,22 @@ internal static unsafe class SelfTest
         return failures;
     }
 
+    /// <summary>The harness's act (test runs only): the battle menu's frame, its state and its object are found and hooked.</summary>
+    public static int HarnessAct(Game game, Log log)
+    {
+        try
+        {
+            BattleAct.Install(game);
+            log.Info("self-test: the harness's act, the battle menu's frame, state and object found, the frame hooked");
+            return 0;
+        }
+        catch (Exception e)
+        {
+            log.Info($"self-test: the harness's act: WRONG ({e.Message})");
+            return 1;
+        }
+    }
+
     /// <summary>Between a unit's two, the list builder's ids from 0x170 are hidden but Two Shots (its stub, against pads).</summary>
     public static int TwoShotsLists(Game game, Log log)
     {
@@ -4565,16 +4586,71 @@ internal static unsafe class SelfTest
         Record(3, OldGuests.OldAgrias, OldGuests.OldAgrias, OldGuests.Agrias, 0);
         Record(4, OldGuests.OldAgrias, OldGuests.OldAgrias, 0x42, 0); // Ashley
         Record(5, 0x80, 0x4A, 0x123, 0x10); // someone else away
+        Record(6, 0x9C, 0x50, OldGuests.Elias, 0x80); // Elias as 0.9.17's 0x0F3 left him
+        Record(7, 0x80, 0x4A, 0x124, 0x80); // someone else with the bit
         var first = OldGuests.RepairSideChapterRoster(roster);
         var again = OldGuests.RepairSideChapterRoster(roster);
         byte At(int slot, int offset) => roster[slot * size + offset];
-        var ok = first == 3 && again == 0 && At(1, OldGuests.RosterJob) == OldGuests.RemasterBard
+        var ok = first == 4 && again == 0 && At(1, OldGuests.RosterJob) == OldGuests.RemasterBard
+                 && At(6, OldGuests.RosterErrand) == 0 && At(7, OldGuests.RosterErrand) == 0x80
                  && At(2, OldGuests.RosterErrand) == 0x01 && At(3, 0) == OldGuests.Agrias
                  && At(3, OldGuests.RosterJob) == OldGuests.Agrias && At(4, 0) == OldGuests.OldAgrias
                  && At(5, OldGuests.RosterErrand) == 0x10;
+        // Bryn and Lorne past the river camp: dismissed with their gear back (Bryn's dagger 0x01 one more), not before.
+        Record(10, 0xB5, 0x5C, OldGuests.Bryn, 0);
+        *(ushort*)(roster + 10 * size + OldGuests.Equipment + 2 * 5) = 0x01;
+        *(ushort*)(roster + 10 * size + OldGuests.Equipment + 2 * 1) = 0xFF;
+        var inventory = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(OldGuests.Items);
+        inventory[0x01] = 3;
+        var early = OldGuests.DismissDepartedPerformers(roster, inventory, 6);
+        var late = OldGuests.DismissDepartedPerformers(roster, inventory, 7);
+        var twice = OldGuests.DismissDepartedPerformers(roster, inventory, 0xE);
+        ok &= early == 0 && late == 2 && twice == 0 && At(1, 1) == 0xFF && At(10, 1) == 0xFF && inventory[0x01] == 4
+              && inventory[0xFF] == 0 && At(2, 1) != 0xFF;
+        System.Runtime.InteropServices.NativeMemory.Free(inventory);
         System.Runtime.InteropServices.NativeMemory.Free(roster);
         log.Info($"self-test: 1-A roster repair, {first} records then {again}: Lorne a Bard, Lavian's 1-A bit off (her own "
-                 + $"errand bit kept), Agrias off 0x34, Ashley and another's errand left{(ok ? "" : ": WRONG")}");
+                 + $"errand bit kept), Agrias off 0x34, Elias's join bit off, Ashley and others' errands left; Bryn and Lorne dismissed past the river camp ({early}, {late}, {twice}) with their gear back{(ok ? "" : ": WRONG")}");
+        return ok ? 0 : 1;
+    }
+
+    /// <summary>
+    /// DismissUnit by name id where no sprite set matched (<see cref="DismissByName"/>), through its stub's probe: the
+    /// remaster's find by sprite set stands, then the name id from slot 1, empty slots skipped.
+    /// </summary>
+    public static int DismissByNameRule(Game game, Log log)
+    {
+        if (DismissByName.Probe == 0)
+        {
+            log.Info("self-test: DismissUnit by name, isn't installed: WRONG");
+            return 1;
+        }
+        const int size = UnitTables.RosterSize;
+        var roster = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(UnitTables.RosterSlots * size);
+        for (var k = 0; k < UnitTables.RosterSlots; k++)
+            roster[k * size + 1] = 0xFF;
+        void Record(int slot, byte sprites, int name)
+        {
+            roster[slot * size] = sprites;
+            roster[slot * size + 1] = (byte)slot;
+            *(int*)(roster + slot * size + DismissByName.RosterName) = name;
+        }
+        Record(0, 0x01, 0x6B);                          // Ramza's slot, never dismissed (the remaster starts at 1)
+        Record(4, 0xB5, 0x69);                          // Bryn
+        Record(9, 0xB4, 0x6A);                          // Lorne
+        Record(12, 0x9C, 0x6B);                         // Elias
+        roster[20 * size] = 0x80;                       // an empty slot with a matching name: skipped
+        *(int*)(roster + 20 * size + DismissByName.RosterName) = 0x78;
+        var probe = (delegate* unmanaged<byte*, int, int, int>)DismissByName.Probe;
+        int Find(int id, int bySprite = UnitTables.RosterSlots) => probe(roster, id, bySprite);
+        var site = (byte*)DismissByName.SiteAt;
+        var (bryn, lorne, elias) = (Find(0x69), Find(0x6A), Find(0x6B));
+        var ok = bryn == 4 && lorne == 9 && elias == 12 && Find(0x78) == -1 && Find(0x6C) == -1
+                 && Find(0x69, 7) == 7 && site[0] == 0xE9;
+        System.Runtime.InteropServices.NativeMemory.Free(roster);
+        log.Info($"self-test: DismissUnit by name, Bryn 0x69 → slot {bryn}, Lorne → {lorne}, Elias → {elias} "
+                 + $"(not Ramza's slot 0), none for an empty slot's name; a sprite set's find stands; its test jumps "
+                 + $"away ({site[0]:X2}){(ok ? "" : ": WRONG")}");
         return ok ? 0 : 1;
     }
 
@@ -4693,6 +4769,88 @@ internal static unsafe class SelfTest
         Check($"a write over a unit's graphic marks it (a halfword at +0x15F, one at +0x15E), not one beside it: {string.Join(" ", marked)}",
               marked.SequenceEqual(new uint[] { 5, 6 }));
         System.Runtime.InteropServices.NativeMemory.Free(fake);
+        return failures;
+    }
+
+    /// <summary>
+    /// ReMixed's unlocked-jobs rule for Bryn and Lorne (<see cref="PerformerJobs"/>): the game's own 0x348684, hooked,
+    /// on a roster record and a battle unit at job level 1 everywhere, as 0x0ED makes them, and the menu units' step.
+    /// </summary>
+    public static int PerformerJobRules(Game game, Log log)
+    {
+        var failures = 0;
+        void Check(string name, bool ok)
+        {
+            if (!ok) failures++;
+            log.Info($"self-test: performer jobs, {name}{(ok ? "" : ": WRONG")}");
+        }
+        if (PerformerJobs.UnlockedAt == 0)
+        {
+            Check("isn't installed", false);
+            return failures;
+        }
+        var unlocked = (delegate* unmanaged<byte*, int, byte*, int, int>)PerformerJobs.UnlockedAt;
+        var squireChemist = 0x800000 | 0x400000;
+
+        // A roster record (levels +0x74, gender +4, learned +0x32, name id +0x230) in the roster's last slot.
+        var record = game.Units.Roster + (UnitTables.RosterSlots - 1) * UnitTables.RosterSize;
+        var savedRecord = new byte[UnitTables.RosterSize];
+        new ReadOnlySpan<byte>(record, UnitTables.RosterSize).CopyTo(savedRecord);
+        int Roster(int gender, int name)
+        {
+            new Span<byte>(record + 0x74, 12).Fill(0x11);
+            new Span<byte>(record + 0x32, 66).Clear();
+            record[4] = (byte)gender;
+            *(ushort*)(record + 0x230) = (ushort)name;
+            return unlocked(record + 0x74, gender, record + 0x32, 0); // a last byte under 0x14: no Mime or Onion Knight check
+        }
+        Check($"a roster record at job level 1, not a performer: 0x{Roster(0x40, 0x10):X6}", Roster(0x40, 0x10) == squireChemist);
+        Check($"Bryn's (0x69, a woman) gets the Dancer: 0x{Roster(0x40, 0x69):X6}", Roster(0x40, 0x69) == (squireChemist | 0x20));
+        Check($"Lorne's (0x6A, a man) the Bard: 0x{Roster(0x80, 0x6A):X6}", Roster(0x80, 0x6A) == (squireChemist | 0x40));
+        Check($"a monster named so nothing: 0x{Roster(0x20, 0x69):X6}", Roster(0x20, 0x69) == 0);
+        savedRecord.CopyTo(new Span<byte>(record, UnitTables.RosterSize));
+
+        // A battle unit (levels +0xE4, gender +6, learned +0xA2, name id +0x1FC), and the same unit off the units' array.
+        var unit = game.TurnCode.Units + 6 * Battle.UnitSize;
+        var savedUnit = new byte[Battle.UnitSize];
+        new ReadOnlySpan<byte>(unit, Battle.UnitSize).CopyTo(savedUnit);
+        int Unit(byte* u, int gender, int name)
+        {
+            new Span<byte>(u + 0xE4, 12).Fill(0x11);
+            new Span<byte>(u + 0xA2, 66).Clear();
+            u[6] = (byte)gender;
+            *(uint*)(u + 0x1FC) = (uint)name;
+            return unlocked(u + 0xE4, gender, u + 0xA2, 0);
+        }
+        Check($"Lorne as a battle unit (as 0x0ED's setup makes him, flagged a woman): 0x{Unit(unit, 0x40, 0x6A):X6}",
+              Unit(unit, 0x40, 0x6A) == (squireChemist | 0x40));
+        Check($"Bryn as one (flagged a man): 0x{Unit(unit, 0x80, 0x69):X6}", Unit(unit, 0x80, 0x69) == (squireChemist | 0x20));
+        var loose = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(Battle.UnitSize);
+        Check($"a unit outside the units' array goes the game's way: 0x{Unit(loose, 0x40, 0x69):X6}",
+              Unit(loose, 0x40, 0x69) == squireChemist);
+        // The menus' step on such a unit (the party menu's on the stack): the menu unit's +0x78, high byte first.
+        var menu = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(0x280);
+        menu[0x78] = 0xC0;
+        PerformerJobs.AddToMenu(loose, menu);
+        Check($"the party menu's unit of Bryn gets the Dancer: {menu[0x78]:X2} {menu[0x79]:X2} {menu[0x7A]:X2}",
+              menu[0x78] == 0xC0 && menu[0x79] == 0 && menu[0x7A] == 0x20);
+        *(uint*)(loose + 0x1FC) = 0x6A;
+        loose[6] = 0x80;
+        new Span<byte>(menu + 0x78, 3).Clear();
+        PerformerJobs.AddToMenu(loose, menu);
+        Check($"Lorne's the Bard: {menu[0x7A]:X2}", menu[0x7A] == 0x40);
+        *(uint*)(loose + 0x1FC) = 0x11;
+        menu[0x7A] = 0;
+        PerformerJobs.AddToMenu(loose, menu);
+        Check("anyone else's nothing", menu[0x7A] == 0);
+        System.Runtime.InteropServices.NativeMemory.Free(menu);
+        System.Runtime.InteropServices.NativeMemory.Free(loose);
+        savedUnit.CopyTo(new Span<byte>(unit, Battle.UnitSize));
+        var hooked = new[] { PerformerJobs.UnlockedAt, PerformerJobs.PartyMenuUnitAt, PerformerJobs.BattleMenuUnitAt };
+        Check($"hooked at 0x{hooked[0] - game.Image.ImageStart:X}, 0x{hooked[1] - game.Image.ImageStart:X} and "
+              + $"0x{hooked[2] - game.Image.ImageStart:X}",
+              hooked[0] - game.Image.ImageStart == 0x348684 && hooked[1] - game.Image.ImageStart == 0x284A08
+              && hooked[2] - game.Image.ImageStart == 0x360048);
         return failures;
     }
 
@@ -5674,7 +5832,8 @@ internal static unsafe class SelfTest
         return failures;
     }
 
-    /// <summary>The private event-graphic aliases use one unique native event texture and one unused PSP stub.</summary>
+    /// <summary>ReMixed's event graphics without a texture of their own (0x10 in place, appended alias 0xF2) each take
+    /// an unused PSP stub that no other event graphic names.</summary>
     public static int EventGraphicTextures(Game game, Log log)
     {
         var table = RemixedEventGraphics.Textures;
@@ -5687,10 +5846,11 @@ internal static unsafe class SelfTest
         var ok = table != null && at == 0x714490
                  && paletteIdsAt == 0x2E7FEF4
                  && RemixedEventGraphics.Routed.All(row => table[row.Graphic] == row.Texture)
-                 && Enumerable.Range(0, 0x8F).Count(graphic => table[graphic] == RemixedEventGraphics.NativeTexture) == 1
+                 && Enumerable.Range(0, 0x8F).Count(graphic => table[graphic] == RemixedEventGraphics.InPlaceTexture) == 1
+                 && Enumerable.Range(0, 0x8F).All(graphic => table[graphic] != RemixedEventGraphics.AppendedTexture)
                  && palettePatches;
         log.Info($"self-test: ReMixed's event textures, table at 0x{at:X}, palette ids preserved at 0x{paletteIdsAt:X}; "
-                 + $"native 0x{RemixedEventGraphics.NativeAlias:X}->0x{(table == null ? -1 : table[RemixedEventGraphics.NativeAlias]):X}, "
+                 + $"in place 0x{RemixedEventGraphics.InPlaceGraphic:X}->0x{(table == null ? -1 : table[RemixedEventGraphics.InPlaceGraphic]):X}, "
                  + $"appended 0x{RemixedEventGraphics.AppendedAlias:X}->0x{(table == null ? -1 : table[RemixedEventGraphics.AppendedAlias]):X}, "
                  + $"neutral palette 0x{RemixedEventGraphics.NeutralPaletteTexture:X} patched {palettePatches}"
                  + (ok ? "" : ": WRONG"));
@@ -5891,6 +6051,107 @@ internal static unsafe class SelfTest
         var unlisted = fold(0x59);
         Check($"an unlisted graphic folds as the game folds it: 0x59 0x{unlisted:X2}", unlisted == 0x60);
         RemixedFaces.Set(0x59, 0x59);
+        return failures;
+    }
+
+    /// <summary>The faces of the story characters whose face the remaster keeps under a number the mod gives one of
+    /// ReMixed's characters (Agrias 0x1E and Ashley 0x34, Rafa 0x29 and ReMixed's 0x19, Celia 0x2D and ReMixed's 0x3A,
+    /// Lede 0x2E and ReMixed's 0x3B), by each way a screen gets one. In battle (unit cards, the turn list, the battle's
+    /// speech boxes, the formation's cards) from the unit's graphic, which is its sprite set: the fold. For a roster unit
+    /// (the party menu's unit screen and its dialogs, shops, the formation list, the join screen) the world menus'
+    /// 0x2C06D4: its sprite set's PS1 portrait (0x32AB3C, the table 0x683A70), that portrait's graphic (0x274028, the
+    /// table 0x7146D0), then the fold. Each story character shows its own face (Agrias 0x34, not Ashley's 0x14, whose
+    /// sprite set shared her portrait 0x17) and each of ReMixed's its own, by a portrait of its own.</summary>
+    public static int FacePortraits(Game game, Log log)
+    {
+        var failures = 0;
+        void Check(string name, bool ok)
+        {
+            if (!ok) failures++;
+            log.Info($"self-test: world menu faces, {name}{(ok ? "" : ": WRONG")}");
+        }
+        if (RemixedFaces.FoldAt == 0 || RemixedFaces.GraphicOfPortraitAt == 0)
+        {
+            Check("aren't installed", false);
+            return failures;
+        }
+        // 0x32AB3C (ecx the roster slot, rdx what 0x2E16A8 fills in, r9 its palette out): mov rax, rsp; four saves;
+        // push r15; sub rsp, 0x20; xor r11d, r11d; lea r15, [image]; or esi, -1; mov rbp, rdx; mov r10d, r11d;
+        // cmp ecx, 0x36.
+        var portraitOfUnit = (delegate* unmanaged<int, byte*, nint, int*, int>)game.Image.FindUnique(
+            "48 8B C4 48 89 58 08 48 89 68 10 48 89 70 18 48 89 78 20 41 57 48 83 EC 20 45 33 DB 4C 8D 3D ?? ?? ?? ?? "
+            + "83 CE FF 48 8B EA 45 8B D3 83 F9 36");
+        var graphicOf = (delegate* unmanaged<nint, int, int>)RemixedFaces.GraphicOfPortraitAt;
+        var fold = (delegate* unmanaged<int, int>)RemixedFaces.FoldAt;
+        // 0x2C06D4 (ecx 1 for a roster unit, edx its slot, r8 its palette out): mov [rsp+8], rbx; mov [rsp+0x20], rbp;
+        // push rsi; push rdi; push r14; sub rsp, 0x2A0; the cookie; xor edi, edi; movsxd rbp, edx; mov r14, r8;
+        // test ecx, ecx; je. Its roster path reads the menu's mode (+0x43: movsx ecx, word [mode]; 0 the menus'), a
+        // level that has to reach its constant (+0x10E: movss xmm0, [level]; +0x116: comiss xmm0, [constant]; under it
+        // gives none) and a kind (+0x129: test [kind], ~2; 0 or 2 looks the portrait up), which the check sets.
+        var screenFace = game.Image.FindUnique(
+            "48 89 5C 24 08 48 89 6C 24 20 56 57 41 56 48 81 EC A0 02 00 00 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 84 24 "
+            + "90 02 00 00 33 FF 48 63 EA 4D 8B F0 85 C9 0F 84");
+        var s = (byte*)screenFace;
+        if (s[0x43] != 0x0F || s[0x44] != 0xBF || s[0x45] != 0x0D || s[0x10E] != 0xF3 || s[0x10F] != 0x0F
+            || s[0x110] != 0x10 || s[0x116] != 0x0F || s[0x117] != 0x2F || s[0x129] != 0xF7 || s[0x12A] != 0x05)
+        {
+            Check("0x2C06D4 isn't laid out as this test expects", false);
+            return failures;
+        }
+        var mode = (short*)GameImage.Rip(screenFace + 0x43, 3, 7);
+        var level = (float*)GameImage.Rip(screenFace + 0x10E, 4, 8);
+        var needed = (float*)GameImage.Rip(screenFace + 0x116, 3, 7);
+        var kind = (int*)GameImage.Rip(screenFace + 0x129, 2, 10);
+        (short savedMode, float savedLevel, int savedKind) = (*mode, *level, *kind);
+        (*mode, *level, *kind) = ((short)0, *needed, 0);
+        var screen = (delegate* unmanaged<int, int, int*, int>)screenFace;
+        const int slot = 20;
+        var unit = game.Units.Roster + slot * UnitTables.RosterSize;
+        var saved = new Span<byte>(unit, UnitTables.RosterSize).ToArray();
+        var drawn = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(0x100);
+        string Face(int spriteSet)
+        {
+            unit[0] = (byte)spriteSet;
+            var palette = -1;
+            var portrait = portraitOfUnit(slot, drawn, 0, &palette);
+            var graphic = graphicOf(0, portrait);
+            var menuPalette = -1;
+            var menuGraphic = screen(1, slot, &menuPalette);
+            return $"0x{fold(graphic):X2} (portrait 0x{portrait:X2}, 0x{graphic:X2}, palette {palette})"
+                   + (menuGraphic == graphic && menuPalette == palette ? "" : $", the menus' 0x{menuGraphic:X2} palette {menuPalette}");
+        }
+        string agrias = Face(0x1E), ashley = Face(0x34), rafa = Face(0x29), remixed19 = Face(0x19);
+        string celia = Face(0x2D), remixed3A = Face(0x3A), lede = Face(0x2E), remixed3B = Face(0x3B), ramza = Face(2);
+        (*mode, *level, *kind) = (savedMode, savedLevel, savedKind);
+        new Span<byte>(saved).CopyTo(new Span<byte>(unit, UnitTables.RosterSize));
+        System.Runtime.InteropServices.NativeMemory.Free(drawn);
+        Check($"the world menus (0x2C06D4 agreeing): Agrias (0x1E) {agrias} and Ashley (0x34) {ashley}",
+              agrias == "0x34 (portrait 0x17, 0x1E, palette 8)" && ashley.StartsWith("0x14 ") && ashley.EndsWith(", 0x34, palette 8)"));
+        Check($"the world menus: Rafa (0x29) {rafa} and ReMixed's 0x19 {remixed19}",
+              rafa == "0x19 (portrait 0x0E, 0x29, palette 8)" && remixed19.StartsWith("0x28 ") && remixed19.EndsWith(", 0x19, palette 8)"));
+        Check($"the world menus: Celia (0x2D) {celia}, ReMixed's 0x3A {remixed3A}, Lede (0x2E) {lede}, ReMixed's 0x3B {remixed3B}",
+              celia == "0x3A (portrait 0x8D, 0x2D, palette 8)" && remixed3A.StartsWith("0x2A ") && remixed3A.EndsWith(", 0x3A, palette 8)")
+              && lede == "0x3B (portrait 0x8E, 0x2E, palette 8)" && remixed3B.StartsWith("0x2C ") && remixed3B.EndsWith(", 0x3B, palette 8)"));
+        Check($"the world menus: Ramza's (2) as before: {ramza}", ramza == "0x02 (portrait 0x01, 0x02, palette 8)");
+        int[] battle = [fold(0x1E), fold(0x34), fold(0x29), fold(0x19), fold(0x2D), fold(0x3A), fold(0x2E), fold(0x3B)];
+        Check("in battle, by graphic: Agrias 0x1E, Ashley 0x34, Rafa 0x29, ReMixed's 0x19, Celia 0x2D, ReMixed's 0x3A, "
+              + $"Lede 0x2E, ReMixed's 0x3B: {string.Join(", ", battle.Select(f => $"0x{f:X2}"))}",
+              battle.SequenceEqual([0x34, 0x14, 0x19, 0x28, 0x3A, 0x2A, 0x3B, 0x2C]));
+        var portraits = new[] { RemixedFaces.PortraitOfSpriteSet[0x34] & 0xFF, RemixedFaces.PortraitOfSpriteSet[0x19] & 0xFF,
+                                RemixedFaces.PortraitOfSpriteSet[0x3A] & 0xFF, RemixedFaces.PortraitOfSpriteSet[0x3B] & 0xFF };
+        Check($"ReMixed's four have unused portraits, each its own: {string.Join(", ", portraits.Select(p => $"0x{p:X2}"))}",
+              portraits.Distinct().Count() == 4 && portraits.All(p => p is 0x70 or 0x84 or 0x8C or 0x98 or 0x9E or 0x9F));
+        // An event's or a list's portrait of Agrias (0x17, the PS1's for her) is hers, through the game's own lookup.
+        var agriasPortrait = fold(graphicOf(0, 0x17));
+        Check($"Agrias's portrait 0x17 gives her face: 0x{agriasPortrait:X2}", agriasPortrait == 0x34);
+        // Brave Story's people, by the graphics LoreDictionary gives them (+0x1C), through the hooked lookups' mapping
+        // and the fold: Agrias 0x1E, Rafa 0x29, Celia 0x2D, Lede 0x2E, Gafgarion 0x11, Malak 0x12.
+        int[] lore = [0x1E, 0x29, 0x2D, 0x2E, 0x11, 0x12];
+        var people = lore.Select(g => fold(RemixedFaces.Person(g))).ToArray();
+        Check($"Brave Story's people (Agrias, Rafa, Celia, Lede, Gafgarion, Malak): "
+              + string.Join(", ", people.Select(f => $"0x{f:X2}")) + $"; 0x34 as 0x{RemixedFaces.Person(0x34):X2}",
+              people.SequenceEqual([0x34, 0x19, 0x3A, 0x3B, 0x17, 0x1A]) && RemixedFaces.Person(0x34) == 0x1E
+              && RemixedFaces.PersonFaceAt != 0 && RemixedFaces.ChronicleFaceAt != 0);
         return failures;
     }
 
@@ -6179,6 +6440,43 @@ internal static unsafe class SelfTest
               + $"another type 0x{otherType:X}, Hirame 0x{hirameId:X}; off the field 0x{gone:X}, Dead {goneDead}",
               agriasDead == 1 && acting == 0x78 && falls == 0x78 && otherType == 0x22 && hirameId == 0x93 && gone == 0x22
               && goneDead == 0);
+        // Its events' instructions name her 0x22 too (her boxes' faces, her poses): the event unit lookup takes the
+        // port's 0x1E when no unit is 0x22, and leaves 0x22 to a scene's actor that has it, and other ids alone.
+        // (the formation's Agrias is off the field here: unit 16's +1 is 0xFF)
+        var ownLookup = RemixedScenarios.EventUnitId(units, 0x22);
+        agrias[1] = 0x10;
+        var lookedUp = RemixedScenarios.EventUnitId(units, 0x22);
+        var otherId = RemixedScenarios.EventUnitId(units, 0x93);
+        actor[0x191] = 0x22;
+        var sceneActor = RemixedScenarios.EventUnitId(units, 0x22);
+        actor[0x191] = 0x90;
+        agrias[1] = 0xFF;
+        Check($"1-A's Agrias in event instructions: 0x22 looked up as 0x{lookedUp:X} (the formation's), with none there as "
+              + $"0x{ownLookup:X} (not the off-field actor), 0x93 as 0x{otherId:X}, with a unit of battle id 0x22 as 0x{sceneActor:X}",
+              lookedUp == 0x78 && ownLookup == 0x22 && otherId == 0x93 && sceneActor == 0x22);
+        // 1-A's second squad: Bryn's line names her battle-data place (0x91, off the field: +1 0xFF), where the formation
+        // put her as a party unit (0x7A, the same name id 0x69, her locked look 0xB5).
+        var place = units + 12 * Battle.UnitSize;
+        var bryn = units + 17 * Battle.UnitSize;
+        place[0] = 0x81; place[1] = 0xFF; place[0x191] = 0x91; *(ushort*)(place + 0x1FC) = 0x69;
+        bryn[0] = 0xB5; bryn[1] = 0x11; bryn[0x191] = 0x7A; *(ushort*)(bryn + 0x1FC) = 0x69;
+        var brynLine = RemixedScenarios.EventUnitId(units, 0x91);
+        var brynNamed = RemixedScenarios.EventUnitId(units, 0x9A);   // ReMixed's 0x191 gives her 0x9A by name
+        var brynCondition = RemixedScenarios.GameUnitId(units, 5, 0x9A);
+        var lorneNamed = RemixedScenarios.EventUnitId(units, 0x9B);  // no Lorne in the party here
+        *(ushort*)(bryn + 0x1FC) = 0x6A;
+        var otherName = RemixedScenarios.EventUnitId(units, 0x91);
+        *(ushort*)(bryn + 0x1FC) = 0x69;
+        place[1] = 0x0C;
+        var placeOnField = RemixedScenarios.EventUnitId(units, 0x91);
+        new Span<byte>(place, Battle.UnitSize).Clear();
+        new Span<byte>(bryn, Battle.UnitSize).Clear();
+        Check($"1-A's second squad in event instructions: Bryn's place 0x91 looked up as 0x{brynLine:X} (her party unit), "
+              + $"with no party unit of her name 0x{otherName:X}, with the place on the field 0x{placeOnField:X}",
+              brynLine == 0x7A && otherName == 0x91 && placeOnField == 0x91);
+        Check($"1-A's battles' ids by name (ReMixed's 0x191): 0x9A looked up as 0x{brynNamed:X} and as a condition's "
+              + $"0x{brynCondition:X} (Bryn's party unit), 0x9B with no Lorne 0x{lorneNamed:X}",
+              brynNamed == 0x7A && brynCondition == 0x7A && lorneNamed == 0x9B);
         RemixedScenarios.ResetVictoryObservation();
         enemy[1] = 0xFF;
         var emptyVictory = Test(0x16);
@@ -6526,6 +6824,103 @@ internal static unsafe class SelfTest
         *FormationStart.Group = saved;
         Check($"the first group empty {first}, with units {firstSome}; the second group empty {second}",
               first == "refused" && firstSome == "starts" && second == "starts");
+        Check($"the remaster's own Start check (0x{FormationStart.SecondGroupAt - game.Image.ImageStart:X}) goes past "
+              + "its refusal of an empty second group",
+              FormationStart.SecondGroupAt != 0 && *(byte*)FormationStart.SecondGroupAt == 0xEB);
+        return failures;
+    }
+
+    /// <summary>The formation's six places: each site as patched, then the patched count of units placed and the list's
+    /// compaction run on a made-up formation.</summary>
+    public static int SixPlacesRule(Game game, Log log)
+    {
+        var failures = 0;
+        void Check(string name, bool ok)
+        {
+            if (!ok) failures++;
+            log.Info($"self-test: six places, {name}{(ok ? "" : ": WRONG")}");
+        }
+        if (SixPlaces.Count == 0)
+        {
+            Check("aren't installed", false);
+            return failures;
+        }
+        for (var k = 0; k < SixPlaces.Sites.Length; k++)
+        {
+            var site = SixPlaces.Sites[k];
+            Check($"{site.What} at 0x{SixPlaces.At[k] - game.Image.ImageStart:X}",
+                  new ReadOnlySpan<byte>((void*)SixPlaces.At[k], site.Now.Length).SequenceEqual(site.Now));
+        }
+        var formation = stackalloc byte[0x80];
+        var places = (int*)(formation + 0x40);
+        var list = (int*)(formation + 0x44);
+        void Fill(int count, params int[] entries)
+        {
+            new Span<byte>(formation, 0x80).Clear();
+            *places = count;
+            for (var n = 0; n < SixPlaces.Places; n++)
+                list[n] = n < entries.Length ? entries[n] : -1;
+            *(int*)(formation + 0x5C) = 0x5C5C5C5C; // past the list: left alone
+        }
+        string List()
+        {
+            var entries = new int[SixPlaces.Places];
+            for (var n = 0; n < entries.Length; n++)
+                entries[n] = list[n];
+            return string.Join(" ", entries);
+        }
+        var count = (delegate* unmanaged<byte*, int>)SixPlaces.Count;
+        var compact = (delegate* unmanaged<byte*, void>)SixPlaces.Compact;
+        Fill(6, 3, -1, 5, -1, 7, 9);
+        var six = count(formation);
+        Fill(7, 3, -1, 5, -1, 7, 9);
+        var seven = count(formation);
+        Check($"units placed of six places: {six}; of seven: {seven}", six == 4 && seven == 0);
+        Fill(6, 3, -1, 5, -1, 7, 9);
+        compact(formation);
+        var sixList = List();
+        var kept = *(int*)(formation + 0x5C) == 0x5C5C5C5C;
+        Fill(5, -1, 4, -1, 8);
+        compact(formation);
+        var fiveList = List();
+        Check($"six places compacted to {sixList} (+0x5C kept: {kept}); five to {fiveList}",
+              sixList == "3 5 7 9 -1 -1" && kept && fiveList == "4 8 -1 -1 -1 -1");
+        // The battle ids at Commence: the party in 0x10-0x14 numbered 0x78-0x7C by the game, the sixth (roster slot 3)
+        // in slot 15 still 0x78, an enemy in slot 5 (no roster slot) and a guest from the roster in slot 11 (slot 50).
+        var units = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed((nuint)(Battle.UnitCount * Battle.UnitSize));
+        try
+        {
+            for (var slot = 0; slot < Battle.UnitCount; slot++)
+                units[slot * Battle.UnitSize + SixPlaces.Present] = 0xFF;
+            void Unit(int slot, byte sprites, byte roster, byte id)
+            {
+                var unit = units + slot * Battle.UnitSize;
+                unit[0] = sprites;
+                unit[SixPlaces.Present] = (byte)slot;
+                unit[SixPlaces.RosterSlot] = roster;
+                unit[SixPlaces.BattleId] = id;
+            }
+            Unit(16, 0x1E, 0, 0x78);
+            Unit(17, 0x80, 1, 0x79);
+            Unit(18, 0x81, 2, 0x7A);
+            Unit(19, 0x80, 4, 0x7B);
+            Unit(20, 0x81, 5, 0x7C);
+            Unit(15, 0x80, 3, 0x78);
+            Unit(5, 0x82, 0xFF, 0x85);
+            Unit(11, 0x1E, 50, 0x90);
+            Fill(6, 0, 1, 2, 4, 5, 3);
+            var numbered = SixPlaces.Number(units, list);
+            Check($"battle ids at Commence: {string.Join(", ", numbered.Select(n => $"slot {n.Slot} 0x{n.Id:X2}"))}; "
+                  + $"the enemy 0x{units[5 * Battle.UnitSize + SixPlaces.BattleId]:X2}, "
+                  + $"the guest 0x{units[11 * Battle.UnitSize + SixPlaces.BattleId]:X2}",
+                  numbered.Count == 1 && numbered[0] == (15, (byte)0x7D)
+                  && units[5 * Battle.UnitSize + SixPlaces.BattleId] == 0x85
+                  && units[11 * Battle.UnitSize + SixPlaces.BattleId] == 0x90);
+        }
+        finally
+        {
+            System.Runtime.InteropServices.NativeMemory.Free(units);
+        }
         return failures;
     }
 
@@ -6568,11 +6963,29 @@ internal static unsafe class SelfTest
     private static readonly List<(int Index, int Moved, int Acted)> _actedCalls = [];
     private static readonly List<int> _stateCalls = [];
     private static int _clockStopped;
+    private static byte* _actedUnits;
+    private static int _turnsEnded;
 
+    /// <summary>
+    /// Stands in for 0x310548: the move and action flags (+0x1B9, +0x1BA), then, once the unit has moved and acted, the
+    /// end of turn, which Movement's hook passes to Two Spells before the game's own (so before the queue that follows).
+    /// </summary>
     [System.Runtime.InteropServices.UnmanagedCallersOnly]
     private static int FakeSetActed(int index, int moved, int acted)
     {
         _actedCalls.Add((index, moved, acted));
+        if (_actedUnits == null)
+            return 0;
+        var unit = _actedUnits + index * Battle.UnitSize;
+        if (moved != 0)
+            unit[0x1B9] |= 1;
+        if (acted != 0)
+            unit[0x1BA] = 1;
+        if ((unit[0x1B9] & 1) != 0 && unit[0x1BA] != 0)
+        {
+            _turnsEnded++;
+            TwoSpells.TurnEnded(index);
+        }
         return 0;
     }
 
@@ -6655,6 +7068,7 @@ internal static unsafe class SelfTest
         TwoSpells.GameSetActed = &FakeSetActed;
         TwoSpells.GameActionState = &FakeActionState;
         TwoSpells.GameStopped = &FakeStopped;
+        _actedUnits = game.TurnCode.Units;
         var ui = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(0x400);
         var harness = GameImage.AllocateCode(128);
         // acts(index, moved, acted, ui): push rbx; mov rbx, r9; sub rsp, 0x20; mov rax, the stub; call rax; ...
@@ -6697,13 +7111,16 @@ internal static unsafe class SelfTest
                 acts(slot, 0, 1, ui);
                 return _actedCalls.Count == 1 && _actedCalls[0].Index == slot ? _actedCalls[0].Acted : -1;
             }
-            // The game's commit as far as Two Spells cares: the record into +0x1A0, its CT, "acted", Charging.
+            // The game's commit as far as Two Spells cares: the record into +0x1A0, its CT, "acted", Charging; the
+            // Charge skillset's case (0x2818B1) also uses up the move.
             void Commit(int ct)
             {
                 TwoSpells.BeforeQueue(ui + 0x178, queued, 1);
                 new Span<byte>(ui + 0x178, 20).CopyTo(new Span<byte>(queued, 20));
                 unit[0x18D] = (byte)ct;
                 unit[0x1BA] = 1;
+                if (ui[0x179] == 0x08)
+                    unit[0x1B9] |= 1;
                 unit[Battle.UnitStatuses] |= 0x08;
                 TwoSpells.AfterQueue(ui + 0x178, queued, 1);
             }
@@ -6865,15 +7282,39 @@ internal static unsafe class SelfTest
             Check($"with Non-charge an AI unit's spell gets two strikes ({aiDouble}); not a player's ({playerDouble}) or without Non-charge ({chargedDouble}); the action's setup (0x{TwoSpells.SetupAt - image:X}) is hooked",
                   aiDouble && !playerDouble && !chargedDouble && TwoSpells.SetupAt != 0 && TwoSpells.Strikes == Knockback.Strikes);
 
-            // Two Shots without 0x1D0: a pair of its own, but not with a spell.
+            // Two Shots without 0x1D0: a pair of its own, but not with a spell. The first's commit uses up the move, so
+            // marking the second ends the turn before its queue (0x310548), as in the game.
             Fresh(false, true);
             Choose(0x08, 0x195);
+            ui[0x178 + 0x10] = 1;
             var shotActed = Act();
             Commit(4);
             Choose(0x08, 0x195);
+            ui[0x178 + 0x10] = 2;
+            var endedBefore = _turnsEnded;
             var secondShot = Act();
+            var shotTurnEnded = _turnsEnded - endedBefore;
             Commit(4);
             var shotSlot = Slotted();
+            Check($"Two Shots: the second's marking ends the turn ({shotTurnEnded}) before its queue, and still the record keeps the first (0x{Main():X3}, shot {queued[0x10]}, CT {unit[0x18D]}) and the slot holds the second (0x{shotSlot:X3}, shot {TwoSpells.SlotRecordOf(slot)[0x10]}, CT {TwoSpells.SlotCtOf(slot)})",
+                  shotTurnEnded == 1 && Main() == 0x195 && queued[0x10] == 1 && unit[0x18D] == 4
+                  && shotSlot == 0x195 && TwoSpells.SlotRecordOf(slot)[0x10] == 2 && TwoSpells.SlotCtOf(slot) == 4);
+            ui[0x178 + 0x10] = 0;
+
+            // Two Spells after moving: the second spell's marking ends the turn too.
+            Fresh(true, true);
+            unit[0x1B9] = 1;
+            Choose(0x0B, fire);
+            Act();
+            Commit(4);
+            Choose(0x0B, ice);
+            endedBefore = _turnsEnded;
+            Act();
+            var spellTurnEnded = _turnsEnded - endedBefore;
+            Commit(6);
+            Check($"two spells after moving: the second's marking ends the turn ({spellTurnEnded}); the record keeps 0x{Main():X2} at CT {unit[0x18D]}, the slot holds 0x{Slotted():X2} at CT {TwoSpells.SlotCtOf(slot)}",
+                  spellTurnEnded == 1 && Main() == fire && unit[0x18D] == 4 && Slotted() == ice && TwoSpells.SlotCtOf(slot) == 6);
+
             Fresh(false, true);
             Choose(0x08, 0x195);
             Act();
@@ -6898,6 +7339,7 @@ internal static unsafe class SelfTest
             TwoSpells.GameSetActed = realActed;
             TwoSpells.GameActionState = realState;
             TwoSpells.GameStopped = realStopped;
+            _actedUnits = null;
             TwoSpells.ResetAll();
             savedUnit.CopyTo(new Span<byte>(unit, Battle.UnitSize));
             foreach (var (id, bytes) in saved)
@@ -7892,7 +8334,7 @@ internal static unsafe class SelfTest
         var table = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(12 * 20);
         table[12 * 13 + 0] = 0x20; table[12 * 13 + 1] = 0x02; table[12 * 13 + 4] = 0x03; // job 13: Squire 2, Archer 2, Thief 3
         table[12 * 4 + 0] = 0x30;                                                   // job 4: Squire 3
-        var jobs = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(0x31 * 0x60);
+        var jobs = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(0x31 * 0xB0);
         for (var j = 0x4A; j < 0x5E; j++)
             jobs[j * 0x31] = (byte)(0x10 + j - 0x4A); // job 0x4A's skillset 0x10, 0x4B's 0x11…
         JobLevels.Prerequisites = table;
@@ -7919,6 +8361,29 @@ internal static unsafe class SelfTest
               && Levels(4, 0xFF, 0, Options.EnemyJobRule.Expert) == "21121111131115111111");
         Check("Exceptional: every job of an enemy at 8",
               Levels(4, 0xFF, 1, Options.EnemyJobRule.Exceptional, 0x10) == "88888888888888888888");
+        // ReMixed's gendered slots as the build converts its battle data (remixed_levels_job): its Dark Knight slot (17)
+        // is the remaster's Dark Knight, index 20, with that row's prerequisites (here Knight 8, Black Mage 8); a man's
+        // slot 18 (0x92) the Bard's level (index 17) with row 18's prerequisites (here Geomancer 4).
+        var wide = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(12 * 22);
+        wide[12 * JobLevels.DarkKnight + 1] = 0x80;
+        wide[12 * JobLevels.DarkKnight + 3] = 0x80;
+        wide[12 * JobLevels.SharedSlot + 6] = 0x40;
+        wide[12 * JobLevels.Bard + 4] = 0x55; // the Bard's own row, which a man's slot 18 doesn't take
+        JobLevels.Prerequisites = wide;
+        entry[8] = JobLevels.DarkKnight;
+        entry[9] = 8;
+        var knight = Levels(0xFF, 0xFF, 0, Options.EnemyJobRule.Normal);
+        Check($"a Dark Knight at 8 (index 20): the 11th byte 0x{levels[10]:X2} (no Onion Knight level), Knight and Black Mage " +
+              $"at 8: {knight}", levels[10] == 0x80 && levels[11] == 0 && knight == "11811181111111111111");
+        entry[8] = JobLevels.MansBard;
+        entry[9] = 7;
+        var bard = Levels(0xFF, 0xFF, 0, Options.EnemyJobRule.Normal);
+        Check($"a man's slot 18 at 7: the Bard at 7 with row 18's prerequisites, the Dancer at 1: {bard}",
+              bard == "11111111111141111711" && levels[10] == 0);
+        entry[8] = 13;
+        entry[9] = 5;
+        JobLevels.Prerequisites = table;
+        System.Runtime.InteropServices.NativeMemory.Free(wide);
         var roster = JobLevels.Roster;
         var ramza = roster[0];
         int ModeAt(byte sprite)
@@ -7939,6 +8404,12 @@ internal static unsafe class SelfTest
         entry[0xA] = 0x4E;
         Check("the current job: 0x4E is 4; a unit in its own sprite set's job counts as 0",
               JobLevels.CurrentJob(record, entry) == 4 && JobLevels.CurrentJob((byte*)&entry[0xA] - 0, entry) == 0);
+        entry[0xA] = JobLevels.DarkKnightJob;
+        jobs[JobLevels.DarkKnightJob * 0x31] = 0xE0;
+        Check("the Dark Knight (0xA0) as the current job and its skillset (0xE0) as the secondary's: index 20 for both",
+              JobLevels.CurrentJob(record, entry) == JobLevels.DarkKnight
+              && JobLevels.SecondaryJob(record, 0xE0) == JobLevels.DarkKnight);
+        entry[0xA] = 0x4E;
         JobLevels.RandomJobFunction = &FakeRandomJob;
         var realReadVariable = JobLevels.ReadVariable;
         var variable6C = 0;

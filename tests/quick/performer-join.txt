@@ -1,0 +1,11 @@
+# Bryn and Lorne as 0x0ED's opening block leaves them, without playing the scene: what each has learned and earned as
+# ReMixed gives it (read on the PS1, 2026-11-18), Lorne's Bard in the Bard's slot (not a man's Dancer's), and both with
+# their own job open as well as the Squire and the Chemist (ReMixed's rule by name: Patches/PerformerJobs.cs).
+name Bryn and Lorne join with their own abilities and jobs
+scenario 0x194
+wait log "loaded event 404" timeout=25
+wait unit battle_id=0x91 job=0x5b graphic=0x38 timeout=25
+wait seconds 1
+expect unit battle_id=0x91 job=0x5b unlocked=0xC00040 bard_learned=0x100000 bard_jp=61 bard_total=161 dancer_learned=0 dancer_jp=0 dancer_total=0 archer_learned=0x20 archer_jp=0 archer_total=350
+expect unit battle_id=0x90 job=0x5c unlocked=0xC00020 dancer_learned=0x200000 dancer_jp=11 dancer_total=111 archer_learned=0x10 archer_jp=0 archer_total=400
+shot opening

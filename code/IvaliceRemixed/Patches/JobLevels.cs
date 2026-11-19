@@ -31,6 +31,13 @@ internal static unsafe class JobLevels
 
     internal const int Levels = 0xE4, Unlocked = 0x9F, Primary = 0x12, Secondary = 0x13;
     private const int JobRow = 12, JobSize = UnitTables.JobSize, Generic = 0x4A, GenericJobs = 20;
+    /// <summary>
+    /// The port's job indexes for ReMixed's gendered slots (tools/build_mod.py, remixed_levels_job): the Dark Knight is
+    /// the remaster's index 20 (job 0xA0, its level the high nibble of the levels' 11th byte), and a man's slot 18, the
+    /// battle data's 0x92, is the Bard's level (index 17) with the slot's prerequisites, row 18 (ReMixed's one row for
+    /// a woman's Dancer and a man's Bard).
+    /// </summary>
+    internal const int DarkKnight = 20, MansBard = 0x92, Bard = 17, SharedSlot = 18, DarkKnightJob = 0xA0;
     private const byte RandomSecondary = 0xFE;
     private const int AllJobs = 0xFFFF;
 
@@ -141,7 +148,8 @@ internal static unsafe class JobLevels
     };
 
     /// <summary>The current job's generic index, 0 for a unit in its own sprite set's job, or ≥ 20 for none.</summary>
-    internal static int CurrentJob(byte* record, byte* entry) => entry[0xA] == record[0] ? 0 : (byte)(entry[0xA] - Generic);
+    internal static int CurrentJob(byte* record, byte* entry) =>
+        entry[0xA] == record[0] ? 0 : entry[0xA] == DarkKnightJob ? DarkKnight : (byte)(entry[0xA] - Generic);
 
     /// <summary>The generic index of the job whose skillset is the secondary (its own job's first), else 0xFF.</summary>
     internal static int SecondaryJob(byte* record, byte skillset)
@@ -153,7 +161,7 @@ internal static unsafe class JobLevels
         for (var job = Generic; job < Generic + GenericJobs - 1; job++)
             if (_jobs[job * JobSize] == skillset)
                 return job - Generic;
-        return 0xFF;
+        return _jobs[DarkKnightJob * JobSize] == skillset ? DarkKnight : 0xFF; // ReMixed's Dark Knight slot's skillset
     }
 
     /// <summary>
@@ -176,17 +184,26 @@ internal static unsafe class JobLevels
         for (var k = 0; k <= Math.Min(mode, 2); k++)
         {
             var job = jobs[k];
-            int at, shift;
+            int at, shift, row = job;
             if (job == AllJobs)
                 (at, shift) = (9, 0); // ReMixed's quirk: the level lands on Mime's nibble, then everything is 8
             else if (job < GenericJobs)
                 (at, shift) = (job >> 1, (job & 1) != 0 ? 0 : 4);
+            else if (job == MansBard)
+                (at, shift, row) = (Bard >> 1, 0, SharedSlot);
+            else if (job == DarkKnight)
+            {
+                // Past the PS1's 20 nibbles: no "at least 1" for the Dark Knight's or the Onion Knight's.
+                levels[DarkKnight >> 1] = (byte)(Math.Max(levels[DarkKnight >> 1] & 0xF0, level << 4) | (levels[DarkKnight >> 1] & 0xF));
+                (at, shift) = (-1, 0);
+            }
             else
                 continue;
-            levels[at] = Merge(levels[at], (byte)(level << shift));
+            if (at >= 0)
+                levels[at] = Merge(levels[at], (byte)(level << shift));
             for (var b = 0; b < 10; b++)
             {
-                var need = job == AllJobs ? eights[b] : job == 0 ? (byte)0 : _prerequisites[job * JobRow + b];
+                var need = job == AllJobs ? eights[b] : row == 0 ? (byte)0 : _prerequisites[row * JobRow + b];
                 levels[b] = Merge(levels[b], need);
             }
         }

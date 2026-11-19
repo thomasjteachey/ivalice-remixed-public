@@ -73,6 +73,24 @@ internal static unsafe class RemixedEvents
         {
             _log.Error($"remixed events: units don't keep the looks events give them: {e.Message}");
         }
+        try
+        {
+            // Bryn and Lorne keep their Dancer and Bard open, as ReMixed's unlocked-jobs rule gives them by name.
+            PerformerJobs.Install(game, game.TurnCode.Units);
+        }
+        catch (Exception e)
+        {
+            _log.Error($"remixed events: Bryn's and Lorne's own jobs aren't kept open: {e.Message}");
+        }
+        try
+        {
+            // DismissUnit by name id where no sprite set matches (Bryn, Lorne and Elias's locked looks, 1-A's end).
+            DismissByName.Install(game);
+        }
+        catch (Exception e)
+        {
+            _log.Error($"remixed events: DismissUnit doesn't find units by name: {e.Message}");
+        }
         api.OnUnitPreset(preset => UnitPresets.Pending = preset);
         api.AddStepObserver(at =>
         {
@@ -97,7 +115,16 @@ internal static unsafe class RemixedEvents
         api.AddRoutine(MirrorCopy, () => Note(CopyParty(battleUnits, (uint)api.GetVariable(1), (uint)api.GetVariable(MirrorLast),
                                                         k => api.GetVariable(MirrorSources + k))));
         BattleEnd.Install(game);
-        api.AddRoutine(LiveBattleWriteBack, () => Note($"live battle write-back returned {BattleEnd.WriteBackNow()}"));
+        api.AddRoutine(LiveBattleWriteBack, () =>
+        {
+            // What it returns is the joiners it queued for a join screen, which this call doesn't show: none join.
+            var joiners = BattleEnd.WriteBackNow();
+            if (joiners > 0)
+                _log.Warn($"remixed events: the live battle write-back queued {joiners} joiner(s) with no join screen; "
+                          + "they don't join (a recruitment needs display state 7)");
+            else
+                Note("live battle write-back done");
+        });
         _log.Info("remixed events: ReMixed's routines, conditions and tavern given to the Event Instruction Upgrade");
     }
 

@@ -1,0 +1,16 @@
+# 1-A's river camp battle (ReMixed's 0x0EE, the mod's 0x1FE) at its battle's run, its scene noted as seen: the
+# Mindflayers (0xC0-0xC8) should begin it seated on their chocobos (0xC1-0xC9), as ReMixed's 0x191 seats them; testers
+# found them on foot (2026-11-18). Leaves the game in the battle for the links to be read (+0x1B4).
+name River camp riders at battle start
+wait world depth=1 state=0 timeout=20
+# 1-A's Agrias, the remaster's Agrias (sprite set, job and name 0x1E), in roster slot 0, so the formation places her
+# (as 1-A's start sets Ramza aside, his slot here).
+send poke +0x11A7D10 1E
+send poke +0x11A7D12 1E
+send poke +0x11A7F40 1E 00
+scenario 0x1FE noted
+wait log "sets its battle up after event 0x" timeout=30
+formation units=1
+wait log "condition set 0 fires" press=RETURN every=2 timeout=90
+wait seconds 6
+shot battle-start

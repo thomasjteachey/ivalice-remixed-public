@@ -371,8 +371,11 @@ def peek_bytes(address: int, count: int) -> bytes:
         text = send(f"peek 0x{address + len(out):X} {chunk}")
         if text.startswith("error"):
             raise OSError(text)
+        before = len(out)
         for line in text.splitlines()[1:]:
             out += bytes.fromhex(line[6:6 + 47].strip())
+        if len(out) == before:
+            raise OSError(f"peek 0x{address + before:X} gave no bytes: {text[:80]!r}")
     return bytes(out[:count])
 
 
@@ -397,13 +400,15 @@ def defeat(units: list[int] | None) -> list[int]:
 WHEEL = 872
 
 
-def advance(until: str, timeout: float, key: str = "RETURN", every: float = 6, shots: bool = False) -> dict:
+def advance(until: str, timeout: float, key: str = "RETURN", every: float = 6, shots: bool = False,
+            shot_dir: Path | None = None) -> dict:
     """Press key every few seconds while a scene runs, printing each change of event or scenario, until: "world" (the
     world map runs again: its frame counter moves; nothing is pressed there, as Enter searches for enemies on a field),
     "opening" (ReMixed's code has reached an END and stays there: the battle is on), or "event N" (it's running).
     On the Treasure Wheel, once two presses in a row change nothing (its code stays at the same instruction: the
     chest in front is open), Right turns the ring to the next chest for the presses to open, until its tries are
-    spent and it ends by itself. With shots, a screenshot before each press (work/harness/shots/advance-NNN.png)."""
+    spent and it ends by itself. With shots, a screenshot before each press (work/harness/shots/advance-NNN.png, or
+    in shot_dir), named by the tenths of a second since the start."""
     start = game_state()
     began = time.time()
     last, still, pc = None, 0, None
@@ -424,7 +429,11 @@ def advance(until: str, timeout: float, key: str = "RETURN", every: float = 6, s
             if still >= 2:
                 return now
         if shots:
-            snap(f"advance-{int(time.time() - began):03d}")
+            name = f"advance-{int(10 * (time.time() - began)):04d}"
+            if shot_dir:
+                shot(argparse.Namespace(file=shot_dir / f"{name}.png"))
+            else:
+                snap(name)
         press = key
         if now["event"] == WHEEL:
             idle = idle + 1 if (now["pc"], now["op"]) == (before["pc"], before["op"]) else 0
@@ -453,6 +462,11 @@ def snap(name: str) -> Path:
 # Reveal Treasures (code/IvaliceRemixed/Patches/RevealTreasures.cs) asks its price as a formation screen opens on a map
 # whose hidden items still hold a rare one, in the box "Commence battle?" uses (Yes first). Its log says when it asks,
 # how it was answered, and when the arrows it stands over the hidden items (after Yes, or shown for free) are up.
+COMMENCE_ASKED = r"formation: Commence battle\? asked"
+COMMENCE_CLOSED = r"formation: Commence battle\? closed"  # the state it watches set while a unit is placed, too
+# The formation screen's first frame that takes input (RevealTreasures.OnFrame), with its places and groups; Reveal
+# Treasures asks (or shows for free) in that frame, so a map with nothing hidden needn't wait out the question.
+FORMATION_OPEN = r"formation: screen open, (\d+) place\(s\) in (\d+|\?) group\(s\)"
 REVEAL_ASKED = r"reveal treasures: map \d+, \d+ panel\(s\) with their rare item: asked"
 REVEAL_ANSWERED = r"reveal treasures: (paid \d+ gil|declined|\d+ gil asked, \d+ held)"
 REVEAL_FREE = r"reveal treasures: map \d+'s \d+ hidden item\(s\) shown, for free"
@@ -512,21 +526,33 @@ def place(reveal: str) -> None:
     nap(5)
 
 
-def formation(units: int, second: int = 0, reveal: str = "no", ask_wait: float = 5, free: int | None = None) -> bool:
+def formation(units: int, second: int = 0, reveal: str = "no", ask_wait: float = 5, free: int | None = None,
+              opened: int | None = None) -> bool:
     """Place units on the formation screen (F picks a tile, F a unit), and with second, that many more in its second
     group (Tab switches to it; ReMixed's missions have two groups, and won't start with one empty), commence (Space; F
     for Yes once the box is up) and wait for the battle's event to load; twice more if it doesn't. First Reveal
     Treasures is waited for, up to ask_wait seconds: its question is answered with reveal ("no" or "yes"), and when it
     shows a map's items for free (a free line past the first `free` of them), its arrows are given time to stand. Each
     step leaves a screenshot in work/harness/shots. The sequence that commenced by hand, and in this order (a bare Space
-    then F 5-10 s later didn't, three times): Space, 4 s, a screenshot, F."""
+    then F 5-10 s later didn't, three times): Space, 4 s, a screenshot, F. With opened (FORMATION_OPEN's count before the
+    battle was started), the screen's own line is waited for instead, up to ask_wait, and Reveal Treasures for 3 s."""
     free = count_log(REVEAL_FREE) if free is None else free
-    if wait_until(lambda: reveal_asking() or count_log(REVEAL_FREE) > free, ask_wait) and not reveal_asking():
+    if opened is not None:
+        line = wait_log(FORMATION_OPEN, ask_wait, before=opened)
+        print(f"  {line[line.find('formation'):] if line else f'no formation screen logged in {ask_wait:g} s'}")
+        ask_wait = 3
+    if wait_until(lambda: reveal_asking() or count_log(REVEAL_FREE) > free, ask_wait, every=0.5) and not reveal_asking():
         print("  reveal treasures: the hidden items shown for free")
         nap(5)  # its arrows are made, and the formation takes no input meanwhile
     snap("formation-0-start")
     if answer_reveal(reveal):
         snap("formation-0-answered")
+    asked_start, closed_start = count_log(COMMENCE_ASKED), count_log(COMMENCE_CLOSED)
+
+    def box_up() -> bool:
+        """Whether "Commence battle?" is up: asked more often than closed since the placing began."""
+        return count_log(COMMENCE_ASKED) - asked_start > count_log(COMMENCE_CLOSED) - closed_start
+
     for _ in range(units * 2):
         place(reveal)
     if second:
@@ -534,19 +560,51 @@ def formation(units: int, second: int = 0, reveal: str = "no", ask_wait: float =
         nap(3)
         for _ in range(second * 2):
             place(reveal)
-    for attempt in range(3):
+    for attempt in range(5):
         answer_reveal(reveal)
         snap(f"formation-{attempt + 1}-placed")
-        send("key SPACE")
-        nap(4)
+        # Space opens "Commence battle?" (the mod logs it, COMMENCE_ASKED); a Space the screen didn't take is tried
+        # again at once instead of after the 40 s a battle may take to load (two lost tries cost 80 s, 2026-11-18).
+        asked = count_log(COMMENCE_ASKED)
+        if box_up():
+            # Placing the last unit there is to place brings the box up by itself (seen on the PC with six places,
+            # 2026-11-19); a Space then is lost in the box.
+            print("  \"Commence battle?\" came up with the last unit placed")
+        else:
+            send("key SPACE")
+            if not wait_log(COMMENCE_ASKED, 6, before=asked):
+                print(f"  commence try {attempt + 1}: Space didn't bring up \"Commence battle?\"")
+                nap(1)
+                continue
+        nap(4)  # the box takes no keys while it opens (an F 1.5 s after it was lost, 2026-11-18)
         snap(f"formation-{attempt + 1}-commence")
         send("key F")
-        line = wait_log(r"loading event \d+", 40)
-        if line:
-            print(f"  {line[line.find('remixed'):]}")
+        # A ReMixed battle loads its event; a random battle has none and goes straight to its first turn.
+        before = count_log(r"loading event \d+")
+
+        def started() -> bool:
+            return count_log(r"loading event \d+") > before or turn_started()
+
+        commenced = wait_until(started, 12, every=1)
+        if not commenced:
+            send("key F")  # the box hadn't taken the first F yet; an F in a loading battle's opening is harmless
+            commenced = wait_until(started, 40, every=1)
+        if commenced:
+            line = wait_log(r"loading event \d+", 0.1, before=before)
+            print(f"  {line[line.find('remixed'):]}" if line else "  a unit's turn started")
             return True
         print(f"  commence try {attempt + 1}: no event loaded (screenshots in {SHOTS})")
     return False
+
+
+def turn_started() -> bool:
+    """Whether a battle unit on the field has its turn (+0x1B8): the battle runs."""
+    base, units = battle_units()
+    present = [u for u in units if u["id"] != 0xFF]
+    if not base or not present:
+        return False
+    data = peek_bytes(base, (max(u["index"] for u in present) + 1) * UNIT_SIZE)
+    return any(data[u["index"] * UNIT_SIZE + 0x1B8] for u in present)
 
 
 def on_world_map(timeout: float) -> bool:
@@ -569,14 +627,13 @@ def cmd_battle(args: argparse.Namespace) -> None:
     scenario = int(args.scenario, 16)
     if not on_world_map(args.timeout):
         raise SystemExit("the world map isn't running (start with --world, or get there first)")
-    free = count_log(REVEAL_FREE)
+    free, opened = count_log(REVEAL_FREE), count_log(FORMATION_OPEN)
     print(f"starting scenario 0x{scenario:X}: {send(f'scenario {scenario:X}')}")
     line = wait_log(rf"scenario 0x{scenario:X} takes", 90)
     print(f"  {line[line.find('remixed'):] if line else 'its setup never logged'}")
-    # The formation screen is up once Reveal Treasures asks or shows the hidden items for free (45-78 s after the setup
-    # in the runs so far); on a map with nothing of theirs left hidden it says nothing, and formation_wait goes by.
+    # The formation screen logs its first frame that takes input (45-78 s after the setup in the runs so far).
     print("formation:")
-    if not formation(args.units, args.second, args.reveal, ask_wait=args.formation_wait, free=free):
+    if not formation(args.units, args.second, args.reveal, ask_wait=args.formation_wait, free=free, opened=opened):
         raise SystemExit("the battle didn't start; look at a `shot`")
     print("its opening:")
     advance("opening", args.timeout, every=args.every)
@@ -841,6 +898,44 @@ def cmd_slots(_: argparse.Namespace) -> None:
         if u[0x191] or u[0] or u[3]:
             print(f"unit {k:2}: sprites 0x{u[0]:02X} +1 0x{u[1]:02X} slot 0x{u[2]:02X} job 0x{u[3]:02X} flags 0x{u[6]:02X} "
                   f"battle id 0x{u[0x191]:02X} +0x1B5 0x{u[0x1B5]:02X} name id {int.from_bytes(u[0x1FC:0x200], 'little')}")
+
+
+def scenario_maps() -> list[tuple[int, int, int]]:
+    """The exe's scenario table (24-byte records from the lea at ScenariosPattern + 0x12, RemixedScenarios.cs): each
+    scenario's id, map and battle entry, read from the file (no game needed)."""
+    exe = (Path(load_config()["target"]["tic_dir"]) / "FFT_enhanced.exe").read_bytes()
+    pe = struct.unpack_from("<I", exe, 0x3C)[0]
+    count, optional = struct.unpack_from("<H", exe, pe + 6)[0], struct.unpack_from("<H", exe, pe + 20)[0]
+    sections = [struct.unpack_from("<IIII", exe, pe + 24 + optional + 40 * k + 8) for k in range(count)]
+
+    def offset(rva: int) -> int:
+        for size, address, raw_size, raw in sections:
+            if address <= rva < address + max(size, raw_size):
+                return raw + rva - address
+        raise ValueError(f"RVA 0x{rva:X} is in no section")
+
+    pattern = re.compile(rb"\x44\x8B\x0D....\x33\xDB\x45\x85\xC9\x0F\x88....\x48\x8D\x0D", re.S)
+    found = [m.start() for m in pattern.finditer(exe)]
+    if len(found) != 1:
+        raise SystemExit(f"the scenario table's reference is found {len(found)} times")
+    text = next(s for s in sections if s[3] <= found[0] < s[3] + s[2])
+    lea_rva = text[1] + found[0] - text[3] + 0x12
+    table = offset(lea_rva + 7 + struct.unpack_from("<i", exe, offset(lea_rva) + 3)[0])
+    out = []
+    for k in range(0x400):
+        sid, map_, entry = (struct.unpack_from("<H", exe, table + 24 * k + o)[0] for o in (0, 2, 7))
+        if k and sid == 0:
+            break
+        out.append((sid, map_, entry))
+    return out
+
+
+def cmd_maps(args: argparse.Namespace) -> None:
+    rows = [r for r in scenario_maps() if r[1] == args.map]
+    print(f"map {args.map}: " + (", ".join(f"scenario 0x{s:X} (battle entry 0x{e:X})" for s, _, e in rows) or "no scenario"))
+    if rows:
+        print("A story battle's first scenario plays its scene, then its formation; the next one starts at the formation "
+              "(its battle may then load the wrong event, but the map is up in about 10 s).")
 
 
 def cmd_crashes(args: argparse.Namespace) -> None:
@@ -1126,6 +1221,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(run=cmd_wait)
     sub.add_parser("roster", help="the roster records in use").set_defaults(run=cmd_roster)
     sub.add_parser("slots", help="the battle units' roster slots, flags and battle ids").set_defaults(run=cmd_slots)
+    p = sub.add_parser("maps", help="the scenarios fought on a map (from the exe's scenario table), for a quick look "
+                                     "at a map: `start --world`, then `send scenario N` reaches its formation")
+    p.add_argument("map", type=lambda text: int(text, 0))
+    p.set_defaults(run=cmd_maps)
     p = sub.add_parser("crashes", help="the game's crashes in Windows' log")
     p.add_argument("--minutes", type=int, default=120)
     p.set_defaults(run=cmd_crashes)

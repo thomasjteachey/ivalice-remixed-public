@@ -22,7 +22,8 @@ MANDALIA_SETUP_FLAGS = (b"".join(bytes([0xAE, flag, 0, 1, 0]) for flag in range(
                          + bytes([0x49])
                          + b"".join(bytes([0x45, unit, 0, 0]) for unit in [0x12, *range(0x80, 0x89)])
                          + bytes([0x4A, 0x4B, 0x4D, 0x1E, 0xF1, 0x1E, 0x00, 0x0D, 0xFF]))
-JOIN_NOW = bytes([0x43, 0x01])
+MENU_CHECK = bytes([0xAF, 0x00, 0x00, 0x18, 0x00, 0xAF, 0x01, 0x00, 0x27, 0x00, 0xA2, 0x01])  # build_mod.py's
+MENU_FADE_IN = bytes([0x4D, 0x1E, 0xF1, 0x1E, 0x00])
 LIVE_BATTLE_WRITE_BACK = bytes([0xCF, 0xC5, 0x00, 0x00, 0x00])
 TAVERN_HOME = bytes([0xAE, 0xD4, 0x00, 0x01, 0x00])
 DISPLAY_STATE_7 = bytes([0x78, 0x07, 0x3C, 0xE5, 0x38, 0x00])
@@ -35,13 +36,17 @@ LIVE_RETURN_EDGES = {
     845: (0x1FC, 124), 850: (0x0EF, 850), 851: (0x0F0, 851), 852: (0x1FD, 852),
     886: (0x103, 886),
 }
-# These returns feed a recruitment scene. Their roster writer is intentionally deferred until after Join Now, or the
-# candidate is already in the roster and the native recruitment presentation is suppressed.
+# These returns feed a recruitment scene. Their roster writer is left to that scene's join screen (display state 7),
+# which writes the battle back and shows each joiner.
 DEFERRED_RETURN_EDGES = {121, 123, 845}
 # Of those, the returns chosen as the event runs: only the return goes on to the recruitment; the other way ends at the
-# world map with no join, so it joins (Boco) and writes the battle back itself in its ELSE branch (Araguay with Luso
-# already recruited: its results were never written back and Boco never joined, 2026-11-18).
+# world map with no scene, so it writes the battle back with the join screen (Boco) itself in its ELSE branch (Araguay
+# with Luso already recruited: its results were never written back and Boco never joined, 2026-11-18; then a silent
+# 0x43 1 there made him join with no screen, reported the same day).
 DEFERRED_CHOSEN_RETURNS = {121}
+# ReMixed's recruitment scenes: their join screens (display state 7 inside a dark screen), which go on to dialogue on
+# the same map (build_mod.MIDSCENE_JOIN_SCREENS). A silent join (0x43 1) there put the unit in the party with no
+# screen (Boco after Araguay, Luso at Mandalia).
 MIDSCENE_JOINS = {122: 1, 124: 1, 874: 3, 886: 1}
 POSTBATTLE_CLEANUP = {
     122: (0x02, 0x17, 0x1E, 0x90, *range(0x80, 0x87), *range(0x78, 0x7D)),
@@ -121,6 +126,101 @@ def scenario_own_entries() -> dict[int, bytes]:
             data[at + size * k + 2:at + size * (k + 1)] for k in range(count)}
 
 
+# The remaster deploys at most five of the player's units. As the formation screen opens (0x1EF0D8) it counts both
+# groups' places (a formation's +8, var 0x35's and var 0x36's) into the formation's +0x40, and Start opens "Commence
+# battle?" only for 1 to 5 of them (0x1EE890: [rcx+0x40] - 1, cmp 4, ja to nothing): with more, Start does nothing and
+# says nothing (1-A's 0x0F0 with both its groups, 4 + 2, seen on the PC 2026-11-12). Its list of the units placed (the
+# formation's +0x44) holds five. ReMixed's missions with two groups have 3 + 2 or 2 + 2; its own events set 4 + 2 in
+# side chapter 1-A and 2 + 4 in the Argath campaign's Hokuten battles, which on the PS1 deploy six. The code mod's rule
+# "six-places" (code/IvaliceRemixed/Patches/SixPlaces.cs) lets the remaster take six, and no more.
+REMASTER_PLACES = 6
+FORMATION_BYTES, FORMATION_ID, FORMATION_PLACES = 12, 10, 8
+REMASTER_FORMATIONS = 0x7AE2D0 - 0x1C00  # FFT_enhanced.exe, .data 0x7AE2D0: formation n at 12 * n
+SECOND_GROUP_MARK = 0x8000  # the build's MENU_SECOND_GROUP, RemixedScenarios.SecondGroupMark
+SCENARIOS_CODE = ROOT / "code" / "IvaliceRemixed" / "Patches" / "RemixedScenarios.cs"
+
+
+def scenario_sections(data: bytes) -> tuple[list[bytes], dict[int, bytes], dict[int, tuple[int, int]]]:
+    """remixed-scenarios.bin's records, its formations by id and its battles set up after their scene (the mod's
+    scenario -> its two formations, the second maybe marked), read in RemixedScenarios.Add's order."""
+    u16 = lambda at: int.from_bytes(data[at:at + 2], "little")  # noqa: E731
+    at = 2 + SCENARIO_BYTES * u16(0)
+    records = [data[2 + SCENARIO_BYTES * k:2 + SCENARIO_BYTES * (k + 1)] for k in range(u16(0))]
+    formations = {u16(at + 2 + FORMATION_BYTES * k + FORMATION_ID):
+                  data[at + 2 + FORMATION_BYTES * k:at + 2 + FORMATION_BYTES * (k + 1)] for k in range(u16(at))}
+    for size in (FORMATION_BYTES, 4, 6, 5, 2 + 16 * 40):  # formations, mission places, message bases, offers, units
+        at += 2 + size * u16(at)
+    named, at = u16(at), at + 2  # hand-offs by Ramza's name: 6 bytes, then u8-counted names
+    for _ in range(named):
+        names, at = data[at + 5], at + 6
+        for _ in range(names):
+            at += 1 + data[at]
+    at += 2 + 8 * u16(at)  # mission postings
+    battles, menu = u16(at), {}
+    at += 2
+    for _ in range(battles):
+        menu[u16(at)] = (u16(at + 2), u16(at + 4))
+        at += 7 + 2 * data[at + 6]
+    return records, formations, menu
+
+
+def second_groups_on() -> bool:
+    """RemixedScenarios.SecondGroupsOn as the code mod is built: whether a marked second group is put in."""
+    import re
+    found = re.search(r"internal static bool SecondGroupsOn(\s*=\s*(true|false))?;", SCENARIOS_CODE.read_text())
+    if not found:
+        raise AssertionError("RemixedScenarios.SecondGroupsOn isn't where the check reads it")
+    return found.group(2) == "true"
+
+
+def remaster_formations() -> bytes:
+    """The remaster's formation records, from its exe (where the mod's file has none of that number)."""
+    sys.path.insert(0, str(ROOT / "tools"))
+    from remixed import load_config
+    exe = (Path(load_config()["target"]["tic_dir"]) / "FFT_enhanced.exe").read_bytes()
+    return exe[REMASTER_FORMATIONS:REMASTER_FORMATIONS + FORMATION_BYTES * 0x400]
+
+
+def battle_places(scenarios: bytes, remaster: bytes, on: bool) -> dict[int, tuple[str, list[int]]]:
+    """Each of the mod's battles (its scenario) -> how its formation is set up ("record": from the world map or a
+    hand-off; "after scene": its scene's run first, RemixedScenarios.MenuBattles) and its groups' places, a marked
+    second group only when on (the most the scene's run can put in)."""
+    records, formations, menu = scenario_sections(scenarios)
+
+    def places(formation: int) -> int:
+        record = formations.get(formation) or remaster[FORMATION_BYTES * formation:FORMATION_BYTES * (formation + 1)]
+        if int.from_bytes(record[FORMATION_ID:FORMATION_ID + 2], "little") != formation:
+            raise AssertionError(f"formation 0x{formation:X} is neither the mod's nor the remaster's")
+        return record[FORMATION_PLACES]
+
+    battles: dict[int, tuple[str, list[int]]] = {}
+    for record in records:
+        first, second = (int.from_bytes(record[at:at + 2], "little") for at in (9, 0xB))
+        if first:
+            battles[int.from_bytes(record[:2], "little")] = ("record", [places(f) for f in (first, second) if f])
+    for scenario, (first, second) in menu.items():
+        marked, second = second & SECOND_GROUP_MARK, second & ~SECOND_GROUP_MARK
+        battles[scenario] = ("after scene", [places(first)] + ([places(second)] if second and (on or not marked)
+                                                                else []))
+    return battles
+
+
+def check_places(scenarios: bytes | None = None, remaster: bytes | None = None) -> str:
+    """Every battle the mod sets up has places the remaster will commence with (REMASTER_PLACES at most)."""
+    on = second_groups_on()
+    battles = battle_places(SCENARIOS.read_bytes() if scenarios is None else scenarios,
+                            remaster_formations() if remaster is None else remaster, on)
+    over = {s: groups for s, (_, groups) in battles.items() if sum(groups) > REMASTER_PLACES}
+    if over:
+        raise AssertionError(f"battle(s) with more than the {REMASTER_PLACES} places the remaster takes, which won't "
+                             "commence: " + ", ".join(f"0x{s:X} ({' + '.join(map(str, g))})"
+                                                      for s, g in sorted(over.items())))
+    two = sum(len(groups) == 2 for _, groups in battles.values())
+    six = sum(sum(groups) == 6 for _, groups in battles.values())
+    return (f"Formation places: {len(battles)} battle(s), {two} with two groups ({six} of six places), none over "
+            f"{REMASTER_PLACES}" + ("" if on else " (marked second groups off)"))
+
+
 def preset_sets(number: int) -> list[list[tuple[int, tuple[int, ...]]]]:
     """Condition records in each set of a generated ReMixed preset, excluding its event action only by type."""
     data = PRESETS.read_bytes()[number * PRESET_BYTES:(number + 1) * PRESET_BYTES]
@@ -187,46 +287,30 @@ def check() -> list[str]:
     if stale:
         raise AssertionError(f"return flag clear follows a world handoff in: {', '.join(stale)}")
 
-    # DisplayConditions state 7 writes invited units back but also tears down the remaster's battle map. If a scene
-    # resumes dialogue after RemoveDarkScreen, that write-back must use CallFunction 1 (Join Now) instead.
-    destructive_joins = []
+    # A recruitment scene's join is display state 7 in a dark screen: the remaster's join screen, which writes the battle
+    # back and shows each joiner. A silent join (0x43 1) there leaves the unit in the party with no screen.
     midscene_joins = 0
-    barriers = {0x3E, 0x4D, 0x76, 0x77, 0xCD, 0xDB}
-    for path in paths:
-        code = path.read_bytes()[len(MARKER):]
+    for number, expected in MIDSCENE_JOINS.items():
+        code = event(number)
         parsed = list(instructions(code))
+        found = 0
         for dark, (_, op, _) in enumerate(parsed):
             if op != 0x76:
                 continue
-            remove = next((n for n in range(dark + 1, len(parsed)) if parsed[n][1] == 0x77), None)
-            if remove is None:
-                continue
-            dialogue = False
-            for _, later, _ in parsed[remove + 1:]:
-                if later in barriers:
-                    break
-                if later == 0x10:
-                    dialogue = True
-                    break
-            if not dialogue:
-                continue
-            for at, candidate, params in parsed[dark + 1:remove]:
-                if candidate == 0x78 and params == bytes([0x07, 0x3C]):
-                    destructive_joins.append((path.name, at))
-    if destructive_joins:
-        raise AssertionError("mid-scene joins tear down the map before dialogue: "
-                             + ", ".join(f"{name}@0x{at:X}" for name, at in destructive_joins))
-    for number, expected in MIDSCENE_JOINS.items():
-        found = event(number).count(JOIN_NOW)
+            remove = next((n for n in range(dark + 1, len(parsed)) if parsed[n][1] == 0x77), len(parsed))
+            found += sum(bytes([parsed[n][1]]) + parsed[n][2] + bytes([parsed[n + 1][1]]) + parsed[n + 1][2]
+                         == DISPLAY_STATE_7 for n in range(dark + 1, remove - 1))
         if found != expected:
-            raise AssertionError(f"event {number} has {found} safe mid-scene joins, expected {expected}")
+            raise AssertionError(f"event {number} shows {found} join screen(s) in a dark screen, expected {expected}")
+        silent = sum(op == 0x43 and params[:1] == b"\x01" for _, op, params in parsed)
+        if silent:
+            raise AssertionError(f"event {number} has {silent} silent join(s) (0x43 1), which skip the join screen")
         midscene_joins += found
 
     # Event 8's same-battlefield returns cannot use the remaster's display state 7: its roster write-back is correct,
     # but the surrounding state destroys the map before the returned preset starts its dialogue event. Every encoded
     # return instead calls the mod's synchronous native writer, sets the tavern-home flag, and keeps PostEvent mode 0.
     live_sites: dict[int, tuple[int, int]] = {}
-    join_writebacks = 0
     else_writebacks: dict[int, int] = {}
     destructive_returns = []
     for path in paths:
@@ -234,8 +318,14 @@ def check() -> list[str]:
         code = path.read_bytes()[len(MARKER):]
         parsed = list(instructions(code))
         for index, (at, op, params) in enumerate(parsed):
-            if bytes([op]) + params == DISPLAY_STATE_7:
-                window = parsed[index + 1:index + 25]
+            if index + 1 < len(parsed) and bytes([op]) + params + bytes([parsed[index + 1][1]]) \
+                    + parsed[index + 1][2] == DISPLAY_STATE_7:
+                # A chosen deferred return's other way (ELSE, to the world map) writes the battle back itself, with
+                # the join screen; its preset load is the empty one and the mode-0 hand-off is the return's alone.
+                if index and number in DEFERRED_CHOSEN_RETURNS and parsed[index - 1][1] == 0x03:
+                    else_writebacks[number] = else_writebacks.get(number, 0) + 1
+                    continue
+                window = parsed[index + 2:index + 26]
                 if any(later == 0xCE for _, later, _ in window) \
                         and any(later == 0xCD and args == bytes(3) for _, later, args in window):
                     destructive_returns.append((path.name, at))
@@ -244,16 +334,6 @@ def check() -> list[str]:
             window = parsed[index + 1:index + 25]
             if not window or bytes([window[0][1]]) + window[0][2] != TAVERN_HOME:
                 raise AssertionError(f"{path.name}@0x{at:X}: live write-back does not set tavern-home flag next")
-            # A chosen deferred return's other way (ELSE, to the world map) joins and writes the battle back itself.
-            if index >= 2 and number in DEFERRED_CHOSEN_RETURNS and parsed[index - 2][1] == 0x03 \
-                    and bytes([parsed[index - 1][1]]) + parsed[index - 1][2] == JOIN_NOW:
-                else_writebacks[number] = else_writebacks.get(number, 0) + 1
-                continue
-            # A recruitment scene deliberately writes after CallFunction 1 has presented and resolved its candidate.
-            # It is not a return edge and therefore has no following preset load / mode-0 handoff.
-            if index and bytes([parsed[index - 1][1]]) + parsed[index - 1][2] == JOIN_NOW:
-                join_writebacks += 1
-                continue
             presets = [int.from_bytes(args, "little") for _, later, args in window if later == 0xCE]
             if not presets or not any(later == 0xCD and args == bytes(3) for _, later, args in window):
                 raise AssertionError(f"{path.name}@0x{at:X}: live write-back has no same-map conditional handoff")
@@ -263,8 +343,6 @@ def check() -> list[str]:
     if destructive_returns:
         raise AssertionError("same-map battle returns tear down their map: "
                              + ", ".join(f"{name}@0x{at:X}" for name, at in destructive_returns))
-    if join_writebacks != sum(MIDSCENE_JOINS.values()):
-        raise AssertionError(f"mid-scene join write-backs are {join_writebacks}, expected {sum(MIDSCENE_JOINS.values())}")
     if else_writebacks != {number: 1 for number in DEFERRED_CHOSEN_RETURNS}:
         raise AssertionError(f"chosen deferred returns' world-map write-backs are {else_writebacks}, "
                              f"expected one each in {sorted(DEFERRED_CHOSEN_RETURNS)}")
@@ -320,8 +398,6 @@ def check() -> list[str]:
 
     # Mandalia's closing marks Luso met, but consumes its post-battle return.
     mandalia = event(124)
-    if mandalia.count(JOIN_NOW) != 1:
-        raise AssertionError(f"Mandalia recruitment has {mandalia.count(JOIN_NOW)} safe mid-scene joins")
     set_met = bytes([0xAE, 0x93, 0x00, 0x01, 0x00])
     mandalia_start = last(mandalia, set_met + clear + WORLD)
     state = mutate_tail(mandalia, mandalia_start, {0x8E: 1, 0x93: 0})
@@ -445,17 +521,38 @@ def check() -> list[str]:
     if not selected or any(line >> 16 != 4 for line in selected) or selected.count(max(selected)) != 4:
         raise AssertionError(f"Mandalia's runtime-selected lines lack four valid repair templates: {selected!r}")
 
+    # ReMixed's riders (build_mod.py seat_riders): battle ids 0xC0, 0xC2, ... ride the next id, seated by ReMixed's
+    # 0x191 as the battle begins, which the port doesn't run. The river camp's battle run (the mod's 510, past
+    # ReMixed's check: var 0x18 == var 0x27) seats its five Mindflayers before its fade-in; 0x0FB's battle copy
+    # (843) its three goblins.
+    river = event(510)
+    check_at = river.find(MENU_CHECK)
+    fade_at = river.find(MENU_FADE_IN, check_at)
+    if check_at < 0 or fade_at < 0:
+        raise AssertionError("the river camp's battle run (its check, then its fade-in) isn't where expected")
+    seated = sorted(params[0] for at, op, params in instructions(river, check_at)
+                    if at < fade_at and op == 0x28 and params[6] == 0x63)
+    if seated != [0xC0, 0xC2, 0xC4, 0xC6, 0xC8]:
+        raise AssertionError(f"the river camp's battle run seats riders {[hex(u) for u in seated]}, not C0-C8")
+    goblins = sorted(params[0] for _, op, params in instructions(event(843))
+                     if op == 0x28 and params[6] == 0x63 and 0xC0 <= params[0] <= 0xCF)
+    if goblins != [0xC0, 0xC4, 0xC8]:
+        raise AssertionError(f"0x0FB's battle seats riders {[hex(u) for u in goblins]}, not C0, C4 and C8")
+
     return [f"{len(paths)} generated events, {len(handoffs)} handoffs: no stale return cleanup",
             "Gariland: valid map state, no formation, Rendezvous notice closes, commits location 6 before world return",
             "Araguay exit: story 0x11, completion flag 0x287 set",
             "Luso exits: return flag consumed; met-Luso flag cleared at Araguay and set at Mandalia",
             f"Fresh battle entries: {len(scene_battles)} scene -> battle hand-offs use distinct ENTD carriers",
-            f"Mid-scene join audit: {midscene_joins} Join Now operation(s), no map teardown before dialogue",
+            f"Recruitment scenes: {midscene_joins} join screen(s) in a dark screen, no silent joins; Araguay's "
+            "world-map way writes back with the join screen",
             f"Same-map battle returns: {len(live_sites)} exact live write-back edge(s), no display-state teardown",
             f"Post-battle cleanup: {cleanup_erases} corpse/crystal drawable(s) erased before logical removal",
             "Mandalia: no duplicate Ramza, prepared and visibly activated Luso + nine enemies, "
             "scene fade cleared, one victory -> recruitment, stable actors, "
-            "four runtime lines valid"]
+            "four runtime lines valid",
+            "Riders: the river camp's battle run seats its five, 0x0FB's battle its three",
+            check_places()]
 
 
 def main() -> None:

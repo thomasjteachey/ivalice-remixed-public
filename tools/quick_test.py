@@ -10,9 +10,16 @@ Case files live in tests/quick and contain one command per line. Values use Pyth
 For a picture to check by eye, `shot NAME` saves the hidden window to work/harness/quick/CASE/NAME.png at that step;
 every case also leaves pass.png (or fail.png) there as it ends. Pictures are evidence only: no step reads them.
 `scenario 0x79 noted` starts a scene-first battle at its battle (its scene counted as seen). `defeat [UNIT...]`
-downs the enemies (or those units); `expect roster name_id=0x76` wants exactly one roster record so.
+downs the enemies (or those units); `expect roster name_id=0x76` wants exactly one roster record so, and
+`count=N` another number of them (`count=0`: a recruit turned down on its join screen isn't there).
+`show slots` (or `roster`) prints the battle units' roster slots and ids into the case's output; `copy roster 2 3`
+copies roster slot 2's record into slot 3, a party member more.
 `key K` posts one key to the game's own window (never the desktop's input). `wait log PATTERN press=RETURN every=1`
 confirms through dialogue until a log line comes; `wait world depth=D state=S` waits for a world-map menu.
+A battle unit matches on its listing's fields (index, id, job, team, primary, secondary, battle_id, ...) and on its
+live ones (turn, moved, acted, ability, charge, statuses, hp, right_hand; player and present, 1 or 0):
+`wait unit player=1 present=1 turn=1 timeout=300` waits for a party unit's turn. `poke unit FIELD=VALUE... offset=0x13 hex=08` writes bytes into every matching unit (`or=`
+ORs them in), to set a unit up for a test: a skillset, a learned ability, a weapon.
 
 Start or restart the hidden game and print strict PASS/FAIL lines:
 
@@ -61,8 +68,36 @@ def describe(wanted: dict[str, int]) -> str:
     return " ".join(f"{key}=0x{value:X}" for key, value in wanted.items())
 
 
+# Jobs by the remaster's job index (Squire 0 ... Mime 19) whose learned abilities, JP and total JP are fields.
+JOB_FIELDS = {"archer": 3, "bard": 17, "dancer": 18}
+# Where a record keeps the unlocked jobs (3 bytes, the high first: 0x800000 the Squire), the learned abilities (3 bytes a
+# job, the high first), the JP and the total JP (halfwords): a roster record's, and a battle unit's (the PS1's +0x96,
+# +0x99, +0xDC and +0x104, moved as the Event Instruction Upgrade's unit fields move them).
+ROSTER_JOBS = (0x2F, 0x32, 0x80, 0xAE)
+UNIT_JOBS, UNIT_SIZE = (0x9F, 0xA2, 0xF0, 0x11E), 0x200
+# Job levels (a nibble a job, the even index high: 12 bytes, the remaster's 22 jobs) as `<job>_level` fields.
+LEVEL_FIELDS = {"knight": 2, "black_mage": 6, "bard": 17, "dancer": 18, "dark_knight": 20}
+ROSTER_LEVELS, UNIT_LEVELS, ROSTER_ERRAND = 0x74, 0xE4, 0x11E
+
+
+def job_fields(r: bytes, at: tuple[int, int, int, int]) -> dict[str, int]:
+    """A record's unlocked jobs and its Archer's, Bard's and Dancer's learned abilities, JP and total JP."""
+    unlocked, learned, jp, total = at
+    out = {"unlocked": int.from_bytes(r[unlocked:unlocked + 3], "big")}
+    for job, k in JOB_FIELDS.items():
+        out[f"{job}_learned"] = int.from_bytes(r[learned + 3 * k:learned + 3 * k + 3], "big")
+        out[f"{job}_jp"] = int.from_bytes(r[jp + 2 * k:jp + 2 * k + 2], "little")
+        out[f"{job}_total"] = int.from_bytes(r[total + 2 * k:total + 2 * k + 2], "little")
+    return out
+
+
+def level_fields(r: bytes, levels: int) -> dict[str, int]:
+    """A record's job levels for LEVEL_FIELDS' jobs."""
+    return {f"{job}_level": r[levels + k // 2] >> (0 if k & 1 else 4) & 0xF for job, k in LEVEL_FIELDS.items()}
+
+
 def roster_records(data: bytes | None = None) -> list[dict]:
-    """The roster records in use: slot, sprite set and name id (harness.cmd_roster's fields)."""
+    """The roster records in use: slot, sprite set, name id (harness.cmd_roster's fields), job, EXP and job fields."""
     if data is None:
         data = harness.peek_bytes(harness.image_base() + harness.ROSTER, harness.ROSTER_SIZE * harness.ROSTER_COUNT)
     found = []
@@ -70,15 +105,70 @@ def roster_records(data: bytes | None = None) -> list[dict]:
         r = data[k * harness.ROSTER_SIZE:(k + 1) * harness.ROSTER_SIZE]
         if r[1] == 0xFF or not any(r[:4]):
             continue
-        found.append({"slot": k, "sprites": r[0],
-                      "name_id": int.from_bytes(r[harness.ROSTER_NAME_ID:harness.ROSTER_NAME_ID + 4], "little")})
+        found.append({"slot": k, "sprites": r[0], "job": r[2], "exp": r[0x1C],
+                      "name_id": int.from_bytes(r[harness.ROSTER_NAME_ID:harness.ROSTER_NAME_ID + 4], "little"),
+                      "errand": r[ROSTER_ERRAND], **job_fields(r, ROSTER_JOBS), **level_fields(r, ROSTER_LEVELS)})
     return found
+
+
+# A battle unit's live fields beyond `units`' listing, read in one peek of the whole array: the turn flag, moved and
+# acted, the pending action's ability and charge (0xFF none), the action statuses (+0x61: 8 Charging) and the HP.
+UNIT_FIELDS = {"turn": (0x1B8, 1), "moved": (0x1B9, 1), "acted": (0x1BA, 1), "ability": (0x1A2, 2),
+               "charge": (0x18D, 1), "statuses": (0x61, 1), "hp": (harness.UNIT_HP, 2), "right_hand": (0x20, 2)}
+
+
+def unit_records() -> list[dict]:
+    """The battle units (the in-game harness's fields), with their live fields and job fields read from memory."""
+    base, units = harness.battle_units()
+    if not base or not units:
+        return units
+    try:
+        data = harness.peek_bytes(base, (max(u["index"] for u in units) + 1) * UNIT_SIZE)
+    except (OSError, ValueError):
+        return units  # no memory read back: the in-game fields only
+    for u in units:
+        at = u["index"] * UNIT_SIZE
+        record = data[at:at + UNIT_SIZE]
+        u["address"] = base + at
+        for name, (offset, size) in UNIT_FIELDS.items():
+            u[name] = int.from_bytes(record[offset:offset + size], "little")
+        u["player"] = 1 if u["team"] & 0x08 else 0  # the player's to command (+5 & 8)
+        u["present"] = 0 if u["id"] == 0xFF else 1  # on the field (a formation's spare records have id 0xFF)
+        u.update(job_fields(record, UNIT_JOBS))
+        u.update(level_fields(record, UNIT_LEVELS))
+    return units
 
 
 def records(kind: str) -> list[dict]:
     if kind == "roster":
         return roster_records()
-    return harness.battle_units()[1] if kind == "unit" else harness.battle_entries()
+    return unit_records() if kind == "unit" else harness.battle_entries()
+
+
+def poke_units(args: list[str], case: str) -> None:
+    """poke unit FIELD=VALUE... offset=OFF hex=BYTES (or or=BYTES, ORed into what's there): every matching unit."""
+    wanted, offset, data, merge = {}, None, b"", False
+    for arg in args:
+        key, value = arg.split("=", 1)
+        if key == "offset":
+            offset = number(value)
+        elif key in ("hex", "or"):
+            data, merge = bytes.fromhex(value), key == "or"
+        else:
+            wanted[key.replace("-", "_")] = number(value)
+    if offset is None or not data:
+        raise CaseFailure("poke unit needs offset= and hex= (or or=)")
+    chosen = find("unit", wanted)
+    if not chosen:
+        raise CaseFailure(f"poke unit: no unit {describe(wanted)}")
+    for u in chosen:
+        at = u["address"] + offset
+        if merge:
+            data = bytes(a | b for a, b in zip(harness.peek_bytes(at, len(data)), data))
+        reply = harness.send(f"poke 0x{at:X} {data.hex()}")
+        if reply.startswith("error"):
+            raise CaseFailure(reply)
+    print(f"PASS {case}: poked +0x{offset:X} = {data.hex()} on unit(s) {[u['index'] for u in chosen]}")
 
 
 def find(kind: str, wanted: dict[str, int], items: list[dict] | None = None) -> list[dict]:
@@ -86,11 +176,16 @@ def find(kind: str, wanted: dict[str, int], items: list[dict] | None = None) -> 
     return [item for item in items if matches(item, wanted)]
 
 
-def expect_record(kind: str, wanted: dict[str, int], case: str, line: int, items: list[dict] | None = None) -> None:
+def expect_record(kind: str, wanted: dict[str, int], case: str, line: int, items: list[dict] | None = None,
+                  count: int | None = None) -> None:
+    """Exactly one record so, or `count=N` of them (count=0: none)."""
+    wanted = dict(wanted)
+    count = wanted.pop("count", 1) if count is None else count
     found = find(kind, wanted, items)
-    label = f"{kind} {describe(wanted)}"
-    if len(found) != 1:
-        raise CaseFailure(f"{case}:{line}: {label}: expected exactly one, found {len(found)}")
+    label = f"{kind} {describe(wanted)}" + (f" count={count}" if count != 1 else "")
+    if len(found) != count:
+        raise CaseFailure(f"{case}:{line}: {label}: expected {'exactly one' if count == 1 else count}, "
+                          f"found {len(found)}")
     print(f"PASS {case}: {label}")
 
 
@@ -140,6 +235,9 @@ def run_case(path: Path) -> None:
         source = source.strip()
         if not source or source.startswith("#"):
             continue
+        if source.split(maxsplit=1)[0].lower() == "name":
+            case = source[4:].strip()  # as written: an apostrophe in a name ("Luso's") is no quote
+            continue
         words = shlex.split(source, comments=True)
         command, args = words[0].lower(), words[1:]
         try:
@@ -148,9 +246,12 @@ def run_case(path: Path) -> None:
             elif command == "scenario":
                 if not harness.on_world_map(5):
                     raise CaseFailure("scenario requires the idle world map")
+                # scenario N [noted] [event=E]: event= loads E for it (the remaster's own scenes, whose events a
+                # requested start doesn't load: tests/quick/lionel-in-sight.txt).
                 scenario = number(args[0])
-                noted = " noted" if len(args) > 1 and args[1].lower() == "noted" else ""
-                reply = harness.send(f"scenario {scenario:X}{noted}")
+                noted = " noted" if any(a.lower() == "noted" for a in args[1:]) else ""
+                event = next((f" event {number(a.split('=', 1)[1]):X}" for a in args[1:] if a.startswith("event=")), "")
+                reply = harness.send(f"scenario {scenario:X}{noted}{event}")
                 if reply.startswith("error"):
                     raise CaseFailure(reply)
             elif command == "setvar":
@@ -161,16 +262,35 @@ def run_case(path: Path) -> None:
                 reply = harness.send(" ".join(args))
                 if reply.startswith("error"):
                     raise CaseFailure(reply)
+            elif command == "poke" and args and args[0] == "unit":
+                poke_units(args[1:], case)
+            elif command == "copy" and args and args[0] == "roster":  # copy roster FROM TO: a party member more
+                source, target = number(args[1]), number(args[2])
+                base = harness.image_base() + harness.ROSTER
+                record = bytearray(harness.peek_bytes(base + source * harness.ROSTER_SIZE, harness.ROSTER_SIZE))
+                record[1] = target  # a roster unit's id is its slot
+                reply = harness.send(f"poke 0x{base + target * harness.ROSTER_SIZE:X} {record.hex(' ')}")
+                if reply.startswith("error"):
+                    raise CaseFailure(reply)
+            elif command == "show":  # a listing into the case's output, as evidence: slots or roster
+                {"slots": harness.cmd_slots, "roster": harness.cmd_roster}[args[0].lower()](None)
             elif command == "advance":
-                timeout = 45.0
+                # advance world|opening|event N [timeout=S] [every=S] [shots=1]: with shots, a frame of the scene
+                # before each press, in the case's folder (advance-NNNN.png, tenths of a second in).
+                timeout, every, shots = 45.0, 0.25, False
                 positional = []
                 for arg in args:
                     if arg.startswith("timeout="):
                         timeout = float(arg.split("=", 1)[1])
+                    elif arg.startswith("every="):
+                        every = float(arg.split("=", 1)[1])
+                    elif arg.startswith("shots="):
+                        shots = arg.split("=", 1)[1] not in ("0", "no")
                     else:
                         positional.append(arg)
                 reached = " ".join(positional)
-                result = harness.advance(reached, timeout, every=0.25)
+                result = harness.advance(reached, timeout, every=every, shots=shots,
+                                         shot_dir=SHOTS / path_name(case_file) if shots else None)
                 if reached == "world" and not harness.on_world_map(2):
                     raise CaseFailure("world map was not reached")
                 if reached == "opening" and result["op"] != 0xDB:
@@ -258,7 +378,9 @@ def run_case(path: Path) -> None:
             elif command == "expect":
                 kind = args[0].lower()
                 if kind in ("unit", "entry", "roster"):
-                    expect_record(kind, fields(args[1:]), case, line_number, snapshots.get(kind))
+                    wanted = fields(args[1:])
+                    count = wanted.pop("count", 1)
+                    expect_record(kind, wanted, case, line_number, snapshots.get(kind), count)
                 elif kind == "var":
                     variable, expected = number(args[1]), number(args[2])
                     reply = harness.send(f"var {variable}")

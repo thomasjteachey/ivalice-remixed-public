@@ -70,7 +70,7 @@ message windows, not the battle menus.
 | 0x80136378 | Two loads swapped | nothing |
 | 0x801393B8 | The unit list window's palette for player-team entries | nothing |
 | 0x80140578, 0x80140658 | The command menu (0x801404CC) holds 8 entries, not 6 | nothing (the remaster's menu takes Two Spells' and Dragon Tech's commands) |
-| 0x80140BE0 | The turn-start notice (0x80140B04): "Performing" (0x8002) is gone; with the hook 0x8015F0E0 at 0x80140B88 the charging notice is hidden during Two Spells' turn (+0x188 & 9) | open: Two Spells' menu extras |
+| 0x80140BE0 | The turn-start notice (0x80140B04): "Performing" (0x8002) is gone; with the hook 0x8015F0E0 at 0x80140B88 the charging notice is hidden during Two Spells' turn (+0x188 & 9) | open: Two Spells' menu extras. The remaster's turn-start notices are 0x237494 and its copy 0x2EB408 (+0x61 & 8: 0x8001, "The unit is readying ..."; +0x61 & 1: 0x8002, "The unit is performing. Using another ability will cancel the performance.", c_mes_id_sample): the Performing case (`test al, 1; je` at 0x237554) goes with the persistent performances it was taken out for (battle-80150000.md §17), which aren't ported yet |
 | 0x8014138C | Only Jump (0x12) goes straight to targeting; Elemental (0x11) opens its list | ported (skillset types: Elemental is ordinary) |
 | 0x801417C0 | The ability banner: no quote for primaries from 0xA8 | nothing |
 | 0x80142664 | The battle event conditions (0x801425B0, table 0x800475E0 from ReMixed's opcodes 0xED and 0xEE): 16, not 10 | waits: the story port |

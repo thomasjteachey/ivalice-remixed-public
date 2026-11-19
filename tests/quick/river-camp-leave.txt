@@ -1,0 +1,25 @@
+# Side chapter 1-A after the river camp (ReMixed's 0x0F2, then 0x0F3): Bryn and Lorne leave (DismissUnit by name:
+# Patches/DismissByName.cs) and Valmafra and Elias join as guests, Elias not "On Errand" (0x0F3's roster byte left
+# out). As on the PS1 (2026-11-18: their slots emptied, then both guests in the formation). The save's generics David
+# and Alexis (slots 7 and 8) get Lorne's and Bryn's records first, as party-looks.txt does.
+name Bryn and Lorne leave at the river camp; Elias joins without an errand
+wait world depth=1 state=0 timeout=20
+send poke +0x11A8D78 B4
+send poke +0x11A8D7A 5B
+send poke +0x11A8FA8 6A 00
+send poke +0x11A8FD0 B5
+send poke +0x11A8FD2 5C
+send poke +0x11A9200 69 00
+expect roster name_id=0x6A
+expect roster name_id=0x69
+scenario 0x198
+wait log "loaded event 408" timeout=25
+wait log "loaded event 409" press=RETURN every=1 timeout=300
+advance world timeout=300
+expect roster name_id=0x69 count=0
+expect roster name_id=0x6A count=0
+expect roster name_id=0x6B sprites=0x9C errand=0
+expect roster name_id=0x21
+key ESCAPE wait=1.5
+wait world depth=2 state=1 timeout=10
+shot units

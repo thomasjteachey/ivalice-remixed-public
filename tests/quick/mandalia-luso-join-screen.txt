@@ -1,0 +1,26 @@
+# Luso's join screen at Mandalia (ReMixed's 0x0EB, here event 124). The split battle 0x34D from the test save's world
+# map, its enemies downed: the victory returns to its conditions for 124, which flags Luso (battle id 0x12) to join,
+# darkens the screen and runs display state 7: the join screen's choice (join-screen), Accept, "JOINED!" (joined), and
+# the scene goes on talking on the same map (after-join: message 18, "a nice new entry in my Grimoire", over the
+# map, not black). Then the world map with Luso in the roster once and flag 0x93 set. Needs a fresh save (--restart).
+name Mandalia shows Lusos join screen and keeps the map
+wait world depth=1 state=0 timeout=20
+scenario 0x34D
+formation units=1
+wait log "condition set 0 fires" press=RETURN every=2 timeout=90
+wait unit battle_id=0x86 timeout=20
+defeat
+wait log "loading event 124" press=RETURN every=3 timeout=120
+wait log "to the join screen" press=RETURN every=3 timeout=240
+wait seconds 5
+shot join-screen
+key RETURN
+wait log "join screen: battle id" timeout=30
+wait seconds 2
+shot joined
+wait log "event 124's message (18|47) shown" press=RETURN every=2 timeout=60
+wait seconds 4
+shot after-join
+advance world timeout=200
+expect var 0x93 1
+expect roster name_id=0x38

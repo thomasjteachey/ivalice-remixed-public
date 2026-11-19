@@ -1,0 +1,15 @@
+# ReMixed's gendered slots in its battle data (build_mod.py remixed_levels_job, Patches/JobLevels.cs): mission 0xAD
+# (the port's 0x1EC) has three men's Bards whose job to level is ReMixed's slot 17, its Dark Knight, at 4 (with its
+# prerequisites, Knight 8 and Black Mage 8, if the game's Dark Knight row is ReMixed's), and three Dancers at slot 18.
+# Before the fix the Bards got the Bard's level 4 and the Dark Knight none. The harness's save is chapter 1, so Job
+# Level Settings give the specified job only (the Bard stays at 1).
+name ReMixeds Dark Knight slot levels in battle data
+wait world depth=1 state=0 timeout=20
+scenario 0x1EC
+wait unit battle_id=0x83 timeout=90
+expect unit battle_id=0x83 job=0x5b dark_knight_level=4 bard_level=1
+expect unit battle_id=0x80 job=0x5c dancer_level=4 dark_knight_level=0
+# Not certain: the Dark Knight's prerequisites as the game holds them (ReMixed's Knight 8 and Black Mage 8 if its
+# requirement row is in the game's table, the remaster's own otherwise).
+expect unit battle_id=0x83 knight_level=8 black_mage_level=8
+shot battle

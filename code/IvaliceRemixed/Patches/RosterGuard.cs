@@ -15,7 +15,9 @@ namespace IvaliceRemixed.Patches;
 /// 0x2C60E4 writes each unit still flagged again; it skips one whose sprite set the roster has, but not a generic's
 /// (0x80, 0x81). The remaster's own events call it twice (its opening and event 467); ReMixed's 0x0ED makes its two
 /// recruits join this way (generics with names of their own, Bryn and Lorne) and then gives them their sprite sets, and
-/// each was in the roster twice after the scene (seen on the PC). A unit this join writes has its flag cleared now.</para>
+/// each was in the roster twice after the scene (seen on the PC). A unit this join writes has its flag cleared now. It
+/// shows no join screen: that's display state 7's (<see cref="BattleEnd.JoinScreenPending"/>), whose writes of the
+/// units it shows are logged here.</para>
 /// Installed with ReMixed's scenarios (<see cref="RemixedScenarios"/>).
 /// </summary>
 internal static unsafe class RosterGuard
@@ -90,6 +92,13 @@ internal static unsafe class RosterGuard
         if (_joining && slot != NotWritten && Joined(unit) && _joinsNoted++ < 16)
             _log.Info($"roster guard: battle id 0x{unit[0x191]:X2} (sprite set 0x{unit[0]:X2}) joined at once, into roster "
                       + $"slot {slot}; it won't join again at the scene's end");
+        else if (!_joining && slot != NotWritten && BattleEnd.JoinScreenPending > 0)
+        {
+            // After the write-back has queued its joiners, the next writes are the join screen's, one for each Accept.
+            BattleEnd.JoinScreenPending--;
+            _log.Info($"join screen: battle id 0x{unit[0x191]:X2} (sprite set 0x{unit[0]:X2}, name id "
+                      + $"0x{*(int*)(unit + 0x1FC):X}) joined, into roster slot {slot}");
+        }
         return slot;
     }
 }

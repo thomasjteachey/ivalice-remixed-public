@@ -1,0 +1,23 @@
+# Continues river-camp-start.txt in its battle (with 1-A's Agrias placed from the formation, as its start leaves her):
+# Bryn's question (message 17), Agrias's choice (18: how the chocobos take the Mindflayers' fall; her unit is ReMixed's
+# 0x22, which the port's event unit lookup takes as the formation's Agrias), the second answer, then the victory and her
+# closing line (22), which testers saw with no face (2026-11-18). A box is closed once its text is out.
+name River camp Agrias lines in its battle
+send event 1FE 1
+wait log "event 510's message 17 shown" timeout=60
+wait seconds 10
+shot bryn-line
+key RETURN wait=1
+wait log "event 510's message 18 shown" press=RETURN every=4 timeout=60
+wait seconds 12
+shot agrias-choice
+key DOWN wait=1
+shot agrias-choice-second
+key RETURN wait=1
+wait seconds 8
+shot after-choice
+defeat
+wait log "event 510's message 22 shown" press=RETURN every=3 timeout=150
+wait seconds 6
+shot closing-line
+advance world timeout=240

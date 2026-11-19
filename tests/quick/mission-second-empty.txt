@@ -1,0 +1,12 @@
+# A mission with two groups (Desert Minefield, 0x1F2: 2 + 2) begun with its second group left empty, as ReMixed allows
+# (its split formations: deployed + the group's index); the remaster's own Start check refused it unless every unit
+# was in the first group, so the harness placed one in the second (TESTING.md). Patches/FormationStart.cs jumps past
+# that refusal (0x1EE928). Also a battle of fewer than six places with Patches/SixPlaces.cs in. Stops once it begins.
+name Mission begun with its second group empty
+wait world depth=1 state=0 timeout=20
+scenario 0x1F2
+wait log "formation: screen open, 4 place\(s\) in 2 group\(s\)" timeout=150
+wait seconds 4
+formation units=1
+wait seconds 8
+shot begun

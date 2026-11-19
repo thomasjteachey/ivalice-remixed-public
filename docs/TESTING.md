@@ -169,14 +169,18 @@ stops the game; `--only` picks checks. About 50 minutes (2026-11-13), half of it
 `battle --integration` plays one of ReMixed's scenarios through: starts it from the world map (as the world map starts its story
 events), places units, commences, presses Enter through its opening, defeats its enemies, then presses Enter through
 its closing and whatever follows until the world map runs again, printing each event and scenario change. 1F2 is a
-mission (Desert Minefield), so `--second 1` places a unit in its second group too: a mission won't start with one
-empty.
+mission (Desert Minefield); `--second 1` places a unit in its second group too. The remaster's formation refused to
+start with a second group empty until 2026-11-19, when ReMixed's split-formation rule reached its own Start check
+(`tests/quick/mission-second-empty.txt`: 1F2 begun with one unit, seen on the PC). A battle with six places (1-A's
+4 + 2) brings "Commence battle?" up by itself as its last unit is placed; the formation step answers it then
+(`tests/quick/river-camp-squads.txt`).
 
 As the formation screen opens (45 to 78 s after the scenario's setup in the runs so far), Reveal Treasures asks its
-price on a map with a rare item still hidden, in the box that takes the formation's F. `battle` waits for its log line
-(up to `--formation-wait`, 90 s) and declines it (Down, then F) before placing anyone; `--reveal yes` pays instead and
-waits for its arrows. A map shown for free gets a few seconds for its arrows; a map with nothing left hidden says
-nothing, and the wait runs out. A mission's win goes on to the Treasure Wheel (event 872). Its lines go on without a
+price on a map with a rare item still hidden, in the box that takes the formation's F. The screen logs its first frame
+that takes input ("formation: screen open, N place(s) in G group(s)", from 2026-11-19); `battle` waits for that line (up
+to `--formation-wait`, 90 s), then up to 3 s for the question, and declines it (Down, then F) before placing anyone;
+`--reveal yes` pays instead and waits for its arrows. A map shown for free gets a few seconds for its arrows; a map
+with nothing left hidden says nothing (before the screen's own line, the whole 90 s went by there). A mission's win goes on to the Treasure Wheel (event 872). Its lines go on without a
 press, so Enter opens the chest in front and reads its prize, and then changes nothing. Once two presses in a row leave
 ReMixed's code at the same instruction (`state`'s "event at"), `advance` presses Right to turn the ring to the next
 chest, and Enter opens that one. When its tries are spent, the Wheel ends and the world map runs again. Space would
@@ -230,9 +234,39 @@ python -I tools/quick_test.py --restart tests/quick/araguay-entry.txt
 `--location N` starts the save at world location N instead of its own (a case that needs a tavern uses 2, Eagrose:
 `python -I tools/quick_test.py --restart --location 2 --stop tests/quick/dispatch-button.txt`, about 45 seconds).
 
+**A map's look** (its water, lighting, textures): don't play a story scene to reach it. `python -I tools/harness.py
+maps N` lists the scenarios fought on map N from the exe (no game needed; Siedge Weald, map 74: 0x1E, 0x1F, 0x20). The
+one after a story battle's first starts at its formation: `send scenario 1F`, Enter past the Formation banner, and the
+map is up in about 10 seconds (its battle may load the wrong event after Commence, so it's for looking, not for the
+battle). The formation helper (`harness.formation`, quick_test's `formation`) now waits for the mod's log of
+"Commence battle?" after each Space and tries again at once when the screen didn't take it, instead of 40 s per lost
+try. If a test would still take minutes, make it fast first (a shortcut in the harness or a case's setup), then run it.
+
 Each case prints one `PASS` or `FAIL` line per expectation and a final elapsed time. Case files use one small command
-per line: `scenario`, `setvar`, `send`, `advance`, `formation`, `defeat`, `key`, `shot`,
-`wait unit|entry|log|world|seconds`, and `expect unit|entry|roster|var`.
+per line: `scenario`, `setvar`, `send`, `advance`, `formation`, `defeat`, `key`, `shot`, `poke unit`,
+`wait unit|entry|log|world|seconds`, `expect unit|entry|roster|var` and `show slots|roster`. `show` prints the
+battle units' roster slots and battle ids (or the roster) into the case's output, as evidence. A case on the
+formation screen waits for its own line first (`wait log "formation: screen open"`), as quick_test's `formation`
+gives Reveal Treasures only a second.
+A battle unit also matches on its live fields (turn, moved, acted, ability, charge, statuses, hp, right_hand, and
+player and present, 1 or 0), so `wait unit player=1 present=1 turn=1` waits for a party unit's turn, and `poke unit
+player=1 present=1 offset=0x13 hex=08` sets a field on each (`or=` ORs bits in): a quick way to give units a skillset,
+a learned ability or a weapon for a test, in any battle. The PC's settings have the test mode's RecordAndAutoBattle, where the AI plays the party; `send testmode
+record` keeps the party the player's for the rest of the run (before the battle), for a case that drives the battle
+menus, and `send testmode auto` hands it back.
+
+`send act SKILLSET ABILITY TARGET` makes a party unit use an ability without driving the menus: `send act 08 195
+foe` is Two Shots (skillset 0x08, ability 0x195) at the nearest foe's panel (TARGET is also a battle unit's index, or
+`X,Y[,LEVEL]`; a fifth word queues it that many times, for a turn's two actions). Acts are queued (`send act clear`
+drops them) and taken as a party unit's command menu is about to open, at its turn's start or again after an action
+that leaves the turn going; a turn already at its first command menu gets an F on Move, and the move selection takes
+it. Then the battle
+menu's action record is filled and the menu put in its confirm state, so the game's own confirm does the rest (the
+action marked, queued, the turn going on or ending). The log says `harness: unit N used ...` with the unit's action
+and charge after each, which a case waits for. Only a fast way into a battle is needed around it: a
+random battle, `--location 24` (Mandalia Plains) and `key RETURN` on the world map, about two minutes to its
+formation. tests/quick/two-shots.txt is the whole pattern: a random battle, a unit given Two Shots by `poke unit`,
+two `act`s, and the mod's lines for both shots.
 Each `wait log` consumes a matching line logged during the current case, so earlier runs in the same game cannot pass it.
 `wait log PATTERN press=RETURN every=1` confirms through a scene until the line comes. `key K [times=N] [wait=S]`
 posts a key to the game's own window; before each key in a menu, `wait world depth=D state=S` waits for that menu
@@ -241,13 +275,39 @@ posts a key to the game's own window; before each key in a menu, `wait world dep
 `pass.png` (or `fail.png`) there as it ends. Frames are evidence only: no step reads them or chooses a key by them. Put a
 `shot` where the thing checked is on screen, for example after the line the tested character speaks (`wait log
 "message (8|20) shown" press=RETURN`; the numbers are ReMixed's message ids, the second set for its other translation).
+The remaster's own scenes log no lines to wait on, so `advance world every=1.5 shots=1` frames one before each press
+instead (`advance-NNNN.png` in the case's folder, tenths of a second in): `tests/quick/lionel-in-sight.txt` starts the
+remaster's chapter 2 scene of Agrias and Ovelia with Lionel in sight (scenario 0x95) and frames it to the world map.
 Set state rather than play to it: `send poke` writes a roster record as a scene would leave it
 (`tests/quick/party-looks.txt`, 17.5 s), `scenario N noted` starts a scene-first battle at its battle
-(`araguay-battle.txt`), `defeat` downs the enemies, `expect roster name_id=N` checks a recruit joined. Scenes still play
+(`araguay-battle.txt`), `defeat` downs the enemies, `expect roster name_id=N` checks a recruit joined. A recruit's
+join screen logs "to the join screen" as it opens and "join screen: battle id ..." as Accept writes each unit, so a
+case can `shot` the screen between them and the scene after it (`araguay-boco-join-screen.txt`,
+`araguay-thanks-join-screen.txt`, `mandalia-luso-join-screen.txt`, and `mandalia-luso-declined.txt`, which turns him
+down; each needs `--restart`, a save without the recruit). `expect roster ... count=0` checks a declined recruit is
+absent.
+Scenes still play
 in real time (`tests/quick/lorne-scene-shots.txt`, about 2 minutes; the scene in `roster-loads-knights.txt`, about 4).
 Integer values are decimal or `0x`-prefixed. `entries` exposes each raw 40-byte battle-data record,
-including its unit-selection `flags`; `units` exposes the live job, graphic, palette and battle id. Screenshots are
+including its unit-selection `flags`; `units` exposes the live job, graphic, palette and battle id, and `unit` and
+`roster` records also have `unlocked` (the unlocked jobs, 0x800000 the Squire) and, for the Archer, Bard and Dancer,
+`archer_learned` (3 bytes, the first ability 0x800000), `archer_jp` and `archer_total` (and `bard_`, `dancer_`), and
+`knight_level`, `black_mage_level`, `bard_level`, `dancer_level` and `dark_knight_level`; `roster` records also have
+`errand` (+0x11E, which the remaster shows as an errand when it isn't 0). `count=N` on an `expect` wants N records so
+(`count=0`: none). An event's opening block can be checked at once, without playing its scene
+(`tests/quick/performer-join.txt`; `river-camp-leave.txt` and `remixed-job-levels.txt` likewise). Screenshots are
 still for a final visual review, not a prerequisite for these checks.
+
+A battle's in-battle scene is reached without playing to its condition: `send event SCENARIO PHASE` runs that phase of
+its event through the battle walker (`tests/quick/river-camp-lines.txt`, after `river-camp-start.txt`). The hidden
+game types a box's text slowly: a press while it types shows the rest, so wait about 10 s after `message N shown`
+before the press that closes it, and a press on an answer list answers it (`tests/quick/bryn-answers.txt`, Agrias's
+answers to Bryn). The formation helper places the unit the list's cursor starts on each time (`units=2` places the
+first unit twice), so a case that needs a character placed pokes it into roster slot 0 first. Two of 1-A's battles
+started on their own from the world map (0x0FB's copy 0x34B, the thief battle 0x195 noted) took no placement in the
+harness (2026-11-18); the river camp's (0x1FE noted) did. A unit's riding link is its +0x1B4 (a rider `0x80 | its
+mount's index`, a mount `0x40 | its rider's`): `python -I tools/harness.py send peek ADDRESS 1` on the unit's record
+(`send units` gives the base, 0x200 a unit).
 
 To check the Dispatch navigation soft lock, start the disposable Eagrose fixture and run the full catalog check:
 

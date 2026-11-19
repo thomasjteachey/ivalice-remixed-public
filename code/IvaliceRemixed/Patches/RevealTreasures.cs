@@ -73,6 +73,7 @@ internal static unsafe class RevealTreasures
 
     internal const int CommenceDialog = 16, MarkKind = 4, Tiles = 0x200, Group2Kind = 11, Group1Kind = 12;
     internal const int Mode = 0x75C, Confirming = 0x768, Box = 0x7A0, BoxNode = 0x50, Controller = 0x170;
+    internal const int Places = 0x40; // both groups' places in all, as the formation's setup counts them (SixPlaces)
     internal const int GilVar = 0x2C, PaidFlags = 0x100, NumberBytes = 0x108, NumberType = 0x100, Price = 8;
     private const int WaitFrames = 20; // the box's own wait before the formation polls it is longer (0x1F)
 
@@ -89,6 +90,9 @@ internal static unsafe class RevealTreasures
     private static ushort* _held;
     private static nint _numbers; // the vector (+8 the first entry, +0x10 past the last) and its two entries after it
     private static bool _due, _asking;
+    /// <summary>Whether "Commence battle?" was up last frame: its opening is logged for the test harness, which then
+    /// knows its Space was taken (tools/harness.py, formation).</summary>
+    private static bool _commenceShown;
     private static int _frames, _price, _map, _failed;
     /// <summary>Where the formation keeps its copy of the event variables (+0x68), read from its setup's code.</summary>
     internal static int Kept { get; private set; }
@@ -140,6 +144,16 @@ internal static unsafe class RevealTreasures
         var result = _frame(formation);
         try
         {
+            SixPlaces.AfterFrame(formation);
+            // +0x768 is set while a unit is placed too, and the box comes up by itself once the last unit is placed (seen
+            // on the PC, 2026-11-19): the harness tells it's up by its "asked" past its "closed".
+            var confirming = *(int*)(formation + Confirming);
+            var commence = confirming != 0 && !_asking;
+            if (commence && !_commenceShown)
+                _log.Info($"formation: Commence battle? asked (mode {*(int*)(formation + Mode)}, confirm {confirming})");
+            else if (!commence && _commenceShown)
+                _log.Info("formation: Commence battle? closed");
+            _commenceShown = commence;
             if (TreasureArrows.Busy)
                 TreasureArrows.Step();
             else
@@ -152,6 +166,9 @@ internal static unsafe class RevealTreasures
             if (_due && *(int*)(formation + Mode) == 0 && *(int*)(formation + Confirming) == 0)
             {
                 _due = false;
+                // The screen takes input from here: the test harness places units once it's logged (tools/harness.py).
+                var groups = Nemesis.GetVariable == null ? "?" : $"{Nemesis.GetVariable(0x34)}";
+                _log.Info($"formation: screen open, {*(int*)(formation + Places)} place(s) in {groups} group(s)");
                 if (Ask())
                     return 0;
             }

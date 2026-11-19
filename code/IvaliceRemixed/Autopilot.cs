@@ -227,12 +227,18 @@ internal static unsafe class Autopilot
                 case "scenario":
                 {
                     // "scenario 79 noted": its scene counted as seen, so a scene-first battle starts at the battle.
+                    // "scenario 95 event 95": the scenario's map and units with that event (hex), for the remaster's
+                    // own scenes, whose events a requested start doesn't load.
                     var words = arg.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                     var scenario = Convert.ToInt32(words[0], 16);
-                    if (words.Length > 1 && words[1].Equals("noted", StringComparison.OrdinalIgnoreCase))
-                        Patches.RemixedScenarios.RequestedNote = scenario;
+                    for (var k = 1; k < words.Length; k++)
+                        if (words[k].Equals("noted", StringComparison.OrdinalIgnoreCase))
+                            Patches.RemixedScenarios.RequestedNote = scenario;
+                        else if (words[k].Equals("event", StringComparison.OrdinalIgnoreCase) && k + 1 < words.Length)
+                            Patches.RemixedScenarios.RequestedEvent = Convert.ToInt32(words[++k], 16);
                     Patches.RemixedScenarios.Requested = scenario;
-                    _log.Info($"autopilot: asks for scenario 0x{scenario:X}{(words.Length > 1 ? " " + words[1] : "")} "
+                    _log.Info($"autopilot: asks for scenario 0x{scenario:X}"
+                              + $"{(words.Length > 1 ? " " + string.Join(' ', words.Skip(1)) : "")} "
                               + "on the world map's next frame");
                     break;
                 }

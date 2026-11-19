@@ -35,7 +35,9 @@ namespace IvaliceRemixed.Patches;
 /// ReMixed lets the turn end there and opens it again at the commit, while here the call at 0x206D48 goes through
 /// <see cref="Acts"/>, which leaves the action out for such a spell, and the commit's "acted" is cleared after it.
 /// Between the two only qualifying abilities show, and Attack, Defend and Equip Change go. The pair ends with the
-/// turn (the end of turn, hooked by <see cref="Movement"/>).</para>
+/// turn (the end of turn, hooked by <see cref="Movement"/>). Marking the second can end the turn itself, before the
+/// queue (0x310548 ends it once the unit has moved, which a Charge's commit always does): that end of turn keeps
+/// the second's mark for the queue.</para>
 /// <para>The second slot (PS1 0x8015E900, 0x80156300, 0x8015EA00, 0x8015EEC8, 0x8015F400): at the second spell's
 /// commit the one that finishes first keeps the unit's record (+0x1A0, the CT at +0x18D) and the other goes to the
 /// slot, kept here. It ticks with the unit's charge at the end of the turn loop's countdown (0x30F33A); once the
@@ -82,6 +84,7 @@ internal static unsafe class TwoSpells
     private static readonly byte[] SlotRecords = new byte[Battle.UnitCount * RecordSize];
     private static readonly byte[] FirstRecord = new byte[RecordSize];
     private static byte _firstCt = Empty;
+    private static int _markingSecond = -1;                                // the unit whose second action 0x310548 marks
     private static int* _dryRun;
     /// <summary>0x310548 (battle index, moved, acted): marks the turn's move and action, then the turn-over check. The offline check swaps it.</summary>
     internal static delegate* unmanaged<int, int, int, int> GameSetActed;
@@ -439,7 +442,17 @@ internal static unsafe class TwoSpells
         {
             RidingActions.Failed("the turn's action", e);
         }
-        return GameSetActed(index, moved, acted);
+        // Marking the second ends the turn there and then if the unit has moved (always after Two Shots: a Charge's
+        // commit uses the move), before the queue: TurnEnded keeps the second's mark for the queue.
+        _markingSecond = (uint)index < Battle.UnitCount && Pending[index] == PendingSecond ? index : -1;
+        try
+        {
+            return GameSetActed(index, moved, acted);
+        }
+        finally
+        {
+            _markingSecond = -1;
+        }
     }
 
     /// <summary>Before the queue's commit (from <see cref="Rules"/>' hook): the first spell kept for a second one.</summary>
@@ -635,13 +648,20 @@ internal static unsafe class TwoSpells
         (unit[5] & 0x08) == 0 && (unit[Support] & SupportBit) != 0 && (unit[Battle.UnitSupports + 3] & 0x04) != 0
         && Qualifies(*(ushort*)(unit + UnitRecord + 2));
 
-    /// <summary>The end of a unit's turn (from <see cref="Movement"/>' hook): its pair is over.</summary>
+    /// <summary>
+    /// The end of a unit's turn (from <see cref="Movement"/>' hook): its pair is over. When it comes from marking the
+    /// pair's second action (0x310548 ends the turn of a unit that has moved and now acted), the second is queued
+    /// right after, so its mark stays for <see cref="BeforeQueue"/> and <see cref="AfterQueue"/>, which clear it.
+    /// </summary>
     internal static void TurnEnded(int index)
     {
         if (Turns && (uint)index < Battle.UnitCount)
         {
             Pair[index] = 0;
-            Pending[index] = 0;
+            if (index != _markingSecond || Pending[index] != PendingSecond)
+                Pending[index] = 0;
+            else
+                Tracer.Line(_game.Log, $"two spells: unit {index}'s turn ends as its second action is marked; the second still goes to the slot");
         }
         RidingActions.TurnEnded(index);
     }
@@ -653,6 +673,7 @@ internal static unsafe class TwoSpells
         Array.Clear(Pending);
         Array.Fill(SlotCt, (byte)Empty);
         _firstCt = Empty;
+        _markingSecond = -1;
         RidingActions.Reset();
     }
 
