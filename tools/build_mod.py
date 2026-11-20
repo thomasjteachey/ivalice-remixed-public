@@ -2207,6 +2207,20 @@ WHEEL_CLOSE = bytes.fromhex("51 02 ff ff 00 00")  # closes its middle box, box 2
 MISSION_ROUNDS = {0xB2: 0x32C, 0xB3: 0x32D, 0xB4: 0x32E, 0xB9: 0x331, 0xBA: 0x332, 0xBB: 0x333, 0xBC: 0x337,
                   0xBD: 0x338, 0xBE: 0x33C, 0xBF: 0x33D, 0xC0: 0x341, 0xC1: 0x342}
 REMIXED_SCENARIOS |= MISSION_ROUNDS
+# Each mission's first round and the rounds after it, in order. A round's units come in by its battle entry, which the
+# events step by one (ADD var 0x32, 1, then 0x4C: the entry's units onto the map; the party put back at its first
+# places): The Shrine Knights' round's own event as it begins, Brave Story's round's as it's won, for the next one. Their
+# entries are consecutive in ReMixed (0x1A4-0x1A7, 0x1AB-0x1B4), so their slots must be too (ROUND_SLOTS): the first
+# rounds took slots among the location battles (0x1DF, 0x1E3) and the rounds theirs after them (0x1EA on), so each
+# mission's second round loaded another battle's units (the slot after its first's).
+MISSION_ROUND_CHAINS = {0xB1: (0xB2, 0xB3, 0xB4), 0xB8: (0xB9, 0xBA, 0xBB, 0xBC, 0xBD, 0xBE, 0xBF, 0xC0, 0xC1)}
+# The rounds' events put the party back (their FUNCTION 00) by battle units 16-20, taking each whose first halfword (its
+# sprite set, then its place on the field) isn't 0xFF00 for a deployed unit: the PS1's empty places are 00 FF. The map's
+# reload (0x4C) has just taken the deployed units off the field (+1 0xFF), so it must stay so: reading the place alone
+# (tried 2026-11-19) left the party off the field from the second round on, and the battle went to its game over or,
+# with its enemies down, crashed with nobody to act. The remaster's spare copy of the party's leader in unit 20 (sprite
+# set 1, battle id 0, off the field) comes on with each round too, with no sprite and its name tag in the screen's top
+# left corner (GAMEPLAY_TODO.md).
 # Side chapter 1-A (docs/analysis/story-flow-plan.md, "Side chapter 1-A"): ReMixed's 0x0EC-0x0FB and 0x111-0x119, all
 # numbers of the remaster's own scenarios, so all move: below 0x200 where the remaster leaves numbers free (0x193-0x199,
 # 0x1FE-0x1FF; it has a script at 0x192), then from 0x2E8 where it has no event file and no text (it runs events of its
@@ -2485,6 +2499,10 @@ SCRIPT_VERSION = (bytes([0xAF, 0x00, 0x00, 0xB2, 0x00]), bytes([0xAE, 0x00, 0x00
 # small changes in 0x113).
 SCRIPT_VERSION_SET = (1, 0x1FD, 1, 1, 0xB2)  # such a set's words before the flag's value (then 0x19, the event)
 EVENT_CODE_PATCHES: dict[int, list[tuple[bytes, bytes]]] = {
+    # The Shrine Knights' last round: its reinforcement scene brings 0x85-0x87 in, the camera on each in turn (0x1F, the
+    # unit and the one to face), and the third names 0x8B, a unit the round hasn't (its first two: 0x85 on 0x85, 0x86 on
+    # 0x86). On the remaster that crashed the game (TESTING: shrine-knights-rounds.txt).
+    0x0B4: [(bytes.fromhex("1f 87 00 8b 00 00"), bytes.fromhex("1f 87 00 87 00 00"))],
     # Biggs and Wedge unlock the Mandalia Luso start as they leave. ReMixed's world-map code also commits Gariland
     # as the party's location; the remaster hand-off does not. Without that write, entering from Mandalia returns
     # with var 0x31 still at 24 and immediately satisfies the newly unlocked Mandalia start, chaining the wrong scene.
@@ -3437,6 +3455,31 @@ def write_mission_postings(cfg: dict) -> str:
         raise SystemExit("the bar lists rumors 0-63; the postings don't fit")
     line = add_nxd_rows(cfg, "gossip.en", "Gossip-en", rows, "0004.en.pac")
     return f"{len(MISSIONS)} postings ({', '.join(titles)}) and {HIRAME_RUMOR_TITLE}; {line}"
+
+
+# ROUND_SLOTS: the battle entries of the missions in rounds (MISSION_ROUND_CHAINS) go in runs of consecutive slots, one
+# run a mission in ReMixed's order, taken from the first free slots before any other entry's, so that the events'
+# ADD var 0x32, 1 steps from one round's slot to the next's as it steps from one of ReMixed's entries to the next.
+def round_slots(records: dict[int, bytes], free: list[int]) -> dict[int, int]:
+    """ReMixed's battle entries of the missions in rounds -> their slots: each mission's a run of consecutive free slots
+    (the first long enough), taken out of free (ascending)."""
+    out: dict[int, int] = {}
+    for first, rounds in MISSION_ROUND_CHAINS.items():
+        if set(rounds) - set(MISSION_ROUNDS) or first not in REMIXED_SCENARIOS:
+            sys.exit(f"mission 0x{first:X}'s rounds aren't all shipped (MISSION_ROUND_CHAINS, MISSION_ROUNDS)")
+        entries = [u16(records[s], 7) for s in (first, *rounds)]
+        if entries != list(range(entries[0], entries[0] + len(entries))):
+            sys.exit(f"ReMixed's mission 0x{first:X}: its rounds' entries aren't consecutive "
+                     f"({', '.join(f'0x{e:X}' for e in entries)}; MISSION_ROUND_CHAINS)")
+        n = len(entries)
+        start = next((k for k in range(len(free) - n + 1) if free[k + n - 1] - free[k] == n - 1), None)
+        if start is None:
+            sys.exit(f"no {n} consecutive free battle entries for mission 0x{first:X}'s rounds (ROUND_SLOTS)")
+        out |= dict(zip(entries, free[start:start + n]))
+        del free[start:start + n]
+    if set(MISSION_ROUNDS) != {r for rounds in MISSION_ROUND_CHAINS.values() for r in rounds}:
+        sys.exit("MISSION_ROUNDS and MISSION_ROUND_CHAINS name different rounds")
+    return out
 
 
 def remixed_preset_targets(preset: bytes) -> list[tuple[int, int, int]]:
@@ -5183,6 +5226,8 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
         at = SCENARIO_TABLE + SCENARIO_SIZE * k
         if u16(attack, at):
             records[u16(attack, at)] = attack[at:at + SCENARIO_SIZE]
+    chain_slots = round_slots(records, free)  # the missions in rounds: their entries' slots, in runs (ROUND_SLOTS)
+    chained = dict(chain_slots)
     # The Nemesis's return runs where ReMixed's Preparation Menu would have (NEMESIS_SCENE).
     nemesis_sets = (0, 0, [])
     if set(NEMESIS_SCENE) <= set(REMIXED_SCENARIOS):
@@ -5318,9 +5363,9 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
                 own_entries[ours] = bytes(units)
                 fresh_scenarios.add(ours)
                 fresh_entries += 1
-            elif entry not in entry_slots and free:
+            elif entry not in entry_slots and (entry in chain_slots or free):
                 slot_from_data[entry] = cleared
-                entry_slots[entry] = free.pop(0)
+                entry_slots[entry] = chain_slots.pop(entry) if entry in chain_slots else free.pop(0)
                 at = (entry_slots[entry] - 0x180) * entry_bytes
                 entd4[at:at + entry_bytes] = units
                 used_entries.append(entry_slots[entry])
@@ -5568,6 +5613,9 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
         kind = "'s battle" if scene is not None else "'s post-battle run" if ours in AFTER_SPLITS.values() else ""
         done.append(f"0x{theirs:X}{kind} as 0x{ours:X}")
 
+    if chain_slots or any(entry_slots.get(e) != s for e, s in chained.items()):
+        sys.exit("the missions in rounds didn't get their slots (ROUND_SLOTS): "
+                 + ", ".join(f"0x{e:X}" for e, s in chained.items() if entry_slots.get(e) != s))
     out = MOD_DIR / "FFTIVC" / "data" / "enhanced" / "fftpack"
     out.mkdir(parents=True, exist_ok=True)
     entd4_path.write_bytes(entd4)
@@ -7616,7 +7664,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata. The title screen's plaque shows it (write_title_screen).
-RELEASE_VERSION = "0.9.24"
+RELEASE_VERSION = "0.9.25"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:

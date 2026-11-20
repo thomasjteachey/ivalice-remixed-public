@@ -50,6 +50,21 @@ internal static unsafe class RemixedSprites
     /// imul rax, rax, 0xD08 (0x268EB0 is its twin for the SEQ, + 1 and 0x808).</summary>
     internal const string AnimationSetsPattern =
         "0F B7 C1 48 8D 0D ?? ?? ?? ?? 80 3C 81 05 73 16 0F B6 04 81 48 8D 0D ?? ?? ?? ?? 48 69 C0 08 0D 00 00";
+    /// <summary>The palette limit of a generic's sprite, in the sprite's maker 0x26EB74 (0x26EDE8): and byte
+    /// [rbx+0x12C], 0xCF; mov r8d, 5 (the limit); movsx r12d, bp; mov ecx, r12d; sub ecx, 0x9F; je (the generics'
+    /// case). For graphics 0x9F-0xA2 (the PSP's Dark Knights and others) and 0x60-0x85 (the generics) the maker takes
+    /// the unit's palette (battle unit +4, the battle data's +0x17) and keeps it only under the limit, else draws
+    /// palette 0 (0x26EEE7: cmp dx, r8w; cmovl), so ReMixed's Dark Knights with palettes 5 and 6 (Brave Story's third
+    /// round, its entry 0x1AD's units 4 and 3) drew in palette 0's blue and gold where the PS1 draws its sheet's own 5
+    /// (grey) and 6 (blue and orange), and showed face 08 (seen on the PC, 2026-11-19). The PS1 has no limit; a sheet
+    /// has eight unit palettes (8-15 are its portrait's), and no battle data of vanilla's, the remaster's or
+    /// ReMixed's but those two gives a generic one past 4.</summary>
+    internal const string PaletteLimitPattern =
+        "80 A3 2C 01 00 00 CF 41 B8 ?? 00 00 00 44 0F BF E5 41 8B CC 81 E9 9F 00 00 00 0F 84";
+    internal const int PaletteLimitAt = 9;
+    internal const byte RemasterPaletteLimit = 5, UnitPalettes = 8;
+    /// <summary>The palette limit's immediate (null until found), for the offline check.</summary>
+    internal static byte* PaletteLimit;
 
     /// <summary>{file, size} by graphic, in each of the two tables.</summary>
     internal static uint* SheetTable, OtherSheetTable;
@@ -103,9 +118,34 @@ internal static unsafe class RemixedSprites
             else
                 Give(graphic, File.ReadAllBytes(path), texture, remixedSet);
         }
+        var palettes = LiftPaletteLimit(game.Image);
         game.Log.Info($"unit sprites: ReMixed's art for {string.Join(", ", Given.Select(g => $"0x{g:X2}"))}"
-                      + (left.Count > 0 ? $"; left as the remaster has them: {string.Join(", ", left)}" : ""));
+                      + (left.Count > 0 ? $"; left as the remaster has them: {string.Join(", ", left)}" : "")
+                      + (palettes ? $"; generics and Dark Knights keep palettes 0-{UnitPalettes - 1}"
+                                  : "; the palette limit isn't the one this DLL expects (left at the remaster's)"));
         return $"ReMixed's own unit art ({Given.Count} graphics)";
+    }
+
+    /// <summary>The generics' and Dark Knights' palette limit (<see cref="PaletteLimitPattern"/>) raised from 5 to the
+    /// sheet's eight unit palettes, as the PS1 draws them (already raised is fine). False if the code isn't the one this
+    /// DLL expects.</summary>
+    internal static bool LiftPaletteLimit(GameImage image)
+    {
+        nint at;
+        try
+        {
+            at = image.FindUnique(PaletteLimitPattern);
+        }
+        catch (InvalidDataException)
+        {
+            return false;
+        }
+        var limit = (byte*)at + PaletteLimitAt;
+        if (*limit != RemasterPaletteLimit && *limit != UnitPalettes)
+            return false;
+        GameImage.Unprotected((nint)limit, 1, () => *limit = UnitPalettes);
+        PaletteLimit = limit;
+        return true;
     }
 
     /// <summary>Graphic <paramref name="graphic"/> drawn from <paramref name="sheet"/> and texture

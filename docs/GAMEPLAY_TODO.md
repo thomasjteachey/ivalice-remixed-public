@@ -5,12 +5,12 @@ is, and what it waits on. The technical details (what ReMixed's code does, where
 [MECHANICS.md](MECHANICS.md) and [REMASTER.md](REMASTER.md); data held back is in
 [the build report](generated/mod-build.md).
 
-**Progress: 98% of gameplay** (106 done, 3 open: 2 small, 1 medium, 0 large). Worked out from this list by
+**Progress: 99% of gameplay** (106 done, 3 open: 3 small, 0 medium, 0 large). Worked out from this list by
 `python -I tools/todo_progress.py`, open items weighted by size (small 1, medium 3, large 15) and done ones at 2 each,
 and updated with every change to the list. Everything outside the story and display ports is ported or settled
 (the formulas ReMixed rewrote in place were the last, 2026-11-12; ReMixed's own battles writing their units back,
 found and built 2026-11-13); the game is being played on the Deck now, with the test mode on.
-**The whole port: 77% done**, counted by
+**The whole port: 80% done**, counted by
 `python -I tools/port_progress.py` ([PORT_PROGRESS.md](PORT_PROGRESS.md): the parts, their shares and the history).
 Done: the gameplay; random battles' event running ReMixed's own code; ReMixed's unit
 builds in 122 story entries; the Dark Knight's page and its hint. Off the list by choice: ReMixed's re-staged
@@ -28,7 +28,7 @@ ReMixed's own story content, which the remaster doesn't have (plan: docs/analysi
 events: built means the mod ships it; working means seen running in the game. Each event is listed in
 [PORT_PROGRESS.md](PORT_PROGRESS.md), where `tools/port_progress.py` counts them.
 
-**79 of ReMixed's own events to bring over: 79 built, 40 seen working; 21 in-between scenes to read: 21 read.**
+**79 of ReMixed's own events to bring over: 79 built, 42 seen working; 21 in-between scenes to read: 21 read.**
 
 The events, by group:
 
@@ -231,7 +231,7 @@ What the events need:
   conditions on particular units and a turn counter (Nightmares' demons fall in order), which the test's defeat-
   everyone shortcut can't meet, so they need playing through for real. The Guarded Temple ended three ways in three
   tries (once on an empty speech bubble from an Automaton). Brave Story's plain-victory condition is fixed above,
-  but its ten-round chain still needs the same in-game pass. *medium*
+  and its first three rounds hand on in the game (below); its later rounds still need the same pass. *medium*
 - [x] A ReMixed battle's scripted failure (2026-11-07): ReMixed sends it to its own game-over menu (Retry Battle,
   Return to Title Screen, Return to World Map), which the mod doesn't have, so the battle went on with its enemies
   down and its closing ran again and again (seen on the PC with The Guarded Temple). It now goes back to the world
@@ -638,10 +638,36 @@ Reported by a player:
   Boco's screens in the thanks scene, which goes on over its map (`araguay-thanks-join-screen.txt`), Luso's at Mandalia
   (`mandalia-luso-join-screen.txt`) and turning him down (`mandalia-luso-declined.txt`). Not seen yet: Zalbag's and the
   chapter-3 branch's. *small*
-- [ ] Brave Story's rounds handing on in the game: its second round started on its own, with its units downed, fires
-  its victory, then goes on (one of its units up again) and never loads the third (seen on the PC, 2026-11-19;
-  `tests/quick/brave-story-round-handoff.txt`, not passing). The ten-round chain hasn't been seen working in the
-  game yet. *medium*
+- [x] Brave Story's rounds handing on (2026-11-19). A round's win runs its event, which loads the next round's units
+  (the battle entry stepped by one, then the map again with them) and its conditions. Each mission's second round
+  loaded another battle's units: its first round had a slot among the location battles, not the one before its
+  second round's (Brave Story 0x1E3 and 0x1ED, The Shrine Knights 0x1DF and 0x1EA). Their rounds now take runs of
+  slots in ReMixed's order. The test's `defeat` left a unit its Reraise (Brave Story's 0x19 has an Angel Ring), and
+  ReMixed's events run after the turn, not between actions, so it was up again before the win could run. Seen in the
+  hidden PC game: Brave Story from its formation, its first round won, its second round's units and scene, its second
+  round won and the third's five Dark Knights with their scene, the party's unit back on the field after each
+  (`tests/quick/brave-story-first-rounds.txt`), and the second round started on its own handing on to the third
+  (`brave-story-round-handoff.txt`); The Shrine Knights from its formation through its four rounds, round 2's and
+  round 4's reinforcements coming in as their first ones fall, the party back after each hand-off, and round 4's win
+  handing on to the Treasure Wheel (`shrine-knights-rounds.txt`, with the crash below fixed). Not seen yet: Brave
+  Story's rounds 4 to 10 and its end. *medium*
+- [x] The Shrine Knights' last round crashed the game as its reinforcements came in (fixed 2026-11-19): when its first
+  three Knights fall, its event brings three Dragoons in where they stood, the camera on each in turn, and its third
+  camera named unit 0x8B, which the round hasn't (ReMixed's slip: 0x85 on 0x85, 0x86 on 0x86, 0x87 on 0x8B). The
+  remaster's camera instruction (0x1F) looks both units up; with one missing, the battle's drawing soon wrote through a
+  null (exe 0x257F8B: a frame's 2 MB of GPU commands overflowed), most readily with Enter pressed through the scene.
+  The build names 0x87 there. Seen in the hidden PC game: the round started on its own with Enter pressed every quarter
+  second, which crashed every time before, plays its scene to its end (`tests/quick/shrine-knights-last-round.txt`,
+  1.5 minutes), and the whole mission goes on from round 4's win to the Treasure Wheel (`shrine-knights-rounds.txt`).
+  Not proven: that a missing unit is all it takes, as the remaster turns the camera that follows it off (writes 0xC0,
+  a no-op, over its 0x19); a wider look at ReMixed's other cameras on units its battles haven't is still to do.
+  *medium*
+- [ ] The remaster's spare copy of the party's leader comes on with each round of The Shrine Knights and Brave Story:
+  battle unit 20 holds one (sprite set 1, battle id 0, off the field), and the rounds' events put back each of units
+  16-20 whose sprite set isn't 0 (the map's reload has just taken the party off the field), so it comes on with no
+  sprite (whether it takes turns isn't known), its name tag ("Guest") in the screen's top left corner (seen on the
+  PC, 2026-11-19). Taking a place by its +1 alone left the real party off too (tried and reverted the same day). Where
+  the remaster makes that copy, and whether to clear it before the round's step, is still to find. *small*
 - [x] The Dark Knight's unit card showed no job name without GenericJobs: the remaster's job table has no name for its
   Dark Knight (nor its command), which GenericJobs filled (seen on the PC, 2026-11-19, on both Brave Story rounds'
   Dark Knights). The port now gives it its name, Darkness and its icon itself (below, the job menu's page).
@@ -887,6 +913,18 @@ or new art, none of which the offline check can exercise; the rules behind them 
   (ITEM.BIN), the town backdrops (WLDBK.BIN) and the Bonus Content pictures (BONUS.BIN, its missions are posted in the
   taverns); the portraits (EVTFACE, WLDFACE): ReMixed's new ones are its sheets' portraits, which its characters'
   faces are made from (the portraits items above). *medium*
+- [x] Brave Story's grey Dark Knight drew blue and gold (round 3; found beside ReMixed on the PS1, 2026-11-19, and
+  first put down as the round's first knight, which is the Red Dark Knight and was right). ReMixed colours two of
+  its five knights with colours 5 and 6 of their sheet, grey and orange with gold; the remaster draws any colour
+  past the fifth of a generic's or Dark Knight's sheet as the first, blue and gold, where the PS1 draws them all. The
+  port now lets those units keep all eight of their sheet's colours; no other unit in ReMixed's battles or the
+  remaster's uses one past the fifth, so nothing else changes. Seen in the hidden PC game (2026-11-19): the five drawn
+  in their own colours, the grey one beside the PS1's (`tests/quick/brave-story-dark-knight-palettes.txt`, 81 s,
+  which also reads each knight's colour from the game). *small*
+- [ ] Brave Story's fifth Dark Knight (round 3, orange with gold, standing behind the purple one) shows faint and
+  see-through in its opening scene, where ReMixed on the PS1 draws it solid (seen in the hidden PC game beside the
+  PS1's, 2026-11-19; its colours are its own). Not looked into: the remaster may fade a unit that its own map hides,
+  or the knight may stand where the remaster's map has a step in front of it. *small*
 
 ## Waiting for the story port
 

@@ -1,0 +1,61 @@
+# The Shrine Knights (0x1F5, ReMixed's 0x0B1) from its formation through its four rounds to the Treasure Wheel, on the
+# slots each mission's rounds take in ReMixed's order since 2026-11-19 (build_mod.py MISSION_ROUND_CHAINS: 0x1D6-0x1D9).
+# Before, round 1 had slot 0x1DF among the location battles and round 2 0x1EA, and round 2's event, which steps the
+# battle entry on by one as it begins (ADD var 0x32, 1, then 0x4C: the map again with the entry's units), loaded
+# another battle's units. Each round's win sets a flag (0x81-0x83) and loads the next round's preset, whose set 0 runs
+# that round's event at once; rounds 2 and 4 also bring reinforcements in where their first ones fall (set 1: round 2's
+# 0x82 and 0x84 for 0x85 and 0x86, round 4's 0x85-0x87 for 0x80-0x82). Round 4's win ends the mission (preset 7, then
+# the Treasure Wheel, event 872). Leaders: round 1 sprite sets 0x28 and 0x26, round 2 0x27, round 3 0x2B, round 4
+# 0x24 and 0x25. As in brave-story-first-rounds.txt, each round's enemies on the field are downed during its scene
+# (the party is one level-8 unit), and the party's unit (16) is back on the field after each hand-off. The
+# reinforcements are downed once their scene has ended (`advance opening`; they're levels 7 and 8).
+# Round 4's reinforcement scene crashed the game (2026-11-19, 4 runs of 4 with Enter pressed through it): its camera on
+# the third Dragoon names unit 0x8B, which the round hasn't (ReMixed's slip: 0x85 on 0x85, 0x86 on 0x86, 0x87 on 0x8B),
+# and the battle's drawing then wrote through a null (exe 0x257F8B: the 2 MB of GPU commands a frame overflowed). The
+# build names 0x87 there (build_mod.py EVENT_CODE_PATCHES). Round 4 alone reproduces it in 1.5 minutes: scenario
+# 0x32E, a priest put on the player's side, `defeat 2 3 4` (0x80-0x82) and Enter every quarter second
+# (shrine-knights-last-round.txt). The case ends at the Wheel's first line: this mission's Wheel has six tries, and
+# `advance world` opened two in its 300 s (seen 2026-11-19), the Wheel's own play being the Treasure Wheel cases'.
+name The Shrine Knights' four rounds hand on, to the Treasure Wheel
+wait world depth=1 state=0 timeout=20
+scenario 0x1F5
+wait log "formation: screen open" timeout=150
+wait seconds 4
+formation units=1
+wait log "condition set 0 fires" timeout=90
+wait log "condition set 2 fires" press=RETURN every=2 timeout=120
+wait seconds 6
+shot first-round
+show units
+defeat
+wait log "condition set 3 fires" timeout=120
+wait unit sprites=0x27 timeout=240 press=RETURN every=3
+wait seconds 15
+shot second-round-scene
+defeat
+wait unit battle_id=0x82 job=0x52 present=1 timeout=180 press=RETURN every=2
+advance opening timeout=120
+shot second-round-reinforced
+defeat
+show units
+expect unit index=16 present=1
+wait unit sprites=0x2B timeout=240 press=RETURN every=3
+wait seconds 15
+shot third-round-scene
+defeat
+show units
+expect unit index=16 present=1
+wait unit sprites=0x24 timeout=240 press=RETURN every=3
+wait seconds 15
+shot fourth-round-scene
+defeat
+wait unit battle_id=0x85 present=1 timeout=180 press=RETURN every=2
+advance opening timeout=120
+shot fourth-round-reinforced
+defeat
+show units
+expect unit index=16 present=1
+wait log "scenario 0x368 takes" press=RETURN every=3 timeout=300
+wait log "\(event 0x368\) shows" timeout=90
+wait seconds 3
+shot wheel

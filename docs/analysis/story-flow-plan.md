@@ -266,6 +266,25 @@ with each one's text beside it:
   Brave Story's first round (0x0B8, preset 0xB7) didn't end with all ten of its enemies down (the harness's
   `defeat`; six minutes of turns): what its conditions wait for isn't known yet. Its Death Knights and monsters
   (sprite sets 0x12, 0x32, 0x82) drew as broken stand-ins.
+  How a round hands on (read 2026-11-19): the next round's units come in by battle entry, the events stepping var
+  0x32 by one (ADD var 0x32, 1), then 0x4C (the map again, with the entry's units in slots 0-15); the party, slots
+  16-20, is put back on the tiles the first round's block 2 kept in vars 0x70-0x74. The Shrine Knights do it in each
+  round's own event as it begins (the round before sets flag 0x81-0x83 and loads its preset, whose set 0 fires at
+  once). Brave Story does it in the round's event as it's won: round 1's block 3 loads round 2 and its preset (0xB8),
+  whose set 1 (the plain victory, type 0x16) runs 0x0B9, whose blocks 0 and 1 are one code that loads round 3, and so
+  on (set 0, var 0x7D = the round less one, holds only while the event that loads the preset runs: it sets var 0x7D
+  as it begins and zeroes it at its end). So 0x0BA loads only
+  as round 3 is won. ReMixed's records leave the hand-off mode (+0x14) 0, so the remaster runs these events after the
+  turn, not between actions (0x2387C4: `0xD3F950[event] & 0xF300`, a table the scenario setup makes from the records'
+  +0x12-0x14). Each mission's entries are consecutive in ReMixed (0x1A4-0x1A7, 0x1AB-0x1B4), but the port's slots
+  weren't (the first rounds 0x1DF and 0x1E3 among the location battles, the rounds from 0x1EA), so each second round
+  loaded another battle's units; since 2026-11-19 each mission's go in a run (`MISSION_ROUND_CHAINS`): 0x1D6-0x1D9,
+  0x1DA-0x1E3. So The Shrine Knights' rounds seen on 2026-11-07 had other battles' units from round 2 on; on their
+  own units (2026-11-19) the last round's reinforcement scene (three Dragoons where its first three Knights fell)
+  crashed the game, its third camera naming a unit the round hasn't (0x8B for 0x87, fixed in the build), and the
+  mission now plays through its four rounds to the Treasure Wheel. The map's reload takes the deployed party off the field (+1 0xFF), and the
+  rounds' FUNCTION 00 puts back each of units 16-20 whose sprite set isn't 0, the remaster's spare copy of the leader
+  in unit 20 too.
 - **The Treasure Wheel** (0x0C3, shipped as 0x368 on 2026-11-12): a mission won hands on to it (its vars 0x3A–0x3C
   name 0xC3), and it runs on map 116 (a zodiac floor) with its twelve chests, units 0x90–0x9B in a circle: battle data
   of Ramza's sprite set given ReMixed's event graphic 0x6F (LoadEVTCHR, 0x58), which vanilla's events never load and

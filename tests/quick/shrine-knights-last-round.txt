@@ -1,0 +1,22 @@
+# The Shrine Knights' last round (scenario 0x32E, ReMixed's 0x0B4) started on its own, its reinforcement scene pressed
+# through fast: when Knights 0x80-0x82 fall, set 1 brings three Dragoons (0x85-0x87) in where they stood, the camera on
+# each in turn. Its third camera named unit 0x8B, which the round hasn't, and with Enter pressed through the scene the
+# game crashed there (exe 0x257F8B, a null in the battle's drawing; 2026-11-19); the build names 0x87 (build_mod.py
+# EVENT_CODE_PATCHES). The whole mission is shrine-knights-rounds.txt (10 minutes); this is the 1.5-minute check.
+# Started on its own the round has no party, so one of its priests (0x88) is put on the player's side to keep turns
+# going (ReMixed's events run after a turn); `defeat 2 3 4` downs 0x80-0x82 only. The round's set 0 (flag 0x83) doesn't
+# hold, so its opening (the hand-off from round 3) doesn't run.
+name The Shrine Knights' last round brings its reinforcements in
+wait world depth=1 state=0 timeout=20
+scenario 0x32E
+wait log "level scaling: the battle" timeout=120
+wait seconds 8
+poke unit battle_id=0x88 offset=0x5 hex=84
+poke unit battle_id=0x88 offset=0x1EE hex=84
+defeat 2 3 4
+wait log "condition set 1 fires" timeout=120
+wait unit battle_id=0x85 present=1 timeout=120 press=RETURN every=2
+advance opening timeout=90
+show units
+wait seconds 10
+shot reinforced

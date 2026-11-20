@@ -1,0 +1,48 @@
+# Brave Story's third round (ReMixed's 0x0BA, entry 0x1AD; the port's 0x1DC) as its scene lines up its five Dark
+# Knights, for the PS1's (`mbr-b9`, frames 780 and 1080 of `film NAME 1500 60`). ReMixed gives them palettes 1, 2, 3,
+# 6 and 5 (battle data +0x17; battle ids 0x7F-0x83), its 82.SPR's own: teal and orange (the Red Dark Knight), purple,
+# green, orange and gold, grey. The remaster's sprite maker (0x26EB74) draws a generic's or Dark Knight's palette past
+# 4 as palette 0, so 0x82 and 0x83 drew blue and gold (seen on the PC, 2026-11-19); RemixedSprites.LiftPaletteLimit
+# lets them keep theirs. Reached as brave-story-round-handoff does: round 2 started on its own and won, handing on.
+name Brave Story's Dark Knights draw in their own palettes
+wait world depth=1 state=0 timeout=20
+scenario 0x331
+wait log "level scaling: the battle" timeout=120
+poke unit battle_id=0x88 offset=0x5 hex=84
+poke unit battle_id=0x88 offset=0x1EE hex=84
+defeat
+wait log "condition set 1 fires" timeout=60
+wait unit job=0xa0 graphic=0x9f timeout=240 press=RETURN every=3
+# The units come before their sprites (the loader makes them a few frames apart, with the screen still black): each
+# knight's sprite first (sprite_palette is -1 until it has one).
+wait unit battle_id=0x7f sprite_palette&0x80=0 timeout=60
+wait unit battle_id=0x80 sprite_palette&0x80=0 timeout=60
+wait unit battle_id=0x81 sprite_palette&0x80=0 timeout=60
+wait unit battle_id=0x82 sprite_palette&0x80=0 timeout=60
+wait unit battle_id=0x83 sprite_palette&0x80=0 timeout=60
+show units
+expect unit job=0xa0 battle_id=0x7f palette_byte=1 sprite_palette=1
+expect unit job=0xa0 battle_id=0x80 palette_byte=2 sprite_palette=2
+expect unit job=0xa0 battle_id=0x81 palette_byte=3 sprite_palette=3
+expect unit job=0xa0 battle_id=0x82 palette_byte=6 sprite_palette=6
+expect unit job=0xa0 battle_id=0x83 palette_byte=5 sprite_palette=5
+# The screen fades in about 10 s on; the fifth knight (0x82, palette 6) stands behind the purple one and is seen
+# before the Red Dark Knight's box covers it (as in the PS1's frame 780).
+wait seconds 10
+shot lined-up-10s
+wait seconds 2
+shot lined-up-12s
+wait seconds 2
+shot lined-up-14s
+wait seconds 2
+shot lined-up-16s
+wait seconds 2
+shot lined-up-18s
+wait seconds 2
+shot lined-up-20s
+wait seconds 2
+shot lined-up-22s
+wait seconds 2
+shot lined-up-24s
+wait seconds 6
+shot red-dark-knight

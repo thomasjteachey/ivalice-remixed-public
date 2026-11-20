@@ -6062,6 +6062,19 @@ internal static unsafe class SelfTest
             });
         GameImage.Unprotected((nint)(textures + alias), 4, () => textures[alias] = aliasTexture);
         RemixedSprites.Given.Remove(alias);
+
+        // The generics' and Dark Knights' palette limit (RemixedSprites.LiftPaletteLimit): the remaster's 5 in the
+        // sprite's maker, raised to 8, then put back.
+        var lifted = RemixedSprites.LiftPaletteLimit(game.Image);
+        var limit = RemixedSprites.PaletteLimit;
+        Check($"the palette limit at 0x{(nint)limit - game.Image.ImageStart:X} raised to {(lifted ? *limit : -1)}",
+              lifted && (nint)limit - game.Image.ImageStart == 0x26EDF1 && *limit == RemixedSprites.UnitPalettes
+              && limit[-2] == 0x41 && limit[-1] == 0xB8 && limit[1] == 0 && limit[4] == 0x44);
+        if (lifted)
+            GameImage.Unprotected((nint)limit, 1, () => *limit = RemixedSprites.RemasterPaletteLimit);
+        // The sprites the harness's units listing reads each unit's drawn palette from (Autopilot.SpriteOf).
+        var pool = *(int*)(game.Image.FindUnique(Autopilot.SpritePoolPattern) + Autopilot.SpritePoolAt);
+        Check($"the sprites (the harness's units listing) at 0x{pool:X}", pool == 0xD30038);
         return failures;
     }
 

@@ -1,0 +1,40 @@
+# Brave Story as its Tavern posting starts it (0x1F9, ReMixed's 0x0B8): its formation, its opening, its first round won,
+# and its rounds handing on, each in the one battle: round 1's win runs its event's block 3, which loads round 2's units
+# (ADD var 0x32, 1, then 0x4C: the next battle entry's units onto the map; the party put back on its first tiles) and
+# its conditions (preset 0xB8); round 2's win runs 0x331's, which loads round 3's (its five Dark Knights). Before
+# 2026-11-19 the first round's slot (0x1E3) wasn't the one before round 2's (0x1ED), so its win loaded another battle's
+# units (build_mod.py MISSION_ROUND_CHAINS, round_slots). The party is one unit, played by the AI (RecordAndAutoBattle).
+# A round's units are listed as soon as they load, while its scene goes on (a fade, then its lines), so each scene is
+# pressed through to its END (`advance opening`): while an event runs, the conditions aren't walked. Round 2's enemies
+# (level 99; the party is one level-8 unit) are downed during its scene, before they have a turn: ReMixed's events run
+# after a turn, so the party must keep one. The case ends as round 3 begins. The map's reload takes the party off the
+# field and the round's event puts it back: unit 16 is the party's one unit (a build that read only a place's +1 there
+# left it off, and the battle went to its game over; seen on the PC, 2026-11-19).
+name Brave Story hands its first round on to its second and third
+wait world depth=1 state=0 timeout=20
+scenario 0x1F9
+wait log "formation: screen open" timeout=150
+wait seconds 4
+formation units=1
+wait log "condition set 0 fires" timeout=90
+wait log "condition set 2 fires" press=RETURN every=2 timeout=120
+wait seconds 6
+shot first-round
+show units
+defeat
+wait log "condition set 3 fires" timeout=120
+wait unit job=0x19 battle_id=0x89 timeout=240 press=RETURN every=3
+wait seconds 20
+shot second-round-scene
+defeat
+advance opening timeout=120
+show units
+expect unit index=16 present=1
+wait log "condition set 1 fires" timeout=120
+wait unit job=0xa0 graphic=0x9f timeout=240 press=RETURN every=3
+wait seconds 25
+shot third-round-scene
+advance opening timeout=120
+shot third-round
+show units
+expect unit index=16 present=1

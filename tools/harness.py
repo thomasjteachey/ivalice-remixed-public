@@ -326,12 +326,16 @@ def battle_units() -> tuple[int, list[dict]]:
                       r"graphic 0x([0-9A-F]+) palette 0x([0-9A-F]+) battle id 0x([0-9A-F]+) name 0x([0-9A-F]+)",
                       line)
         if u:
+            # The sprite drawing it (newer DLLs): the palette it's drawn in and the unit's own (+4), -1 without.
+            s = re.search(r"sprite \d+ graphic 0x[0-9A-F]+ palette (\d+) \(unit \+4 (\d+)\)", line)
             found.append({"index": int(u.group(1)), "sprites": int(u.group(2), 16), "id": int(u.group(3), 16),
                           "job": int(u.group(4), 16), "team": int(u.group(5), 16),
                           "primary": int(u.group(6), 16), "secondary": int(u.group(7), 16),
                           "level": int(u.group(8)), "graphic": int(u.group(9), 16),
                           "palette": int(u.group(10), 16), "battle_id": int(u.group(11), 16),
                           "name": int(u.group(12), 16),
+                          "sprite_palette": int(s.group(1)) if s else -1,
+                          "palette_byte": int(s.group(2)) if s else -1,
                           "line": line[line.index("unit "):]})
     return base, found
 
@@ -354,6 +358,8 @@ def battle_entries() -> list[dict]:
 
 
 UNIT_SIZE, UNIT_HP, UNIT_STATUS, UNIT_STATUS_COPY, DEAD = 0x200, 0x30, 0x61, 0x1EF, 0x20
+# Reraise: the third status byte's 0x20, in the innate statuses (+0x57, the PS1's +0x4E), the current ones and their copy.
+UNIT_INNATE, RERAISE_BYTE, RERAISE = 0x57, 2, 0x20
 # The team bits of a unit's team byte (unit +5, the battle data's +0x18): 0 the player's side (the party 0x00-0x0B,
 # guests 0x84), 1 and 2 the enemy teams (0x90, 0x95; 0xA0 in side chapter 1-A's first battle).
 TEAM_BITS = 0x30
@@ -380,17 +386,26 @@ def peek_bytes(address: int, count: int) -> bytes:
 
 
 def defeat(units: list[int] | None) -> list[int]:
-    """HP 0 and the dead status bit (+0x61 and its copy at +0x1EF) for the given units, or for the enemies."""
+    """HP 0 and the dead status bit (+0x61 and its copy at +0x1EF) for the given units, or for the enemies, and no
+    Reraise (innate or current), so they stay down. A battle's own events (ReMixed's all) run after the turn, not between
+    actions, and by then a unit with Reraise was up again: Brave Story's second round, whose 0x19 wears an Angel Ring,
+    fired its victory at the poke and went on (seen on the PC, 2026-11-19). The enemies are those on the field (+1 not
+    0xFF), as the victory checks count them: a unit still to come (The Shrine Knights' reinforcements, brought in by
+    their rounds' events) is left as it is."""
     base, listed = battle_units()
     if not base:
         raise SystemExit("no battle units (not in a battle?)")
-    chosen = units or [u["index"] for u in listed if u["team"] & TEAM_BITS]
+    chosen = units or [u["index"] for u in listed if u["team"] & TEAM_BITS and u["id"] != 0xFF]
     for k in chosen:
         at = base + k * UNIT_SIZE
         status = peek_bytes(at + UNIT_STATUS, 1)[0] | DEAD
         send(f"poke 0x{at + UNIT_HP:X} 00 00")
         send(f"poke 0x{at + UNIT_STATUS:X} {status:02X}")
         send(f"poke 0x{at + UNIT_STATUS_COPY:X} {status:02X}")
+        for place in (UNIT_INNATE, UNIT_STATUS, UNIT_STATUS_COPY):
+            byte = peek_bytes(at + place + RERAISE_BYTE, 1)[0]
+            if byte & RERAISE:
+                send(f"poke 0x{at + place + RERAISE_BYTE:X} {byte & ~RERAISE & 0xFF:02X}")
     return chosen
 
 
@@ -886,6 +901,38 @@ def cmd_roster(_: argparse.Namespace) -> None:
 
 
 BATTLE_UNITS, BATTLE_UNIT_COUNT = 0x1853CE0, 21
+
+
+# A battle's unit sprites: 15 sheet slots (.data 0xD005A0, 0x32D6 bytes each: +0 nonzero while a sprite uses it, +1 the
+# graphic in it; the allocator 0x268FF4 reuses a graphic's slot or takes a free one, else fails), and 16 sprite objects
+# (their in-use words at 0xD30030, 0x548 apart; the object at 0xD30038: +8 its index, +9 its sheet slot, +10 its
+# graphic), the active ones listed from [0xD3A410] (+0 the next).
+SHEET_SLOTS, SHEET_SLOT_SIZE, SHEET_SLOT_COUNT = 0xD005A0, 0x32D6, 15
+SPRITE_OBJECTS, SPRITE_OBJECT_SIZE, SPRITE_OBJECT_COUNT, SPRITE_LIST = 0xD30030, 0x548, 16, 0xD3A410
+
+
+def cmd_sprites(_: argparse.Namespace) -> None:
+    """The unit sprites' sheet slots and sprite objects (SHEET_SLOTS, SPRITE_OBJECTS)."""
+    base = image_base()
+    slots = []
+    for k in range(SHEET_SLOT_COUNT):
+        used, graphic = peek_bytes(base + SHEET_SLOTS + k * SHEET_SLOT_SIZE, 2)
+        slots.append(f"{k}:{'+' if used else '-'}{graphic:02X}")
+    print(f"  sheet slots ({sum(s[s.index(':') + 1] == '+' for s in slots)} of {SHEET_SLOT_COUNT} in use): "
+          + " ".join(slots))
+    objects = []
+    for k in range(SPRITE_OBJECT_COUNT):
+        at = base + SPRITE_OBJECTS + k * SPRITE_OBJECT_SIZE
+        used = int.from_bytes(peek_bytes(at, 4), "little")
+        index, slot, graphic = peek_bytes(at + 8 + 8, 3)
+        if used:
+            objects.append(f"{k}:slot {slot} graphic {graphic:02X}")
+    listed, node = [], int.from_bytes(peek_bytes(base + SPRITE_LIST, 8), "little")
+    while node and len(listed) < 32:
+        listed.append((node - (base + SPRITE_OBJECTS + 8)) // SPRITE_OBJECT_SIZE)
+        node = int.from_bytes(peek_bytes(node, 8), "little")
+    print(f"  sprite objects in use ({len(objects)} of {SPRITE_OBJECT_COUNT}): " + ", ".join(objects))
+    print(f"  listed: {listed}")
 
 
 def cmd_slots(_: argparse.Namespace) -> None:

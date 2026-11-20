@@ -1,4 +1,4 @@
-# ReMixed's Dark Knights in the Depths (its entry 0x1B4, the port's 0x1F5, scenario 0x342): eight women whose primary
+# ReMixed's Dark Knights in the Depths (its entry 0x1B4, the port's 0x1E3, scenario 0x342): eight women whose primary
 # is its Dark Knight slot's skillset (0x16), read from that slot's learned abilities, which they learn by their Dark
 # Knight level 8 (about 1,550 JP in ReMixed's JP table, 3,000 in the remaster's, for 4,100 JP of abilities, learn
 # rates 32 to 100%) once their levels meet its row (Knight 8, Black Mage 8). The port: Darkness (0xE0), their own

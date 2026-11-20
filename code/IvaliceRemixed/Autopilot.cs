@@ -440,6 +440,16 @@ internal static unsafe class Autopilot
         {
             Say($"the battle data: {e.Message}");
         }
+        byte* sprites = null;
+        try
+        {
+            var at = _game.Image.FindUnique(SpritePoolPattern);
+            sprites = (byte*)(_game.Image.ImageStart + *(int*)(at + SpritePoolAt));
+        }
+        catch (Exception e)
+        {
+            Say($"the sprites: {e.Message}");
+        }
         for (var k = 0; k < Battle.UnitCount; k++)
         {
             var u = units + k * Battle.UnitSize;
@@ -447,9 +457,32 @@ internal static unsafe class Autopilot
                 continue;
             Say($"unit {k}: sprites 0x{u[0]:X2} id 0x{u[1]:X2} job 0x{u[3]:X2} team 0x{u[5]:X2} skillsets "
                 + $"0x{u[0x12]:X2} 0x{u[0x13]:X2} level {u[0x29]} graphic 0x{u[0x18F]:X2} palette 0x{u[0x190]:X2} "
-                + $"battle id 0x{u[0x191]:X2} name 0x{*(ushort*)(u + 0x1FC):X}");
+                + $"battle id 0x{u[0x191]:X2} name 0x{*(ushort*)(u + 0x1FC):X}" + SpriteOf(sprites, u));
         }
         return string.Join("\n", text);
+    }
+
+    /// <summary>The sprites (16 of 0x548 bytes, each in use while the int before it is set; +0xA the graphic drawn,
+    /// +0xB the palette, +0x148 the battle unit), from the sprite's maker 0x26EB74 (0x26EC26): imul rcx, r9, 0x548;
+    /// cmp [rcx+rdi+in use], r12d; jne; lea rbx, [rdi+the sprites] (rdi the image's start).</summary>
+    internal const string SpritePoolPattern =
+        "49 69 C9 48 05 00 00 44 39 A4 39 ?? ?? ?? ?? 0F 85 ?? ?? ?? ?? 48 8D 9F ?? ?? ?? ??";
+    internal const int SpritePoolAt = 0x18;
+    private const int Sprites = 16, SpriteSize = 0x548;
+
+    /// <summary>" sprite N palette P" for the sprite drawing a battle unit (the palette it's drawn in, which the
+    /// sprite's maker limits: RemixedSprites.PaletteLimitPattern; the unit's own +4 beside it), or "".</summary>
+    private static string SpriteOf(byte* sprites, byte* unit)
+    {
+        if (sprites == null)
+            return "";
+        for (var s = 0; s < Sprites; s++)
+        {
+            var sprite = sprites + s * SpriteSize;
+            if (*(int*)(sprite - 8) != 0 && *(byte**)(sprite + 0x148) == unit)
+                return $" sprite {s} graphic 0x{sprite[0xA]:X2} palette {sprite[0xB]} (unit +4 {unit[4]})";
+        }
+        return "";
     }
 
     private static void LogAskedUi()

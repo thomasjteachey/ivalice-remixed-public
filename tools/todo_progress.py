@@ -21,7 +21,8 @@ def progress(text):
         title = section.split("\n", 1)[0]
         if title.startswith(SKIPPED):
             continue
-        for item in re.split(r"\n- \[ \] ", "\n" + section)[1:]:
+        # An open item ends where the next item begins, open or done: a done item's size after it isn't its own.
+        for item in (p for p in re.split(r"\n(?=- \[[ x]\] )", "\n" + section) if p.startswith("- [ ] ")):
             found = re.findall(r"\*(small|medium|large)[^*]*\*", item)
             sizes[found[-1] if found else "medium"] += 1
     done = len(re.findall(r"\n- ", text[text.index("\n## Done"):]))

@@ -6,15 +6,15 @@ below) and rewrites the figures here, the history's row for the day and the figu
 every change to those lists; don't edit the figures by hand.
 
 <!-- figures -->
-**The port: 77% done** (2026-11-15).
+**The port: 80% done** (2026-11-19).
 
 | Part | Share of the port | Done | Counted from |
 |---|--:|--:|---|
-| Gameplay: ReMixed's rules ported | 40% | 100% | GAMEPLAY_TODO.md's gameplay items by size: 107 done, 0 open |
-| Gameplay: seen working in the game | 10% | 14% | GAMEPLAY_TODO.md's "Testing" by size: 7 done, 38 open |
-| Story: ReMixed's own events | 25% | 75% | the 79 events below, half for each the mod ships (79) and the rest once seen working (40) |
-| Story: what its events and battles need | 10% | 77% | GAMEPLAY_TODO.md's "Story port progress" and "Waiting for the story port" by size: 36 done, 10 open |
-| Display, text and art | 15% | 61% | GAMEPLAY_TODO.md's "Waiting for the display, text and art port" by size: 17 done, 10 open |
+| Gameplay: ReMixed's rules ported | 40% | 99% | GAMEPLAY_TODO.md's gameplay items by size: 106 done, 2 open |
+| Gameplay: seen working in the game | 10% | 25% | GAMEPLAY_TODO.md's "Testing" by size: 14 done, 39 open |
+| Story: ReMixed's own events | 25% | 77% | the 79 events below, half for each the mod ships (79) and the rest once seen working (42) |
+| Story: what its events and battles need | 10% | 85% | GAMEPLAY_TODO.md's "Story port progress" and "Waiting for the story port" by size: 42 done, 6 open |
+| Display, text and art | 15% | 69% | GAMEPLAY_TODO.md's "Waiting for the display, text and art port" by size: 21 done, 10 open |
 <!-- /figures -->
 
 ## How it's counted
@@ -43,6 +43,7 @@ every change to those lists; don't edit the figures by hand.
 | 2026-11-12 | 76% | 100% | 11% | 75% | 67% | 62% |
 | 2026-11-13 | 77% | 100% | 14% | 75% | 74% | 61% |
 | 2026-11-15 | 77% | 100% | 14% | 75% | 77% | 61% |
+| 2026-11-19 | 80% | 99% | 25% | 77% | 85% | 69% |
 <!-- /history -->
 
 Before this count, 2026-11-04: "roughly 70%", a judgment.
@@ -75,8 +76,8 @@ is side chapter 1-A's end and joined the list (story-flow-plan.md, "Side chapter
 | 0x0B5 | Missions | All-Star Melee | 0x1F6 |  |
 | 0x0B6 | Missions | The Guarded Temple | 0x1F7 |  |
 | 0x0B7 | Missions | Nightmares | 0x1F8 |  |
-| 0x0B8 | Missions | Brave Story | 0x1F9 |  |
-| 0x0B9 | Missions | Brave Story's second round | 0x331 |  |
+| 0x0B8 | Missions | Brave Story | 0x1F9 | 2026-11-19 |
+| 0x0B9 | Missions | Brave Story's second round | 0x331 | 2026-11-19 |
 | 0x0BA | Missions | Brave Story's third round | 0x332 |  |
 | 0x0BB | Missions | Brave Story's fourth round | 0x333 |  |
 | 0x0BC | Missions | Brave Story's fifth round | 0x337 |  |

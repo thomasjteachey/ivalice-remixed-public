@@ -307,6 +307,7 @@ def run_case(path: Path) -> None:
                 reply = harness.send(" ".join(args))
                 if reply.startswith("error"):
                     raise CaseFailure(reply)
+                print("\n".join(f"  {line}" for line in reply.splitlines()))  # what it says, as evidence
             elif command == "poke" and args and args[0] == "unit":
                 poke_units(args[1:], case)
             elif command == "ride":
@@ -332,7 +333,8 @@ def run_case(path: Path) -> None:
                 if reply.startswith("error"):
                     raise CaseFailure(reply)
             elif command == "show":  # a listing into the case's output, as evidence: slots, roster or units
-                {"slots": harness.cmd_slots, "roster": harness.cmd_roster, "units": show_units}[args[0].lower()](None)
+                {"slots": harness.cmd_slots, "roster": harness.cmd_roster, "units": show_units,
+                 "sprites": harness.cmd_sprites}[args[0].lower()](None)
             elif command == "advance":
                 # advance world|opening|event N [timeout=S] [every=S] [shots=1]: with shots, a frame of the scene
                 # before each press, in the case's folder (advance-NNNN.png, tenths of a second in).
@@ -460,14 +462,14 @@ def run_case(path: Path) -> None:
     print(f"PASS {case}: complete in {time.monotonic() - started:.1f}s")
 
 
-def start_game(location: int | None = None) -> None:
+def start_game(location: int | None = None, boot_timeout: float = 160) -> None:
     if harness.game_running():
         if not harness.answering():
             raise CaseFailure("the game is running without the quick-test harness; stop it first")
         return
     args = argparse.Namespace(world=True, script=None, timeout=120.0, keep_saves=False, location=location)
     harness.start(args)
-    harness.wait_world_ready(160)
+    harness.wait_world_ready(boot_timeout)
 
 
 def final_frame(case: Path, outcome: str) -> None:
@@ -489,6 +491,8 @@ def main() -> int:
     parser.add_argument("--stop", action="store_true", help="stop the hidden game after the cases")
     parser.add_argument("--location", type=lambda text: int(text, 0), default=None,
                         help="start the save at this world location (2 is Eagrose, which has a tavern)")
+    parser.add_argument("--boot-timeout", type=float, default=160,
+                        help="seconds to wait for the started game's world map (more on a busy PC)")
     args = parser.parse_args()
     try:
         if args.start and args.restart:
@@ -496,7 +500,7 @@ def main() -> int:
         if args.restart and harness.game_running():
             harness.stop(argparse.Namespace())
         if args.start or args.restart:
-            start_game(args.location)
+            start_game(args.location, args.boot_timeout)
         elif not harness.answering():
             raise CaseFailure("no warm harness game; pass --start")
         for case in args.cases:

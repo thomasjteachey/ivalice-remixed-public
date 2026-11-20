@@ -196,8 +196,10 @@ went through to the world map again. Its Wheel also held one instruction through
 presses, so one Right came before the Wheel waited; it did no harm (three chests opened, as in the first run).
 
 Its steps also run alone: `formation` (`--reveal` too), `advance --until opening|world|"event N"` (it never presses
-Enter on the world map, where Enter searches for enemies), `defeat` (the enemy team, or the unit numbers given), `wait
-PATTERN` (a log line from now on). For looking around: `send units`, `send state`, `roster` (the remaster's roster records), `slots` (the
+Enter on the world map, where Enter searches for enemies), `defeat` (the enemy team on the field, or the unit numbers
+given: HP 0, Dead, and no Reraise, since a battle's own events run after the turn and a unit with Reraise was up
+again by then; a reinforcement still off the field is left for its event to bring in),
+`wait PATTERN` (a log line from now on). For looking around: `send units`, `send state`, `roster` (the remaster's roster records), `slots` (the
 battle units' roster slots, flags and battle ids), `shot`, `log`, and `crashes`, which reads the game's crashes from Windows' Application log and names each address's function (the
 mod's own crash.txt misses a crash that .NET reports first). To find what writes a place in memory, `send watch ADDR
 [LEN]` sets a hardware write watch on it (up to four at once), `send watch` lists the writes caught (the instruction
@@ -245,8 +247,10 @@ try. If a test would still take minutes, make it fast first (a shortcut in the h
 
 Each case prints one `PASS` or `FAIL` line per expectation and a final elapsed time. Case files use one small command
 per line: `scenario`, `setvar`, `send`, `advance`, `formation`, `defeat`, `key`, `shot`, `poke unit`, `ride`,
-`wait unit|entry|log|world|seconds`, `expect unit|entry|roster|var` and `show slots|roster`. `show` prints the
-battle units' roster slots and battle ids (or the roster) into the case's output, as evidence. A case on the
+`wait unit|entry|log|world|seconds`, `expect unit|entry|roster|var` and `show slots|roster|units|sprites`. `show`
+prints the battle units' roster slots and battle ids (or the roster, their jobs, or the unit sprites' 15 sheet slots
+and 16 sprite objects) into the case's output, as evidence; `send` prints what the game answers (`send state`, `send
+peek +0x3C7C950 4`, `send watch`). A case on the
 formation screen waits for its own line first (`wait log "formation: screen open"`), as quick_test's `formation`
 gives Reveal Treasures only a second.
 A battle unit also matches on its live fields (turn, moved, acted, ability, charge, statuses, hp, right_hand, and
@@ -294,7 +298,9 @@ absent.
 Scenes still play
 in real time (`tests/quick/lorne-scene-shots.txt`, about 2 minutes; the scene in `roster-loads-knights.txt`, about 4).
 Integer values are decimal or `0x`-prefixed. `entries` exposes each raw 40-byte battle-data record,
-including its unit-selection `flags`; `units` exposes the live job, graphic, palette and battle id, and `unit` and
+including its unit-selection `flags`; `units` exposes the live job, graphic, palette and battle id (and
+`sprite_palette`, the palette its sprite is drawn in, and `palette_byte`, the unit's +4 it comes from; -1 with no
+sprite: `palette` is +0x190, which stays 0 for a generic), and `unit` and
 `roster` records also have `unlocked` (the unlocked jobs, 0x800000 the Squire) and, for the Archer, Bard and Dancer,
 `archer_learned` (3 bytes, the first ability 0x800000), `archer_jp` and `archer_total` (and `bard_`, `dancer_`), and
 `knight_level`, `black_mage_level`, `bard_level`, `dancer_level` and `dark_knight_level`; `roster` records also have
