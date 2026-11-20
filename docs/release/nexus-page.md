@@ -4,14 +4,14 @@ The mod's page on Nexus Mods: https://www.nexusmods.com/finalfantasytacticstheiv
 (published 2026-11-14 with 0.9.1; the Event Instruction Upgrade has its own page, mod 186). Its text, ready to paste. Nexus's
 description editor takes BBCode. ReMixed's author, Nyzer, gave his permission on 2026-11-12 ("Sure, go nuts", in reply to
 the user on Discord); the credits link ReMixed's thread on FFHacktics.
-Written for release 0.9.25 (2026-11-20); update the "What's in it" and "Not ported yet" lists from
+Written for release 0.9.26 (2026-11-20); update the "What's in it" and "Not ported yet" lists from
 [GAMEPLAY_TODO.md](../GAMEPLAY_TODO.md) for each release.
 
 ## Page fields
 
 - **Name:** Ivalice ReMixed
 - **Category:** Overhauls (or Gameplay)
-- **Version:** 0.9.25
+- **Version:** 0.9.26
 - **Language:** English
 - **Requirements** (Nexus's requirements tab):
   - FFT Mod Loader by Nenkai: https://www.nexusmods.com/finalfantasytacticstheivalicechronicles/mods/4
@@ -89,10 +89,10 @@ Untick Ivalice ReMixed in Reloaded-II. Its saves stay in their own folder.
 
 ## File (the upload)
 
-- **File:** `mod/release/nexus/IvaliceReMixed-0.9.25.zip`: only ReMixed's folder, cut from
-  `mod/release/IvaliceReMixed-0.9.25.zip` (the upgrade's folder goes up on its own page; never the other zips in
+- **File:** `mod/release/nexus/IvaliceReMixed-0.9.26.zip`: only ReMixed's folder, cut from
+  `mod/release/IvaliceReMixed-0.9.26.zip` (the upgrade's folder goes up on its own page; never the other zips in
   `mod/steam-deck/`, which are other people's mods)
-- **Name:** Ivalice ReMixed 0.9.25
+- **Name:** Ivalice ReMixed 0.9.26
 - **Category:** Main file
 - **Description:** Drag onto Reloaded-II with the Event Instruction Upgrade. Needs the FFT Mod Loader. Enhanced mode.
 

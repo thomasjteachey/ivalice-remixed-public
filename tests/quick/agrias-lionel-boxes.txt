@@ -1,0 +1,12 @@
+# Agrias's speech boxes in the remaster's chapter 2 scene with Lionel in sight (event 149), its first lines: a short
+# form of lionel-in-sight.txt, for her face. Her lines (unit 0x34, portrait 0) take the face from her battle unit
+# (0x22AA88, its sprite's sheet), where Agrias's 0x1E would be handed over as 0x34, the number the mod gives Ashley's
+# face (RemixedFaces.BoxFace hands back her own). A frame before each Enter, every 1.5 s, for 45 s: her face in her
+# boxes, Ovelia's in hers. Run with
+#   python -I tools/quick_test.py --restart --stop tests/quick/agrias-lionel-boxes.txt
+name Agrias's boxes with Lionel in sight
+wait world depth=1 state=0 timeout=20
+scenario 0x95 event=0x95
+wait log "loads event 149 in place of event" timeout=40
+show units
+advance event 999 every=1.5 shots=1 timeout=45

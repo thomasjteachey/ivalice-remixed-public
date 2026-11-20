@@ -296,7 +296,11 @@ case can `shot` the screen between them and the scene after it (`araguay-boco-jo
 down; each needs `--restart`, a save without the recruit). `expect roster ... count=0` checks a declined recruit is
 absent.
 Scenes still play
-in real time (`tests/quick/lorne-scene-shots.txt`, about 2 minutes; the scene in `roster-loads-knights.txt`, about 4).
+in real time (`tests/quick/lorne-scene-shots.txt`, about 2 minutes; the scene in `roster-loads-knights.txt`, about 4),
+unless the case speeds them up: `send speed 5` turns the game's fast-forward on at ×5 (`3` ×3) wherever the game
+allows it (events and battles), whatever the Fast-forward setting, until `send speed off`
+(`Patches/FastForwardToggle.cs`, `Forced`). `tests/quick/yardrow-armory-faces.txt` plays 0x0F4's town scene that way to
+its question and the armory's first line.
 Integer values are decimal or `0x`-prefixed. `entries` exposes each raw 40-byte battle-data record,
 including its unit-selection `flags`; `units` exposes the live job, graphic, palette and battle id (and
 `sprite_palette`, the palette its sprite is drawn in, and `palette_byte`, the unit's +4 it comes from; -1 with no

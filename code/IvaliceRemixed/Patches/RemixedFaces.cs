@@ -34,6 +34,13 @@ namespace IvaliceRemixed.Patches;
 /// remaster's are left (0x08, Gafgarion's second, as ReMixed's 0x11): ReMixed redrew part of EVTFACE, and which of its
 /// events name one isn't known.
 ///
+/// A message's portrait 1-8 (the PS1's EVTFACE portrait of the set event op 0x50 loaded) is a graphic from the set's
+/// row of a table (.rdata 0x7141E0, copied to [0x37A1348] by 0x2459E0, read by 0x221798 for the box record's face),
+/// which the fold then takes. Set 4's portrait 4 is Rafa's, as 0x19, so her boxes in the frog scene (event 270, style
+/// 0x92, portrait 4) showed Balthier's face (a tester on 0.9.22); <see cref="RemasterEventFaces"/> points such entries at
+/// the graphic the remaster means, Rafa's 0x29 there (the only one; none holds Agrias's 0x34), with the palette cap
+/// 0x221798 gives the graphic it replaced (.rdata 0x680970; 0x29's was 0, which drew no face).
+///
 /// Brave Story's people (0x172B70 and 0x177004, through 0x1E4720 and 0x1E5B6C) carry the remaster's graphic numbers
 /// for its own characters, two of which the mod gives ReMixed's (Gafgarion's 0x11, Malak's 0x12, which the game folds
 /// into 0x17 and 0x1A). The two lookups are hooked to hand Brave Story the graphic the remaster means
@@ -62,6 +69,22 @@ internal static unsafe class RemixedFaces
     /// takes.</summary>
     internal const string EventGraphicOfPortraitPattern = "41 83 F8 51 77 ?? 48 8D 0D ?? ?? ?? ?? 42 8B 8C 81";
     private const int EventPortraits = 0x52;
+    /// <summary>An EVTFACE set's graphics (0x2459E0, ecx the set event op 0x50 loads): cmp ecx, 7; ja; lea eax,
+    /// [rcx*8]; movsxd rcx, eax; lea rax, [table]; lea rax, [rax+rcx*4]; test rax, rax; je; movups the set's 8 dwords
+    /// into the event's portraits ([0x37A1348], which a message's portrait 1-8 names: 0x221798, 0x21FA50).</summary>
+    internal const string EventFaceSetPattern =
+        "83 F9 07 77 30 8D 04 CD 00 00 00 00 48 63 C8 48 8D 05 ?? ?? ?? ?? 48 8D 04 88 48 85 C0 74 16 0F 10 00 0F 10 " +
+        "48 10 0F 11 05";
+    internal const int EventFaceSets = 8, EventFacesPerSet = 8;
+    /// <summary>A message's face (0x221798: ecx its portrait less 1, -1 for the speaker unit's own; edx the unit's
+    /// slot; r8 the palette out; eax the graphic the fold takes): push rbx; sub rsp, 0xB0; or dword [r8], -1;
+    /// movsxd r9, ecx; movsxd rbx, edx; cmp r9d, -1; je. A portrait's palette is the unit's + 8, at most the graphic's
+    /// byte in a table only this reads (+<see cref="PaletteCapAt"/>: add ecx, 8; movsxd rax, r9d; mov [r8], ecx; movzx
+    /// edx, byte [r10 + rax + table], .rdata 0x680970), 0 for the graphics the fold folds: no face file.</summary>
+    internal const string MessageFacePattern = "40 53 48 81 EC B0 00 00 00 41 83 08 FF 4C 63 C9 48 63 DA 41 83 F9 FF 74";
+    private const int PaletteCapAt = 0x63;
+    private static ReadOnlySpan<byte> PaletteCapRead =>
+        [0x83, 0xC1, 0x08, 0x49, 0x63, 0xC1, 0x41, 0x89, 0x08, 0x42, 0x0F, 0xB6, 0x94, 0x10];
     private const int Graphics = 0x100, Portraits = 0xA0, SpriteSets = 0xD3;
     private const int Portrait = 0xFF, NoPortrait = 0x300; // a sprite set's portrait; bits that make 0x32AB3C give none
 
@@ -89,8 +112,9 @@ internal static unsafe class RemixedFaces
     /// which the callers (0x214153 and others) take through <see cref="SheetSlots"/> when under 10: the graphic of the
     /// sheet loaded there. A story character whose graphic shares its sheet with its second sprite set's (Rafa's 0x29
     /// with 0x19, Agrias's 0x1E with 0x34) gets the sheet's graphic, which is ReMixed's character's number in the mod, so
-    /// the fold gave her box his face (Balthier's for Rafa in the frog scene, a tester on 0.9.22; Ashley's for Agrias):
-    /// <see cref="BoxFace"/> hands back the unit's own graphic there, which the fold sends to her face. Its prologue: mov
+    /// the fold would give her box his face (Balthier's for Rafa, Ashley's for Agrias; the frog scene's boxes name an
+    /// EVTFACE portrait instead, <see cref="RemasterEventFaces"/>): <see cref="BoxFace"/> hands back the unit's own
+    /// graphic there, which the fold sends to her face. Its prologue: mov
     /// [rsp+8], rbx; push rbp, rsi, rdi, r14, r15; sub rsp, 0x20; or edi, -1; movsxd rbp, edx; mov r15, r9;
     /// mov rsi, r8; mov rbx, rcx; test r8, r8; je; mov [r8], edi; cmp ebp, 0x14 (+0x33: lea rax, [the battle units]).
     /// </summary>
@@ -121,6 +145,11 @@ internal static unsafe class RemixedFaces
     internal static int* GraphicOfPortrait { get; private set; }
     internal static ushort* PortraitOfSpriteSet { get; private set; }
     internal static int* EventGraphicOfPortrait { get; private set; }
+    // For the offline check: 0x2459E0 (calling it loads a set into the event's portraits) and its table.
+    internal static nint EventFaceSetAt { get; private set; }
+    internal static int* EventFaceSet { get; private set; }
+    internal static nint MessageFaceAt { get; private set; }
+    internal static byte* PaletteCaps { get; private set; }
     // For the offline check: Brave Story's two lookups as hooked.
     internal static nint PersonFaceAt { get; private set; }
     internal static nint ChronicleFaceAt { get; private set; }
@@ -174,10 +203,20 @@ internal static unsafe class RemixedFaces
             game.Log.Error($"faces: the world menus' portraits not separated (a story character there can show the "
                            + $"face of ReMixed's character on its second sprite set): {e.Message}");
         }
-        var people = new List<string>();
+        var people = RemasterPeople();
+        var sets = new List<string>();
         try
         {
-            people = RemasterPeople();
+            sets = RemasterEventFaces(game.Image);
+            game.Log.Info($"faces: the event face sets as the remaster's people: {string.Join(", ", sets)}");
+        }
+        catch (Exception e)
+        {
+            game.Log.Error($"faces: the event face sets not mended (Rafa's boxes in the frog scene can show the face of "
+                           + $"ReMixed's character on 0x19): {e.Message}");
+        }
+        try
+        {
             PersonFaceAt = game.Image.FindUnique(PersonFacePattern);
             ChronicleFaceAt = game.Image.FindUnique(ChronicleFacePattern);
             _personFace = (delegate* unmanaged<nint, nint, int>)game.Hooks.Hook(
@@ -192,7 +231,53 @@ internal static unsafe class RemixedFaces
             game.Log.Error($"faces: Brave Story's people not given the remaster's faces: {e.Message}");
         }
         return $"ReMixed's characters' faces ({given.Count} graphics, {apart.Count} with portraits of their own, "
-               + $"Brave Story's people the remaster's)";
+               + $"{sets.Count} event face set entries and Brave Story's people the remaster's)";
+    }
+
+    /// <summary>Points each EVTFACE set's graphic (.rdata 0x7141E0, 8 sets of 8) that the mod gives one of ReMixed's
+    /// characters at the one the remaster means (<see cref="Person"/>): set 4's portrait 4 is Rafa's, 0x19, where the
+    /// remaster keeps her face, so the frog scene's boxes (op 0x50 4, then portrait 4) showed Balthier's (a tester on
+    /// 0.9.22). EVTFACE's sets 2-7 are vanilla's in ReMixed too, so its events that load them mean the same people.
+    /// The graphic it gives takes the palette cap of the one it replaces (Rafa's 0x29 has none of its own: the remaster
+    /// keeps her face under 0x19, and a box asked for 0x29's at palette 0 showed no face). Returns what it changed.
+    /// </summary>
+    private static List<string> RemasterEventFaces(GameImage image)
+    {
+        var loader = image.FindUnique(EventFaceSetPattern);
+        var sets = (int*)GameImage.Rip(loader + 15, 3, 7);
+        var messageFace = image.FindUnique(MessageFacePattern);
+        if (!new ReadOnlySpan<byte>((byte*)messageFace + PaletteCapAt, PaletteCapRead.Length).SequenceEqual(PaletteCapRead))
+            throw new InvalidDataException("a message's face (0x221798) isn't laid out as this DLL expects");
+        var caps = (byte*)(image.ImageStart + *(int*)(messageFace + PaletteCapAt + PaletteCapRead.Length));
+        const int count = EventFaceSets * EventFacesPerSet;
+        // Set 0 starts 0xB7, 0x1C; set 4's portrait 4 is Rafa's 0x19 (her 0x29 once mended), whose palette cap is 8.
+        if (sets[0] != 0xB7 || sets[1] != 0x1C || sets[4 * EventFacesPerSet + 3] is not (0x19 or 0x29) || caps[0x19] != 8
+            || caps[2] != 0x0B || Enumerable.Range(0, count).Any(at => (uint)sets[at] >= Graphics))
+            throw new InvalidDataException("the EVTFACE sets' graphics aren't the ones this DLL expects");
+        var moves = new List<(int At, int Graphic, int Person)>();
+        for (var at = 0; at < count; at++)
+            if (People[sets[at]] != sets[at])
+                moves.Add((at, sets[at], People[sets[at]]));
+        if (moves.Count > 0)
+        {
+            GameImage.Unprotected((nint)sets, count * sizeof(int), () =>
+            {
+                foreach (var move in moves)
+                    sets[move.At] = move.Person;
+            });
+            GameImage.Unprotected((nint)caps, Graphics, () =>
+            {
+                foreach (var move in moves)
+                    caps[move.Person] = Math.Max(caps[move.Person], caps[move.Graphic]);
+            });
+        }
+        EventFaceSetAt = loader;
+        EventFaceSet = sets;
+        MessageFaceAt = messageFace;
+        PaletteCaps = caps;
+        return moves.Select(move => $"set {move.At / EventFacesPerSet} portrait {move.At % EventFacesPerSet + 1} "
+                                    + $"0x{move.Graphic:X2} as 0x{move.Person:X2} (palette cap {caps[move.Person]})")
+                    .ToList();
     }
 
     /// <summary>The graphic Brave Story means by each number the mod gives one of ReMixed's characters: its people are
@@ -340,6 +425,8 @@ internal static unsafe class RemixedFaces
         var face = _boxFace(layout, slot, found, palette);
         try
         {
+            if (face < 0)
+                NoFace(slot);
             if ((uint)slot <= 0x14 && _boxUnits != null)
                 return BoxFaceOf(face, _boxUnits[slot * 0x200 + 0x18F]);
         }
@@ -363,6 +450,24 @@ internal static unsafe class RemixedFaces
             Failed(e);
         }
         return _fold(graphic);
+    }
+
+    private static int _noFaceSlot = -1, _noFaces;
+
+    /// <summary>Logs a speech box drawn with no face: its unit has no sprite (or isn't a battle unit), as a line naming
+    /// a unit the scene hasn't put on the field (a tester on 0.9.22: Agrias's line at the Yardrow armory). Once a slot
+    /// in a row, and at most 32 times a run.</summary>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void NoFace(int slot)
+    {
+        if (slot == _noFaceSlot || _noFaces >= 32)
+            return;
+        _noFaceSlot = slot;
+        _noFaces++;
+        _log.Info((uint)slot <= 0x14 && _boxUnits != null
+            ? $"faces: a speech box's unit (battle unit {slot}, battle id 0x{_boxUnits[slot * 0x200 + 0x191]:X2}, "
+              + $"graphic 0x{_boxUnits[slot * 0x200 + 0x18F]:X2}) has no sprite: no face"
+            : $"faces: a speech box names no battle unit ({slot}): no face");
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

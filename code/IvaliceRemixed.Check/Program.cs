@@ -6414,6 +6414,45 @@ internal static unsafe class SelfTest
                   events[0x0E] == 0x29 && rafaBox == 0x19 && events[0x17] == 0x1E && agriasBox == 0x34
                   && events[1] == 2 && events[2] == 3 && events[8] == 0x11);
         }
+        // A message's portrait 1-8 names one of the EVTFACE set event op 0x50 loaded, as a graphic from that set's row
+        // of 0x7141E0, which 0x2459E0 copies into the event's portraits ([0x37A1348]; 0x221798 gives the box record
+        // its face from there). Set 4's portrait 4 is Rafa's: the frog scene's boxes (op 0x50 4, portrait 4) showed
+        // Balthier's face as 0x19 (a tester on 0.9.22). Through the game's own 0x2459E0, set by set, and 0x221798, the
+        // face and palette a box takes for portrait N (N - 1, a unit slot past the units, so palette 8 before the cap):
+        // hers is 0x29, her face 0x19 at palette 8 (0x29's cap was 0: a box with no face, seen on the PC 2026-11-20),
+        // and no set holds a number the mod gives one of ReMixed's characters for the remaster's person.
+        if (RemixedFaces.EventFaceSetAt == 0 || RemixedFaces.MessageFaceAt == 0)
+            Check("the EVTFACE sets aren't found", false);
+        else
+        {
+            var loadSet = (delegate* unmanaged<int, void>)RemixedFaces.EventFaceSetAt;
+            var messageFace = (delegate* unmanaged<int, int, int*, int>)RemixedFaces.MessageFaceAt;
+            var loaded = (int*)GameImage.Rip(RemixedFaces.EventFaceSetAt + 0x26, 3, 7);
+            var before = new Span<int>(loaded, RemixedFaces.EventFacesPerSet).ToArray();
+            var sets = new (int Graphic, int Palette)[RemixedFaces.EventFaceSets][];
+            for (var set = 0; set < sets.Length; set++)
+            {
+                loadSet(set);
+                sets[set] = new (int, int)[RemixedFaces.EventFacesPerSet];
+                for (var portrait = 0; portrait < RemixedFaces.EventFacesPerSet; portrait++)
+                {
+                    var palette = -1;
+                    var graphic = messageFace(portrait, 0x15, &palette);
+                    sets[set][portrait] = (graphic, palette);
+                }
+            }
+            new Span<int>(before).CopyTo(new Span<int>(loaded, RemixedFaces.EventFacesPerSet));
+            var all = sets.SelectMany(set => set).ToArray();
+            var others = all.Where(face => RemixedFaces.Person(face.Graphic) != face.Graphic).Distinct().ToArray();
+            string Shown((int Graphic, int Palette) face) =>
+                $"0x{face.Graphic:X2}, face 0x{fold(face.Graphic):X2} palette {face.Palette}";
+            Check($"event boxes' EVTFACE portraits: set 4's 4 (Rafa's, the frog scene) {Shown(sets[4][3])}; its 8 "
+                  + $"(Malak's) {Shown(sets[4][7])}; set 0's 1 {Shown(sets[0][0])}; entries meaning another of the "
+                  + "remaster's people: " + (others.Length == 0 ? "none" : string.Join(", ", others.Select(f => $"0x{f.Graphic:X2}"))),
+                  sets[4][3] == (0x29, 8) && fold(0x29) == 0x19 && sets[4][7] == (0x1A, 8) && fold(0x1A) == 0x1A
+                  && sets[0][0].Graphic == 0xB7 && others.Length == 0 && all.Length == 64
+                  && RemixedFaces.EventFaceSet[4 * RemixedFaces.EventFacesPerSet + 3] == 0x29);
+        }
         // A battle unit's speech box takes its face from the unit's sheet (0x22AA88: a sheet slot, through the slot
         // table): Rafa (0x29) and Agrias (0x1E) draw from 0x19's and 0x34's sheets, ReMixed's characters' numbers, so
         // their boxes showed Balthier's and Ashley's faces (a tester on 0.9.22). The hook hands back their own
@@ -6967,6 +7006,27 @@ internal static unsafe class SelfTest
               NameGuard.At - game.Image.ImageStart == 0x1E8B7C);
         Check($"the battle entry's records the mod's own entries replace: 0x{RemixedScenarios.EntryRecordsAt - game.Image.ImageStart:X}",
               RemixedScenarios.EntryRecordsAt - game.Image.ImageStart == 0x28416C);
+        Check($"the entry the battle setup reads (var 0x32 as it took it): 0x{(nint)RemixedScenarios.EntryAsked - game.Image.ImageStart:X}",
+              (nint)RemixedScenarios.EntryAsked - game.Image.ImageStart == 0x1856930);
+        {
+            // A map reload's units by the scenario and the entry asked (the build's MAP_RELOAD; its data is checked by
+            // tools/check_story_regressions.py check_map_reloads): 0x0F4's town scene (the mod's 0x1FF) reloads with
+            // its battle's entry, ReMixed's 0x1DB, whose slot in the port is one of Brave Story's rounds (0x1F9's own).
+            var made = stackalloc byte[16 * 40];
+            made[0x20] = 0x90;
+            var key = (0x1FF, 0x1DB);
+            var had = RemixedScenarios.ReloadEntries.TryGetValue(key, out var kept);
+            RemixedScenarios.ReloadEntries[key] = (nint)made;
+            bool found = RemixedScenarios.ReloadRecords(0x1FF, 0x1DB) == made,
+                 other = RemixedScenarios.ReloadRecords(0x1F9, 0x1DB) == null,
+                 own = RemixedScenarios.ReloadRecords(0x1FF, 0x1F6) == null;
+            if (had)
+                RemixedScenarios.ReloadEntries[key] = kept;
+            else
+                RemixedScenarios.ReloadEntries.Remove(key);
+            Check($"a map reload's units by scenario and entry: 0x1FF's reload of 0x1DB the mod's ({found}), 0x1F9's of "
+                  + $"0x1DB the game's slot ({other}), 0x1FF's own entry 0x1F6 the game's ({own})", found && other && own);
+        }
         var empty = stackalloc byte[0x200];
         var ramza = stackalloc byte[0x200];
         ramza[0] = 1;

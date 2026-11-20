@@ -240,6 +240,25 @@ internal static unsafe class Harness
                 return $"tracing ReMixed events' instructions: {Patches.RemixedEvents.TraceSteps}";
             case "act":
                 return BattleAct.Run(parts);
+            case "speed":
+            {
+                // speed 5|3|off: the game's fast-forward on (×5 or ×3) wherever it can be, whatever the setting, for a
+                // case that plays a long scene; off gives the setting back.
+                var speed = parts.Length > 1 ? parts[1] : "";
+                Patches.FastForwardToggle.Forced = speed switch
+                {
+                    "5" => Patches.FastForwardToggle.Fast,
+                    "3" => Patches.FastForwardToggle.Slow,
+                    "off" => 0,
+                    _ => -1,
+                };
+                if (Patches.FastForwardToggle.Forced < 0)
+                {
+                    Patches.FastForwardToggle.Forced = 0;
+                    return "error: speed 5|3|off";
+                }
+                return speed == "off" ? "fast-forward: the setting's again" : $"fast-forward: ×{speed} wherever it can be";
+            }
             case "testmode":
                 // testmode record: the party's units stay the player's (a test that drives the battle menus); testmode
                 // auto: the AI plays them again. For this run only; the settings stay as they are.
@@ -283,6 +302,7 @@ internal static unsafe class Harness
                 return "state | peek ADDR [N] | poke ADDR HEX | var ID | setvar ID VALUE | event HEX PHASE | "
                        + "entries | dispatch KIND [STORY] [MONTH] | dispatchinfo | find text T | find hex H | call ADDR ARGS | "
                        + "snap ADDR N | diff [OLD NEW] | worldpad BITS [FRAMES] | code | line ID [TEXT] | testmode record|auto | "
+                       + "speed 5|3|off | "
                        + "act SKILLSET ABILITY foe|INDEX|X,Y[,LEVEL] [TIMES] | act clear | "
                        + "an autopilot step (key K, press B, scenario S, units, action A, ui0-2 A, pad BITS, log T, quit)";
             default:

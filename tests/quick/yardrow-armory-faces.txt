@@ -1,11 +1,32 @@
 # ReMixed's Yardrow Armory scene (its scenario 0xF4, the mod's event 511), before its battle. A tester on 0.9.22 saw
-# Agrias's line "So these are the fiends? This chamber is cramped..." with no portrait, where the scene before had
-# them all. Run with
+# Agrias's line "So these are the fiends? This chamber is cramped..." (message 43, the PSP script's 18) with no
+# portrait, where the scene before had them all. On the PS1 the scene ends in the town, the map changes to the armory's
+# (0x4C), which brings in the battle entry's units (var 0x32, 0x1DB: the enemies, and 0x90 Agrias, 0x91 Balmafula, 0x92
+# the Wizard), and the line names 0x90: Agrias, with her face (work/psx/run/shots f4y-05580.png). The town scene plays
+# at ×5 (the harness's speed) to the knight's last line, the armory at the game's own; about 2 minutes. Run with
 #   python -I tools/quick_test.py --restart tests/quick/yardrow-armory-faces.txt
-# A frame before each Enter: each speech box's face. (2026-11-19: the opening stayed on the map for 2 minutes.)
 name Yardrow Armory faces
 wait world depth=1 state=0 timeout=20
 scenario 0x1FF
 wait log "loaded event 511" timeout=40
+send speed 5
 show slots
-advance event 999 every=0.8 shots=1 timeout=120
+# The question whether to fight (message 35): "Very well, we shall lend our aid." is the second answer.
+wait log "event 511's message 35 shown" press=RETURN every=1 timeout=150
+wait seconds 3
+shot question
+key DOWN wait=1
+key RETURN wait=1
+# The knight's "The armory lies just ahead." (42), then the map reload and the armory's line, at the game's own speed:
+# fast-forward also closes an event's boxes by itself.
+wait log "event 511's message 42 shown" press=RETURN every=1 timeout=60
+send speed off
+wait seconds 3
+key RETURN wait=1
+wait log "event 511's message 43 shown" timeout=90
+wait seconds 8
+shot armory-line
+show slots
+show sprites
+expect unit battle_id=0x90 sprites=0x1E present=1
+key RETURN wait=1

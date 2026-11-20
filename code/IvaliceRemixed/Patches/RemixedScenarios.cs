@@ -110,6 +110,19 @@ internal static unsafe class RemixedScenarios
     /// </summary>
     internal static readonly Dictionary<int, nint> OwnEntries = [];
 
+    /// <summary>
+    /// The units a map reload (event instruction 0x4C: the map again, and battle units 0-15 from the entry var 0x32
+    /// names) brings in where ReMixed's code set var 0x32 to one of its own entry numbers, which the port keeps
+    /// elsewhere: (the mod's scenario, the entry asked) -> its records (the build's MAP_RELOAD). 0x0F4's town scene
+    /// (the mod's 0x1FF) reloads with its battle's entry, ReMixed's 0x1DB, for the armory's line by 0x90, Agrias; the
+    /// port's slot 0x1DB is one of Brave Story's rounds, so the reload brought no 0x90 and her box no face (a tester on
+    /// 0.9.22). <see cref="EntryRecords"/> looks here first, by the entry the setup is reading ([0x1856930]).
+    /// </summary>
+    internal static readonly Dictionary<(int Scenario, int Entry), nint> ReloadEntries = [];
+    /// <summary>The entry the battle setup is reading ([0x1856930], var 0x32 as the setup took it).</summary>
+    internal static int* EntryAsked;
+    private static readonly HashSet<(int, int)> ReloadEntriesNoted = [];
+
     // The bar's check of a rumor (0x36F53C: its Gossip row's situation and "always" byte, then the town's bit and flag
     // 0x2D1 + the rumor): mov [rsp+8], rbx; mov [rsp+0x10], rsi; push rdi; sub rsp, 0x20; movsxd rdi, ecx; mov esi, edx;
     // mov edx, edi; mov ecx, 0xB5 (the Gossip table); call (its row).
@@ -345,6 +358,7 @@ internal static unsafe class RemixedScenarios
         LoadEventAt = image.FindUnique(LoadEventPattern) - 0x18;
         UnitLookupAt = image.FindExactly(UnitLookupPattern, 2)[0];
         EntryRecordsAt = image.FindUnique(EntryRecordsPattern);
+        EntryAsked = (int*)GameImage.Rip(EntryRecordsAt, 2, 6); // mov eax, [the entry]
         if (*(uint*)ButtonsAt != 0xC1058B48)  // mov rax, [first pad]
             throw new InvalidDataException("the world's button function isn't laid out as this DLL expects");
 
@@ -372,7 +386,7 @@ internal static unsafe class RemixedScenarios
                 : $"remixed scenarios: scenario 0x{from:X} isn't in the table; Chapter 1-A isn't offered");
         GameSetup = (delegate* unmanaged<long>)game.Hooks.Hook(
             SetupAt, (nint)(delegate* unmanaged<long>)&Setup, "the scenario setup");
-        if (OwnEntries.Count > 0)
+        if (OwnEntries.Count > 0 || ReloadEntries.Count > 0)
             GameEntryRecords = (delegate* unmanaged<byte*>)game.Hooks.Hook(
                 EntryRecordsAt, (nint)(delegate* unmanaged<byte*>)&EntryRecords, "the battle entry's records");
         // The walker is replaced whole (an absolute jump at its start, no hook buffer: the space near some of the
@@ -1357,6 +1371,16 @@ internal static unsafe class RemixedScenarios
                                        BitConverter.ToUInt16(data, at + 4), BitConverter.ToUInt16(data, at + 6),
                                        BitConverter.ToUInt16(data, at + 8)));
         }
+        if (at < data.Length)
+        {
+            var reloads = Count();
+            for (var k = 0; k < reloads; k++, at += 4 + EntryBytes)
+            {
+                var records = (byte*)NativeMemory.Alloc(EntryBytes);
+                data.AsSpan(at + 4, EntryBytes).CopyTo(new Span<byte>(records, EntryBytes));
+                ReloadEntries[(BitConverter.ToUInt16(data, at), BitConverter.ToUInt16(data, at + 2))] = (nint)records;
+            }
+        }
         return (scenarios, formations);
     }
 
@@ -1438,8 +1462,9 @@ internal static unsafe class RemixedScenarios
         return null;
     }
 
-    /// <summary>The battle entry's records: the game's, or for a scenario of <see cref="OwnEntries"/> (var 0x27, the
-    /// scenario being set up) its own.</summary>
+    /// <summary>The battle entry's records: the game's; a map reload's of an entry ReMixed's code names, where the port
+    /// keeps it elsewhere (<see cref="ReloadEntries"/>, by var 0x27 and the entry asked); or for a scenario of
+    /// <see cref="OwnEntries"/> (var 0x27, the scenario being set up) its own.</summary>
     [UnmanagedCallersOnly]
     private static byte* EntryRecords()
     {
@@ -1447,6 +1472,14 @@ internal static unsafe class RemixedScenarios
         try
         {
             var scenario = Nemesis.GetVariable(0x27);
+            var reload = ReloadRecords(scenario, EntryAsked == null ? -1 : *EntryAsked);
+            if (records != null && reload != null)
+            {
+                if (ReloadEntriesNoted.Add((scenario, *EntryAsked)))
+                    _log?.Info($"remixed scenarios: scenario 0x{scenario:X}'s map reload takes entry 0x{*EntryAsked:X}'s "
+                               + "units from the mod's file (MAP_RELOAD)");
+                return reload;
+            }
             if (records != null && OwnEntries.TryGetValue(scenario, out var own))
             {
                 if (OwnEntriesNoted.Add(scenario))
@@ -1460,6 +1493,11 @@ internal static unsafe class RemixedScenarios
         }
         return records;
     }
+
+    /// <summary>The records a map reload of <paramref name="entry"/> takes in <paramref name="scenario"/>
+    /// (<see cref="ReloadEntries"/>), or null for the game's (or the scenario's own).</summary>
+    internal static byte* ReloadRecords(int scenario, int entry) =>
+        ReloadEntries.TryGetValue((scenario, entry), out var records) ? (byte*)records : null;
 
     /// <summary>A roster slot's name (+0xDC, UTF-8 up to its first 0), trimmed.</summary>
     internal static string RosterName(int slot)

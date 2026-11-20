@@ -68,6 +68,10 @@ internal static unsafe class FastForwardToggle
     /// <summary>The action whose speed is on (<see cref="Slow"/> or <see cref="Fast"/>), or 0.</summary>
     internal static int On => _latch.On;
 
+    /// <summary>A test harness's fast-forward (its "speed" command: <see cref="Slow"/> or <see cref="Fast"/>, 0 none): on
+    /// wherever fast-forward can be, whatever the setting, so a case gets through a long scene quickly.</summary>
+    internal static volatile int Forced;
+
     /// <summary>Where the input's frame, the mode and the GlobalWork pointer are, for the offline check.</summary>
     internal static nint FrameAt, ModeAt, GlobalWorkAt, InputManagerAt;
 
@@ -96,7 +100,10 @@ internal static unsafe class FastForwardToggle
         _frame(input, record);
         try
         {
-            if (Options.Current.FastForward != Options.FastForwardRule.Toggle)
+            var forced = Forced;
+            if (forced != 0)
+                _latch = new Latch { On = forced }; // the harness's speed, whatever was pressed
+            else if (Options.Current.FastForward != Options.FastForwardRule.Toggle)
             {
                 if (_latch.On != 0 || _latch.Pending != 0)
                 {
@@ -108,8 +115,8 @@ internal static unsafe class FastForwardToggle
             var work = *_globalWork;
             var mode = work == 0 ? 0 : _mode(work);
             var before = _latch.On;
-            Step(input + State, filled, mode, ref _latch);
-            if (_latch.On != before)
+            Step(input + State, filled && forced == 0, mode, ref _latch); // a forced speed takes no presses
+            if (_latch.On != before && forced == 0)
                 _log.Info(_latch.On == 0 ? "fast-forward: off" : $"fast-forward: on (×{(_latch.On == Fast ? 5 : 3)})");
         }
         catch (Exception e)

@@ -1,0 +1,16 @@
+# Rafa's speech boxes in the remaster's frog scene (event 270), only its first lines: a short form of
+# rafa-frog-scene.txt (7 minutes), for her face. Her lines (style 0x92, unit 0x80) name EVTFACE portrait 4 of the set
+# the scene's op 0x50 loads (4); the remaster gives that portrait as graphic 0x19 (.rdata 0x7141E0, copied to
+# [0x37A1348]), where it keeps Rafa's face and the mod gives ReMixed's character his, so her boxes showed Balthier's
+# face (a tester on 0.9.22). RemixedFaces.RemasterEventFaces makes it her 0x29, with 0x19's palette cap (8; 0x29's
+# own, 0, drew boxes with no face). The second peek prints the scene's eight portraits as loaded: the fourth dword is
+# 0x29 (0x19 before). A frame before each Enter, every second, for 45 s: her face in her boxes. About a minute:
+#   python -I tools/quick_test.py --restart --stop tests/quick/rafa-frog-boxes.txt
+name Rafa's boxes in the frog scene
+wait world depth=1 state=0 timeout=20
+copy roster 0 50 sprites=0x29 job=0x29 name_id=25
+scenario 0x10E event=0x10E
+wait log "loads event 270 in place of event" timeout=40
+wait unit battle_id=0x80 graphic=0x29 timeout=30
+advance event 999 every=1 shots=1 timeout=45
+send peek +0x37A1348 32

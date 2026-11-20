@@ -228,6 +228,76 @@ UNIT_BYTES, UNIT_JOB, UNIT_PRIMARY = 40, 0x0A, 0x1D
 DARK_KNIGHT, DARKNESS, SING = 0xA0, 0xE0, 0x16
 
 
+MAP_RELOAD, MENU_ENTRY_VAR = 0x4C, 0x32  # build_mod.py's
+
+
+def scenario_reloads(data: bytes | None = None) -> dict[tuple[int, int], bytes]:
+    """remixed-scenarios.bin's last section: (the mod's scenario, the entry a map reload asks) -> its 16 units
+    (build_mod.py MAP_RELOAD, RemixedScenarios.ReloadEntries); {} for data built without it."""
+    data = SCENARIOS.read_bytes() if data is None else data
+    u16 = lambda at: int.from_bytes(data[at:at + 2], "little")  # noqa: E731
+    at = 2 + SCENARIO_BYTES * u16(0)
+    for size in (FORMATION_BYTES, 4, 6, 5, 2 + 16 * 40):  # formations, mission places, message bases, offers, units
+        at += 2 + size * u16(at)
+    named, at = u16(at), at + 2  # hand-offs by Ramza's name: 6 bytes, then u8-counted names
+    for _ in range(named):
+        names, at = data[at + 5], at + 6
+        for _ in range(names):
+            at += 1 + data[at]
+    at += 2 + 8 * u16(at)  # mission postings
+    battles, at = u16(at), at + 2  # battles set up after their scene
+    for _ in range(battles):
+        at += 7 + 2 * data[at + 6]
+    at += 2 + 10 * u16(at)  # conditional rumors
+    if at >= len(data):
+        return {}
+    size = 4 + 16 * UNIT_BYTES
+    return {(u16(at + 2 + size * k), u16(at + 4 + size * k)): data[at + 6 + size * k:at + 2 + size * (k + 1)]
+            for k in range(u16(at))}
+
+
+def check_map_reloads() -> str:
+    """A map reload (0x4C) puts the units of the entry var 0x32 names in battle units 0-15. Where a generated event's
+    code names that entry by a literal (ReMixed's numbers: 0x0F4's town scene, the mod's 511, reloads the armory with
+    0x1DB), the units the port gives that reload (the mod's file's MAP_RELOAD section, else the slot of that number in
+    ENTD4) must be the ones its boxes then name: every battle id from 0x80 up a MESSAGE names, up to the reload's GOTO,
+    LABEL or END. The port's slot 0x1DB is one of Brave Story's rounds, so Agrias's "So these are the fiends?" named a
+    0x90 the reload never brought, and had no face (a tester on 0.9.22)."""
+    reloads = scenario_reloads()
+    entd4 = (FFTPACK / "battle_entd4_ent.bin").read_bytes()
+    seen: list[tuple[int, int]] = []
+    for path in sorted(SCRIPT.glob("event*.e")):
+        if not path.read_bytes().startswith(MARKER):
+            continue
+        number = int(path.stem[5:])
+        literal, reload = None, None
+        for _, op, params in instructions(event(number)):
+            if 0xAC <= op <= 0xBE and int.from_bytes(params[:2], "little") == MENU_ENTRY_VAR:
+                literal = int.from_bytes(params[2:4], "little") if op == 0xAE else None
+            if op == MAP_RELOAD:
+                reload = None
+                if literal is None:
+                    continue
+                units = reloads.get((number, literal))
+                if units is None and 0x180 <= literal < 0x200:
+                    units = entd4[(literal - 0x180) * 16 * UNIT_BYTES:(literal - 0x17F) * 16 * UNIT_BYTES]
+                ids = {units[u * UNIT_BYTES + 0x20] for u in range(16) if units and units[u * UNIT_BYTES]}
+                reload = (literal, ids, (number, literal) in reloads)
+                seen.append((number, literal))
+            elif reload is not None and op == 0x10 and params[6] >= 0x80 and params[6] not in reload[1]:
+                where = "the mod's file" if reload[2] else f"ENTD4's slot 0x{reload[0]:X}"
+                raise AssertionError(f"event {number}'s map reload with entry 0x{reload[0]:X} ({where}) has no unit "
+                                     f"0x{params[6]:X}, which its box names (line {int.from_bytes(params[2:6], 'little')}"
+                                     "): no face there (MAP_RELOAD)")
+            elif op in (0x0D, 0x0E, 0xDB):
+                reload = None
+    unused = set(reloads) - set(seen)
+    if unused:
+        raise AssertionError(f"map reload units no event asks for: {sorted(unused)}")
+    return (f"Map reloads naming their entry: {', '.join(f'event {n} of 0x{e:X}' for n, e in seen) or 'none'}, "
+            "the units their boxes name brought in")
+
+
 def check_primaries() -> str:
     """ReMixed's primary skillsets as the port gives them (build_mod.py remixed_primary): none names the remaster's
     story skillsets 0x4D and 0x4E (ReMixed's Bard and woman's Darkness), and no Dark Knight sings."""
@@ -578,7 +648,7 @@ def check() -> list[str]:
             "scene fade cleared, one victory -> recruitment, stable actors, "
             "four runtime lines valid",
             "Riders: the river camp's battle run seats its five, 0x0FB's battle its three",
-            check_places(), check_primaries()]
+            check_places(), check_primaries(), check_map_reloads()]
 
 
 def main() -> None:

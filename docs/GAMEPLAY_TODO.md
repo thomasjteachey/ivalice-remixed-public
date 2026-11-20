@@ -5,7 +5,7 @@ is, and what it waits on. The technical details (what ReMixed's code does, where
 [MECHANICS.md](MECHANICS.md) and [REMASTER.md](REMASTER.md); data held back is in
 [the build report](generated/mod-build.md).
 
-**Progress: 99% of gameplay** (106 done, 3 open: 3 small, 0 medium, 0 large). Worked out from this list by
+**Progress: 100% of gameplay** (106 done, 1 open: 1 small, 0 medium, 0 large). Worked out from this list by
 `python -I tools/todo_progress.py`, open items weighted by size (small 1, medium 3, large 15) and done ones at 2 each,
 and updated with every change to the list. Everything outside the story and display ports is ported or settled
 (the formulas ReMixed rewrote in place were the last, 2026-11-12; ReMixed's own battles writing their units back,
@@ -472,15 +472,14 @@ the Lionel scene's event art and Two Shots have sessions of their own):
   (`tests/quick/performance-through-item.txt`, 2026-11-19): Ramza sang Battle Song, used a Potion with two ticks of
   it left, had it back in the turn order right after, it landed again, and his next turn's menu came with no notice.
   *medium*
-- [ ] Rafa's and Agrias's speech boxes show the faces of ReMixed's characters on their second sprite sets: Balthier's
-  for Rafa in the frog scene (event 270, a tester on 0.9.22; seen again in the hidden PC game, 2026-11-19), Ashley's for
-  Agrias. ReMixed's characters on 0x19 and 0x34 get their faces through the fold (Patches/RemixedFaces.cs), but the
-  remaster files Rafa's and Agrias's faces under those same numbers, and some of its boxes hand the fold 0x19 or 0x34
-  for them. Two of those ways are mended (2026-11-19): an event box's portrait through the event table (0x714D50), and
-  a battle unit's box through its sprite's sheet slot (0x22AA88, RemixedFaces.BoxFace; seen leaving Ramza's box as it
-  was). Rafa's boxes in the frog scene (style 0x92) take another way still: one fold of 0x19 from the speech box
-  (0x138E22), with her unit drawn as 0x29, her name id 41 or 25 alike, and the face box not called. Next: find what
-  fills that box's face (+0xF0 of its record) for a style 0x92 line. *small*
+- [x] Rafa's and Agrias's speech boxes showed the faces of ReMixed's characters on their second sprite sets: Balthier's
+  for Rafa in the frog scene (event 270, a tester on 0.9.22; seen again in the hidden PC game on 0.9.24). Her lines
+  there name a portrait from the set of event portraits the scene loads, and the remaster gives that portrait as the
+  number it keeps her face under, which the mod gives ReMixed's character his. That portrait now names her own sprite
+  set, which leads to her face, with that face's colours (on its own it gave a box with no face). It was the only one
+  of the remaster's 64 event portraits so affected; none of them is Agrias's. Seen in the hidden PC game (2026-11-20):
+  Rafa's own face in her boxes in the frog scene, and Agrias's own in hers with Lionel in sight (her box's other way,
+  through her unit, mended 2026-11-19). *small*
 - [x] An answer list with a sentence before it ran past its box: the river camp's "Nay. Beasts gather often..." and
   its three answers drew their last two rows under the box, and the cursor stood two rows up (seen in the hidden PC
   game). The remaster wraps a long row itself, but the tall boxes count a text's rows by its line breaks, so the box
@@ -612,11 +611,15 @@ Reported by a player:
   own function: a man's Black Mage, as a generic's). His name id (0x6B) is a blank row in the remaster's names, as were
   Aliste's, Bremondt's, Valens's, Govis's, Teioh's and the workers'; every blank row a unit of the port's battle data
   names takes ReMixed's name now (build_mod.py unit_name_rows, 20 rows). Not seen in the game yet. *small*
-- [ ] Yardrow Armory (ReMixed's scenario 0xF4, the mod's event 511): Agrias's "So these are the fiends?" showed no
-  portrait before its battle, where the scene before had them all (a tester on 0.9.22). `tests/quick/yardrow-armory-faces.txt`
-  starts it, but in the hidden PC game (2026-11-19) its opening stayed on the map for two minutes without a line, so it
-  isn't reproduced yet: its battle's units there are a generic woman and man as 0x90 and 0x91 (name ids 105 and 106),
-  and the lines name 0x90 as the speaker. *small*
+- [x] Yardrow Armory (ReMixed's scenario 0xF4, the mod's event 511): Agrias's "So these are the fiends?" showed no
+  portrait before its battle, where the scene before had them all (a tester on 0.9.22). After the town scene's "yes"
+  the scene changes to the armory's map, which also brings in the units of the battle the scene names: on the PS1 the
+  armory's enemies, Agrias, Balmafula and the Wizard, and the line is Agrias's own, with her face. The port keeps
+  ReMixed's battles under other numbers, so the armory got another battle's units (one of Brave Story's rounds) and no
+  Agrias to give the line a face. Now the armory gets its battle's units; the build checks that every such change of
+  map brings in the units its lines name (only this one names its battle so). Seen in the hidden PC game (2026-11-20,
+  `tests/quick/yardrow-armory-faces.txt`, about 2 minutes, the town scene fast-forwarded): Agrias, Balmafula and the
+  Wizard at the armory's stairs and Agrias's face in her box, as on the PS1; then on to the battle. *small*
 - [x] The game froze on the line "Rendezvous missions are now posted among the Rumors in taverns." (reported
   2026-11-17 with a screenshot, Auto-proceed on, most likely on 0.9.5; the report's screenshot and folder of files are
   kept outside the repo). It's the last line of ReMixed's 0x0A4, Biggs and Wedge's bartender. On 0.9.5 its box's wait

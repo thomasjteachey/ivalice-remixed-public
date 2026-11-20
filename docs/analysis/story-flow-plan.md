@@ -1074,6 +1074,22 @@ and 0xB4 (slots 0 and 3), once as generics (slots 4 and 5); to look at.
   battle's opening starts through its conditions ("var 0x1FD = 1 → the event", which sets var 0x27 and loads that
   event): with the scene's preset, the battle's formation led into the scene again (var 0x27 back at 0x1FF), which
   handed on to the formation again (seen on the PC, from the scene and started directly alike).
+- **0x0F4's armory line before its battle (2026-11-20):** after the town scene's "yes", 0x0F4's own run reloads the
+  map (0x4C, map 26), which brings in the units of the entry var 0x32 names, and its opening set var 0x32 to 0x1DB, the
+  battle's: on the PS1 the armory shows the battle's enemies and 0x90 Agrias, 0x91 Balmafula and 0x92 the Wizard, and
+  Agrias's "So these are the undead?" (the PSP script's "fiends") names 0x90, with her face; then the fade, the
+  Preparation Menu's formation and the battle (work/psx/run/shots f4y-*, from the `wm` state with var 0x27 set to 0xF4
+  and the question answered Down, Circle; RAM: battle units 11-13 ids 0x90-0x92, sprite sets 0x22, 0x21, 0x80). The
+  port moves ReMixed's entries, and its slot 0x1DB is one of Brave Story's rounds (ROUND_SLOTS), so the reload brought
+  no 0x90 and her box had no face (a tester on 0.9.22: "it was showing the battlefield"). The build now carries, for
+  each literal var 0x32 a shipped event's map reload uses (only this one, in the scene and in its battle's copy,
+  where the opening jumps past it), that entry's units as the port builds them
+  (`MAP_RELOAD`, the scenarios file's last section), and the code mod hands them to that scenario's reload of that
+  entry (`RemixedScenarios.ReloadEntries`, by var 0x27 and the entry the setup reads, [0x1856930]). The literal stays
+  ReMixed's: it differs from the scene's slot (0x1F6) and the battle's fresh carrier (0x1FE), so the reload builds its
+  units and the battle its own afresh. `check_story_regressions.check_map_reloads` checks that every unit from 0x80 a
+  box names after such a reload is among the units it brings. The other reloads (the missions' rounds, stepping var
+  0x32; 0x0F7, 0x0FB, 0x103, 0x115 and 0x119 with their scenario's own entry) were already the port's numbers.
 - **ReMixed's two scripts out of step (2026-11-07):** 1-A's events carry both of ReMixed's translations as two blocks
   of n messages, in either order (0x0F6 has the PSX script first, 0x0F5, 0x0F9, 0x0FB and 0x119 the PSP one), and name
   a message by its number in the first block, plus n for the second (`ADD var 0x71, n` under a test of flag 0xB2,

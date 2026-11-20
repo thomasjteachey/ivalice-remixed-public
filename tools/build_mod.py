@@ -3758,6 +3758,39 @@ BATTLE_SPLITS = {
     # formation and a private copy of preset 0xE9, before any battle condition is walked.
     0xEA: 0x34D,
 }
+# A map reload in an event (0x4C) loads the map and puts the units of the battle entry var 0x32 names in battle units
+# 0-15, on the PS1 and in the remaster (the setup 0x3044EC/0x30476C: [0x1856930] = var 0x32, its ENTD file, its
+# records through 0x28416C). ReMixed's code may set var 0x32 to one of its own entry numbers first: 0x0F4's opening
+# sets it to 0x1DB, its battle's, and after the town scene its map reload brings the armory's units in (the enemies, and
+# 0x90 Agrias, 0x91 Balmafula, 0x92 the Wizard; seen on the PS1, work/psx/run/shots f4y-*), whose first line names
+# 0x90. The port moves ReMixed's entries to other slots or into the mod's file, so its 0x1DB is another battle's (one of
+# Brave Story's rounds, ROUND_SLOTS): the reload brought no 0x90, and Agrias's "So these are the fiends?" had no face
+# (a tester on 0.9.22). So every literal var 0x32 a shipped event's map reload uses (MAP_RELOAD) carries that entry's
+# units as the port builds them, for that scenario: the code mod hands them to the reload in the slot's place
+# (RemixedScenarios.ReloadEntries, by the scenario and the entry asked). The literal stays ReMixed's: it differs from the
+# scene's own slot and from the battle's carrier, as the reload must (an entry number the setup has just loaded keeps
+# that load's units; see FRESH_ENTRY_BATTLES), and the build checks that it does.
+MAP_RELOAD, SET_VALUE = 0x4C, 0xAE
+
+
+def reload_entries(code: bytes, lengths: bytes) -> list[int]:
+    """The entries ReMixed's code names by a literal in var 0x32 (SET var 0x32, N) where a map reload (MAP_RELOAD) of
+    its uses them, in code order. Any other write to var 0x32 (ADD in the missions' rounds, SET_VAR, ZERO) leaves the
+    reloads after it to the slots as the port has them (ROUND_SLOTS); a reload with no literal before it loads the
+    scenario's own entry. Read straight through: 0x0F4's literal is in its opening, its reload after the town scene."""
+    found: list[int] = []
+    literal = None
+    at = 0
+    while at < len(code):
+        op = code[at]
+        if op in range(0xAC, 0xBF) and at + 3 <= len(code) and u16(code, at + 1) == MENU_ENTRY_VAR:
+            literal = u16(code, at + 3) if op == SET_VALUE else None
+        elif op == MAP_RELOAD and literal is not None and literal not in found:
+            found.append(literal)
+        at += 1 + lengths[op]
+    return found
+
+
 # Actors needed by the scene around a split battle, but not by the battle itself: ReMixed's Mandalia carrier has a
 # data-built Ramza (battle id 0x90) for its opening/recruitment staging. The remaster also deploys the player's real
 # roster Ramza through the formation, leaving that scene actor as a second guest Ramza in a corner. Keep the actor in
@@ -5251,6 +5284,9 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
     menu_scenarios = {REMIXED_SCENARIOS[s] for s in MENU_BATTLES.values()}
     menu_battles: dict[int, tuple[int, int]] = {}  # the mod's scenario -> its battle's formations (MENU_BATTLES)
     dropped_groups: list[int] = []  # ReMixed's battles whose second group the mod would leave out
+    entry_units: dict[int, bytes] = {}  # ReMixed's battle entry -> its 16 units as the port builds them (MAP_RELOAD)
+    named_reloads: list[tuple[int, int, int]] = []  # (ReMixed's event, the mod's scenario, the entry its reload names)
+    job_slots: dict[int, int] = {}  # the mod's scenario -> the entry number its record names
     for theirs, ours, scene in jobs:
         record = bytearray(SCENARIO_SIZE if theirs in TAVERN_EVENTS else records[theirs])
         record[0:2] = ours.to_bytes(2, "little")
@@ -5265,6 +5301,8 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
             else:
                 sys.exit(f"ReMixed's scenario 0x{theirs:X} hands on to 0x{after_it:X}, which the mod doesn't ship")
         raw_code = remixed_event_code(test_evt, battle_new, theirs)
+        # A split battle's copy too, though its opening jumps to its end: the code is there, so its units are.
+        named_reloads += [(theirs, ours, named) for named in reload_entries(raw_code, lengths)]
         own_preset = None
         if scene is not None:  # the battle's map and entry, as the menu sets them up
             setup = opening_sets(raw_code, lengths, (MENU_ENTRY_VAR, MENU_MAP_VAR))
@@ -5339,6 +5377,7 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
                     units[at + ENTD_FLAGS] &= ~ENTD_LOAD & 0xFF  # made from its data (ALGUS_GUESTS_FROM_DATA)
                     guests_from_data += 1
                     cleared = True
+            entry_units.setdefault(entry, bytes(units))  # as ReMixed has the entry, for a map reload (MAP_RELOAD)
             # A split battle copies the source scene's entry. Remove actors used only to stage that scene when the
             # formation supplies the real party member; retaining them produces a second, data-built guest copy.
             if scene is not None:
@@ -5380,6 +5419,7 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
                 own_entries[ours] = bytes(units)
             record[7:9] = slot.to_bytes(2, "little")
             record[0xF:0x11] = slot.to_bytes(2, "little")  # what the setup takes when started from the world map
+            job_slots[ours] = slot
         # Its formations: the record's, or (a battle ReMixed sets up for its Preparation Menu) the ones its code sets;
         # none for a scene whose battle is a scenario of its own.
         if not u16(record, 9) and not (theirs in BATTLE_SPLITS and scene is None):
@@ -5693,6 +5733,23 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
     data += len(CONDITIONAL_RUMORS).to_bytes(2, "little") + b"".join(
         b"".join(v.to_bytes(2, "little") for v in (rumor, *conditions))
         for rumor, conditions in sorted(CONDITIONAL_RUMORS.items()))
+    # The units a map reload brings in where ReMixed's code names the entry (MAP_RELOAD): (the mod's scenario, the
+    # entry asked, its 16 units), for the code mod to hand to that scenario's reload of that entry.
+    reloads = []
+    for theirs, ours, named in named_reloads:
+        if named not in entry_units:
+            sys.exit(f"ReMixed's event 0x{theirs:X} reloads its map with entry 0x{named:X}, which no shipped scenario "
+                     "has (MAP_RELOAD)")
+        battle = BATTLE_SPLITS.get(theirs)
+        clashes = {carrier, fresh_carrier, job_slots.get(ours), job_slots.get(battle) if battle else None}
+        if named in clashes:
+            sys.exit(f"ReMixed's event 0x{theirs:X} reloads its map with entry 0x{named:X}, the number of an entry the "
+                     "scenario or its battle loads itself, so the reload would keep that load's units (MAP_RELOAD)")
+        reloads.append((ours, named, entry_units[named]))
+    data += len(reloads).to_bytes(2, "little") + b"".join(
+        s.to_bytes(2, "little") + e.to_bytes(2, "little") + units for s, e, units in reloads)
+    done.append(f"{len(reloads)} map reload(s) with the entry ReMixed's code names ("
+                + ", ".join(f"0x{s:X}'s of 0x{e:X}" for s, e, _ in reloads) + ")")
     if len(menu_battles) != len(set(MENU_BATTLES.values())):
         sys.exit("a scenario of MENU_BATTLES has no battle")
     done.append(f"{len(menu_battles)} battle(s) set up again after their scene, as ReMixed's Preparation Menu does")
@@ -7664,7 +7721,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata. The title screen's plaque shows it (write_title_screen).
-RELEASE_VERSION = "0.9.25"
+RELEASE_VERSION = "0.9.26"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:
