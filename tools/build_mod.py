@@ -986,6 +986,15 @@ OVERRIDE_FIELDS = {  # attribute byte -> OverrideAbilityActionData column
     9: "X", 10: "Y", 11: "InflictStatus", 12: "CT", 13: "MPCost",
 }
 OVERRIDE_FLAGS = {3: ("Flags12", 0), 4: ("Flags12", 1), 5: ("Flags34", 0), 6: ("Flags34", 1)}
+# The equipment slot ReMixed puts in an ability's status byte (its data: 1 weapon, 2 shield, 3 head, 4 body, 5
+# accessory) for its own slot pick, where vanilla and the remaster pick by the ability's id (0x3065C4) and agree:
+# the Steals, the Knight's Rends and Mighty Sword. The remaster reads the byte as the action's status set, so it
+# showed as added effects and, with nothing to break, a Rend's plain attack inflicted it (a player's report,
+# 2026-11-19: Rend Helm's 3 is Silence, Rend Armor's 4 Frog; ReMixed's tail 0x8018BAF8 clears the statuses its slot
+# numbers would name). These keep vanilla's byte, 0.
+SLOT_STATUS_BYTES = {0x6E: 3, 0x6F: 4, 0x70: 2, 0x71: 1, 0x72: 5,  # Steal Helmet, Armor, Shield, Weapon, Accessory
+                     0x8A: 3, 0x8B: 4, 0x8C: 2, 0x8D: 1,  # Rend Helm, Armor, Shield, Weapon (Head/Armor/... Break)
+                     0xA0: 4, 0xA1: 3, 0xA2: 1, 0xA3: 5}  # Shellbust Stab, Blastar Punch, Hellcry Punch, Icewolf Bite
 
 
 @dataclass
@@ -996,6 +1005,7 @@ class OverrideResult:
     custom_formula: list[int] = field(default_factory=list)
     code_formula: list[int] = field(default_factory=list)  # on a formula the code mod implements
     kept_formula: dict[int, int] = field(default_factory=dict)  # ability -> ReMixed formula it can't use yet
+    slot_bytes: list[int] = field(default_factory=list)  # abilities whose slot number stays out of the status byte
     remaster_owned: list[int] = field(default_factory=list)
     written: Path | None = None
 
@@ -1037,6 +1047,12 @@ def build_ability_overrides(cfg: dict, scus_old: bytes, scus_new: bytes, empty: 
         start = ABILITY_ATTRIBUTES + i * 14
         old, new = scus_old[start : start + 14], bytearray(scus_new[start : start + 14])
         new[6] = (new[6] & ~KEEP_VANILLA_FLAG4) | (old[6] & KEEP_VANILLA_FLAG4)
+        if i in SLOT_STATUS_BYTES:
+            if new[11] != SLOT_STATUS_BYTES[i] or old[11] != 0:
+                sys.exit(f"ability 0x{i:03X}'s status byte is 0x{new[11]:02X} in ReMixed (vanilla 0x{old[11]:02X}), "
+                         f"not its slot {SLOT_STATUS_BYTES[i]}: see SLOT_STATUS_BYTES")
+            new[11] = old[11]
+            result.slot_bytes.append(i)
         if i in remaster_owned:
             if old != bytes(new):
                 result.remaster_owned.append(i)
@@ -7417,7 +7433,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata. The title screen's plaque shows it (write_title_screen).
-RELEASE_VERSION = "0.9.22"
+RELEASE_VERSION = "0.9.23"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:
@@ -7601,6 +7617,9 @@ def write_report(builds: list[tuple[str, list[TableResult]]], overrides: Overrid
           ["- No ability is left on a formula that's empty without ReMixed's code."]),
         f"- Left alone because the remaster uses the slot for its own ability: "
         + (", ".join(f"0x{i:03X}" for i in overrides.remaster_owned) or "none"),
+        f"- The status byte stays vanilla's for {len(overrides.slot_bytes)} abilities whose slot number ReMixed keeps "
+        "there (the remaster picks their slot by id and reads the byte as statuses): "
+        + ", ".join(f"0x{i:03X}" for i in overrides.slot_bytes),
     ]
 
     lines += ["", "## Decoder disagreements by field (enhanced)", "",

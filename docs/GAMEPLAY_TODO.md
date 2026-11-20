@@ -1245,6 +1245,12 @@ In order:
   moved, which a Charge always counts as (a Calculator's second spell after moving too). Fixed the same day and seen
   on the PC (tests/quick/two-shots.txt, the turn's two shots chosen by the harness's act): the second goes to the
   slot as the turn ends, the unit keeps Charging when the first fires, and the second fires on the next tick.
+- [x] The Knight's Rends inflicted statuses (a player's report, 2026-11-19: a second Rend Helm on a helmetless
+  target dealt damage and silenced; a Rend Armor turned a unit into a frog). ReMixed keeps an equipment slot number
+  in the Rends', Steals' and Mighty Sword's status byte for its own slot pick; the remaster picks the slot by the
+  ability's id but reads the byte as statuses, so the preview listed added effects and a Rend with nothing to break
+  inflicted them. Those 13 abilities now keep vanilla's byte. Seen on the PC (`tests/quick/rend-helm-statuses.txt`):
+  Rend Helm on a chocobo, with no helm to break, hit with the action's status set 0 and added no statuses.
 - [x] Elemental Strike aims at range 7 with its own preview. A player reported it as a melee ability with a 0% hit
   chance (2026-11-19): the battle menu still handed Geomancy's choice over as "no ability", for the terrain to fill
   in as in vanilla, so the targeting and the preview were worked out for no ability (the panels round the unit), and

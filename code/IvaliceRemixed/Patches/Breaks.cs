@@ -15,8 +15,10 @@ namespace IvaliceRemixed.Patches;
 /// clears the result's slot (+0x1B) and item (+4) and goes on to the damage without the break mark (+0x12 = 4), as
 /// ReMixed does with Maintenance; otherwise the game's step runs as before (it then does nothing).</para>
 /// <para>ReMixed's 0x2E ends in its common tail past the Y test (0x8018BAF8), which clears the action's status bytes
-/// (0x80193860): its data puts the slot (1 weapon, 2 shield, 3 head, 4 body) in the Breaks' status byte. The remaster's
-/// 0x2E has no status step, so nothing reads them here.</para>
+/// (0x80193860): its data puts the slot (1 weapon, 2 shield, 3 head, 4 body) in the Breaks' status byte. The remaster
+/// picks the slot by the ability's id (0x3065C4) but takes the byte as the action's status set, shown as added
+/// effects and inflicted by a Rend's plain attack (a player's report, 2026-11-19), so the build keeps vanilla's byte
+/// for these (tools/build_mod.py SLOT_STATUS_BYTES).</para>
 /// </remarks>
 internal static unsafe class Breaks
 {

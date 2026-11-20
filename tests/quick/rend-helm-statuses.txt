@@ -1,0 +1,24 @@
+# A Rend inflicts no statuses (a player's report, 2026-11-19: a second Rend Helm on a target with no helm dealt damage
+# and silenced it). ReMixed keeps the Rends' equipment slot in their status byte (Rend Helm's 3); the remaster took it
+# as the action's status set (3, Silence) and its plain attack with nothing to break inflicted it. The build keeps
+# vanilla's 0 there (tools/build_mod.py SLOT_STATUS_BYTES). Run with
+#   python -I tools/quick_test.py --restart --location 24 --stop tests/quick/rend-helm-statuses.txt
+# A random battle on Mandalia Plains, one unit placed and given Arts of War (0x07) as its secondary with Rend Helm
+# (0x8A, its second ability in ReMixed's list: bit 0x40 of +0xA8, the Knight's learned bits) learned. An `act` uses it
+# at the nearest foe (a monster, no helm: the plain attack), and formula 0x25's trace names the action's status set
+# (0) and the statuses the hit adds (none). The trace's ability id reads 0x000: the formula's tail has cleared it by
+# then, so the match leaves it open (the `uses 0x08A` line before it names the action). Seen passing 2026-11-19 on a
+# chocobo: status set 0, statuses added 0000000000, hit 1.
+name Rend Helm inflicts no statuses
+send testmode record
+wait world depth=1 state=0 timeout=20
+key RETURN
+wait log "reveal treasures: map" press=RETURN every=3 timeout=180
+formation units=1
+poke unit player=1 present=1 offset=0x13 hex=07
+poke unit player=1 present=1 offset=0xA8 or=40
+send act 07 08A foe
+wait log "harness: unit \d+ uses 0x08A" timeout=240
+wait log "formula 0x25, ability 0x[0-9A-F]{3}: status set 0, statuses added 0000000000, hit 1" timeout=60
+wait log "harness: unit \d+ used 0x08A" timeout=60
+shot struck

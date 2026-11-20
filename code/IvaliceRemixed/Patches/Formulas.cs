@@ -1143,7 +1143,9 @@ internal static unsafe class Formulas
     /// <remarks>
     /// ReMixed also reads the slot from the ability's "status" byte (its data: 1 weapon, 2 shield, 3 head, 4 body, 5
     /// accessory) where vanilla and the remaster go by the ability's id; for the four Breaks the two agree. It then
-    /// clears the action's status bytes (its common tail, 0x8018BAF8), as neither game's 0x25 runs a status step.
+    /// clears the action's status bytes (its common tail, 0x8018BAF8). The remaster takes that byte as the action's
+    /// status set, which its plain attack with nothing to break inflicted (Rend Helm's 3, Silence), so the build keeps
+    /// vanilla's byte for the Breaks (tools/build_mod.py SLOT_STATUS_BYTES).
     /// </remarks>
     [UnmanagedCallersOnly]
     private static void MomentumBreak()
@@ -1153,6 +1155,10 @@ internal static unsafe class Formulas
         try
         {
             var result = *_battle.TargetResult;
+            // The action's status set (the ability's status byte, vanilla's 0 for the Breaks) and what the hit adds.
+            Trace(0x25, $"status set {*_code.StatusId}, statuses added "
+                        + $"{Convert.ToHexString(new ReadOnlySpan<byte>(result + Battle.ResultStatusAdded, 5))}, "
+                        + $"hit {result[0]}, flags 0x{*(ushort*)(result + Battle.ResultFlags2):X4}");
             if (!Supports.MomentumBreak || result[0] == 0 || *(ushort*)(result + Battle.ResultFlags2) != 4)
                 return;
             _r.Knockback();
