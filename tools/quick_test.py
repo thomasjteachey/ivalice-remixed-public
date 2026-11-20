@@ -14,14 +14,17 @@ downs the enemies (or those units); `expect roster name_id=0x76` wants exactly o
 `count=N` another number of them (`count=0`: a recruit turned down on its join screen isn't there).
 `show slots` (or `roster`) prints the battle units' roster slots and ids into the case's output, `show units` their
 jobs, skillsets, unlocked jobs and job fields (levels, learned abilities, JP); `copy roster 2 3`
-copies roster slot 2's record into slot 3, a party member more.
+copies roster slot 2's record into slot 3, a party member more (`sprites=0x29 job=0x29 name_id=25` on the end make
+the copy someone else: in slot 50, the guest Rafa).
 `key K` posts one key to the game's own window (never the desktop's input). `wait log PATTERN press=RETURN every=1`
 confirms through dialogue until a log line comes; `wait world depth=D state=S` waits for a world-map menu.
 A battle unit matches on its listing's fields (index, id, job, team, primary, secondary, battle_id, ...) and on its
 live ones (turn, moved, acted, ability, charge, statuses, hp, right_hand; player and present, 1 or 0):
 `wait unit player=1 present=1 turn=1 timeout=300` waits for a party unit's turn; `FIELD&MASK=V` compares only the
 mask's bits (`dark_knight_learned&0xA00000=0xA00000`: those two abilities learned, whatever the rest). `poke unit FIELD=VALUE... offset=0x13 hex=08` writes bytes into every matching unit (`or=`
-ORs them in), to set a unit up for a test: a skillset, a learned ability, a weapon.
+ORs them in), to set a unit up for a test: a skillset, a learned ability, a weapon. `ride [foe] [skillset=0xB0]` links the
+first party unit on the field as a rider to the next party unit (with `foe`, the first enemy) as its mount, the
+mount's primary skillset a monster's (the Chocobo's by default), as boarding would; they keep their own panels.
 
 Start or restart the hidden game and print strict PASS/FAIL lines:
 
@@ -190,6 +193,29 @@ def poke_units(args: list[str], case: str) -> None:
     print(f"PASS {case}: poked +0x{offset:X} = {data.hex()} on unit(s) {[u['index'] for u in chosen]}")
 
 
+UNIT_LINK, UNIT_PRIMARY = 0x1B4, 0x12  # a rider's link is 0x80 | its mount's index, a mount's 0x40 | its rider's
+
+
+def ride(args: list[str], case: str) -> None:
+    """ride [foe] [skillset=0xB0]: the first party unit on the field (by battle index) becomes a rider, and the next
+    party unit, or with foe the first enemy, its mount."""
+    foe = "foe" in args
+    skillset = fields([a for a in args if a != "foe"]).get("skillset", 0xB0)
+    units = sorted(find("unit", {"present": 1}), key=lambda u: u["index"])
+    party = [u for u in units if u["player"]]
+    mounts = [u for u in units if not u["player"]] if foe else party[1:]
+    if not party or not mounts:
+        raise CaseFailure(f"ride needs a party unit and a{'n enemy' if foe else 'nother party unit'} on the field")
+    rider, mount = party[0], mounts[0]
+    for at, value in ((rider["address"] + UNIT_LINK, 0x80 | mount["index"]),
+                      (mount["address"] + UNIT_LINK, 0x40 | rider["index"]),
+                      (mount["address"] + UNIT_PRIMARY, skillset)):
+        reply = harness.send(f"poke 0x{at:X} {value:02x}")
+        if reply.startswith("error"):
+            raise CaseFailure(reply)
+    print(f"PASS {case}: unit {rider['index']} rides unit {mount['index']}, whose skillset is 0x{skillset:X}")
+
+
 def find(kind: str, wanted: dict[str, int], items: list[dict] | None = None) -> list[dict]:
     items = records(kind) if items is None else items
     return [item for item in items if matches(item, wanted)]
@@ -283,11 +309,25 @@ def run_case(path: Path) -> None:
                     raise CaseFailure(reply)
             elif command == "poke" and args and args[0] == "unit":
                 poke_units(args[1:], case)
-            elif command == "copy" and args and args[0] == "roster":  # copy roster FROM TO: a party member more
+            elif command == "ride":
+                ride(args, case)
+            elif command == "copy" and args and args[0] == "roster":
+                # copy roster FROM TO [sprites=S] [job=J] [name_id=N]: a party member more, or with those fields
+                # someone else (a guest in slots 50-53: sprites=0x29 job=0x29 name_id=25 is the guest Rafa)
                 source, target = number(args[1]), number(args[2])
                 base = harness.image_base() + harness.ROSTER
                 record = bytearray(harness.peek_bytes(base + source * harness.ROSTER_SIZE, harness.ROSTER_SIZE))
                 record[1] = target  # a roster unit's id is its slot
+                for arg in args[3:]:
+                    field, _, value = arg.partition("=")
+                    if field == "sprites":
+                        record[0] = number(value)
+                    elif field == "job":
+                        record[2] = number(value)  # +0x02 (roster_records' job)
+                    elif field == "name_id":
+                        record[harness.ROSTER_NAME_ID:harness.ROSTER_NAME_ID + 4] = number(value).to_bytes(4, "little")
+                    else:
+                        raise CaseFailure(f"copy roster: unknown field {field!r}")
                 reply = harness.send(f"poke 0x{base + target * harness.ROSTER_SIZE:X} {record.hex(' ')}")
                 if reply.startswith("error"):
                     raise CaseFailure(reply)

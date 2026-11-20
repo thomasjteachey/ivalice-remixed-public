@@ -1,0 +1,20 @@
+# The remaster's frog scene (event 270, entry 0x1AD: Rafa and Marach's voice, "Come, Ramza. Let us make for
+# Riovanes."). A tester on 0.9.22 saw Rafa there in another character's sprite and face, with "? joined the party as a
+# guest" at level 0: the enhanced override of the entry's unit 1 (OverrideEntryData) loads the guest Rafa from the
+# formation by sprite set 0x19, ReMixed's slot, while her roster record is on 0x29, so the unit was made empty; and
+# AddGhostUnit 0x19 walked her in as 0x19 (tools/build_mod.py REMASTER_SPRITE_SET_OPS, write_entry_overrides). The
+# test save has no Rafa, so slot 50 gets a guest copy of her as the scene before (entry 0x1AC) saves her. Run with
+#   python -I tools/quick_test.py --restart tests/quick/rafa-frog-scene.txt
+# A requested scenario loads its first event, so event=0x10E makes it load 270, and after the scene its hand-on loads
+# event 4 (the harness's start, not the story's), where the case stops. A frame before each Enter: her face in her
+# boxes (her own, not 0x19's sheet's: RemixedFaces.BoxFace), and her join screen's card.
+name Rafa in the frog scene
+wait world depth=1 state=0 timeout=20
+copy roster 0 50 sprites=0x29 job=0x29 name_id=25
+scenario 0x10E event=0x10E
+wait log "loads event 270 in place of event" timeout=40
+wait unit battle_id=0x80 graphic=0x29 timeout=30
+expect unit battle_id=0x80 graphic=0x29 job=0x29
+show slots
+advance event 4 every=0.6 shots=1 timeout=480
+expect roster name_id=25

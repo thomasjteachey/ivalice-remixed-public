@@ -26,9 +26,13 @@ namespace IvaliceRemixed.Patches;
 /// the same, by 0x0E; Celia's and Lede's by 0x8D and 0x8E). So a listed graphic whose number holds a story
 /// character's face gets an unused portrait of its own, and the portrait they shared gives the story character's own
 /// sprite set, which the game's fold turns into that face (<see cref="SeparatePortraits"/>). The PS1's tables do the
-/// same (ReMixed gives Ashley's 0x34 a portrait of her own). Event speech boxes that name an EVTFACE portrait take it
-/// through another table (0x714D50), left as it is: ReMixed redrew part of EVTFACE, and which of its events name one
-/// isn't known.
+/// same (ReMixed gives Ashley's 0x34 a portrait of her own). An event's speech boxes start from the speaker's PS1
+/// portrait too, and take one of 0x51 or less through a table of their own (0x714D50, <see
+/// cref="EventGraphicOfPortraitPattern"/>), which gave Rafa's 0x0E as 0x19 and Agrias's 0x17 as 0x34: her boxes showed
+/// ReMixed's character's face, his Ashley's (a tester, 2026-11-19, Rafa in the frog scene). The separated portraits'
+/// entries there go to the story character's own sprite set as well. The portraits it gives no sprite set of the
+/// remaster's are left (0x08, Gafgarion's second, as ReMixed's 0x11): ReMixed redrew part of EVTFACE, and which of its
+/// events name one isn't known.
 ///
 /// Brave Story's people (0x172B70 and 0x177004, through 0x1E4720 and 0x1E5B6C) carry the remaster's graphic numbers
 /// for its own characters, two of which the mod gives ReMixed's (Gafgarion's 0x11, Malak's 0x12, which the game folds
@@ -52,6 +56,12 @@ internal static unsafe class RemixedFaces
     /// movzx r11d, word [r15+rax*2+table]; mov al, r8b.</summary>
     internal const string PortraitOfSpriteSetPattern =
         "81 F9 D3 00 00 00 73 ?? 48 63 C1 45 0F B7 9C 47 ?? ?? ?? ?? 41 8A C0";
+    /// <summary>An event speech box's graphic by its portrait ([0x2FF9EDC], the speaker unit's PS1 portrait) with the
+    /// enhanced sprites, at 0x2F999C (the same at 0x339DF4 and 0x3994DD): cmp r8d, 0x51; ja (0x274028's table above);
+    /// lea rcx, [image]; mov ecx, [rcx + r8*4 + table], the table .rdata 0x714D50 (0x52 dwords), which the fold then
+    /// takes.</summary>
+    internal const string EventGraphicOfPortraitPattern = "41 83 F8 51 77 ?? 48 8D 0D ?? ?? ?? ?? 42 8B 8C 81";
+    private const int EventPortraits = 0x52;
     private const int Graphics = 0x100, Portraits = 0xA0, SpriteSets = 0xD3;
     private const int Portrait = 0xFF, NoPortrait = 0x300; // a sprite set's portrait; bits that make 0x32AB3C give none
 
@@ -74,6 +84,27 @@ internal static unsafe class RemixedFaces
         "74 29 49 83 38 00 7C 1E 49 8B C8 E8 ?? ?? ?? ?? 48 85 C0 74 16 49 83 38 00 7C 0B 49 8B C8 E8 ?? ?? ?? ?? 48 8B " +
         "D8 8B 43 1C";
 
+    /// <summary>A speech box's face for a battle unit (0x22AA88: rcx the box's layout, edx the unit's slot, r8 and r9
+    /// out; eax the face): the graphic recomputed (0x0FCAB0), then the face from the unit's sprite's +9, its sheet slot,
+    /// which the callers (0x214153 and others) take through <see cref="SheetSlots"/> when under 10: the graphic of the
+    /// sheet loaded there. A story character whose graphic shares its sheet with its second sprite set's (Rafa's 0x29
+    /// with 0x19, Agrias's 0x1E with 0x34) gets the sheet's graphic, which is ReMixed's character's number in the mod, so
+    /// the fold gave her box his face (Balthier's for Rafa in the frog scene, a tester on 0.9.22; Ashley's for Agrias):
+    /// <see cref="BoxFace"/> hands back the unit's own graphic there, which the fold sends to her face. Its prologue: mov
+    /// [rsp+8], rbx; push rbp, rsi, rdi, r14, r15; sub rsp, 0x20; or edi, -1; movsxd rbp, edx; mov r15, r9;
+    /// mov rsi, r8; mov rbx, rcx; test r8, r8; je; mov [r8], edi; cmp ebp, 0x14 (+0x33: lea rax, [the battle units]).
+    /// </summary>
+    internal const string BoxFacePattern =
+        "48 89 5C 24 08 55 56 57 41 56 41 57 48 83 EC 20 83 CF FF 48 63 EA 4D 8B F9 49 8B F0 48 8B D9 4D 85 C0 74 03 " +
+        "41 89 38 83 FD 14";
+    /// <summary>A caller's sheet slot to graphic (0x214162): cmp rdx, 0xA; jae; mov edx, [r8 + rdx*4 + table]
+    /// (r8 the image's start; .data 0x37A59E0, 10 dwords).</summary>
+    internal const string SheetSlotsPattern = "48 83 FA 0A 73 08 41 8B 94 90";
+    internal static nint BoxFaceAt { get; private set; }
+    internal static int* SheetSlots { get; private set; }
+    private static byte* _boxUnits;
+    private static delegate* unmanaged<nint, int, nint, int*, int> _boxFace; // the original
+
     /// <summary>The face by graphic (-1: the game's fold).</summary>
     private static readonly int[] Faces = NewFaces();
     /// <summary>The graphic Brave Story means by each number (<see cref="RemasterPeople"/>).</summary>
@@ -89,6 +120,7 @@ internal static unsafe class RemixedFaces
     internal static nint GraphicOfPortraitAt { get; private set; }
     internal static int* GraphicOfPortrait { get; private set; }
     internal static ushort* PortraitOfSpriteSet { get; private set; }
+    internal static int* EventGraphicOfPortrait { get; private set; }
     // For the offline check: Brave Story's two lookups as hooked.
     internal static nint PersonFaceAt { get; private set; }
     internal static nint ChronicleFaceAt { get; private set; }
@@ -118,6 +150,19 @@ internal static unsafe class RemixedFaces
             at, (nint)(delegate* unmanaged<int, int>)&Fold, "the face fold");
         FoldAt = at;
         game.Log.Info($"faces: ReMixed's portraits for {string.Join(", ", given)}");
+        try
+        {
+            BoxFaceAt = game.Image.FindUnique(BoxFacePattern);
+            _boxUnits = (byte*)GameImage.Rip(BoxFaceAt + 0x33, 3, 7);
+            SheetSlots = (int*)(game.Image.ImageStart + *(int*)(game.Image.FindUnique(SheetSlotsPattern) + 10));
+            _boxFace = (delegate* unmanaged<nint, int, nint, int*, int>)game.Hooks.Hook(
+                BoxFaceAt, (nint)(delegate* unmanaged<nint, int, nint, int*, int>)&BoxFace, "a speech box's face");
+        }
+        catch (Exception e)
+        {
+            game.Log.Error($"faces: a speech box's face not hooked (Rafa and Agrias can show ReMixed's faces in "
+                           + $"theirs): {e.Message}");
+        }
         var apart = new List<string>();
         try
         {
@@ -209,9 +254,11 @@ internal static unsafe class RemixedFaces
         var reader = image.FindUnique(GraphicOfPortraitPattern);
         var graphics = (int*)GameImage.Rip(reader + 14, 3, 7);
         var portraits = (ushort*)(image.ImageStart + *(int*)(image.FindUnique(PortraitOfSpriteSetPattern) + 16));
-        // Ramza's portraits and graphics (sprite sets 2 and 3: portraits 1 and 2, graphics 2 and 3), and Agrias's
-        // portrait, which this leaves as it is.
-        if (graphics[1] != 2 || graphics[2] != 3 || portraits[2] != 1 || portraits[3] != 2 || portraits[0x1E] != 0x17)
+        var events = (int*)(image.ImageStart + *(int*)(image.FindUnique(EventGraphicOfPortraitPattern) + 17));
+        // Ramza's portraits and graphics (sprite sets 2 and 3: portraits 1 and 2, graphics 2 and 3, the event table's
+        // too), and Agrias's portrait, which this leaves as it is.
+        if (graphics[1] != 2 || graphics[2] != 3 || portraits[2] != 1 || portraits[3] != 2 || portraits[0x1E] != 0x17
+            || events[1] != 2 || events[2] != 3)
             throw new InvalidDataException("the portrait tables aren't the ones this DLL expects");
         var unused = new Queue<int>();
         foreach (var portrait in UnusedPortraits)
@@ -252,16 +299,56 @@ internal static unsafe class RemixedFaces
                 foreach (var move in moves)
                     portraits[move.Graphic] = (ushort)(portraits[move.Graphic] & ~Portrait | move.Own);
             });
+            // An event box's portrait of 0x51 or less: the shared one now gives the story character's sprite set
+            // there too (the own ones are past 0x51, so 0x274028's table, above, gives them).
+            GameImage.Unprotected((nint)events, EventPortraits * sizeof(int), () =>
+            {
+                foreach (var move in moves)
+                    if (move.Shared < EventPortraits && events[move.Shared] == move.Graphic)
+                        events[move.Shared] = move.Story;
+            });
         }
         GraphicOfPortraitAt = reader;
         GraphicOfPortrait = graphics;
         PortraitOfSpriteSet = portraits;
+        EventGraphicOfPortrait = events;
         return moves.Select(move => $"0x{move.Graphic:X2} portrait 0x{move.Own:X2} (0x{move.Shared:X2} to "
-                                    + $"0x{move.Story:X2})").ToList();
+                                    + $"0x{move.Story:X2}"
+                                    + (move.Shared < EventPortraits && events[move.Shared] == move.Story ? ", events' too" : "")
+                                    + ")").ToList();
     }
 
     /// <summary>For the offline check: a graphic's face set, or (-1) left to the game.</summary>
     internal static void Set(int graphic, int face) => Faces[graphic] = face;
+
+    /// <summary>For the offline check and the hook: the face a box shows for a unit, given what the game found (a sheet
+    /// slot under 10, else a graphic) and the unit's own graphic: the unit's graphic where the sheet's is one of ReMixed's
+    /// (it has a face of its own) that the game's fold makes of the unit's (a story character on its second sprite set's
+    /// sheet), else what the game found.</summary>
+    internal static int BoxFaceOf(int found, int unitGraphic)
+    {
+        var graphic = found is >= 0 and < 10 && SheetSlots != null ? SheetSlots[found] : found;
+        if ((uint)graphic < Graphics && Faces[graphic] >= 0 && unitGraphic >= 10 && unitGraphic != graphic
+            && (uint)unitGraphic < Graphics && Faces[unitGraphic] < 0 && _fold(unitGraphic) == graphic)
+            return unitGraphic;
+        return found;
+    }
+
+    [UnmanagedCallersOnly]
+    private static int BoxFace(nint layout, int slot, nint found, int* palette)
+    {
+        var face = _boxFace(layout, slot, found, palette);
+        try
+        {
+            if ((uint)slot <= 0x14 && _boxUnits != null)
+                return BoxFaceOf(face, _boxUnits[slot * 0x200 + 0x18F]);
+        }
+        catch (Exception e)
+        {
+            Failed(e);
+        }
+        return face;
+    }
 
     [UnmanagedCallersOnly]
     private static int Fold(int graphic)

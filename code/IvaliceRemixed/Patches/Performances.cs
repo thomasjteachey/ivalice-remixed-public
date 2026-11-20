@@ -53,6 +53,7 @@ internal static unsafe class Performances
     private static byte _snapCt, _snapFull;
     private static int _keep = -1; // the unit whose song the queue's reset, next, keeps
     private static delegate* unmanaged<int, uint> _turnLoop;
+    private static bool _hooked;
     private static int _failed;
 
     internal static bool On => _on;
@@ -63,6 +64,32 @@ internal static unsafe class Performances
 
     public static void Install(Game game)
     {
+        HookAfterAction(game);
+        var image = game.Image;
+        // The turn-start notices (0x237494 and its copy 0x2EB408): a Performing unit (test al, 1; je past) gets 0x8002.
+        var notices = new[]
+        {
+            image.FindUnique("A8 01 0F 84 ?? ?? ?? ?? BB 02 80 00 00") + 2,
+            image.FindUnique("A8 01 0F 84 ?? ?? ?? ?? BE 02 80 00 00") + 2,
+        };
+        // je → nop; jmp, to the same place: no notice.
+        foreach (var at in notices)
+            GameImage.WriteCode(at, [0x90, 0xE9]);
+        BattleEvents.OnStart(game, "persistent performances", Reset);
+        NoticesAt = notices;
+        _on = true;
+    }
+
+    /// <summary>
+    /// The two points after a queued action, which <see cref="RidingActions"/>' parked charge shares (so whichever rule
+    /// installs first hooks them, once): the queue's reset after an instant action (a stub on its call at 0x281476, to
+    /// <see cref="QueueReset"/>) and the battle's step before the turn loop (its call at 0x2029E8, to the kept songs'
+    /// and the parked charges' give-back).
+    /// </summary>
+    internal static void HookAfterAction(Game game)
+    {
+        if (_hooked)
+            return;
         if (!TwoSpells.Turns || TwoSpells.GameActionState == null)
             throw new InvalidOperationException("needs Two Spells' action start (support 0x1D0 in the build)");
         _game = game;
@@ -80,12 +107,6 @@ internal static unsafe class Performances
         var turnLoop = GameImage.Rip(step, 1, 5);
         if ((ulong)(TwoSpells.TickAt - turnLoop) >= TurnLoopSize)
             throw new InvalidDataException("the battle's step doesn't call the turn loop whose countdown Two Spells patched");
-        // The turn-start notices (0x237494 and its copy 0x2EB408): a Performing unit (test al, 1; je past) gets 0x8002.
-        var notices = new[]
-        {
-            image.FindUnique("A8 01 0F 84 ?? ?? ?? ?? BB 02 80 00 00") + 2,
-            image.FindUnique("A8 01 0F 84 ?? ?? ?? ?? BE 02 80 00 00") + 2,
-        };
 
         _turnLoop = (delegate* unmanaged<int, uint>)turnLoop;
         var resetStub = GameImage.AllocateCodeNear(reset, 32);
@@ -98,14 +119,9 @@ internal static unsafe class Performances
         TwoSpells.AbsoluteJump(code, (nint)(delegate* unmanaged<int, uint>)&TurnStep);
         code.ToArray().CopyTo(new Span<byte>(stepStub, 32));
         TwoSpells.WriteCall(step, (nint)stepStub);
-        // je → nop; jmp, to the same place: no notice.
-        foreach (var at in notices)
-            GameImage.WriteCode(at, [0x90, 0xE9]);
-        BattleEvents.OnStart(game, "persistent performances", Reset);
         ResetAt = reset;
         StepAt = step;
-        NoticesAt = notices;
-        _on = true;
+        _hooked = true;
     }
 
     private static bool Active => *_game.Routines.Simulating == 0;
@@ -174,7 +190,8 @@ internal static unsafe class Performances
 
     /// <summary>
     /// The queue's action state reset after an instant action (0x279370 with 0): for a kept song only the countdown is
-    /// emptied, and Performing stays.
+    /// emptied, and Performing stays; a rider whose charge is parked for its mount's skill stays Charging
+    /// (<see cref="RidingActions.AtQueueReset"/>).
     /// </summary>
     internal static nint QueueReset(byte* unit, int state)
     {
@@ -191,6 +208,15 @@ internal static unsafe class Performances
         catch (Exception e)
         {
             Failed("the queue's reset", e);
+        }
+        try
+        {
+            if ((byte)state == 0 && Active && RidingActions.AtQueueReset(unit))
+                return 0;
+        }
+        catch (Exception e)
+        {
+            RidingActions.Failed("the queue's reset", e);
         }
         return TwoSpells.GameActionState(unit, state);
     }
@@ -228,6 +254,15 @@ internal static unsafe class Performances
         catch (Exception e)
         {
             Failed("giving a song back", e);
+        }
+        try
+        {
+            if (start == 0 && Active)
+                RidingActions.GiveBack();
+        }
+        catch (Exception e)
+        {
+            RidingActions.Failed("giving a parked charge back", e);
         }
         return _turnLoop(start);
     }

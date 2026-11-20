@@ -36,6 +36,7 @@ internal static unsafe class BattleAct
     {
         public int Skillset, Ability;
         public string Target = "";
+        public bool Moved;
         public int Actor = -1;
         public string Where = "";
     }
@@ -73,10 +74,12 @@ internal static unsafe class BattleAct
     }
 
     /// <summary>
-    /// <c>act SKILLSET ABILITY TARGET [TIMES]</c> (hex skillset and ability): TARGET is <c>foe</c> (the nearest living unit of
+    /// <c>act SKILLSET ABILITY TARGET [TIMES] [moved]</c> (hex skillset and ability): TARGET is <c>foe</c> (the nearest living unit of
     /// another team), <c>self</c> (the acting unit's panel), a battle unit's index (its panel), or <c>X,Y[,LEVEL]</c>; an
     /// item's ability (Items, 0x06: the item + 0x80, a Potion 0x170) names its item too; TIMES queues it that often (a turn's two
-    /// actions in one go, as the second's menu comes moments after the first). Queued, and answered at once: the next party
+    /// actions in one go, as the second's menu comes moments after the first); <c>moved</c> marks the unit as having moved
+    /// (+0x1B9 bit 1) just before the confirm, as a move first would, so that the action's mark ends the turn there and then
+    /// (a Two Spells second, a rider's mount skill). Queued, and answered at once: the next party
     /// unit's menu between actions takes it (so a turn's actions are queued before it starts), and the log says
     /// "harness: unit N used ..." once its confirm has run. <c>act clear</c> drops what's queued. <c>act menu</c> logs the
     /// menu's state and its action record (unit, skillset, ability, target type, x, level, y), as the menus filled it.
@@ -102,14 +105,17 @@ internal static unsafe class BattleAct
             return line;
         }
         if (parts.Length < 4)
-            return "error: act SKILLSET ABILITY foe|self|INDEX|X,Y[,LEVEL], or act clear";
-        var times = parts.Length > 4 ? int.Parse(parts[4]) : 1;
+            return "error: act SKILLSET ABILITY foe|self|INDEX|X,Y[,LEVEL] [TIMES] [moved], or act clear";
+        var extra = parts.Skip(4).ToList();
+        var moved = extra.RemoveAll(p => p.Equals("moved", StringComparison.OrdinalIgnoreCase)) > 0;
+        var times = extra.Count > 0 ? int.Parse(extra[0]) : 1;
         for (var k = 0; k < times; k++)
             Requests.Enqueue(new Request
             {
                 Skillset = Convert.ToInt32(parts[1].Replace("0x", "", StringComparison.OrdinalIgnoreCase), 16),
                 Ability = Convert.ToInt32(parts[2].Replace("0x", "", StringComparison.OrdinalIgnoreCase), 16),
                 Target = parts[3],
+                Moved = moved,
             });
         // A party unit's turn already at its first command menu (state 4) has no window-less moment left: there the
         // menu's cursor is on Move, and F opens the move selection, which takes the request.
@@ -207,10 +213,12 @@ internal static unsafe class BattleAct
         *(ushort*)(record + 0xE) = (ushort)level;
         *(ushort*)(record + 0x10) = (ushort)y;
         request.Actor = actor[UnitIndex];
+        if (request.Moved)
+            actor[Battle.UnitMoved] |= 1;
         _current = request;
         *_state = Confirm;
         _game.Log.Info($"harness: unit {request.Actor} uses 0x{request.Ability:X3} (skillset 0x{request.Skillset:X2}) at "
-                       + $"{request.Where}, from the menu's state 0x{state:X}");
+                       + $"{request.Where}{(request.Moved ? ", as having moved" : "")}, from the menu's state 0x{state:X}");
     }
 
     /// <summary>The nearest living unit on the field of another team than <paramref name="actor"/>'s (+0x1EE &amp; 0x30).</summary>

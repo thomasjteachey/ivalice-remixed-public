@@ -45,6 +45,13 @@ internal static unsafe class OldGuests
     internal const int EntryUnits = 16, EntryUnitSize = 40, EntryFlags = 1, EntryTeam = 0x18;
     internal const byte Algus = 0x07, Gaffgarion = 0x17, Agrias = 0x1E, LoadsRoster = 0x08, PlayerControl = 0x08;
     internal const byte OldAgrias = 0x34, Ps1Bard = 0x38, RemasterBard = 0x5B, SideChapterParty = 0x10;
+    /// <summary>0.9.22's frog scene (event 270) joined an empty Rafa as a guest: its override loads her from the
+    /// formation as 0x19, which no roster unit had (hers is 0x29), so the unit was made empty ("? joined the party as a
+    /// guest", level 0) and saved to a guest slot, where the next battle moved it to 0x29. Riovanes's gate (event 281)
+    /// finds the guest Rafa by name and can find that one: the game closed on its screens (a tester, 2026-11-19). A
+    /// guest slot holding Rafa's sprite set at level 0 (no recruit is) is emptied.</summary>
+    internal const byte OldRafa = 0x19, Rafa = 0x29;
+    internal const int RosterLevel = 0x1D;
     /// <summary>Araguay's chocobo: a monster (sprite set 0x82) named Boco, whose record asks for him from the roster.</summary>
     internal const byte Monster = 0x82, BocoName = 0x76;
     internal const int EntryName = 2;
@@ -295,7 +302,8 @@ internal static unsafe class OldGuests
     /// <summary>Repair records already saved by builds before 0.9.5: Lorne's PS1 Bard job, the three Lionsguard
     /// recruits' 1-A party-state bit (which the remaster displays as an errand), and Agrias on the sprite set now used
     /// by Ashley. Ashley's distinct name id (0x42) keeps her record out of the Agrias conversion. And by builds before
-    /// 0.9.18: Elias's join bit (<see cref="EliasJoinBit"/>), shown as an errand too.</summary>
+    /// 0.9.18: Elias's join bit (<see cref="EliasJoinBit"/>), shown as an errand too. And by 0.9.22: the empty Rafa
+    /// its frog scene joined (<see cref="OldRafa"/>).</summary>
     internal static int RepairSideChapterRoster(byte* roster)
     {
         if (roster == null)
@@ -322,6 +330,13 @@ internal static unsafe class OldGuests
             {
                 record[RosterErrand] &= unchecked((byte)~EliasJoinBit);
                 changed = true;
+            }
+            if (slot >= FirstGuestSlot && slot < FirstGuestSlot + GuestSlots && record[0] is OldRafa or Rafa
+                && record[RosterLevel] == 0)
+            {
+                record[1] = 0xFF;
+                repaired++;
+                continue;
             }
             if (record[0] == OldAgrias && name is Agrias or OldAgrias)
             {

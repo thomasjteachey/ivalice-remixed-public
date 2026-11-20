@@ -1,0 +1,48 @@
+# A charging rider keeps its spell through its mount's skill, when its turn ends at that skill's mark (found reading
+# the code, 2026-11-19: the queue's reset after the instant skill cleared Charging, so the spell was always lost; and a
+# rider whose turn ends at the mark, as after a move, has its charge parked only after that end of turn). Run with
+#   python -I tools/quick_test.py --restart --location 24 --stop tests/quick/riding-charge.txt
+# A random battle on Mandalia Plains (Enter on the field), the party kept the player's (the PC's settings let the AI
+# play it), one unit placed. `ride foe` links it as a rider to the first enemy as its mount, whose primary skillset
+# becomes the Chocobo's (0xB0), as boarding would (they keep their own panels; the harness's formation places one
+# party unit, so the mount is an enemy, and Choco Cure on the rider misses for the team rule, which changes nothing
+# here). The rider gets Black Magic (0x0B) as its secondary, 99 MP and Don't Move (+0x65 bit 0x08, and its innate copy
+# +0x5B), so no move is asked for: Fire (0x010) at the nearest foe charges (its own action, which isn't the turn's
+# while the mount's skill is left), then Choco Cure (0x10D) on itself is the turn's action. The act's `moved` marks the
+# rider as having moved just before that confirm, so the skill's mark ends the turn before its queue, the order a move
+# first makes (Don't Move alone doesn't: its turn ends at the facing). The mod parks Fire's charge at that queue, keeps
+# the rider Charging through the queue's reset and the action's start, gives the charge back once the action is over
+# (not at the rider's next turn's end), and Fire then fires.
+name A charging rider keeps its spell through its mount's skill
+send testmode record
+wait world depth=1 state=0 timeout=20
+key RETURN
+wait log "reveal treasures: map" press=RETURN every=3 timeout=180
+formation units=1
+ride foe skillset=0xB0
+poke unit player=1 present=1 offset=0x13 hex=0B
+poke unit player=1 present=1 offset=0x34 hex=6300
+poke unit player=1 present=1 offset=0x36 hex=6300
+poke unit player=1 present=1 offset=0x5B or=08
+poke unit player=1 present=1 offset=0x65 or=08
+send act 0B 10 foe
+send act B0 10D self moved
+# The harness takes the second act about a second after the first, so Fire's charge is seen in its line.
+wait log "harness: unit \d+ used 0x010 .*acted 0, its action 0x010 charging 0[1-9]" timeout=240
+wait log "riding: unit \d+ has acted; its mount's skill is left" timeout=10
+wait log "riding: unit \d+'s charge 0x010 \(CT \d+\) waits while its mount acts" timeout=60
+wait log "riding: unit \d+ stays Charging through its mount's skill 0x10D" timeout=10
+wait log "harness: unit \d+ used 0x10D .*acted 1, its action 0x10D charging FF" timeout=10
+shot mount-skill
+# Its turn ended at the skill's mark, before the queue, so nothing was parked then.
+wait log "riding: unit \d+'s turn ends with its mount's skill used, nothing parked yet" timeout=10
+wait log "riding: unit \d+ attacks for its rider, unit \d+" press=F every=2 timeout=60
+# The charge comes back once the action is over: the game's end of turn runs again then (seen 2026-11-19), or else the
+# battle's step before the turn loop gives it back.
+wait log "riding: unit \d+ goes back to charging 0x010, CT \d+, (as its turn ends|after its turn's action)" press=F every=2 timeout=120
+wait unit player=1 present=1 ability=0x010 statuses=8 timeout=10
+shot back
+# Fire fires on its own tick, before the rider's next turn.
+wait unit player=1 present=1 ability=0x010 charge=0xFF statuses=0 timeout=180
+shot fired
+expect unit player=1 present=1 turn=0

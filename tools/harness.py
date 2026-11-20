@@ -874,7 +874,7 @@ ROSTER, ROSTER_SIZE, ROSTER_COUNT, ROSTER_NAME_ID, ROSTER_NAME = 0x11A7D10, 600,
 
 def cmd_roster(_: argparse.Namespace) -> None:
     """The remaster's roster records (.data 0x11A7D10, 54 of 600 bytes) in use: their first bytes (sprite set, unit
-    id), job, name id (+0x230, looked up in an NXD table by 0x1E8B7C) and name text (+0xDC)."""
+    id), job (+0x02), name id (+0x230, looked up in an NXD table by 0x1E8B7C) and name text (+0xDC)."""
     data = peek_bytes(image_base() + ROSTER, ROSTER_SIZE * ROSTER_COUNT)
     for k in range(ROSTER_COUNT):
         r = data[k * ROSTER_SIZE:(k + 1) * ROSTER_SIZE]
@@ -882,7 +882,7 @@ def cmd_roster(_: argparse.Namespace) -> None:
             continue
         name = r[ROSTER_NAME:ROSTER_NAME + 32].split(b"\0")[0].decode("utf-8", "replace")
         name_id = int.from_bytes(r[ROSTER_NAME_ID:ROSTER_NAME_ID + 4], "little")
-        print(f"{k:2}: sprites 0x{r[0]:02X} id 0x{r[1]:02X} job 0x{r[3]:02X} name id {name_id} name {name!r}")
+        print(f"{k:2}: sprites 0x{r[0]:02X} id 0x{r[1]:02X} job 0x{r[2]:02X} name id {name_id} name {name!r}")
 
 
 BATTLE_UNITS, BATTLE_UNIT_COUNT = 0x1853CE0, 21

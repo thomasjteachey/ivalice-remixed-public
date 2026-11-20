@@ -3145,7 +3145,7 @@ CHARACTER_NAMES = {HIRAME_NAME: HIRAME_TEXT, WRIGHT_NAME: WRIGHT_TEXT,
 #   0x17. The remaster's units on them move the same way, jobs with them (vanilla's 0x34, 0x19 and 0x11 are those
 #   characters' own rows, which ReMixed's characters now have). A guest is kept in the roster's guest slots and found
 #   there by sprite set (0x2766C8), so all of a guest's units move together, and the remaster's events that take a
-#   guest out of the party by sprite set (instruction 0x7A) move with them (REMASTER_GUEST_REMOVALS); saves made
+#   guest out of the party by sprite set (instruction 0x7A) move with them (REMASTER_SPRITE_SET_OPS); saves made
 #   with a guest on its old slot are moved by the code mod (REMASTER_OLD_GUESTS).
 # - 0x36-0x38, copies of the female White Mage's, the male Black Mage's and the male Mystic's sheets that only the
 #   remaster's tutorial battles use (0x00A, 0x00C and 0x02E, with jobs of the same numbers): ReMixed made those units
@@ -3161,14 +3161,24 @@ REMASTER_MOVED_SPRITE_SETS = {LUSO_SLOT: (0x1A, 0x1A), 0x34: (0x1E, 0x1E), 0x19:
                               0x36: (0x81, 0x4F), 0x37: (0x80, 0x50), 0x38: (0x80, 0x55), 0x46: (0x76, None),
                               0x47: (0x71, None)}
 GENERIC_SPRITE_SETS = (0x80, 0x81)  # a generic's graphic comes from its job (0x278EDC)
-# The remaster's events that take a guest out of the party by its old sprite set (instruction 0x7A, the sprite set a
-# halfword: 0x23A868 frees the first roster slot from 1 on with it): event -> (the instruction's offset in
-# script/enhanced/eventNNN.e, the sprite set). Event 158 at Lionel (entry 0x117) takes the guest Agrias out before she
-# rejoins at Bariaus Valley as 0x1E (entry 0x19D, which is refused while any roster slot has her sprite set); event 281
-# at Riovanes Castle's entrance (entry 0x1AF) takes the guest Rafa out before she rejoins as 0x29 (entry 0x1B2). The
-# remaster's other 0x7A instructions name sprite sets that stay (Algus 0x07, Delita 0x04, Gafgarion 0x17, Ovelia 0x0C
-# and others).
-REMASTER_GUEST_REMOVALS = {158: (0x935, 0x34), 281: (0x263, 0x19)}
+# Moving a unit off a slot moves it everywhere the remaster names it by sprite set, or the remaster finds ReMixed's
+# character there instead (or no one). The remaster names a sprite set in three places besides its battle data:
+# - Its event instructions whose first parameter byte is a sprite set (REMASTER_SPRITE_SET_OPS): AddGhostUnit (0x47)
+#   puts a unit with no battle unit on the map with that sprite set's sheet and face (op 0x47's queue 0x2730C4,
+#   Patches/TreasureArrows.cs), and DismissUnit (0x7A, a halfword) takes the roster unit with it out of the party
+#   (0x23A868 frees the first roster slot from 1 on with it). Read as the game reads them, the stock scripts name a
+#   moved one in three: event 158 at Lionel (entry 0x117) takes the guest Agrias out (DismissUnit 0x34) before she
+#   rejoins at Bariaus Valley as 0x1E (entry 0x19D, refused while any roster slot has her sprite set); event 270, the
+#   frog scene, walks Rafa in as AddGhostUnit 0x19; event 281 at Riovanes Castle's gate (entry 0x1AF) takes her out as
+#   DismissUnit 0x19 before she rejoins as 0x29 (entry 0x1B2). Until 0.9.23 only the two DismissUnits moved (a
+#   hand-kept list), and event 270 drew ReMixed's character for Rafa. write_remaster_sprite_sets now moves every one, in
+#   each remaster script the mod ships or leaves stock. Not WorldUnitAddress (0xC3): event 281's WorldUnitAddress 0x19
+#   finds the guest Rafa by her name id (25, "Rapha"), which stays; named 0x29 it found no one and the game closed on
+#   "Guest Departure" (seen in the hidden PC game, 2026-11-19), and as 0x19 it shows her leaving.
+# - Its enhanced battle-unit overrides (ENTRY_OVERRIDE_FIELDS, write_entry_overrides): entry 0x1AD's unit 1 is the
+#   guest Rafa loaded from the formation as 0x19.
+# - Its PS1 portrait table, which RemixedFaces separates (SeparatePortraits).
+REMASTER_SPRITE_SET_OPS = {0x47: "AddGhostUnit", 0x7A: "DismissUnit"}
 # A save made with an earlier build may hold a guest on its old sprite set, which the moved battle data would no longer
 # find: old sprite set -> (the guest's name id, the story progress (var 0x6E) from which the remaster's own event has
 # taken the guest out). The code mod moves such a roster record to the new sprite set (and job) as a battle's units
@@ -4848,19 +4858,77 @@ def check_algus_campaign(lengths: bytes, presets: bytes) -> str:
             f"shown by then, and the way out to the remaster's 0x{to:X}; 0 wrong")
 
 
+# ReMixed's unit names (EVENT/ATTACK.OUT, its list of special names, entry 1 Ramza): a unit's name id (battle data +2)
+# indexes it, and the remaster's CharaName rows by the same numbers. Where the port's battle data names a unit by a row
+# the remaster leaves blank, the unit, its card and its roster entry once it joins read no name (Elias at 1-A's river
+# camp, a tester on 0.9.22, after Bryn, Lorne and Whitney on 0.9.17), so every such row takes ReMixed's name
+# (unit_name_rows), besides CHARACTER_NAMES.
+REMIXED_NAME_LIST_START = ["Ramza", "Ramza", "Ramza", "Delita", "Delita", "Delita", "Algus"]
+NO_NAME_IDS = {0x00, 0xFE, 0xFF}  # a generic's, and the battle data's "none"
+
+
+def battle_unit_name_ids() -> dict[int, set[int]]:
+    """Name id -> the battle entries whose units the port's battle data (the mod's files, else the remaster's: ENTD 1-4,
+    the added entries, ReMixed's scenarios' own units in REMIXED_SCENARIOS_FILE) name by it."""
+    stock = WORK / "remaster" / "extract" / "enhanced" / "fftpack"
+    built = MOD_DIR / "FFTIVC" / "data" / "enhanced" / "fftpack"
+    uses: dict[int, set[int]] = collections.defaultdict(set)
+    files = [(f"battle_entd{k}_ent.bin", (k - 1) * 0x80) for k in range(1, 5)] + [(ADDED_ENTRIES_FILE, 0x200)]
+    for name, first in files:
+        data = (built / name if (built / name).exists() else stock / name).read_bytes()
+        for u in range(len(data) // UNIT_SIZE):
+            unit = data[u * UNIT_SIZE:(u + 1) * UNIT_SIZE]
+            if unit[0] and unit[ENTD_NAME] not in NO_NAME_IDS:
+                uses[unit[ENTD_NAME]].add(first + u // UNITS_PER_EVENT)
+    data = (MOD_DIR / REMIXED_SCENARIOS_FILE).read_bytes()
+    at = 2 + SCENARIO_SIZE * u16(data, 0)
+    for size in (FORMATION_SIZE, 4, 6, 5):
+        at += 2 + size * u16(data, at)
+    block = 2 + UNITS_PER_EVENT * UNIT_SIZE
+    for k in range(u16(data, at)):
+        scenario = u16(data, at + 2 + k * block)
+        for u in range(UNITS_PER_EVENT):
+            unit = data[at + 4 + k * block + u * UNIT_SIZE:at + 4 + k * block + (u + 1) * UNIT_SIZE]
+            if unit[0] and unit[ENTD_NAME] not in NO_NAME_IDS:
+                uses[unit[ENTD_NAME]].add(0x10000 | scenario)
+    return uses
+
+
+def unit_name_rows(cfg: dict, blank: set[int]) -> dict[int, str]:
+    """ReMixed's name for each of the blank CharaName rows the port's units name (battle_unit_name_ids)."""
+    with Disc(remixed_bin(cfg)) as patched:
+        attack = patched.read(patched.find("EVENT/ATTACK.OUT"))
+    names = fft_text.read_list(attack, fft_text.find_list(attack, REMIXED_NAME_LIST_START), 0x100)
+    rows, unclean = {}, []
+    for key in sorted(set(battle_unit_name_ids()) & blank):
+        text, clean = fft_text.decode(names[key])
+        if not text:
+            continue
+        if not clean:
+            unclean.append(f"0x{key:X} {text}")
+            continue
+        rows[key] = text
+    if unclean:
+        sys.exit("ReMixed's names for units the port names that this decoder can't read: " + ", ".join(unclean))
+    return rows
+
+
 def write_character_names(cfg: dict) -> str:
-    """ReMixed's characters' names (CHARACTER_NAMES: CharaName rows the remaster leaves blank),
+    """ReMixed's characters' names (CHARACTER_NAMES, and unit_name_rows: CharaName rows the remaster leaves blank),
     which their units' battle data names (REMIXED_SPRITE_SETS) and their roster entries keep once they join. Returns a
     line for the report."""
     def name(db: sqlite3.Connection) -> str:
         notes = []
-        for key, text in CHARACTER_NAMES.items():
-            row = db.execute('select Name from "CharaName-en" where Key = ?', (key,)).fetchone()
-            if row is None or row[0]:
+        blank = {k for (k,) in db.execute('select Key from "CharaName-en" where Name is null or Name = ""')}
+        named = {**unit_name_rows(cfg, blank - set(CHARACTER_NAMES)), **CHARACTER_NAMES}
+        for key, text in sorted(named.items()):
+            if key not in blank:
                 sys.exit(f"the remaster's CharaName 0x{key:X} isn't a blank row (CHARACTER_NAMES)")
             db.execute('update "CharaName-en" set Name = ? where Key = ?', (text, key))
             notes.append(f"0x{key:X} named {text}")
-        return "; " + ", ".join(notes)
+        missing = sorted(k for k in battle_unit_name_ids() if k in blank and k not in named)
+        return "; " + ", ".join(notes) + (f"; blank and unnamed by ReMixed: {', '.join(f'0x{k:X}' for k in missing)}"
+                                          if missing else "")
     return add_nxd_rows(cfg, "charaname.en", "CharaName-en", {}, "0004.en.pac", edit=name)
 
 
@@ -5872,15 +5940,7 @@ def remaster_instruction_size(table: bytes, code: bytes, at: int) -> int:
 def audit_stock_event_graphics(cfg: dict, graphics: set[int]) -> int:
     """Prove no stock enhanced event script loads any of these event graphics (the slots ReMixed's art takes): each is
     read instruction by instruction as the game reads it, to its END, and a script that can't be read so fails too."""
-    extract = WORK / "remaster" / "extract" / "enhanced"
-    scripts = extract / "script" / "enhanced"
-    paths = sorted(scripts.glob("event*.e"))
-    if len(paths) != 560:
-        ff16tools(cfg, "unpack-all", "-i", Path(cfg["target"]["tic_dir"]) / "data" / "enhanced" / "0005.pac",
-                  "-o", extract)
-        paths = sorted(scripts.glob("event*.e"))
-    if len(paths) != 560:
-        raise ValueError(f"the enhanced script pack has {len(paths)} event files, expected 560")
+    paths = stock_event_paths(cfg)
     table = remaster_length_table(cfg)
     found, unread = [], []
     for path in paths:
@@ -6161,8 +6221,7 @@ def old_guest_rows() -> list[list[int]]:
 
 def write_remaster_moves(cfg: dict) -> str:
     """The remaster's own added entries (ADDED_ENTRIES_FILE, from 0x200) with its units off the slots ReMixed gave its
-    own characters (REMASTER_MOVED_SPRITE_SETS), and its events that take a guest out by an old sprite set
-    (REMASTER_GUEST_REMOVALS) naming the new one, into the mod. Returns a line for the report."""
+    own characters (REMASTER_MOVED_SPRITE_SETS), into the mod. Returns a line for the report."""
     out = MOD_DIR / "FFTIVC" / "data" / "enhanced"
     stock = WORK / "remaster" / "extract" / "enhanced" / "fftpack" / ADDED_ENTRIES_FILE
     added = bytearray(stock.read_bytes())
@@ -6170,20 +6229,144 @@ def write_remaster_moves(cfg: dict) -> str:
     if moved:
         (out / "fftpack").mkdir(parents=True, exist_ok=True)
         (out / "fftpack" / ADDED_ENTRIES_FILE).write_bytes(added)
+    return f"{moved} units of the added entries moved"
+
+
+def stock_event_paths(cfg: dict) -> list[Path]:
+    """The enhanced build's 560 stock event scripts (script/enhanced/eventNNN.e), extracted into work/."""
+    extract = WORK / "remaster" / "extract" / "enhanced"
+    scripts = extract / "script" / "enhanced"
+    paths = sorted(scripts.glob("event*.e"))
+    if len(paths) != 560:
+        ff16tools(cfg, "unpack-all", "-i", Path(cfg["target"]["tic_dir"]) / "data" / "enhanced" / "0005.pac",
+                  "-o", extract)
+        paths = sorted(scripts.glob("event*.e"))
+    if len(paths) != 560:
+        raise ValueError(f"the enhanced script pack has {len(paths)} event files, expected 560")
+    return paths
+
+
+def remaster_sprite_set_uses(table: bytes, code: bytes, name: str) -> list[tuple[int, int]]:
+    """(offset, opcode) of each instruction of a remaster event script, read as the game reads it to its END, that
+    names a moved sprite set (REMASTER_SPRITE_SET_OPS, REMASTER_MOVED_SPRITE_SETS)."""
+    uses, at = [], 0
+    while at < len(code) and code[at] != 0xDB:
+        op = code[at]
+        if (op in REMASTER_SPRITE_SET_OPS and at + 2 < len(code) and code[at + 1] in REMASTER_MOVED_SPRITE_SETS
+                and (op != 0x7A or code[at + 2] == 0)):
+            uses.append((at, op))
+        at += remaster_instruction_size(table, code, at)
+    if at >= len(code):
+        raise ValueError(f"{name} can't be read to its END, so its sprite sets can't be checked")
+    return uses
+
+
+def write_remaster_sprite_sets(cfg: dict) -> str:
+    """Every remaster event script, as the mod ships it (unmarked: ReMixed's own carry REMIXED_EVENT_MARK and its
+    numbers) or stock, with each sprite set REMASTER_SPRITE_SET_OPS names moved as its units are
+    (REMASTER_MOVED_SPRITE_SETS), into the mod. Run after every step that writes events. Returns a line for the
+    report."""
+    table = remaster_length_table(cfg)
+    out = MOD_DIR / "FFTIVC" / "data" / "enhanced" / "script" / "enhanced"
     done = []
-    for event, (at, old) in sorted(REMASTER_GUEST_REMOVALS.items()):
-        path = out / "script" / "enhanced" / f"event{event:03d}.e"
-        if path.exists():
-            sys.exit(f"the mod already ships event {event}, whose guest removal REMASTER_GUEST_REMOVALS changes")
-        code = bytearray(remaster_event(cfg, event))
-        if code[at:at + 3] != bytes([0x7A, old, 0]):
-            sys.exit(f"the remaster's event {event} has {code[at:at + 3].hex(' ')} at 0x{at:X}, not instruction 0x7A "
-                     f"taking out sprite set 0x{old:02X} (REMASTER_GUEST_REMOVALS)")
-        code[at + 1] = REMASTER_MOVED_SPRITE_SETS[old][0]
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(code)
-        done.append(f"event {event} takes out 0x{code[at + 1]:02X} for 0x{old:02X}")
-    return f"{moved} units of the added entries moved; " + ", ".join(done)
+    for stock in stock_event_paths(cfg):
+        shipped = out / stock.name
+        code = bytearray(shipped.read_bytes() if shipped.exists() else stock.read_bytes())
+        if code.startswith(REMIXED_EVENT_MARK):
+            continue
+        uses = remaster_sprite_set_uses(table, bytes(code), stock.name)
+        for at, op in uses:
+            old = code[at + 1]
+            new = REMASTER_MOVED_SPRITE_SETS[old][0]
+            if new in GENERIC_SPRITE_SETS:
+                sys.exit(f"{stock.name}: {REMASTER_SPRITE_SET_OPS[op]} names 0x{old:02X}, whose units became generics "
+                         f"(0x{new:02X}), which have no sheet of their own to name")
+            code[at + 1] = new
+            done.append(f"{stock.stem} {REMASTER_SPRITE_SET_OPS[op]} 0x{old:02X} to 0x{new:02X}")
+        if uses:
+            out.mkdir(parents=True, exist_ok=True)
+            shipped.write_bytes(code)
+    for path in sorted(out.glob("event*.e")):  # proof: no unmarked script the mod ships names one still
+        code = path.read_bytes()
+        if not code.startswith(REMIXED_EVENT_MARK) and remaster_sprite_set_uses(table, code, path.name):
+            sys.exit(f"{path.name} still names a moved sprite set")
+    return f"{len(done)} moved: " + ", ".join(done)
+
+
+# The remaster's enhanced battle-unit overrides (nxd/overrideentrydata.nxd, OverrideEntryData: Key a battle entry, Key2
+# one of its units) lay its own fixes over the battle data as the enhanced build makes a battle's units; a cell at its
+# column's none (the value most of its 516 rows have) keeps the battle data's. The mod left the table alone until
+# 0.9.23, so where an override meets the port it undid it:
+# - Sprite sets: entry 0x1AD's unit 1, the frog scene's (event 270) Rafa, loads the guest with sprite set 0x19 from the
+#   formation. No roster unit has it (Rafa's is 0x29, REMASTER_MOVED_SPRITE_SETS), so the unit was made empty, in
+#   0x19's art and face (ReMixed's character's), and its join screen read "?" at level 0 (a tester on 0.9.22). An
+#   override's sprite set moves as the battle data's do.
+# - Fields of ReMixed's unit builds (UNIT_BUILD_FIELDS; the column -> the battle data's bytes): where the port changed
+#   the unit's field from the remaster's (its sprite-set moves aside), an override put the remaster's value back (the
+#   secondary skillset of 0x14A's, 0x183's, 0x185's and 0x197's units, 0x183's abilities). Those cells go to none and
+#   the port's value stands; the remaster's other overrides (its abilities for a unit ReMixed left as vanilla's) stay.
+# - ReMixed's own battle entries (FREE_ENTRIES), which no scenario of the remaster's names: its rows for 0x1E6 and
+#   0x1EE gave units 2-5 there a weapon. Every cell of a row there goes to none.
+ENTRY_OVERRIDE_FIELDS = {"Level": (3,), "Bravery": (6,), "Faith": (7,), "JobUnlock": (8,), "JobLevel": (9,),
+                         "MainJob": (10,), "SecondarySkillset": (11,), "Reaction": (12, 13), "Support": (14, 15),
+                         "Movement": (16, 17), "Head": (18,), "Body": (19,), "Accessory": (20,), "RightHand": (21,),
+                         "LeftHand": (22,), "EntryUnknown1D": (ENTD_PRIMARY,)}
+ENTRY_OVERRIDE_KEYS = ("Key", "Key2")
+
+
+def write_entry_overrides(cfg: dict) -> str:
+    """The remaster's OverrideEntryData with its sprite sets moved and its cells that undo the port's battle data at
+    none (ENTRY_OVERRIDE_FIELDS), into the mod. Run after the battle data is written. Returns a line for the report."""
+    stock_dir = WORK / "remaster" / "extract" / "enhanced" / "fftpack"
+    built_dir = MOD_DIR / "FFTIVC" / "data" / "enhanced" / "fftpack"
+    names = [f"battle_entd{k}_ent.bin" for k in range(1, 5)]
+    expected = b"".join(bytes(_moved_copy(stock_dir / n, (k - 1) * 0x80)) for k, n in enumerate(names, 1))
+    built = b"".join((built_dir / n if (built_dir / n).exists() else stock_dir / n).read_bytes() for n in names)
+    entry_bytes = UNITS_PER_EVENT * UNIT_SIZE
+    counts = collections.Counter()
+
+    def edit(db: sqlite3.Connection) -> str:
+        columns = [r[1] for r in db.execute('pragma table_info("OverrideEntryData")')]
+        rows = [dict(zip(columns, r)) for r in db.execute('select * from "OverrideEntryData"')]
+        none = {c: collections.Counter(json.dumps(r[c]) for r in rows).most_common(1)[0][0] for c in columns}
+        for c in ENTRY_OVERRIDE_FIELDS:
+            if c not in columns:
+                sys.exit(f"OverrideEntryData has no column {c} (ENTRY_OVERRIDE_FIELDS)")
+        for r in rows:
+            entry, u = r["Key"], r["Key2"]
+            changes: dict[str, object] = {}
+            if entry in FREE_ENTRIES:
+                changes = {c: json.loads(none[c]) for c in columns
+                           if c not in ENTRY_OVERRIDE_KEYS and json.dumps(r[c]) != none[c]}
+                counts["ReMixed's entries"] += len(changes)
+            else:
+                if r["Spriteset"] in REMASTER_MOVED_SPRITE_SETS:
+                    changes["Spriteset"] = REMASTER_MOVED_SPRITE_SETS[r["Spriteset"]][0]
+                    counts["sprite sets"] += 1
+                if entry < FREE_ENTRIES.start and u < UNITS_PER_EVENT:
+                    at = entry * entry_bytes + u * UNIT_SIZE
+                    for c, offsets in ENTRY_OVERRIDE_FIELDS.items():
+                        if json.dumps(r[c]) != none[c] and any(built[at + i] != expected[at + i] for i in offsets):
+                            changes[c] = json.loads(none[c])
+                            counts["port's fields"] += 1
+            if changes:
+                sets = ", ".join(f'"{c}" = ?' for c in changes)
+                db.execute(f'update "OverrideEntryData" set {sets} where Key = ? and Key2 = ?',
+                           [*(json.dumps(v) if isinstance(v, list) else v for v in changes.values()), entry, u])
+        moved = [r for r in db.execute('select Key, Key2 from "OverrideEntryData" where Spriteset in ({})'.format(
+            ", ".join(str(s) for s in REMASTER_MOVED_SPRITE_SETS)))]
+        if moved:
+            sys.exit(f"OverrideEntryData still names a moved sprite set: {moved}")
+        return "; " + ", ".join(f"{n} cell(s) for {k}" for k, n in counts.items())
+
+    return add_nxd_rows(cfg, "overrideentrydata", "OverrideEntryData", {}, edit=edit)
+
+
+def _moved_copy(path: Path, first_entry: int) -> bytearray:
+    """A stock battle data file with the remaster's units moved off ReMixed's slots, as the port moves them."""
+    data = bytearray(path.read_bytes())
+    move_remaster_units(data, first_entry)
+    return data
 
 
 def write_remixed_sprites(cfg: dict, battle_old: bytes, battle_new: bytes) -> tuple[str, list[list[int]]]:
@@ -7433,7 +7616,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata. The title screen's plaque shows it (write_title_screen).
-RELEASE_VERSION = "0.9.23"
+RELEASE_VERSION = "0.9.24"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:
@@ -7833,6 +8016,8 @@ def main() -> None:
         print(f"  {'Options page, reveal':24} " + write_options_page(cfg))
         print(f"  {'Dispatch Missions':24} " + write_dispatch_text(cfg, test_evt))
         print(f"  {'World-map starts':24} " + write_world_starts(cfg))
+        print(f"  {'Remaster sprite sets':24} " + write_remaster_sprite_sets(cfg))
+        print(f"  {'Battle unit overrides':24} " + write_entry_overrides(cfg))
         print(f"  {'Algus campaign (offline)':24} "
               + check_algus_campaign(eiu_events.read_lengths(battle_new), presets))
         from check_story_regressions import check as check_story_regressions

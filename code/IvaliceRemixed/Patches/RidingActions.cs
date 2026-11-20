@@ -20,9 +20,16 @@ namespace IvaliceRemixed.Patches;
 /// the mount's primary skillset is a monster's (0xA8 or more). The rider's MP pays, as in ReMixed. AI riders don't use
 /// the mount's skills, as in ReMixed (the AI doesn't list them).</para>
 /// <para>Step 3 (pieces 7, 8 and 10): a charging rider's pending charge is parked while its mount's skill runs and
-/// given back at the end of its turn (<see cref="Parked"/>, through Two Spells' action-start hook); the EXP and JP
-/// go to the mount (<see cref="ActingMount"/>, used by <see cref="Gains"/>); a dead rider's CT goes to its mount when
-/// it's placed off it (the place-unit routine, hooked here).</para>
+/// given back after it (<see cref="Parked"/>); the EXP and JP go to the mount (<see cref="ActingMount"/>, used by
+/// <see cref="Gains"/>); a dead rider's CT goes to its mount when it's placed off it (the place-unit routine, hooked
+/// here). The rider stays Charging through both of the game's action state resets that follow the instant skill, as
+/// ReMixed's 0x8015F400 sits on both: the queue's after an instant action (0x281476, PS1 0x80183DE8; here
+/// <see cref="AtQueueReset"/>, through <see cref="Performances"/>' stub) and the action's start (0x2828E4, PS1
+/// 0x8017DA64; Two Spells' hook). ReMixed gives the charge back as the action's display ends (0x8015DD00); here it's
+/// the end of the rider's turn (<see cref="TurnEnded"/>), before any countdown. A rider that has moved has its turn
+/// ended by the mark of its mount's skill (0x310548), before that skill is queued and the charge parked; the game runs
+/// the end of turn again once the action is over (seen on the PC, 2026-11-19), which gives it back then, and the
+/// battle's step before the turn loop (<see cref="GiveBack"/>, Performances' other stub) gives back any still parked.</para>
 /// </remarks>
 internal static unsafe class RidingActions
 {
@@ -52,6 +59,8 @@ internal static unsafe class RidingActions
         if (!TwoSpells.Turns || TwoSpells.Builder == 0)
             throw new InvalidOperationException("needs Two Spells' hooks (support 0x1D0 in the build)");
         _game = game;
+        // The queue's reset after an instant action and the battle's step, shared with persistent performances.
+        Performances.HookAfterAction(game);
         // The place-unit routine (PS1 0x8017FDDC; index, x, y, level and facing), the only link writer.
         var place = game.Image.FindUnique(
             "48 89 5C 24 08 44 88 44 24 18 88 54 24 10 55 56 57 41 54 41 55 41 56 41 57 48 83 EC 20 45 0F B6 F1");
@@ -224,7 +233,7 @@ internal static unsafe class RidingActions
             int index = record[0];
             SnapRecord.CopyTo(ParkedRecords.AsSpan(index * RecordSize, RecordSize));
             ParkedCt[index] = _snapCt;
-            Tracer.Line(_game.Log, $"riding: unit {index}'s charge 0x{SnapRecord[2] | (SnapRecord[3] << 8):X3} (CT {_snapCt}) waits while its mount acts");
+            Note($"riding: unit {index}'s charge 0x{SnapRecord[2] | (SnapRecord[3] << 8):X3} (CT {_snapCt}) waits while its mount acts");
             _snapCt = Empty;
         }
         if (!_on || commit == 0 || record == null || record[0] >= Battle.UnitCount || Pending[record[0]] == 0)
@@ -236,6 +245,27 @@ internal static unsafe class RidingActions
     }
 
     /// <summary>
+    /// The queue's action state reset after an instant action (0x279370 with 0, from <see cref="Performances.QueueReset"/>):
+    /// a rider whose charge is parked for its mount's skill keeps Charging (PS1 0x8015F400, on 0x80183DE8); only the
+    /// instant skill's countdown (+0x18D, 0 from the queue) is emptied, so nothing fires from its record. Returns whether
+    /// it did, in place of the game's reset.
+    /// </summary>
+    internal static bool AtQueueReset(byte* unit)
+    {
+        if (!_on || unit == null)
+            return false;
+        var offset = unit - _game.TurnCode.Units;
+        if (offset < 0 || offset >= Battle.UnitCount * Battle.UnitSize || offset % Battle.UnitSize != 0)
+            return false;
+        var index = (int)(offset / Battle.UnitSize);
+        if (ParkedCt[index] == Empty || !IsMountSkill(unit + UnitRecord))
+            return false;
+        unit[UnitCharge] = Empty;
+        Note($"riding: unit {index} stays Charging through its mount's skill 0x{*(ushort*)(unit + UnitRecord + 2):X3}");
+        return true;
+    }
+
+    /// <summary>
     /// The end of a unit's turn: its rider state is over, and a parked charge goes back to its record (PS1 0x8015DD00,
     /// after the action's display there), unless the unit stopped Charging or is gone.
     /// </summary>
@@ -243,18 +273,42 @@ internal static unsafe class RidingActions
     {
         if ((uint)index >= Battle.UnitCount)
             return;
+        if (_on && MountUsed[index] != 0)
+            Note($"riding: unit {index}'s turn ends with its mount's skill used{(ParkedCt[index] == Empty ? ", nothing parked yet" : "")}");
         RiderActed[index] = MountUsed[index] = Pending[index] = 0;
-        if (!_on || ParkedCt[index] == Empty)
+        if (_on && ParkedCt[index] != Empty)
+            Unpark(index, "as its turn ends");
+    }
+
+    /// <summary>
+    /// The battle's step before the turn loop (from <see cref="Performances"/>' stub on 0x2029E8, once the turn and its
+    /// action are over): a charge still parked goes back. A rider that had moved has its turn ended by the mark of its
+    /// mount's skill, before the skill is queued and the charge parked, so that <see cref="TurnEnded"/> finds nothing;
+    /// in the game a second end of turn after the action gives it back first, and this is the fallback.
+    /// </summary>
+    internal static void GiveBack()
+    {
+        if (!_on)
             return;
+        for (var index = 0; index < Battle.UnitCount; index++)
+        {
+            if (ParkedCt[index] != Empty)
+                Unpark(index, "after its turn's action");
+        }
+    }
+
+    /// <summary>A parked charge back in its unit's record with its CT, unless the unit stopped Charging or is gone.</summary>
+    private static void Unpark(int index, string when)
+    {
         var unit = _game.TurnCode.Units + index * Battle.UnitSize;
         if (unit[1] != Empty && (unit[Battle.UnitStatuses] & Charging) != 0)
         {
             ParkedRecords.AsSpan(index * RecordSize, RecordSize).CopyTo(new Span<byte>(unit + UnitRecord, RecordSize));
             unit[UnitCharge] = ParkedCt[index];
-            Tracer.Line(_game.Log, $"riding: unit {index} goes back to charging 0x{*(ushort*)(unit + UnitRecord + 2):X3}, CT {ParkedCt[index]}");
+            Note($"riding: unit {index} goes back to charging 0x{*(ushort*)(unit + UnitRecord + 2):X3}, CT {ParkedCt[index]}, {when}");
         }
         else
-            Tracer.Line(_game.Log, $"riding: unit {index}'s parked charge is dropped (no longer charging)");
+            Note($"riding: unit {index}'s parked charge is dropped {when} (no longer charging)");
         ParkedCt[index] = Empty;
     }
 
@@ -265,6 +319,16 @@ internal static unsafe class RidingActions
         Array.Clear(Pending);
         Array.Fill(ParkedCt, (byte)Empty);
         _snapCt = Empty;
+    }
+
+    /// <summary>
+    /// A parked charge's line for the log every time (the tracer stops after 128 distinct lines a session, which a long
+    /// battle reaches) and for the test recorder: a few lines for each use of a mount's skill by a charging rider.
+    /// </summary>
+    private static void Note(string line)
+    {
+        Tracer.Sink?.Invoke(line);
+        _game.Log.Info("trace " + line);
     }
 
     /// <summary>The state of a swap, to put back after the formula.</summary>

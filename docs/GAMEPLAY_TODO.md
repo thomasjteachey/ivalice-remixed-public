@@ -5,7 +5,7 @@ is, and what it waits on. The technical details (what ReMixed's code does, where
 [MECHANICS.md](MECHANICS.md) and [REMASTER.md](REMASTER.md); data held back is in
 [the build report](generated/mod-build.md).
 
-**Progress: 98% of gameplay** (106 done, 2 open: 1 small, 1 medium, 0 large). Worked out from this list by
+**Progress: 98% of gameplay** (106 done, 3 open: 2 small, 1 medium, 0 large). Worked out from this list by
 `python -I tools/todo_progress.py`, open items weighted by size (small 1, medium 3, large 15) and done ones at 2 each,
 and updated with every change to the list. Everything outside the story and display ports is ported or settled
 (the formulas ReMixed rewrote in place were the last, 2026-11-12; ReMixed's own battles writing their units back,
@@ -472,9 +472,15 @@ the Lionel scene's event art and Two Shots have sessions of their own):
   (`tests/quick/performance-through-item.txt`, 2026-11-19): Ramza sang Battle Song, used a Potion with two ticks of
   it left, had it back in the turn order right after, it landed again, and his next turn's menu came with no notice.
   *medium*
-- [ ] Event speech boxes that name a portrait rather than a unit may show Ashley's face for Agrias (and ReMixed's
-  character on Rafa's second sprite set for Rafa). ReMixed redrew part of the event portraits, so which number means
-  whom there, and whether any of the mod's events name one, needs checking before that table is changed. *small*
+- [ ] Rafa's and Agrias's speech boxes show the faces of ReMixed's characters on their second sprite sets: Balthier's
+  for Rafa in the frog scene (event 270, a tester on 0.9.22; seen again in the hidden PC game, 2026-11-19), Ashley's for
+  Agrias. ReMixed's characters on 0x19 and 0x34 get their faces through the fold (Patches/RemixedFaces.cs), but the
+  remaster files Rafa's and Agrias's faces under those same numbers, and some of its boxes hand the fold 0x19 or 0x34
+  for them. Two of those ways are mended (2026-11-19): an event box's portrait through the event table (0x714D50), and
+  a battle unit's box through its sprite's sheet slot (0x22AA88, RemixedFaces.BoxFace; seen leaving Ramza's box as it
+  was). Rafa's boxes in the frog scene (style 0x92) take another way still: one fold of 0x19 from the speech box
+  (0x138E22), with her unit drawn as 0x29, her name id 41 or 25 alike, and the face box not called. Next: find what
+  fills that box's face (+0xF0 of its record) for a style 0x92 line. *small*
 - [x] An answer list with a sentence before it ran past its box: the river camp's "Nay. Beasts gather often..." and
   its three answers drew their last two rows under the box, and the cursor stood two rows up (seen in the hidden PC
   game). The remaster wraps a long row itself, but the tall boxes count a text's rows by its line breaks, so the box
@@ -582,6 +588,35 @@ Asked on the Deck (2026-11-18):
 
 Reported by a player:
 
+- [x] The game closed at the end of the battle at Riovanes Castle's gate, a few seconds after "Pray let them be safe.
+  Alma...and Rapha, too." (a tester on 0.9.22), and in the frog scene before it Rafa was another character's sprite
+  and face, with "? joined the party as a guest" at level 0. The port moved the remaster's Rafa off sprite set 0x19
+  (ReMixed's character's) onto 0x29 in its battle data, but the remaster also names a character by sprite set in two
+  event instructions (AddGhostUnit, DismissUnit) and in its enhanced battle-unit overrides (OverrideEntryData: entry
+  0x1AD's unit 1 loads her from the formation as 0x19, so the unit was made empty and joined as that "?"), and the
+  build moved only two DismissUnits, by hand. Now every remaster event and override row is read for a moved sprite
+  set and moved with its units (build_mod.py write_remaster_sprite_sets, write_entry_overrides; the build stops if one
+  is left). The gate's scene then finds the guest Rafa by name (WorldUnitAddress, name id 25, which stays) for its
+  "Guest Departure" screens, and the empty one could be found there: a save's guest slot with Rafa's sprite set at
+  level 0 is emptied (Patches/OldGuests.cs, checked offline). Seen in the hidden PC game (2026-11-19,
+  `tests/quick/rafa-frog-scene.txt`, `riovanes-gate-end.txt`): the frog scene's Rafa is 0x29 with her own sprite and
+  her join screen reads "Rapha joined the party as a guest"; the gate battle won, "Rapha is no longer a guest member of
+  your party" and on to the next scene. *medium*
+- [x] The remaster's enhanced battle-unit overrides undid the port's units where they met: four story units got the
+  remaster's secondary skillset and abilities back over ReMixed's (entries 0x14A, 0x183, 0x185, 0x197), and two of
+  ReMixed's own battles (0x1E6, 0x1EE) gave units 2-5 a weapon of the remaster's choosing. The cells that meet the
+  port's changes and every cell in ReMixed's entries are left out now (16 cells; checked in the built table). *small*
+- [x] Elias joined at 1-A's river camp with no name and Ramza's chapter 1 face (a tester on 0.9.22). The menus take a
+  unit's portrait from its sprite set, and a locked look (Elias's 0x9C, a Black Mage) read entry 0, Ramza's: every
+  locked look now takes the portrait of the look it draws as (Patches/UnitLooks.cs, checked offline through the game's
+  own function: a man's Black Mage, as a generic's). His name id (0x6B) is a blank row in the remaster's names, as were
+  Aliste's, Bremondt's, Valens's, Govis's, Teioh's and the workers'; every blank row a unit of the port's battle data
+  names takes ReMixed's name now (build_mod.py unit_name_rows, 20 rows). Not seen in the game yet. *small*
+- [ ] Yardrow Armory (ReMixed's scenario 0xF4, the mod's event 511): Agrias's "So these are the fiends?" showed no
+  portrait before its battle, where the scene before had them all (a tester on 0.9.22). `tests/quick/yardrow-armory-faces.txt`
+  starts it, but in the hidden PC game (2026-11-19) its opening stayed on the map for two minutes without a line, so it
+  isn't reproduced yet: its battle's units there are a generic woman and man as 0x90 and 0x91 (name ids 105 and 106),
+  and the lines name 0x90 as the speaker. *small*
 - [x] The game froze on the line "Rendezvous missions are now posted among the Rumors in taverns." (reported
   2026-11-17 with a screenshot, Auto-proceed on, most likely on 0.9.5; the report's screenshot and folder of files are
   kept outside the repo). It's the last line of ReMixed's 0x0A4, Biggs and Wedge's bartender. On 0.9.5 its box's wait
@@ -1302,8 +1337,14 @@ In order:
   (ReMixed allows it and undoes them).
 - [ ] Hitting bodies: a Raise or Phoenix Down thrown, struck or shot at a body lands on it (an archer's shot at a
   body over a living unit's shoulder hits the body), and a body between the archer and its target doesn't block.
-- [ ] Riding, the rest: a rider charging a spell can use Choco Cure and still casts the spell on time; the chocobo
-  gets the EXP and JP for its skill; when a rider dies, its chocobo takes its next turn where the rider would have.
+- [ ] Riding, the rest: a rider charging a spell can use Choco Cure and still casts the spell on time, whether or
+  not it moved first; the chocobo gets the EXP and JP for its skill; when a rider dies, its chocobo takes its next
+  turn where the rider would have. Found reading the code and fixed (2026-11-19): the spell was always lost, as the
+  game's tidy-up after the chocobo's skill cleared the rider's charging. Seen in the hidden PC game since
+  (`tests/quick/riding-charge.txt`, the harness picking the actions, no menus): Ramza, set on an enemy chocobo as
+  its rider, began charging Fire, used Choco Cure (the chocobo acting for him and getting the EXP), had Fire back in
+  the timeline as his turn ended, marked as having moved or not, and cast it before his next turn. Still to see by
+  hand: the menus, a real move first, and a rider's death.
   Also see what ReMixed shows that isn't ported: the action window naming the chocobo, and a rider boarding a
   chocobo that has already moved (ReMixed counts the rider as moved).
 - [ ] Trick Shot: the target window. ReMixed shows only Abandon or Weapon Guard there while aiming Trick Shot (the

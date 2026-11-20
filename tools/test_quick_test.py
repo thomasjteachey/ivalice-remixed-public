@@ -61,6 +61,20 @@ class QuickCaseTests(unittest.TestCase):
                                                                 r"expected 0, found 1"):
                 quick_test.run_case(path)
 
+    def test_ride_links_the_party_unit_to_a_mount(self) -> None:
+        units = [{"index": 5, "player": 0, "present": 1, "address": 0x5000},
+                 {"index": 0, "player": 1, "present": 1, "address": 0x1000},
+                 {"index": 4, "player": 0, "present": 1, "address": 0x4000},
+                 {"index": 2, "player": 1, "present": 0, "address": 0x2000}]
+        sent: list[str] = []
+        with mock.patch.object(quick_test, "find",
+                               side_effect=lambda kind, wanted: [u for u in units if quick_test.matches(u, wanted)]), \
+                mock.patch.object(quick_test.harness, "send", side_effect=lambda command: sent.append(command) or "ok"):
+            quick_test.ride(["foe"], "case")
+            self.assertEqual(sent, ["poke 0x11B4 84", "poke 0x41B4 40", "poke 0x4012 b0"])
+            with self.assertRaisesRegex(quick_test.CaseFailure, "another party unit"):
+                quick_test.ride(["skillset=0xA9"], "case")
+
     def test_log_waits_ignore_old_lines_and_consume_each_new_match_once(self) -> None:
         path = self.case('wait log "loaded event 404" timeout=1\nwait log "loaded event 404" timeout=1\n')
         self.logs.return_value = ["loaded event 404"]

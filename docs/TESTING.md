@@ -244,7 +244,7 @@ battle). The formation helper (`harness.formation`, quick_test's `formation`) no
 try. If a test would still take minutes, make it fast first (a shortcut in the harness or a case's setup), then run it.
 
 Each case prints one `PASS` or `FAIL` line per expectation and a final elapsed time. Case files use one small command
-per line: `scenario`, `setvar`, `send`, `advance`, `formation`, `defeat`, `key`, `shot`, `poke unit`,
+per line: `scenario`, `setvar`, `send`, `advance`, `formation`, `defeat`, `key`, `shot`, `poke unit`, `ride`,
 `wait unit|entry|log|world|seconds`, `expect unit|entry|roster|var` and `show slots|roster`. `show` prints the
 battle units' roster slots and battle ids (or the roster) into the case's output, as evidence. A case on the
 formation screen waits for its own line first (`wait log "formation: screen open"`), as quick_test's `formation`
@@ -259,7 +259,9 @@ menus, and `send testmode auto` hands it back.
 `send act SKILLSET ABILITY TARGET` makes a party unit use an ability without driving the menus: `send act 08 195
 foe` is Two Shots (skillset 0x08, ability 0x195) at the nearest foe's panel (TARGET is also `self`, the acting unit's
 panel, a battle unit's index, or `X,Y[,LEVEL]`; an item's ability names its item too, so `send act 06 170 self` is a
-Potion on the unit itself; a fifth word queues it that many times, for a turn's two actions). Acts are queued (`send act clear`
+Potion on the unit itself; a fifth word queues it that many times, for a turn's two actions; a last word `moved`
+marks the unit as having moved just before that act's confirm, so its mark ends the turn there and then, as after a
+move). Acts are queued (`send act clear`
 drops them; `send act menu` logs the menu's state and its action record, as the menus filled it) and taken as a party unit's command menu is about to open, at its turn's start or again after an action
 that leaves the turn going; a turn already at its first command menu gets an F on Move, and the move selection takes
 it. Then the battle
@@ -298,7 +300,10 @@ including its unit-selection `flags`; `units` exposes the live job, graphic, pal
 `knight_level`, `black_mage_level`, `bard_level`, `dancer_level` and `dark_knight_level`; `roster` records also have
 `errand` (+0x11E, which the remaster shows as an errand when it isn't 0). `count=N` on an `expect` wants N records so
 (`count=0`: none). An event's opening block can be checked at once, without playing its scene
-(`tests/quick/performer-join.txt`; `river-camp-leave.txt` and `remixed-job-levels.txt` likewise). The job menu's second page and roster Dark Knights in the party menus: `tests/quick/dark-knight-page.txt` (the roster record's job, +2, poked to 0xA0; a job's level follows its JP, so poking the level nibbles at +0x74 doesn't open a job). Screenshots are
+(`tests/quick/performer-join.txt`; `river-camp-leave.txt` and `remixed-job-levels.txt` likewise). The job menu's second page and roster Dark Knights in the party menus: `tests/quick/dark-knight-page.txt` (the roster record's job, +2, poked to 0xA0; a job's level follows its JP, so poking the level nibbles at +0x74 doesn't open a job). A guest the story would have saved by then is
+made with `copy roster 0 50 sprites=0x29 job=0x29 name_id=25` (slot 50, the first guest slot: the guest Rafa), so the
+remaster's scenes that load her from the formation or name her by sprite set run from the test save
+(`tests/quick/rafa-frog-scene.txt`, `riovanes-gate-end.txt`). Screenshots are
 still for a final visual review, not a prerequisite for these checks.
 
 A battle's in-battle scene is reached without playing to its condition: `send event SCENARIO PHASE` runs that phase of
@@ -310,7 +315,10 @@ first unit twice), so a case that needs a character placed pokes it into roster 
 started on their own from the world map (0x0FB's copy 0x34B, the thief battle 0x195 noted) took no placement in the
 harness (2026-11-18); the river camp's (0x1FE noted) did. A unit's riding link is its +0x1B4 (a rider `0x80 | its
 mount's index`, a mount `0x40 | its rider's`): `python -I tools/harness.py send peek ADDRESS 1` on the unit's record
-(`send units` gives the base, 0x200 a unit).
+(`send units` gives the base, 0x200 a unit). A case's `ride foe` sets those links up in any battle: the placed party
+unit rides the first enemy, whose primary skillset becomes the Chocobo's (`skillset=` another), so `send act B0 10D
+self` is the rider's Choco Cure (`tests/quick/riding-charge.txt`); `ride` alone takes a second party unit as the mount,
+which the formation helper can't place yet.
 
 To check the Dispatch navigation soft lock, start the disposable Eagrose fixture and run the full catalog check:
 

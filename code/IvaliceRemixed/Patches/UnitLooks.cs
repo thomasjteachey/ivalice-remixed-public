@@ -75,6 +75,62 @@ internal static unsafe class UnitLooks
         RecomputeAt = at;
         PatchPicker(game.Image);
         PatchJobList(game.Image);
+        _roster = game.Units.Roster;
+        PortraitAt = game.Image.FindUnique(PortraitPattern);
+        _portrait = (delegate* unmanaged<int, nint, nint, int*, int>)game.Hooks.Hook(
+            PortraitAt, (nint)(delegate* unmanaged<int, nint, nint, int*, int>)&Portrait, "a roster unit's portrait");
+    }
+
+    /// <summary>A roster unit's PS1 portrait for the world menus (0x32AB3C: ecx the roster slot, rdx what 0x2E16A8 fills
+    /// in, r9 its palette out), the one reader of the portrait table (.rdata 0x683A70): a special character by its sprite
+    /// set, a generic (0x80, 0x81) by its job's graphic (job × 2 − 0x34, a woman's − 0x35), and any other sprite set
+    /// from 0x83 by its job row's monster byte (+0x2E), 0 for a human job, and table entry 0 is Ramza's chapter 1
+    /// portrait. So a locked look showed Ramza's face on its card, the formation list and its join screen (Elias, 0x9C,
+    /// a Black Mage, at 1-A's river camp: a tester on 0.9.22). mov rax, rsp; four saves; push r15; sub rsp, 0x20;
+    /// xor r11d, r11d; lea r15, [image]; or esi, -1; mov rbp, rdx; mov r10d, r11d; cmp ecx, 0x36.</summary>
+    internal const string PortraitPattern =
+        "48 8B C4 48 89 58 08 48 89 68 10 48 89 70 18 48 89 78 20 41 57 48 83 EC 20 45 33 DB 4C 8D 3D ?? ?? ?? ?? " +
+        "83 CE FF 48 8B EA 45 8B D3 83 F9 36";
+    /// <summary>A roster record's gender bits (0x80 a man), as a battle unit's +6.</summary>
+    internal const int RosterGenderAt = 4;
+    internal static nint PortraitAt { get; private set; }
+    private static byte* _roster;
+    private static delegate* unmanaged<int, nint, nint, int*, int> _portrait; // the original
+
+    /// <summary>A locked look's portrait is that of the look it draws as (<see cref="LockedGraphic"/>): for the call,
+    /// its record names that graphic as its sprite set (a generic's graphic, or Lorne's 0x38, is under 0x80, which the
+    /// table takes as it is); Bryn's Dancer and the monster look (0x83, 0x82) stay the game's, which gives them by job.
+    /// </summary>
+    [UnmanagedCallersOnly]
+    private static int Portrait(int slot, nint drawn, nint palette8, int* palette)
+    {
+        byte* record = null;
+        byte sprite = 0;
+        try
+        {
+            if (_roster != null && (uint)slot < UnitTables.RosterSlots)
+            {
+                record = _roster + slot * UnitTables.RosterSize;
+                if (IsLocked(record[0]) && LockedGraphic(record[0], record[RosterGenderAt]) is var look and < 0x80)
+                {
+                    sprite = record[0];
+                    record[0] = (byte)look;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Failed(e);
+        }
+        try
+        {
+            return _portrait(slot, drawn, palette8, palette);
+        }
+        finally
+        {
+            if (sprite != 0)
+                record[0] = sprite;
+        }
     }
 
     /// <summary>The picker as found, for the offline check (calling it runs the patched picker).</summary>

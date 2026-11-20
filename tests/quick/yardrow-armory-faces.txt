@@ -1,0 +1,11 @@
+# ReMixed's Yardrow Armory scene (its scenario 0xF4, the mod's event 511), before its battle. A tester on 0.9.22 saw
+# Agrias's line "So these are the fiends? This chamber is cramped..." with no portrait, where the scene before had
+# them all. Run with
+#   python -I tools/quick_test.py --restart tests/quick/yardrow-armory-faces.txt
+# A frame before each Enter: each speech box's face. (2026-11-19: the opening stayed on the map for 2 minutes.)
+name Yardrow Armory faces
+wait world depth=1 state=0 timeout=20
+scenario 0x1FF
+wait log "loaded event 511" timeout=40
+show slots
+advance event 999 every=0.8 shots=1 timeout=120

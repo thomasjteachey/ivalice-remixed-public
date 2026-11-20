@@ -3690,8 +3690,10 @@ internal static unsafe class SelfTest
     }
 
     /// <summary>
-    /// Riding, step 2: a rider (battle slot 3) on a chocobo (slot 4), both put back after: the command list, the turn's
-    /// action, the queue's charge time and "acted", and the attacker swap.
+    /// Riding, steps 2 and 3: a rider (battle slot 3) on a chocobo (slot 4), both put back after: the command list, the
+    /// turn's action, the queue's charge time and "acted", the attacker swap, the mount's EXP and a dead rider's CT, and
+    /// a charging rider's parked charge through the queue's reset and the action's start (stand-ins for the game's turn
+    /// mark and action state), back at the end of its turn or, for a rider that had moved, at the battle's step.
     /// </summary>
     public static int RidingActionRules(Game game, Log log)
     {
@@ -3717,8 +3719,14 @@ internal static unsafe class SelfTest
         var data = game.RuleCode.GetAbilityAction(ability);
         var savedCt = data[0xC];
         var record = stackalloc byte[20];
+        var realActed = TwoSpells.GameSetActed;
+        var realState = TwoSpells.GameActionState;
+        var ui = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(0x200);
         try
         {
+            TwoSpells.GameSetActed = &FakeSetActed;
+            TwoSpells.GameActionState = &FakeActionState;
+            _actedUnits = units;
             var rider = units + 3 * Battle.UnitSize;
             var mount = units + 4 * Battle.UnitSize;
             rider[1] = 0; mount[1] = 0;
@@ -3798,7 +3806,8 @@ internal static unsafe class SelfTest
             rider[RidingActions.UnitRecord + 1] = 0x05;
             var toRider = RidingActions.ActingMount(rider) == null;
             Check($"the EXP and JP: the mount's skill awards the mount {toMount}; the rider's own, the rider {toRider}", toMount && toRider);
-            // A charging rider uses its mount's skill: its charge is parked, it keeps Charging, and gets it back at the end of its turn.
+            // A charging rider uses its mount's skill: its charge is parked, it keeps Charging through the queue's reset
+            // (only the instant skill's countdown emptied) and the action's start, and gets it back at the end of its turn.
             RidingActions.TurnEnded(3);
             var ownRecord = rider + RidingActions.UnitRecord;
             ownRecord[0] = 3; ownRecord[1] = 0x05; ownRecord[2] = 0x10; ownRecord[3] = 0x00;
@@ -3807,25 +3816,80 @@ internal static unsafe class SelfTest
             record[0] = 3; record[1] = 0xB0; record[2] = 0x7D; record[3] = 0x01;
             RidingActions.BeforeQueue(record, ownRecord, 1);
             new Span<byte>(record, 20).CopyTo(new Span<byte>(ownRecord, 20)); // the game's queue
-            rider[0x18D] = 0xFF;                                          // the instant skill fired
+            rider[0x18D] = 0;                                             // an instant action's countdown
             RidingActions.AfterQueue(record, ownRecord, 1);
             var parked = RidingActions.Parked(3);
-            var keeps = TwoSpells.StartAction(rider, 0xFF) == 0;
+            _stateCalls.Clear();
+            Performances.QueueReset(rider, 0);
+            var throughReset = $"statuses {rider[Battle.UnitStatuses]:X2} countdown {rider[0x18D]}, {_stateCalls.Count} game calls";
+            var keeps = TwoSpells.StartAction(rider, 0xFF) == 0 && _stateCalls.Count == 0;
             RidingActions.TurnEnded(3);
             var chargeBack = ownRecord[1] == 0x05 && ownRecord[2] == 0x10 && rider[0x18D] == 6 && !RidingActions.Parked(3);
+            // Nothing parked: the queue's reset is the game's.
+            Performances.QueueReset(rider, 0);
+            var gameReset = _stateCalls.SequenceEqual([0]);
             // One that stopped Charging meanwhile loses it.
             RidingActions.BeforeQueue(record, ownRecord, 1);
             new Span<byte>(record, 20).CopyTo(new Span<byte>(ownRecord, 20));
-            rider[0x18D] = 0xFF;
+            rider[0x18D] = 0;
             RidingActions.AfterQueue(record, ownRecord, 1);
+            Performances.QueueReset(rider, 0);
             rider[Battle.UnitStatuses] = 0;
             RidingActions.TurnEnded(3);
             var dropped = ownRecord[1] == 0xB0 && rider[0x18D] == 0xFF && !RidingActions.Parked(3);
-            Check($"a charging rider's charge: parked {parked}, keeps Charging at the action's start {keeps}, back at its turn's end {chargeBack}; dropped once it stops Charging {dropped}",
-                  parked && keeps && chargeBack && dropped);
+            Check($"a charging rider's charge: parked {parked}; through the queue's reset {throughReset}; keeps Charging at the action's start {keeps}; back at its turn's end {chargeBack}; without one the reset is the game's {gameReset}; dropped once it stops Charging {dropped}",
+                  parked && throughReset == "statuses 08 countdown 255, 0 game calls" && keeps && chargeBack && gameReset && dropped);
+            // A rider that has moved casts a charge (its own action, not the turn's), then uses its mount's skill: the
+            // skill's mark ends the turn (moved and acted) before it's queued, so the charge is parked after the turn's
+            // end. It stays Charging and goes back at the battle's step before the turn loop, not a turn later.
+            RidingActions.TurnEnded(3);
+            rider[Battle.UnitSupports + 1] &= unchecked((byte)~0x20); // no Two Spells
+            rider[Battle.UnitStatuses] = 0;
+            rider[0x18D] = 0xFF;
+            rider[0x1B9] = 1; // moved
+            rider[RidingActions.UnitActed] = 0;
+            var uiRecord = ui + 0x178;
+            int Mark(int skillset, int ab)
+            {
+                uiRecord[0] = 3; uiRecord[1] = (byte)skillset; *(ushort*)(uiRecord + 2) = (ushort)ab;
+                _actedCalls.Clear();
+                TwoSpells.Acts(3, 0, 1, ui);
+                return _actedCalls.Count == 1 ? _actedCalls[0].Acted : -1;
+            }
+            _turnsEnded = 0;
+            var chargeMark = Mark(0x05, 0x10);
+            RidingActions.BeforeQueue(uiRecord, ownRecord, 1);
+            new Span<byte>(uiRecord, 20).CopyTo(new Span<byte>(ownRecord, 20)); // the charge's queue: state 5
+            rider[0x18D] = 6;
+            rider[RidingActions.UnitActed] = 1;
+            rider[Battle.UnitStatuses] = 0x08;
+            RidingActions.AfterQueue(uiRecord, ownRecord, 1);
+            var chargeActed = rider[RidingActions.UnitActed];
+            var turnsBefore = _turnsEnded;
+            var mountMark = Mark(0xB0, 0x17D);
+            var endedAtMark = _turnsEnded - turnsBefore == 1 && !RidingActions.Parked(3);
+            RidingActions.BeforeQueue(uiRecord, ownRecord, 1);
+            new Span<byte>(uiRecord, 20).CopyTo(new Span<byte>(ownRecord, 20)); // the mount's skill: instant
+            rider[0x18D] = 0;
+            RidingActions.AfterQueue(uiRecord, ownRecord, 1);
+            var movedParked = RidingActions.Parked(3);
+            _stateCalls.Clear();
+            Performances.QueueReset(rider, 0);
+            var movedStarts = TwoSpells.StartAction(rider, 0xFF) == 0;
+            var movedThrough = $"statuses {rider[Battle.UnitStatuses]:X2} countdown {rider[0x18D]}, {_stateCalls.Count} game calls";
+            RidingActions.GiveBack();
+            var movedBack = $"0x{*(ushort*)(ownRecord + 2):X3} skillset {ownRecord[1]:X2} countdown {rider[0x18D]} statuses {rider[Battle.UnitStatuses]:X2} parked {RidingActions.Parked(3)}";
+            Check($"a rider that has moved: its charge marks {chargeMark} (\"acted\" {chargeActed} after its queue); the mount's skill marks {mountMark}, its turn over at the mark {endedAtMark}; parked {movedParked}; through the queue's reset and the action's start ({movedStarts}) {movedThrough}; at the battle's step {movedBack}",
+                  chargeMark == 0 && chargeActed == 0 && mountMark == 1 && endedAtMark && movedParked && movedStarts
+                  && movedThrough == "statuses 08 countdown 255, 0 game calls"
+                  && movedBack == "0x010 skillset 05 countdown 6 statuses 08 parked False");
         }
         finally
         {
+            TwoSpells.GameSetActed = realActed;
+            TwoSpells.GameActionState = realState;
+            _actedUnits = null;
+            System.Runtime.InteropServices.NativeMemory.Free(ui);
             saved.CopyTo(new Span<byte>(units + 3 * Battle.UnitSize, 2 * Battle.UnitSize));
             *battle.Attacker = savedAttacker;
             *game.Routines.AttackerResult = savedResult;
@@ -4728,10 +4792,14 @@ internal static unsafe class SelfTest
         Record(5, 0x80, 0x4A, 0x123, 0x10); // someone else away
         Record(6, 0x9C, 0x50, OldGuests.Elias, 0x80); // Elias as 0.9.17's 0x0F3 left him
         Record(7, 0x80, 0x4A, 0x124, 0x80); // someone else with the bit
+        Record(OldGuests.FirstGuestSlot, OldGuests.Rafa, OldGuests.Rafa, 25, 0); // the guest Rafa
+        roster[OldGuests.FirstGuestSlot * size + OldGuests.RosterLevel] = 23;
+        Record(OldGuests.FirstGuestSlot + 1, OldGuests.Rafa, 0, 25, 0); // 0.9.22's empty Rafa (level 0)
         var first = OldGuests.RepairSideChapterRoster(roster);
         var again = OldGuests.RepairSideChapterRoster(roster);
         byte At(int slot, int offset) => roster[slot * size + offset];
-        var ok = first == 4 && again == 0 && At(1, OldGuests.RosterJob) == OldGuests.RemasterBard
+        var ok = first == 5 && again == 0 && At(1, OldGuests.RosterJob) == OldGuests.RemasterBard
+                 && At(OldGuests.FirstGuestSlot, 1) != 0xFF && At(OldGuests.FirstGuestSlot + 1, 1) == 0xFF
                  && At(6, OldGuests.RosterErrand) == 0 && At(7, OldGuests.RosterErrand) == 0x80
                  && At(2, OldGuests.RosterErrand) == 0x01 && At(3, 0) == OldGuests.Agrias
                  && At(3, OldGuests.RosterJob) == OldGuests.Agrias && At(4, 0) == OldGuests.OldAgrias
@@ -6243,9 +6311,10 @@ internal static unsafe class SelfTest
         // 0x32AB3C (ecx the roster slot, rdx what 0x2E16A8 fills in, r9 its palette out): mov rax, rsp; four saves;
         // push r15; sub rsp, 0x20; xor r11d, r11d; lea r15, [image]; or esi, -1; mov rbp, rdx; mov r10d, r11d;
         // cmp ecx, 0x36.
-        var portraitOfUnit = (delegate* unmanaged<int, byte*, nint, int*, int>)game.Image.FindUnique(
-            "48 8B C4 48 89 58 08 48 89 68 10 48 89 70 18 48 89 78 20 41 57 48 83 EC 20 45 33 DB 4C 8D 3D ?? ?? ?? ?? "
-            + "83 CE FF 48 8B EA 45 8B D3 83 F9 36");
+        // Hooked by UnitLooks (a locked look's portrait), so found there; calling it runs the hook.
+        var portraitOfUnit = (delegate* unmanaged<int, byte*, nint, int*, int>)(UnitLooks.PortraitAt != 0
+            ? UnitLooks.PortraitAt
+            : game.Image.FindUnique(UnitLooks.PortraitPattern));
         var graphicOf = (delegate* unmanaged<nint, int, int>)RemixedFaces.GraphicOfPortraitAt;
         var fold = (delegate* unmanaged<int, int>)RemixedFaces.FoldAt;
         // 0x2C06D4 (ecx 1 for a roster unit, edx its slot, r8 its palette out): mov [rsp+8], rbx; mov [rsp+0x20], rbp;
@@ -6285,6 +6354,12 @@ internal static unsafe class SelfTest
             return $"0x{fold(graphic):X2} (portrait 0x{portrait:X2}, 0x{graphic:X2}, palette {palette})"
                    + (menuGraphic == graphic && menuPalette == palette ? "" : $", the menus' 0x{menuGraphic:X2} palette {menuPalette}");
         }
+        // A locked look (Elias's 0x9C, a man, Black Mage 0x50) shows the face of the look it draws as, a generic man's
+        // Black Mage (0x80 with that job), not table entry 0's, Ramza's chapter 1 (a tester on 0.9.22).
+        (byte job, byte gender) = (unit[2], unit[UnitLooks.RosterGenderAt]);
+        (unit[2], unit[UnitLooks.RosterGenderAt]) = (0x50, 0x80);
+        string elias = Face(0x9C), genericBlackMage = Face(0x80);
+        (unit[2], unit[UnitLooks.RosterGenderAt]) = (job, gender);
         string agrias = Face(0x1E), ashley = Face(0x34), rafa = Face(0x29), remixed19 = Face(0x19);
         string celia = Face(0x2D), remixed3A = Face(0x3A), lede = Face(0x2E), remixed3B = Face(0x3B), ramza = Face(2);
         (*mode, *level, *kind) = (savedMode, savedLevel, savedKind);
@@ -6298,6 +6373,8 @@ internal static unsafe class SelfTest
               celia == "0x3A (portrait 0x8D, 0x2D, palette 8)" && remixed3A.StartsWith("0x2A ") && remixed3A.EndsWith(", 0x3A, palette 8)")
               && lede == "0x3B (portrait 0x8E, 0x2E, palette 8)" && remixed3B.StartsWith("0x2C ") && remixed3B.EndsWith(", 0x3B, palette 8)"));
         Check($"the world menus: Ramza's (2) as before: {ramza}", ramza == "0x02 (portrait 0x01, 0x02, palette 8)");
+        Check($"the world menus: a locked look (0x9C, a man's Black Mage) {elias} as a generic man's Black Mage {genericBlackMage}",
+              UnitLooks.PortraitAt != 0 && elias == genericBlackMage && !elias.Contains("portrait 0x00"));
         int[] battle = [fold(0x1E), fold(0x34), fold(0x29), fold(0x19), fold(0x2D), fold(0x3A), fold(0x2E), fold(0x3B)];
         Check("in battle, by graphic: Agrias 0x1E, Ashley 0x34, Rafa 0x29, ReMixed's 0x19, Celia 0x2D, ReMixed's 0x3A, "
               + $"Lede 0x2E, ReMixed's 0x3B: {string.Join(", ", battle.Select(f => $"0x{f:X2}"))}",
@@ -6309,6 +6386,43 @@ internal static unsafe class SelfTest
         // An event's or a list's portrait of Agrias (0x17, the PS1's for her) is hers, through the game's own lookup.
         var agriasPortrait = fold(graphicOf(0, 0x17));
         Check($"Agrias's portrait 0x17 gives her face: 0x{agriasPortrait:X2}", agriasPortrait == 0x34);
+        // An event's speech box takes a portrait of 0x51 or less through its own table (0x714D50): Rafa's 0x0E and
+        // Agrias's 0x17 give their faces there too (they gave ReMixed's 0x19's and Ashley's, a tester on 0.9.22), and
+        // the entries no separated portrait names stay the game's (Ramza's 1 and 2, Gafgarion's second's 8).
+        var events = RemixedFaces.EventGraphicOfPortrait;
+        if (events == null)
+            Check("the event boxes' portrait table isn't found", false);
+        else
+        {
+            int rafaBox = fold(events[0x0E]), agriasBox = fold(events[0x17]);
+            Check($"event boxes: Rafa's portrait 0x0E as 0x{events[0x0E]:X2}, face 0x{rafaBox:X2}; Agrias's 0x17 as "
+                  + $"0x{events[0x17]:X2}, face 0x{agriasBox:X2}; 1, 2 and 8 as 0x{events[1]:X2}, 0x{events[2]:X2}, "
+                  + $"0x{events[8]:X2}",
+                  events[0x0E] == 0x29 && rafaBox == 0x19 && events[0x17] == 0x1E && agriasBox == 0x34
+                  && events[1] == 2 && events[2] == 3 && events[8] == 0x11);
+        }
+        // A battle unit's speech box takes its face from the unit's sheet (0x22AA88: a sheet slot, through the slot
+        // table): Rafa (0x29) and Agrias (0x1E) draw from 0x19's and 0x34's sheets, ReMixed's characters' numbers, so
+        // their boxes showed Balthier's and Ashley's faces (a tester on 0.9.22). The hook hands back their own
+        // graphics, which the fold sends to their faces; ReMixed's own and anyone else's stay as the game found them.
+        if (RemixedFaces.BoxFaceAt == 0 || RemixedFaces.SheetSlots == null)
+            Check("a speech box's face isn't hooked", false);
+        else
+        {
+            var slots = RemixedFaces.SheetSlots;
+            var savedSlot = slots[3];
+            slots[3] = 0x19;
+            int rafaSlot = RemixedFaces.BoxFaceOf(3, 0x29), rafaDirect = RemixedFaces.BoxFaceOf(0x19, 0x29),
+                agriasDirect = RemixedFaces.BoxFaceOf(0x34, 0x1E), remixed19Box = RemixedFaces.BoxFaceOf(3, 0x19),
+                ashleyDirect = RemixedFaces.BoxFaceOf(0x34, 0x34), ramzaBox = RemixedFaces.BoxFaceOf(0x02, 0x02),
+                none = RemixedFaces.BoxFaceOf(-1, 0x29);
+            slots[3] = savedSlot;
+            Check($"speech boxes: Rafa on 0x19's sheet (slot 3) {rafaSlot:X}, as 0x19 0x{rafaDirect:X}, face 0x{fold(rafaDirect):X2}; "
+                  + $"Agrias as 0x34 0x{agriasDirect:X}, face 0x{fold(agriasDirect):X2}; ReMixed's 0x19 {remixed19Box:X}, "
+                  + $"Ashley 0x{ashleyDirect:X}, Ramza 0x{ramzaBox:X}, none {none}",
+                  rafaSlot == 0x29 && rafaDirect == 0x29 && fold(rafaDirect) == 0x19 && agriasDirect == 0x1E
+                  && fold(agriasDirect) == 0x34 && remixed19Box == 3 && ashleyDirect == 0x34 && ramzaBox == 2 && none == -1);
+        }
         // Brave Story's people, by the graphics LoreDictionary gives them (+0x1C), through the hooked lookups' mapping
         // and the fold: Agrias 0x1E, Rafa 0x29, Celia 0x2D, Lede 0x2E, Gafgarion 0x11, Malak 0x12.
         int[] lore = [0x1E, 0x29, 0x2D, 0x2E, 0x11, 0x12];
