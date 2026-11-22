@@ -30,8 +30,11 @@ namespace IvaliceRemixed.Patches;
 /// OR'd into +0x7A. ReMixed also changes Move and Jump by its scaling's last two bytes, which are 0 in all four of its
 /// scalings: not ported. ReMixed runs all this for every unit, preset 0 too, which takes Fire off +0x7A's innate
 /// strengthening (its element set 0 runs into the tints); here only units with a preset.</item>
-/// <item>Not ported (the display port): the tint and blending of presets 10–12 and 16–18 (dark, gold, grey, bronze; 18
-/// half-transparent).</item>
+/// <item>The display: ReMixed's sprite submission (0x801550D0) copies the selected tint's first three bytes into every
+/// body piece's RGB modulation. The remaster has the same neutral-0x80 modulation on its main body primitive and its
+/// three optional equipment/overlay primitives; <see cref="Draw"/> applies the preset there before every submission.
+/// Preset 18's half-transparency is not ported: no shipped scenario assigns it, and its PS1 tint also depends on a
+/// separate per-sprite transparency flag for which the remaster has no established equivalent.</item>
 /// </list>
 /// </remarks>
 internal static unsafe class UnitPresets
@@ -43,11 +46,19 @@ internal static unsafe class UnitPresets
     /// innate, immune and current statuses, abilities, elements given and taken, a byte for +0x7A) and the random
     /// pick (0xFF: from the second byte up to the third).</summary>
     internal const int ScalingAt = 0x00, ScalingSize = 14, StatusAt = 0x38, StatusSize = 5, AbilityAt = 0x74, AbilitySize = 11,
-                       ElementAt = 0x95, ElementStride = 4, ElementSize = 5, PresetAt = 0xB7, PresetSize = 9, RandomAt = 0x18F;
+                       ElementAt = 0x95, ElementStride = 4, ElementSize = 5, TintAt = 0x99, TintSize = 5,
+                       PresetAt = 0xB7, PresetSize = 9, RandomAt = 0x18F;
     /// <summary>The remaster's unit fields (PS1 in brackets): class evade (+0x43), innate statuses (+0x4E; immune and
     /// current 5 and 10 bytes on), elements (+0x6D), abilities (+0x8B).</summary>
     internal const int ClassEvade = 0x4B, Statuses = 0x57, Elements = 0x76, Abilities = 0x94;
     internal const int Stats = 5, StubSize = 96;
+
+    /// <summary>The battle-sprite draw (0x26D200): mov rax,rsp; save rbx/rsi/rdi; push rbp,r12-r15; lea rbp,[rax-48].</summary>
+    internal const string DrawPattern =
+        "48 8B C4 48 89 58 10 48 89 70 18 48 89 78 20 55 41 54 41 55 41 56 41 57 48 8D 68 B8";
+    /// <summary>A battle sprite's owner, its main body primitive, and the three optional part records. A primitive's
+    /// first three bytes are its RGB modulation (0x80 each is neutral).</summary>
+    internal const int SpriteUnit = 0x148, SpriteBody = 0x238, SpritePart = 0x270, SpritePartStride = 0x48, SpriteParts = 3;
 
     /// <summary>The recalculation (0x2779EC) at +0x1D: and word [rcx+0x3C], 0; lea r14, [rcx+0x3B]; inc edx;
     /// mov byte [r14], 0; mov rbx, rcx; call 0x276EBC.</summary>
@@ -74,7 +85,7 @@ internal static unsafe class UnitPresets
     /// <summary>The preset 0xE0 gives the unit it makes next (its record's +0x25), −1 for none.</summary>
     internal static int Pending = -1;
 
-    internal static nint ProductAt, Stub, RecalculateAt;
+    internal static nint ProductAt, Stub, RecalculateAt, DrawAt;
     private static Game _game = null!;
     private static byte* _units;
     private static byte** _entryData;
@@ -83,6 +94,7 @@ internal static unsafe class UnitPresets
     /// 0x276EBC, as that step's third argument, which it reads for an even mode: a hook that dropped it crashed the
     /// game).</summary>
     private static delegate* unmanaged<byte*, int, nint, nint, void> _recalculate;
+    private static delegate* unmanaged<byte*, void> _draw;
     private static readonly HashSet<string> Failures = [];
 
     public static void Install(Game game)
@@ -102,6 +114,7 @@ internal static unsafe class UnitPresets
         if (*(uint*)RecalculateAt != 0x48C48B48) // mov rax, rsp; mov [rax+8], rbx
             throw new InvalidDataException("the recalculation isn't laid out as this DLL expects");
         ProductAt = image.FindUnique(ProductPattern) + ProductOffset;
+        DrawAt = image.FindUnique(DrawPattern);
         Stub = (nint)GameImage.AllocateCodeNear(ProductAt, StubSize);
         WriteStub((byte*)Stub, ProductAt + ProductBytes, _units, Scales);
         var jump = new byte[ProductBytes];
@@ -113,6 +126,8 @@ internal static unsafe class UnitPresets
             CreateUnit.MakeAt, (nint)(delegate* unmanaged<byte*, byte*, int, int, nint, long>)&Make, "the unit making");
         _recalculate = (delegate* unmanaged<byte*, int, nint, nint, void>)game.Hooks.Hook(
             RecalculateAt, (nint)(delegate* unmanaged<byte*, int, nint, nint, void>)&Recalculate, "the stat recalculation");
+        _draw = (delegate* unmanaged<byte*, void>)game.Hooks.Hook(
+            DrawAt, (nint)(delegate* unmanaged<byte*, void>)&Draw, "the battle sprite drawing");
         BattleEvents.OnStart(game, "unit presets", Clear);
         game.Log.Info($"unit presets: ReMixed's tables ({Tables.Length} bytes) and {Scenarios.Count} scenario(s)' units");
     }
@@ -233,6 +248,44 @@ internal static unsafe class UnitPresets
             Fail("the recalculation", e);
         }
         _recalculate(unit, mode, r8, r9);
+    }
+
+    /// <summary>The sprite draw (0x26D200): apply the owner's preset tint to its body pieces, then draw it.</summary>
+    [UnmanagedCallersOnly]
+    private static void Draw(byte* sprite)
+    {
+        try
+        {
+            var unit = *(byte**)(sprite + SpriteUnit);
+            var slot = unit == null ? -1 : Slot(unit);
+            if (slot >= 0 && Slots[slot] != 0)
+                Tint(sprite, Slots[slot], Tables);
+        }
+        catch (Exception e)
+        {
+            Fail("the battle sprite drawing", e);
+        }
+        _draw(sprite);
+    }
+
+    /// <summary>Copy ReMixed's selected RGB tint into the remaster's body and optional part primitives.</summary>
+    internal static void Tint(byte* sprite, int preset, ReadOnlySpan<byte> tables)
+    {
+        var presetAt = PresetAt + PresetSize * preset;
+        if (preset <= 0 || presetAt < 0 || presetAt + PresetSize > tables.Length)
+            return;
+        var tintAt = TintAt + TintSize * tables[presetAt];
+        if (tintAt < 0 || tintAt + 3 > tables.Length)
+            return;
+        var tint = tables.Slice(tintAt, 3);
+        static void Set(byte* primitive, ReadOnlySpan<byte> rgb)
+        {
+            if (primitive != null)
+                rgb.CopyTo(new Span<byte>(primitive, 3));
+        }
+        Set(*(byte**)(sprite + SpriteBody), tint);
+        for (var k = 0; k < SpriteParts; k++)
+            Set(*(byte**)(sprite + SpritePart + k * SpritePartStride), tint);
     }
 
     /// <summary>ReMixed's part of the recalculation (0x80155184, after its random pick) for <paramref name="preset"/>.</summary>

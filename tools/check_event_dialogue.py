@@ -23,6 +23,10 @@ SCENARIOS = MOD / "remixed-scenarios.bin"
 BATTLE = ROOT / "work" / "files" / "remixed" / "BATTLE.BIN"
 LINE_ID_BASE = 0x40000
 SCENARIO_BYTES, FORMATION_BYTES, PLACE_BYTES, MESSAGE_BYTES = 24, 12, 4, 6
+# Generated copies which enter at the battle setup and jump over their source scene's dialogue to its shared END.
+# Their terminal ChangeDialog closes are actively wrong: no box was opened on that path, and the remaster creates an
+# empty feather-cursor box for the attempted close. Keep this in sync with build_mod.py's BATTLE_SPLITS values.
+SPLIT_BATTLE_EVENTS = {0x2EB, 0x34A, 0x34B, 0x34D}
 
 
 def u16(data: bytes, at: int) -> int:
@@ -124,6 +128,17 @@ def check_chapter_opening_speech_boxes(code: bytes, lengths: bytes, lines: range
         raise AssertionError(f"1-A opening speech boxes cover {sorted(opened)}, expected {expected}")
 
 
+def check_bervenia_postbattle_copy(owners: dict[int, list[int]], ranges: dict[int, range]) -> None:
+    """The first Bervenia battle's same-map closing must own a populated copy of 0x2EA's dialogue."""
+    source, closing = 0x2EA, 0x355
+    copied = dialogue_rows(owners[closing][0], ranges[closing])
+    if copied != dialogue_rows(owners[source][0], ranges[source]):
+        raise AssertionError("Bervenia's post-battle event does not have 0x2EA's ReMixed dialogue")
+    text, speaker = copied[32]
+    if not text.startswith("Nay") or not speaker:
+        raise AssertionError("Bervenia's first post-battle Agrias line is empty or unnamed")
+
+
 def check() -> str:
     lengths = remaster_lengths(read_lengths(BATTLE.read_bytes()))
     ranges = message_ranges(SCENARIOS.read_bytes())
@@ -131,7 +146,7 @@ def check() -> str:
     if not scripts:
         raise AssertionError(f"no generated scripts in {SCRIPT}")
 
-    messages = dynamic = closes = terminal_closes = skipped = 0
+    messages = dynamic = closes = terminal_closes = clean_split_ends = skipped = 0
     wrong: list[str] = []
     for path in scripts:
         event = int(path.stem[5:])
@@ -175,11 +190,18 @@ def check() -> str:
                 elif line_id != 0xFFFFFFFF:
                     recent_closes.clear()
             elif op == 0xDB and has_messages:
-                missing = {1, 2, 3} - recent_closes
-                if missing:
-                    wrong.append(f"{path.name}: END at 0x{at:X} leaves message box(es) {sorted(missing)} open")
+                if event in SPLIT_BATTLE_EVENTS:
+                    if recent_closes:
+                        wrong.append(f"{path.name}: split battle END at 0x{at:X} closes unopened box(es) "
+                                     f"{sorted(recent_closes)}")
+                    else:
+                        clean_split_ends += 1
                 else:
-                    terminal_closes += 3
+                    missing = {1, 2, 3} - recent_closes
+                    if missing:
+                        wrong.append(f"{path.name}: END at 0x{at:X} leaves message box(es) {sorted(missing)} open")
+                    else:
+                        terminal_closes += 3
             pending = []
             at = end
     if wrong:
@@ -210,10 +232,13 @@ def check() -> str:
         code = (SCRIPT / f"event{event}.e").read_bytes()[len(MARKER):]
         check_chapter_opening_notices(code, lengths, ranges[event])
         check_chapter_opening_speech_boxes(code, lengths, ranges[event])
+    check_bervenia_postbattle_copy(owners, ranges)
     return (f"{len(scripts) - skipped} marked scripts: {messages} MESSAGE/ChangeDialog references valid "
-            f"({dynamic} runtime-selected, {closes} intentional closes, {terminal_closes} terminal box closes; "
+            f"({dynamic} runtime-selected, {closes} intentional closes, {terminal_closes} terminal box closes, "
+            f"{clean_split_ends} split battle ENDs close no unopened boxes; "
             f"{skipped} stock-format overrides skipped); "
-            f"{len(owners)} events have one ScenarioId text owner each; 1-A's opening speakers and notices verified")
+            f"{len(owners)} events have one ScenarioId text owner each; 1-A's opening speakers and notices and "
+            "Bervenia's post-battle dialogue copy verified")
 
 
 def main() -> None:

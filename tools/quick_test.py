@@ -14,7 +14,7 @@ downs the enemies (or those units); `expect roster name_id=0x76` wants exactly o
 `count=N` another number of them (`count=0`: a recruit turned down on its join screen isn't there).
 `show slots` (or `roster`) prints the battle units' roster slots and ids into the case's output, `show units` their
 jobs, skillsets, unlocked jobs and job fields (levels, learned abilities, JP); `copy roster 2 3`
-copies roster slot 2's record into slot 3, a party member more (`sprites=0x29 job=0x29 name_id=25` on the end make
+copies roster slot 2's record into slot 3, a party member more (`sprites=0x29 job=0x29 name_id=25 level=0` on the end make
 the copy someone else: in slot 50, the guest Rafa).
 `key K` posts one key to the game's own window (never the desktop's input). `wait log PATTERN press=RETURN every=1`
 confirms through dialogue until a log line comes; `wait world depth=D state=S` waits for a world-map menu.
@@ -313,7 +313,7 @@ def run_case(path: Path) -> None:
             elif command == "ride":
                 ride(args, case)
             elif command == "copy" and args and args[0] == "roster":
-                # copy roster FROM TO [sprites=S] [job=J] [name_id=N]: a party member more, or with those fields
+                # copy roster FROM TO [sprites=S] [job=J] [name_id=N] [level=N]: a party member more, or with those fields
                 # someone else (a guest in slots 50-53: sprites=0x29 job=0x29 name_id=25 is the guest Rafa)
                 source, target = number(args[1]), number(args[2])
                 base = harness.image_base() + harness.ROSTER
@@ -327,6 +327,8 @@ def run_case(path: Path) -> None:
                         record[2] = number(value)  # +0x02 (roster_records' job)
                     elif field == "name_id":
                         record[harness.ROSTER_NAME_ID:harness.ROSTER_NAME_ID + 4] = number(value).to_bytes(4, "little")
+                    elif field == "level":
+                        record[0x1D] = number(value)
                     else:
                         raise CaseFailure(f"copy roster: unknown field {field!r}")
                 reply = harness.send(f"poke 0x{base + target * harness.ROSTER_SIZE:X} {record.hex(' ')}")

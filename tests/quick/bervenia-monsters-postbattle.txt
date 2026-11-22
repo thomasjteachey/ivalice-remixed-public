@@ -1,0 +1,18 @@
+# Mount Bervenia's first fight, starting after its pre-battle scene. Its victory used to run event 0x2EA again on the
+# live battlefield after END had unloaded that event's scenario text. Agrias's portrait box opened, but message 32
+# ("Nay... I'll not yield...") was blank. The flag-0x8E return now runs a private post-battle copy, 0x355.
+name Bervenia monster battle loads its post-battle dialogue copy
+wait world depth=1 state=0 timeout=25
+send poke +0x11A7D10 1E
+send poke +0x11A7D12 1E
+send poke +0x11A7F40 1E 00
+copy roster 2 3
+scenario 0x2EA noted
+wait log "scenario 0x2EA sets its battle up after event 0x2EA's scene" timeout=30
+wait log "formation: screen open" timeout=150
+formation units=4 second=2
+advance opening timeout=120
+defeat
+wait log "loading event 853" timeout=150
+wait log "event 853's message 32 shown as line" timeout=150
+shot agrias-postbattle

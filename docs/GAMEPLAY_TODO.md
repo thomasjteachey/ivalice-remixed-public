@@ -626,7 +626,13 @@ Reported by a player:
   level 0 is emptied (Patches/OldGuests.cs, checked offline). Seen in the hidden PC game (2026-11-19,
   `tests/quick/rafa-frog-scene.txt`, `riovanes-gate-end.txt`): the frog scene's Rafa is 0x29 with her own sprite and
   her join screen reads "Rapha joined the party as a guest"; the gate battle won, "Rapha is no longer a guest member of
-  your party" and on to the next scene. *medium*
+  your party" and on to the next scene. Reported again on 0.9.31: the repair ran only on a world-map frame, so a gate
+  battle autosave could resume with 0.9.22's level-0 Rafa still present; and if the repair had run, event 281 still
+  passed WorldUnitAddress's zero result to its six Guest Departure pages. The first regression supplied a healthy
+  Rafa and missed both routes. Event 281 now validates the record at its point of use, clears a corrupt one, and runs
+  the pages only for a valid record. The focused case injects the corrupt record after battle setup (past both earlier
+  repair opportunities) and reaches event 282. The later rooftop entry supplies Rafa anew, so affected saves continue
+  in place and do not need a rollback. *medium*
 - [x] The remaster's enhanced battle-unit overrides undid the port's units where they met: four story units got the
   remaster's secondary skillset and abilities back over ReMixed's (entries 0x14A, 0x183, 0x185, 0x197), and two of
   ReMixed's own battles (0x1E6, 0x1EE) gave units 2-5 a weapon of the remaster's choosing. The cells that meet the

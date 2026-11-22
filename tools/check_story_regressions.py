@@ -19,6 +19,7 @@ from eiu_events.instructions import MARKER, read_lengths, remaster_lengths  # no
 SCRIPT = ROOT / "mod" / "fftivc.gameplay.ivaliceremixed" / "FFTIVC" / "data" / "enhanced" / "script" / "enhanced"
 SCENARIOS = ROOT / "mod" / "fftivc.gameplay.ivaliceremixed" / "remixed-scenarios.bin"
 PRESETS = ROOT / "mod" / "fftivc.gameplay.ivaliceremixed" / "remixed-event-presets.bin"
+UNIT_PRESETS = ROOT / "mod" / "fftivc.gameplay.ivaliceremixed" / "remixed-unit-presets.bin"
 WORLD = bytes([0xCD, 0x80, 0x00, 0x00])
 MANDALIA_SETUP_FLAGS = (b"".join(bytes([0xAE, flag, 0, 1, 0]) for flag in range(0xC1, 0xCD))
                          + bytes([0x49])
@@ -34,9 +35,10 @@ DISPLAY_STATE_6 = bytes([0x78, 0x06, 0x3C, 0xE5, 0x38, 0x00])
 # Generated event -> (returned preset, event selected by that preset once flag 0x8E is set). Split scene/battle and
 # post-battle copies remain here deliberately: every encoded same-map edge must stay safe even if normally inactive.
 LIVE_RETURN_EDGES = {
-    121: (0x01C, 122), 123: (0x1FC, 124), 746: (0x0F7, 746), 753: (0x0EF, 850),
+    121: (0x01C, 122), 123: (0x1FC, 124), 746: (0x0F7, 853), 753: (0x0EF, 850),
     756: (0x0F0, 851), 757: (0x0F2, 844), 766: (0x1FD, 852), 844: (0x0F2, 844),
     845: (0x1FC, 124), 850: (0x0EF, 850), 851: (0x0F0, 851), 852: (0x1FD, 852),
+    853: (0x0F7, 853),
     886: (0x103, 886),
 }
 # These returns feed a recruitment scene. Their roster writer is left to that scene's join screen (display state 7),
@@ -716,13 +718,41 @@ def check_bervenia() -> str:
         raise AssertionError("existing Bervenia battle autosaves must retain their preset and battle opening")
     if [(1, (0x85, 0)), (6, (0x80, 0)), (0x19, (0x2EA,))] not in preset_sets(preset):
         raise AssertionError("the manifestation's defeat must start the victory scene")
+    close_boxes = b"".join(bytes([0x51, box]) + b"\xFF\xFF\xFF\xFF\0\0" for box in (1, 2, 3))
+    battle_end = bytes([0x0E, 0xFA, 0xBE, 0x53, 0, 0xDB])
+    if not event(0x2EB).endswith(battle_end):
+        raise AssertionError("Bervenia's split battle must reach its END without closing unopened dialogue boxes")
+    if not event(0x1B6).endswith(battle_end[:-1] + close_boxes + battle_end[-1:]):
+        raise AssertionError("Bervenia's full summoning scene must still close its opened dialogue boxes")
+    if [(1, (0x8E, 1)), (0x19, (0x355,))] not in preset_sets(preset):
+        raise AssertionError("Bervenia's first battle must load a distinct post-battle dialogue event")
+    data = UNIT_PRESETS.read_bytes()
+    table_bytes = int.from_bytes(data[:2], "little")
+    tables = data[2:2 + table_bytes]
+    at = 2 + table_bytes
+    count = int.from_bytes(data[at:at + 2], "little")
+    at += 2
+    assigned = {int.from_bytes(data[at + 18 * k:at + 18 * k + 2], "little"):
+                data[at + 18 * k + 2:at + 18 * k + 18] for k in range(count)}
+    wanted = bytes([0, 0, 0, 0, 0, 0, 17, 10, 10, 10, 10, 10, 0, 0, 0, 0])
+    if any(assigned.get(number) != wanted for number in (0x1B6, 0x2EA, 0x2EB, 0x2F7)):
+        raise AssertionError("Bervenia's enemy manifestation presets are not slot 6=17 and slots 7-11=10")
+    tint_at, tint_size, preset_at, preset_size = 0x99, 5, 0xB7, 9
+    expected_tints = [bytes.fromhex(value) for value in
+                      ("80 80 80 00 10", "58 58 58 00 10", "9E 8A 49 00 10",
+                       "9E 9E 9E 00 10", "8F 5D 49 00 10", "80 80 80 00 18")]
+    if [tables[tint_at + tint_size * k:tint_at + tint_size * (k + 1)] for k in range(6)] != expected_tints:
+        raise AssertionError("ReMixed's unit preset tint table changed")
+    if tables[preset_at + preset_size * 10] != 1 or tables[preset_at + preset_size * 17] != 1:
+        raise AssertionError("Bervenia's presets 10 and 17 no longer select the dark tint")
     for name, tile, height in (("map_map075_9", (0, 11), 6), ("new_map_new_map075_9", (0, 11), 6),
                                ("map_map119_7", (9, 2), 5)):
         mesh = read_classic_mesh((FFTPACK / "map" / f"{name}.bin").read_bytes())
         heights = {(t.x, t.z): t.raw[2] for t in mesh.tiles or [] if t.level == 0}
         if heights.get(tile) != height:
             raise AssertionError(f"Bervenia's {name} has the wrong height at {tile}")
-    return "Bervenia: summoning scene before deployment, six manifestations at battle setup, boss victory and terrain heights"
+    return ("Bervenia: summoning scene before deployment, six dark-preset enemy manifestations at battle setup, "
+            "boss victory and terrain heights")
 
 
 def check_yuguo_woods() -> str:

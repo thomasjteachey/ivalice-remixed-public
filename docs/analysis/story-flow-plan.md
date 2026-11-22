@@ -1103,11 +1103,12 @@ and 0xB4 (slots 0 and 3), once as generics (slots 4 and 5); to look at.
   in 0x0F4: its question whether to fight came on Balmafula's line, a line early, and the knight's thanks in Agrias's
   box). The build puts them back in step (`MESSAGE_FIXES`: the PSX and PSP lines now pair one for one). 0x0F7 has one
   message past both blocks (no shift); the Algus campaign's 0x00C has two fewer than its count, to check.
-- **Back to the battle's events after event 8 (2026-11-07):** four of 1-A's battles end through event 8 and come back:
+- **Back to the battle's events after event 8 (2026-11-07):** five of 1-A's battles end through event 8 and come back:
   the victory sets mode 0 (var 0x3A), var 0x3C to 0xFFFF and flag 0x8E, and puts a preset's number in var 0x3B, and
   event 8 (its case 0xFFFF) loads that preset, whose set "flag 0x8E = 1" runs the post-battle scene: 0x115 for 0x0F5's
   battle (preset 0xF2; 0x115 also jumps to its LABEL 10 itself with the flag set), 0x112 in 0x0F0's rescue (0xEF),
-  0x114 (0xF0), and 0x119 in 0x0FB's (0xFA, the ending). The mod ships no event 8, so those battles went straight back
+  0x114 (0xF0), 0x0F7 after its first battle (0xF7), and 0x119 in 0x0FB's (0xFA, the ending). The mod ships no event 8,
+  so those battles went straight back
   to the world map without that scene and the story progress it sets (seen on the PC: 0x0F5's battle left the progress
   at 8, so 0x0F5 would have started again). Now the victory loads that preset itself (`AFTER_BATTLE_RETURN`; for 0x34B
   the battle's own copy of 0xFA), the word stays 0 so the battle goes on with its enemies down, and the scene's own
@@ -1119,7 +1120,10 @@ and 0xB4 (slots 0 and 3), once as generics (slots 4 and 5); to look at.
   0x112 as 0x352, 0x114 as 0x353, 0x119 as 0x354; numbers with no event file or text of the remaster's), the same code
   and lines, which the "flag 0x8E = 1" sets run instead. Seen on the PC: 0x0F5's post-battle scene as event 844 shows
   its lines 30–37 in full, with the speakers' names, then story progress 9; 1-A's ending, 0x119's post-battle part as
-  event 852 after 0x0FB's battle, shows its lines (its victory part, lines 16–18, in 0x119 itself before it).
+  event 852 after 0x0FB's battle, shows its lines (its victory part, lines 16–18, in 0x119 itself before it). 0x0F7's
+  first battle has the same return: in 0.9.31 it reopened 0x0F7 after END had unloaded its text, so Agrias's portrait
+  box had no body. Its flag-0x8E set now runs a fifth copy, event 0x355, while 0x0F8's later victory still runs
+  0x0F7's original final closing.
 - **Its optional battles:** its battles' openings ask whether to fight (the answer in var 0x18, 0 the first): 0x0F0
   ("There's no saving her..." skips the rescue, story progress 5), 0x0F4 ("Sorry, I'll have to pass", progress 8),
   0x0F5 ("Let us leave them be"), 0x0FA ("Very well": on to 0x118's scene without the battle) and 0x0FB ("No, forgive

@@ -3,21 +3,24 @@
 # out of the party (DismissUnit, moved to her sprite set 0x29) before she rejoins as 0x29 (entry 0x1B2). A tester on
 # 0.9.22 had the game close a few seconds after that line. WorldUnitAddress finds her by her name id (25, the 0x19 it
 # names), not her sprite set: named 0x29 it found no one and the game closed on the same screens (seen here,
-# 2026-11-19), so it stays 0x19 (tools/build_mod.py REMASTER_SPRITE_SET_OPS). The test save has no Rafa, so slot 50 gets
-# a guest copy of her. Run with
+# 2026-11-19), so it stays 0x19 (tools/build_mod.py REMASTER_SPRITE_SET_OPS). Reported again on 0.9.31: its old-save
+# repair removed 0.9.22's corrupt level-0 Rafa only on a world-map frame, while a gate battle autosave can resume
+# without one. Event 281 now checks the record and clears a level-0 one at its point of use; its six Guest Departure
+# pages run only for a valid record. This case injects the corrupt record after battle setup, bypassing both the world
+# map and setup repairs, then proves the closing reaches event 282. Run with
 #   python -I tools/quick_test.py --restart tests/quick/riovanes-gate-end.txt
 # Scenario 0x119 is the gate battle (map 6); its victory runs event 281, which a requested scenario loads only with
 # event=0x119 (else event 2), as its battle begins. One unit placed, the enemies downed, then a
 # frame before each Enter through "Guest Departure" to the next scene's event (282); she's out of the roster after.
 name Riovanes gate end finds Rafa
 wait world depth=1 state=0 timeout=20
-copy roster 0 50 sprites=0x29 job=0x29 name_id=25
-expect roster name_id=25
 scenario 0x119 event=0x119
 wait log "reveal treasures: map 6" press=RETURN every=1 timeout=150
 formation units=1
 wait log "loads event 281 in place of event" timeout=60
 wait unit player=1 present=1 timeout=120 press=RETURN every=2
+copy roster 0 50 sprites=0x29 job=0 name_id=25 level=0
+expect roster name_id=25
 wait seconds 5
 defeat
 advance event 282 every=0.6 shots=1 timeout=400

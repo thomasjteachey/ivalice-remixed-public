@@ -121,6 +121,10 @@ internal static unsafe class OldGuests
         var leader = LeaderRecord((byte*)records) >= 0 && _roster[0] == Algus && _roster[1] != 0xFF;
         try
         {
+            // A save can go straight from an affected build into a battle before the world-map frame hook has had a
+            // chance to repair it. In particular, remove 0.9.22's level-0 Rafa before Riovanes's gate setup; event
+            // 281 now skips its Guest Departure pages when that repair leaves no record to display.
+            RepairLoadedSideChapterRoster();
             var progress = _getVariable(StoryProgress);
             foreach (var (slot, guest) in Move(_roster, progress, Guests))
                 if (_noted++ < 8)
@@ -357,7 +361,7 @@ internal static unsafe class OldGuests
     {
         var repaired = RepairSideChapterRoster(_roster);
         if (repaired != 0)
-            _log.Info($"old guests: repaired {repaired} side chapter 1-A roster record(s) from an earlier build");
+            _log.Info($"old guests: repaired {repaired} roster record(s) from an earlier build");
         if (_getVariable == null)
             return; // at install: the title screen's roster, no save's variables yet
         var gone = DismissDepartedPerformers(_roster, _inventory, _getVariable(StoryProgress));

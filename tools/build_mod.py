@@ -1910,7 +1910,8 @@ def parallel_speakers(lines: list[tuple[str, str]], psx: list[tuple[str, str]]) 
 
 
 def fitted_boxes(code: bytes, lengths: bytes, sizes: dict[int, int],
-                 pages: dict[int, list[int]], menus: set[int] | frozenset[int] = frozenset()
+                 pages: dict[int, list[int]], menus: set[int] | frozenset[int] = frozenset(),
+                 close_at_end: bool = True
                  ) -> tuple[bytes, int, int, int]:
     """ReMixed's event code (the PS1 layout) with its swaps to longer lines made boxes of their own (see CLOSE_BOX) and
     its long lines' later pages shown after their first (PAGE_CHARS). ReMixed kept both speakers' boxes open and
@@ -1921,7 +1922,9 @@ def fitted_boxes(code: bytes, lengths: bytes, sizes: dict[int, int],
     Returns the numbers of resized swaps, later pages and speech-box switches. sizes: each message's length (its
     line's characters), by number; menus, the messages that are lists of answers (a swap to or from one opens its box
     again). Acknowledged notices can page in box 3 as well. For numbers written in as ReMixed runs, message_numbers
-    works them out for the PSP script (SCRIPT_VERSION); where it can't, its valid template still reopens the box."""
+    works them out for the PSP script (SCRIPT_VERSION); where it can't, its valid template still reopens the box.
+    ``close_at_end`` is false for a split battle copy: that entry jumps over every dialogue opener to the shared END,
+    so emitting closes there creates an empty feather-cursor box instead of closing one."""
     out, at, openers, pending, reopened, paged, switched = bytearray(), 0, {}, [], 0, 0, 0
     menu_open: dict[int, bool] = {}  # each box: whether a list of answers holds it
     active_speech: int | None = None
@@ -1960,7 +1963,7 @@ def fitted_boxes(code: bytes, lengths: bytes, sizes: dict[int, int],
             # MESSAGE styles are restyled later (for example, box 2's menu becomes style 0x96), but ChangeDialog's
             # close operand remains the event window number. The remaster has the two speech windows and narration
             # window 3; close all three so conditional branches cannot leave one behind.
-            if openers:
+            if close_at_end and openers:
                 for kind in (1, 2, 3):
                     out += close(kind)
             active_speech = None
@@ -3313,6 +3316,11 @@ GENERIC_SPRITE_SETS = (0x80, 0x81)  # a generic's graphic comes from its job (0x
 #   guest Rafa loaded from the formation as 0x19.
 # - Its PS1 portrait table, which RemixedFaces separates (SeparatePortraits).
 REMASTER_SPRITE_SET_OPS = {0x47: "AddGhostUnit", 0x7A: "DismissUnit"}
+# A stock event that puts a roster address into var 0 and immediately gives it to battle-end screens which require a
+# record. A compatibility repair can deliberately remove a corrupt record, so the screens must be conditional on
+# WorldUnitAddress finding one. Event 281 is Riovanes Castle Gate's closing; screens 2-7 are its Guest Departure
+# pages. The tuple is event file -> (the character id, the consecutive DisplayConditions states).
+WORLD_UNIT_SCREEN_GUARDS = {"event281.e": (0x19, tuple(range(2, 8)))}
 # A save made with an earlier build may hold a guest on its old sprite set, which the moved battle data would no longer
 # find: old sprite set -> (the guest's name id, the story progress (var 0x6E) from which the remaster's own event has
 # taken the guest out). The code mod moves such a roster record to the new sprite set (and job) as a battle's units
@@ -3938,11 +3946,13 @@ MANDALIA_BATTLE_ACTIVATE = (bytes([0x49])
 # constructing the battle records again.  BATTLE_SPLITS' battle jobs are handled by ``scene is not None`` below; these
 # are the same shape without a synthetic split (Zalbag at Eagrose, Beowulf's continuation, and 1-A's 0x0F7 -> 0x0F8).
 FRESH_ENTRY_BATTLES = {0x6F, 0x9D, 0xF8}
-# Four of 1-A's battles return to their own in-battle event after their victory (AFTER_BATTLE_RETURN): the victory runs
+# Five of 1-A's battles return to their own in-battle event after their victory (AFTER_BATTLE_RETURN): the victory runs
 # the event, whose code loads the preset with "flag 0x8E = 1 -> that same event", and it runs again into its
 # post-battle scene. Run again under its own number, the scene's boxes showed the speaker's portrait without the line
 # (seen on the PC: 0x115 after 0x0F5's battle, 2026-11-07), where scenes the battle runs under other numbers showed
-# theirs (0x117, then 0x0F7's closing, after 0x0F8's). So each one's post-battle run is an event of its own: its code
+# theirs (0x117, then 0x0F7's final closing, after 0x0F8's). 0x0F7 also needs a split for its own first battle: an END
+# has unloaded 0x0F7's scenario text before that battle's flag-0x8E return, and in 0.9.31 its first Agrias box opened
+# with no body. So each one's post-battle run is an event of its own: its code
 # and lines again under a number where the remaster has no event file or text, which every "flag 0x8E = 1" set that ran
 # the event runs instead. The code is the same: 0x115 tests the flag at its start, the others go to the label of the
 # set that ran them (var 1), as before. Why the lines went (read 2026-11-13): an event's END unloads its scenario text
@@ -3950,7 +3960,7 @@ FRESH_ENTRY_BATTLES = {0x6F, 0x9D, 0xF8}
 # of another number, so the same event run again had its code and no text. The code mod's walker now has such a run
 # loaded afresh (RemixedScenarios.ReloadOnRerun), which is what ReMixed's other in-battle runs of one event needed
 # (their boxes came up empty); the splits stay, as seen working.
-AFTER_SPLITS = {0x115: 0x34C, 0x112: 0x352, 0x114: 0x353, 0x119: 0x354}
+AFTER_SPLITS = {0x115: 0x34C, 0x112: 0x352, 0x114: 0x353, 0x119: 0x354, 0x0F7: 0x355}
 # Every generated event that contains an AFTER_BATTLE_RETURN hand-off. This deliberately includes inactive copies of
 # a split scene's victory label: keeping the transform global prevents a later condition or checkpoint from reviving
 # a display-state-7 map teardown. Each has exactly one such edge in ReMixed's source.
@@ -5654,6 +5664,11 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
         if ours in menu_scenarios and scene is None:
             menu_battles[ours] = (u16(record, 9), u16(record, 11) | (MENU_SECOND_GROUP if second_group else 0))
             record[9:13] = bytes(4)
+        if ours in AFTER_SPLITS.values():
+            # A post-battle copy is loaded by the live battle's conditions; it is not another battle setup. In
+            # particular 0x0F7's code contains the formations for its earlier monster battle, which must not make the
+            # private closing event (0x355) advertise a deployable formation of its own.
+            record[9:13] = bytes(4)
         if theirs not in TAVERN_EVENTS:
             scenarios.append(bytes(record))
         # Its text (from the event's block) as lines of their own, and its event: ReMixed's code with the mark, in the
@@ -5839,7 +5854,8 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
                 sys.exit(f"ReMixed's event 0x{theirs:X} has {made} dynamic menu placeholder(s), expected {expected}")
         ps1, made, paged, switched = fitted_boxes(
             ps1, lengths, {n: len(text) for n, (_, text) in enumerate(lines, 1)}, pages,
-            menus if theirs not in SLOTTED and theirs not in DYNAMIC_MENU_PLACEHOLDERS else frozenset()
+            menus if theirs not in SLOTTED and theirs not in DYNAMIC_MENU_PLACEHOLDERS else frozenset(),
+            close_at_end=not (theirs in BATTLE_SPLITS and scene is not None)
         )  # the tavern's menus are its own (TallMenus)
         boxes_reopened += made
         pages_shown += paged
@@ -6594,6 +6610,59 @@ def remaster_sprite_set_uses(table: bytes, code: bytes, name: str) -> list[tuple
     return uses
 
 
+def guard_missing_world_unit_screens(table: bytes, code: bytearray, name: str) -> bool:
+    """Wrap a stock event's roster-dependent DisplayConditions sequence in ``If(var 0)``.
+
+    WorldUnitAddress leaves var 0 at zero when a roster record is absent. DisplayConditions' unit pages do not
+    accept that null address. The surrounding fade, dismissal and story handoff remain unconditional: a missing
+    departing guest simply has no departure pages and the story can recreate them at their later join entry.
+    The edit is structural rather than offset-based, and idempotent for incremental builds.
+    """
+    wanted = WORLD_UNIT_SCREEN_GUARDS.get(name)
+    if wanted is None:
+        return False
+    character, states = wanted
+    instructions: list[tuple[int, int, int]] = []
+    at = 0
+    while at < len(code) and code[at] != 0xDB:
+        size = remaster_instruction_size(table, code, at)
+        if at + size > len(code):
+            raise ValueError(f"{name}: instruction 0x{code[at]:02X} at 0x{at:X} runs past the event")
+        instructions.append((at, code[at], size))
+        at += size
+    if at >= len(code):
+        raise ValueError(f"{name} can't be read to its END, so its roster screens can't be guarded")
+
+    world = [i for i, (offset, op, _) in enumerate(instructions)
+             if op == 0xC3 and code[offset + 1:offset + 3] == bytes([character, 0])]
+    if len(world) != 1:
+        raise ValueError(f"{name}: expected one WorldUnitAddress(0x{character:02X}, 0), found {len(world)}")
+    first = world[0]
+    displays = [(i, offset) for i, (offset, op, _) in enumerate(instructions[first + 1:], first + 1) if op == 0x78]
+    if [code[offset + 1] for _, offset in displays] != list(states):
+        raise ValueError(f"{name}: expected DisplayConditions states {list(states)}, found "
+                         + str([code[offset + 1] for _, offset in displays]))
+    for i, _ in displays:
+        if i + 1 >= len(instructions) or instructions[i + 1][1] != 0xE5 \
+                or code[instructions[i + 1][0] + 1:instructions[i + 1][0] + 3] != b"\x38\x00":
+            raise ValueError(f"{name}: DisplayConditions isn't followed by WaitForInstruction(0x38, 0)")
+
+    display_at = displays[0][1]
+    last_wait_at, _, last_wait_size = instructions[displays[-1][0] + 1]
+    # If(address) { var 2 = address; var 0 = byte[address + PS1 roster level 0x16]; If(level) {
+    # var 0 = address; ... pages ... } Else { byte[address + active/unit-id 1] = 0xFF; } }
+    # Besides avoiding a null page, this performs the old-save repair at its point of use even when a battle autosave
+    # resumes without ever running the world-map repair hook.
+    before = bytes.fromhex("01 AF 02 00 00 00 C1 00 16 00 02 01 01 AF 00 00 02 00")
+    after = bytes.fromhex("03 AE 01 00 FF 00 C4 01 01 00 02 01 04 04")
+    if code[display_at - len(before):display_at] == before \
+            and code[last_wait_at + last_wait_size:last_wait_at + last_wait_size + len(after)] == after:
+        return True
+    code[last_wait_at + last_wait_size:last_wait_at + last_wait_size] = after
+    code[display_at:display_at] = before
+    return True
+
+
 def write_remaster_sprite_sets(cfg: dict) -> str:
     """Every remaster event script, as the mod ships it (unmarked: ReMixed's own carry REMIXED_EVENT_MARK and its
     numbers) or stock, with each sprite set REMASTER_SPRITE_SET_OPS names moved as its units are
@@ -6601,12 +6670,14 @@ def write_remaster_sprite_sets(cfg: dict) -> str:
     report."""
     table = remaster_length_table(cfg)
     out = MOD_DIR / "FFTIVC" / "data" / "enhanced" / "script" / "enhanced"
-    done = []
+    done, guarded = [], []
     for stock in stock_event_paths(cfg):
         shipped = out / stock.name
         code = bytearray(shipped.read_bytes() if shipped.exists() else stock.read_bytes())
         if code.startswith(REMIXED_EVENT_MARK):
             continue
+        if guard_missing_world_unit_screens(table, code, stock.name):
+            guarded.append(stock.stem)
         uses = remaster_sprite_set_uses(table, bytes(code), stock.name)
         for at, op in uses:
             old = code[at + 1]
@@ -6616,14 +6687,15 @@ def write_remaster_sprite_sets(cfg: dict) -> str:
                          f"(0x{new:02X}), which have no sheet of their own to name")
             code[at + 1] = new
             done.append(f"{stock.stem} {REMASTER_SPRITE_SET_OPS[op]} 0x{old:02X} to 0x{new:02X}")
-        if uses:
+        if uses or stock.stem in guarded:
             out.mkdir(parents=True, exist_ok=True)
             shipped.write_bytes(code)
     for path in sorted(out.glob("event*.e")):  # proof: no unmarked script the mod ships names one still
         code = path.read_bytes()
         if not code.startswith(REMIXED_EVENT_MARK) and remaster_sprite_set_uses(table, code, path.name):
             sys.exit(f"{path.name} still names a moved sprite set")
-    return f"{len(done)} moved: " + ", ".join(done)
+    return f"{len(done)} moved: " + ", ".join(done) + f"; {len(guarded)} missing roster unit guarded: " \
+           + ", ".join(guarded)
 
 
 # The remaster's enhanced battle-unit overrides (nxd/overrideentrydata.nxd, OverrideEntryData: Key a battle entry, Key2
@@ -7963,7 +8035,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata. The title screen's plaque shows it (write_title_screen).
-RELEASE_VERSION = "0.9.31"
+RELEASE_VERSION = "0.9.32"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:

@@ -3516,8 +3516,8 @@ internal static unsafe class SelfTest
 
     /// <summary>
     /// ReMixed's unit presets: the stat step's product jumps to the stub, a copy of the stub scales a slot's stats (and
-    /// leaves the others and a unit outside the battle's alone), and the recalculation's part ORs statuses, abilities
-    /// and elements and scales the class evade, on made-up tables.
+    /// leaves the others and a unit outside the battle's alone), the recalculation's part ORs statuses, abilities
+    /// and elements and scales the class evade, and the draw's part tints only a sprite's body pieces, on made-up tables.
     /// </summary>
     public static int UnitPresetRules(Game game, Log log)
     {
@@ -3533,8 +3533,10 @@ internal static unsafe class SelfTest
             return failures;
         }
         Check($"the stat product (0x{UnitPresets.ProductAt - game.Image.ImageStart:X}) jumps to the stub, the recalculation "
-              + $"at 0x{UnitPresets.RecalculateAt - game.Image.ImageStart:X}",
-              ((byte*)UnitPresets.ProductAt)[0] == 0xE9 && GameImage.Rip(UnitPresets.ProductAt, 1, 5) == UnitPresets.Stub);
+              + $"at 0x{UnitPresets.RecalculateAt - game.Image.ImageStart:X}, the sprite draw at "
+              + $"0x{UnitPresets.DrawAt - game.Image.ImageStart:X}",
+              ((byte*)UnitPresets.ProductAt)[0] == 0xE9 && GameImage.Rip(UnitPresets.ProductAt, 1, 5) == UnitPresets.Stub
+              && UnitPresets.DrawAt != 0);
         // Harness: (unit, stat, raw, multiplier) -> r10, r9d, r8d, eax; ecx 100, edx 0; then a copy of the stub, back to a ret.
         var harness = GameImage.AllocateCodeNear(UnitPresets.Stub, 48 + UnitPresets.StubSize);
         byte[] entry = [0x49, 0x89, 0xCA, 0x44, 0x89, 0xC8, 0x41, 0x89, 0xD1, 0xB9, 0x64, 0, 0, 0, 0x33, 0xD2,
@@ -3584,6 +3586,32 @@ internal static unsafe class SelfTest
               + $"elements {elements}",
               unit[UnitPresets.ClassEvade] == 7 && statuses == "200000000000400000002000000000"
               && abilities == "0000000000000080000000" && elements == "1000000003");
+        // Preset 2 selects tint 1 (58, 59, 5A). The main primitive and two present optional pieces take it; a null
+        // piece is ignored and an unrelated status-icon record stays neutral.
+        tables[UnitPresets.TintAt + UnitPresets.TintSize + 0] = 0x58;
+        tables[UnitPresets.TintAt + UnitPresets.TintSize + 1] = 0x59;
+        tables[UnitPresets.TintAt + UnitPresets.TintSize + 2] = 0x5A;
+        tables[UnitPresets.PresetAt + 2 * UnitPresets.PresetSize] = 1;
+        var sprite = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(0x548);
+        var body = sprite + 0x420;
+        var part0 = sprite + 0x466;
+        var part2 = sprite + 0x4AE;
+        var icon = sprite + 0x4D2;
+        *(byte**)(sprite + UnitPresets.SpriteBody) = body;
+        *(byte**)(sprite + UnitPresets.SpritePart) = part0;
+        *(byte**)(sprite + UnitPresets.SpritePart + 2 * UnitPresets.SpritePartStride) = part2;
+        new Span<byte>(body, 3).Fill(0x80);
+        new Span<byte>(part0, 3).Fill(0x80);
+        new Span<byte>(part2, 3).Fill(0x80);
+        new Span<byte>(icon, 3).Fill(0x80);
+        UnitPresets.Tint(sprite, 2, tables);
+        var wanted = new byte[] { 0x58, 0x59, 0x5A };
+        Check("the sprite tint: the body and present equipment pieces take 58/59/5A, status graphics stay neutral",
+              new ReadOnlySpan<byte>(body, 3).SequenceEqual(wanted)
+              && new ReadOnlySpan<byte>(part0, 3).SequenceEqual(wanted)
+              && new ReadOnlySpan<byte>(part2, 3).SequenceEqual(wanted)
+              && new ReadOnlySpan<byte>(icon, 3).SequenceEqual(new byte[] { 0x80, 0x80, 0x80 }));
+        System.Runtime.InteropServices.NativeMemory.Free(sprite);
         System.Runtime.InteropServices.NativeMemory.Free(units);
         System.Runtime.InteropServices.NativeMemory.Free(scales);
         return failures;
