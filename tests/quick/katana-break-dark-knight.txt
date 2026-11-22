@@ -1,0 +1,31 @@
+# Draw Out by a Dark Knight with Adeptness keeps its katana (a player's report, 2026-11-22: it broke every time). Run with
+#   python -I tools/quick_test.py --restart --location 24 --stop tests/quick/katana-break-dark-knight.txt
+# The remaster takes the katana out of the inventory when a player's Draw Out is confirmed (exe+0x2817D3) and the
+# result gives it back (0x30CEA4, from 0x30A6ED) unless it broke; KatanaBreak.cs once read the marks the wrong way
+# round, so a spared unit always lost it. A random battle on Mandalia Plains, the first party unit made a Dark Knight
+# (job 0xA0) with Draw Out (0x13) learned as its secondary and Adeptness (0x1E4, +0x9B & 2), ten of each katana, and
+# a write watch on Murasame's count: it uses Murasame (0x04F, its allies round it) once, and the count must read 0a
+# again, with two writes (taken, then given back).
+name Dark Knight's Draw Out with Adeptness
+send testmode record
+wait world depth=1 state=0 timeout=20
+key RETURN
+wait log "reveal treasures: map" press=RETURN every=3 timeout=180
+formation units=4
+wait unit player=1 present=1 turn=1 timeout=120
+poke unit player=1 present=1 turn=1 offset=0x03 hex=A0
+poke unit player=1 present=1 turn=1 offset=0x13 hex=13
+poke unit player=1 present=1 turn=1 offset=0x9B or=02
+poke unit player=1 present=1 turn=1 offset=0xCC hex=FFC0
+send poke +0x11A7C26 0A0A0A0A0A0A0A0A0A0A
+send watch +0x11A7C29 1
+# The break chance (the weapon block's +4) at 100, so the roll fails if the block isn't set again first.
+send poke +0x7B07AC 64
+send act 13 04F self
+wait log "harness: unit \d+ used 0x04F" timeout=240
+shot first
+wait seconds 30
+# The katanas 0x26–0x2F, 10 each from the setup: Murasame (0x29) must read 0a.
+send peek +0x11A7C26 10
+send watch
+send watch off

@@ -8035,7 +8035,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata. The title screen's plaque shows it (write_title_screen).
-RELEASE_VERSION = "0.9.32"
+RELEASE_VERSION = "0.9.33"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:

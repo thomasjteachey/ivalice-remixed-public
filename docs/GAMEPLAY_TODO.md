@@ -1516,7 +1516,7 @@ In order:
   reactions), Two Shots (two weaker shots a turn), Aimed Shot (no evasion) and Disruptive Shot (cancels charging),
   with ReMixed's charge times and XA bonuses, for Charge +1–7 too.
 - Draw Out's katana break: a katana breaks only for Draw Out, never for a Samurai or with Maintenance or Adeptness,
-  and with one roll per target until one breaks (none without a target, where the remaster always broke it). Bizen Boat's MP damage goes through the damage rules.
+  and with one roll per target until one breaks (none without a target, as in the remaster). Bizen Boat's MP damage goes through the damage rules.
 - Two Spells (the Calculator's innate): extra White and Black Magic commands with spells of MP 1–15 and CT 1–5; a
   first spell keeps the action, the second charges alongside it and fires right after; AI Calculators cast each
   spell twice. Its learned Equip Sword, Equip Shield, Half of MP and Short Charge come with it.

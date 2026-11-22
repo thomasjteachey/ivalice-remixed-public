@@ -30,6 +30,7 @@ internal static unsafe class BattleAct
     private const int MoveSelection = 0x0D, CommandMenuOpens = 3, TurnStarts = 6, CommandMenu = 4, Confirm = 0x1C;
     private const int UiUnit = 0x148, UiRecord = 0x178, RecordSize = 20, PanelTarget = 5;
     private const int ItemType = 1, ItemAt = 8, ItemAbilities = 0x80; // an Items skillset's record: the item at +8
+    private const int DrawOutType = 7, DrawOutKatanas = 0x26; // Draw Out 0x4C–0x55 uses katanas 0x26–0x2F (ability − 0x26)
     private const int UnitX = 0x4F, UnitY = 0x50, UnitLevelBit = 0x51, UnitIndex = 0x1BC;
 
     private sealed class Request
@@ -206,8 +207,11 @@ internal static unsafe class BattleAct
         record[0] = actor[UnitIndex];
         record[1] = (byte)request.Skillset;
         *(ushort*)(record + 2) = (ushort)request.Ability;
-        if (Patches.TwoSpells.TypeTable != null && (Patches.TwoSpells.TypeTable[(byte)request.Skillset] & 0x0F) == ItemType)
+        var type = Patches.TwoSpells.TypeTable != null ? Patches.TwoSpells.TypeTable[(byte)request.Skillset] & 0x0F : -1;
+        if (type == ItemType)
             *(ushort*)(record + ItemAt) = (ushort)(request.Ability - ItemAbilities);
+        else if (type == DrawOutType)
+            *(ushort*)(record + ItemAt) = (ushort)(request.Ability - DrawOutKatanas); // its katana, as the menu puts it
         record[0xA] = PanelTarget;
         *(ushort*)(record + 0xC) = (ushort)x;
         *(ushort*)(record + 0xE) = (ushort)level;

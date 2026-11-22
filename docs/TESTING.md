@@ -263,7 +263,7 @@ menus, and `send testmode auto` hands it back.
 `send act SKILLSET ABILITY TARGET` makes a party unit use an ability without driving the menus: `send act 08 195
 foe` is Two Shots (skillset 0x08, ability 0x195) at the nearest foe's panel (TARGET is also `self`, the acting unit's
 panel, a battle unit's index, or `X,Y[,LEVEL]`; an item's ability names its item too, so `send act 06 170 self` is a
-Potion on the unit itself; a fifth word queues it that many times, for a turn's two actions; a last word `moved`
+Potion on the unit itself, and a Draw Out names its katana (ability − 0x26: `send act 13 04F self` is Murasame, katana 0x29; the unit needs it learned and the party a katana, `tests/quick/katana-break-dark-knight.txt`); a fifth word queues it that many times, for a turn's two actions; a last word `moved`
 marks the unit as having moved just before that act's confirm, so its mark ends the turn there and then, as after a
 move). Acts are queued (`send act clear`
 drops them; `send act menu` logs the menu's state and its action record, as the menus filled it) and taken as a party unit's command menu is about to open, at its turn's start or again after an action

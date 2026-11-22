@@ -2928,7 +2928,10 @@ internal static unsafe class SelfTest
         return failures;
     }
 
-    /// <summary>The katana break roll through its hook, with the chance at 0 so the game's roll always breaks.</summary>
+    /// <summary>
+    /// The katana break roll through its hook, with the chance at 100 so the game's roll always fails (a break, 0x1000;
+    /// a pass marks 8, the katana kept), and the action setup's decision through its stub.
+    /// </summary>
     public static int KatanaBreaks(Game game, Log log)
     {
         var failures = 0;
@@ -2953,7 +2956,6 @@ internal static unsafe class SelfTest
         *b.Attacker = attacker;
         *r.AttackerResult = own;
         *r.Simulating = 0;
-        b.Weapon[4] = 0; // the break chance: the game's roll then always breaks
         var roll = (delegate* unmanaged<void>)KatanaBreak.RollAt;
         var remembered = new List<bool>();
         string Draw(int job, int skillset, int maintenance = 0, int adeptness = 0)
@@ -2967,18 +2969,28 @@ internal static unsafe class SelfTest
             roll();
             remembered.Add(*KatanaBreak.Broke == attacker - game.TurnCode.Units + 1);
             var mark = *(ushort*)(own + 0x12);
-            return mark switch { 8 => "break", 0x1000 => "none", 0xBEEF => "no roll", _ => $"0x{mark:X}" };
+            return mark switch { KatanaBreak.Broken => "break", KatanaBreak.Keep => "kept", 0xBEEF => "no roll", _ => $"0x{mark:X}" };
         }
+        b.Weapon[4] = 100; // the break chance: the game's roll (0x278E68: chance <= random 0-99 passes) always fails
         var plain = Draw(0x50, 0x13);
+        var darkKnight = Draw(0xA0, 0x13);
         var samurai = Draw(0x58, 0x13);
         var maintained = Draw(0x50, 0x13, maintenance: 0x04);
         var adept = Draw(0x50, 0x13, adeptness: 0x02);
+        var adeptKnight = Draw(0xA0, 0x13, adeptness: 0x02);
         var otherSkillset = Draw(0x50, 0x0B);
         var mime = Draw(0x5D, 0x13);
-        Check($"Draw Out by a Black Mage breaks ({plain}); a Samurai's doesn't ({samurai}), nor with Maintenance ({maintained}) or Adeptness ({adept}), nor another skillset's ({otherSkillset}); a Mime's has no roll ({mime})",
-              plain == "break" && samurai == "none" && maintained == "none" && adept == "none" && otherSkillset == "none" && mime == "no roll");
-        Check($"only the break is remembered for the setup ({string.Join(" ", remembered)})",
-              remembered.SequenceEqual([true, false, false, false, false, false]));
+        Check($"a failed roll breaks Draw Out's katana for a Black Mage ({plain}) and a Dark Knight ({darkKnight}); not a " +
+              $"Samurai's ({samurai}), nor with Maintenance ({maintained}) or Adeptness ({adept}, a Dark Knight's {adeptKnight}), " +
+              $"nor another skillset's ({otherSkillset}); a Mime's has no roll ({mime})",
+              plain == "break" && darkKnight == "break" && samurai == "kept" && maintained == "kept" && adept == "kept"
+              && adeptKnight == "kept" && otherSkillset == "kept" && mime == "no roll");
+        Check($"only the breaks are remembered for the setup ({string.Join(" ", remembered)})",
+              remembered.SequenceEqual([true, true, false, false, false, false, false, false]));
+        b.Weapon[4] = 0; // a roll that always passes
+        remembered.Clear();
+        var passed = Draw(0x50, 0x13);
+        Check($"a roll that passes keeps the katana ({passed}) and isn't remembered", passed == "kept" && !remembered[0]);
         *KatanaBreak.Broke = 0;
         b.Weapon[4] = chance;
         *r.Simulating = simulating;
@@ -2996,28 +3008,35 @@ internal static unsafe class SelfTest
         var code = GameImage.AllocateCode(96);
         byte[] harness = [0x56, 0x4C, 0x89, 0xC6, 0x49, 0x89, 0xCA, 0x41, 0x89, 0xD0, 0x41, 0xFF, 0xE2];
         harness.CopyTo(new Span<byte>(code, harness.Length));
-        for (var k = 1; k <= 3; k++)
+        for (var k = 1; k <= 2; k++)
         {
             byte[] pad = [0x5E, 0xB8, (byte)k, 0, 0, 0, 0xC3]; // pop rsi; mov eax, k; ret
             pad.CopyTo(new Span<byte>(code + 16 * k, pad.Length));
         }
         var flag = (long*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(8);
+        var markAt = (ushort*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(2);
         var stub = GameImage.AllocateCode(KatanaBreak.DecisionStubSize);
-        KatanaBreak.WriteDecisionStub(stub, (nint)flag, (nint)(code + 16), (nint)(code + 32), (nint)(code + 48));
+        KatanaBreak.WriteDecisionStub(stub, (nint)flag, (nint)markAt, (nint)(code + 16), (nint)(code + 32));
         var decide = (delegate* unmanaged<byte*, int, long, int>)code;
-        string Decide(int count, long unit, long broke)
+        string Decide(int count, long unit, long broke, ushort lastMark = KatanaBreak.Keep)
         {
             *flag = broke;
-            var where = decide(stub, count, unit) switch { 1 => "break", 2 => "none", 3 => "as with no target", var r => $"{r}" };
+            *markAt = lastMark;
+            var where = decide(stub, count, unit) switch { 1 => "kept", 2 => "broken", var r => $"{r}" };
+            where += *markAt == lastMark ? "" : $", mark 0x{*markAt:X}";
             return *flag == 0 ? where : $"{where} (not cleared)";
         }
         var broken = Decide(2, 3 * 0x200, 3 * 0x200 + 1);
+        var brokenLastPassed = Decide(2, 3 * 0x200, 3 * 0x200 + 1, KatanaBreak.Keep);
         var notBroken = Decide(2, 3 * 0x200, 0);
         var otherUnit = Decide(2, 3 * 0x200, 5 * 0x200 + 1);
-        var noTarget = Decide(0, 3 * 0x200, 3 * 0x200 + 1);
+        var noTarget = Decide(0, 3 * 0x200, 0, 0);
         System.Runtime.InteropServices.NativeMemory.Free(flag);
-        Check($"the setup breaks it when a target's roll did ({broken}), not when none did ({notBroken}) or another unit's did ({otherUnit}), and never without a target ({noTarget})",
-              broken == "break" && notBroken == "none" && otherUnit == "none" && noTarget == "as with no target");
+        System.Runtime.InteropServices.NativeMemory.Free(markAt);
+        Check($"the setup breaks it when a target's roll did ({broken}; when the last target's passed: {brokenLastPassed}), " +
+              $"and keeps it when none did ({notBroken}) or another unit's did ({otherUnit}), and without a target ({noTarget})",
+              broken == "broken, mark 0x1000" && brokenLastPassed == "broken, mark 0x1000" && notBroken == "kept"
+              && otherUnit == "kept" && noTarget == "kept");
         return failures;
     }
 
