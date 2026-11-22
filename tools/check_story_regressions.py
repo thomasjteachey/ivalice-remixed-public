@@ -6,6 +6,7 @@ does not launch the game or depend on UI timing.
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -24,6 +25,7 @@ MANDALIA_SETUP_FLAGS = (b"".join(bytes([0xAE, flag, 0, 1, 0]) for flag in range(
                          + bytes([0x4A, 0x4B, 0x4D, 0x1E, 0xF1, 0x1E, 0x00, 0x0D, 0xFF]))
 MENU_CHECK = bytes([0xAF, 0x00, 0x00, 0x18, 0x00, 0xAF, 0x01, 0x00, 0x27, 0x00, 0xA2, 0x01])  # build_mod.py's
 MENU_FADE_IN = bytes([0x4D, 0x1E, 0xF1, 0x1E, 0x00])
+YARDROW_BATTLE = 0x34A
 LIVE_BATTLE_WRITE_BACK = bytes([0xCF, 0xC5, 0x00, 0x00, 0x00])
 TAVERN_HOME = bytes([0xAE, 0xD4, 0x00, 0x01, 0x00])
 DISPLAY_STATE_7 = bytes([0x78, 0x07, 0x3C, 0xE5, 0x38, 0x00])
@@ -210,6 +212,8 @@ def check_places(scenarios: bytes | None = None, remaster: bytes | None = None) 
     on = second_groups_on()
     battles = battle_places(SCENARIOS.read_bytes() if scenarios is None else scenarios,
                             remaster_formations() if remaster is None else remaster, on)
+    if battles.get(YARDROW_BATTLE) != ("record", [4, 2]):
+        raise AssertionError("Yardrow Armory must have its original four- and two-place formations")
     over = {s: groups for s, (_, groups) in battles.items() if sum(groups) > REMASTER_PLACES}
     if over:
         raise AssertionError(f"battle(s) with more than the {REMASTER_PLACES} places the remaster takes, which won't "
@@ -296,6 +300,20 @@ def check_map_reloads() -> str:
         raise AssertionError(f"map reload units no event asks for: {sorted(unused)}")
     return (f"Map reloads naming their entry: {', '.join(f'event {n} of 0x{e:X}' for n, e in seen) or 'none'}, "
             "the units their boxes name brought in")
+
+
+def check_yardrow_battle() -> str:
+    record = scenario_records()[YARDROW_BATTLE]
+    if record[2] != 26 or record[5:7] != bytes([0x08, 0x29]):
+        raise AssertionError("Yardrow Armory's battle lost its map or music from the Preparation Menu")
+    opening = [(op, params) for _, op, params in instructions(event(YARDROW_BATTLE))]
+    clear_fade = [(0x4D, b"\x1e"), (0xF1, b"\x1e\x00"), (0x0D, b"\xff")]
+    if not any(opening[i:i + len(clear_fade)] == clear_fade for i in range(len(opening))):
+        raise AssertionError("Yardrow Armory's opening does not clear and wait out the town scene's fade")
+    mesh = SCRIPT.parents[1] / "bg" / "meshes" / "map_026_mesh.bin"
+    if b"_panel_ui\x00" not in mesh.read_bytes():
+        raise AssertionError("Yardrow Armory's enhanced mesh has no tile highlights")
+    return "Yardrow Armory: battle map and tracks, tile panels, opening fade cleared"
 
 
 def check_primaries() -> str:
@@ -648,11 +666,122 @@ def check() -> list[str]:
             "scene fade cleared, one victory -> recruitment, stable actors, "
             "four runtime lines valid",
             "Riders: the river camp's battle run seats its five, 0x0FB's battle its three",
-            check_places(), check_primaries(), check_map_reloads()]
+            check_places(), check_primaries(), check_map_reloads(), check_yardrow_battle(), check_yuguo_woods(),
+            check_extended_statuses(),
+            check_bervenia()]
+
+
+def check_bervenia() -> str:
+    from maps import read_classic_mesh
+
+    records = scenario_records()
+    first, scene, battle = (records[n] for n in (0x2EA, 0x1B6, 0x2EB))
+    if (first[2], scene[2], battle[2]) != (75, 119, 119) or any(scene[9:13]) or not any(battle[9:11]):
+        raise AssertionError("Bervenia must stage the summon before the second deployment on map 119")
+    if len({r[7:9] for r in (first, scene, battle)}) != 3:
+        raise AssertionError("Bervenia's successive setups reuse cached units")
+    if bytes.fromhex("cd 81 b6 01") not in event(0x2EA) or bytes.fromhex("cd 81 eb 02") not in event(0x1B6):
+        raise AssertionError("Bervenia does not reach the summoning scene and then the formation")
+    if MENU_FADE_IN + bytes.fromhex("0d fa") not in event(0x2EB):
+        raise AssertionError("the manifestation battle replays its summoning scene")
+    entries = scenario_own_entries()
+    for number, expected in ((0x1B6, range(0x8A, 0x90)), (0x2EB, range(0x80, 0x86))):
+        units = entries[number]
+        present = [units[i + 0x20] for i in range(0, len(units), UNIT_BYTES) if units[i + 0x18] & 0xC0]
+        if present != list(expected):
+            raise AssertionError(f"Bervenia 0x{number:X} starts with the wrong combatants: {present}")
+    preset = int.from_bytes(battle[0x16:0x18], "little")
+    if preset != 0xF7 or preset_sets(preset)[0][-1] != (0x19, (0x2EB,)):
+        raise AssertionError("existing Bervenia battle autosaves must retain their preset and battle opening")
+    if [(1, (0x85, 0)), (6, (0x80, 0)), (0x19, (0x2EA,))] not in preset_sets(preset):
+        raise AssertionError("the manifestation's defeat must start the victory scene")
+    for name, tile, height in (("map_map075_9", (0, 11), 6), ("new_map_new_map075_9", (0, 11), 6),
+                               ("map_map119_7", (9, 2), 5)):
+        mesh = read_classic_mesh((FFTPACK / "map" / f"{name}.bin").read_bytes())
+        heights = {(t.x, t.z): t.raw[2] for t in mesh.tiles or [] if t.level == 0}
+        if heights.get(tile) != height:
+            raise AssertionError(f"Bervenia's {name} has the wrong height at {tile}")
+    return "Bervenia: summoning scene before deployment, six manifestations at battle setup, boss victory and terrain heights"
+
+
+def check_yuguo_woods() -> str:
+    battle = list(instructions(event(0x2F5)))
+    ritual_calls = [(offset, params) for offset, op, params in battle if op == 0xCF and params == b"\xC6\0\0\0"]
+    if len(ritual_calls) != 1 or any(op == 0x92 and params[:3] == b"\x80\0\x83" for _, op, params in battle):
+        raise AssertionError("Yuguo's ritual must use the native Charging status setter")
+    _, ritual_delay_op, ritual_delay = battle[next(i for i, (at, _, _) in enumerate(battle)
+                                                 if at == ritual_calls[0][0]) + 1]
+    if (ritual_delay_op, ritual_delay) != (0xF1, b"\x14\0"):
+        raise AssertionError("Yuguo's ritual lost its 20-frame pause")
+    victory_at = next(i for i, (_, op, params) in enumerate(battle) if (op, params) == (0x0E, b"\x0F"))
+    closing_at = next(i for i, (_, op, params) in enumerate(battle) if (op, params) == (0x0E, b"\x10"))
+    victory = [(op, params) for _, op, params in battle[victory_at:closing_at]]
+    if any(op == 0x16 for op, _ in victory) or (0x78, b"\x02\x3C") not in victory:
+        raise AssertionError("Yuguo's victory should open the results without an earlier button pause")
+    troupe_boxes = [params[1] for _, op, params in instructions(event(0x2F6))
+                   if op == 0x10 and params[6:8] in (b"\x95\0", b"\x97\0")]
+    if len(troupe_boxes) < 8 or set(troupe_boxes) != {0x19}:
+        raise AssertionError(f"the troupe leader and worker's boxes should be portraitless: {troupe_boxes!r}")
+    return "Yuguo Woods: ritual uses Charging, results open without a hidden input wait, troupe boxes are portraitless"
+
+
+def check_extended_statuses() -> str:
+    expected = {0x1F7: [0x88] * 2, 0x1FB: [0x84] * 9, 0x349: [0x88] * 3,
+                0x1C4: [0x9D, 0x9C, 0x9B, 0x90], 0x2F5: [0x83]}
+    converted = {}
+    for path in SCRIPT.glob("event*.e"):
+        data = path.read_bytes()
+        if not data.startswith(MARKER):
+            continue
+        stream = list(instructions(data[len(MARKER):]))
+        modes = []
+        for k, (_, op, params) in enumerate(stream):
+            if op == 0x92 and params[2] >= 0x80:
+                raise AssertionError(f"{path.name}: extended InflictStatus would execute as a knockout")
+            if op != 0xCF or params != b"\xC6\0\0\0":
+                continue
+            if k < 2 or stream[k - 2][1] != 0xAE or stream[k - 2][2][:2] != b"\x7E\x0B" \
+                    or stream[k - 1][1] != 0xAE or stream[k - 1][2][:2] != b"\x7F\x0B":
+                raise AssertionError(f"{path.name}: extended InflictStatus call lacks its actor and mode")
+            modes.append(int.from_bytes(stream[k - 1][2][2:], "little"))
+        if modes:
+            converted[int(path.stem[5:])] = modes
+    for number, modes in expected.items():
+        if converted.get(number) != modes:
+            raise AssertionError(f"event 0x{number:X}: extended status modes {converted.get(number)}, expected {modes}")
+    return f"Extended InflictStatus: {sum(map(len, converted.values()))} status operations routed in {len(converted)} scripts"
+
+
+def check_world_objectives(path: Path) -> str:
+    from build_mod import REMIXED_WORLD_STARTS, SIDE_CHAPTER_A_FLAG, SIDE_CHAPTER_DESTINATIONS
+
+    data = json.loads(path.read_text(encoding="utf-8"))
+    captions = data["builds"]["fft_enhanced.exe"]["rules"]["side-chapter-objectives"]
+    covered = set()
+    for location, checks, _, _ in REMIXED_WORLD_STARTS:
+        if (SIDE_CHAPTER_A_FLAG, 1) not in checks:
+            continue
+        for variable, value, *kind in checks:
+            if variable != 0x6E or kind:
+                continue
+            progress = str(value)
+            expected = f"Travel to {SIDE_CHAPTER_DESTINATIONS[location]}."
+            if captions.get(progress) != expected:
+                raise AssertionError(f"1-A progress {progress} must direct the player to {expected}")
+            covered.add(progress)
+    if "1" not in covered:
+        if captions.get("1") != captions["0"]:
+            raise AssertionError("the prologue's progress-1 objective must match progress 0")
+        covered.add("1")
+    if set(captions) != covered:
+        raise AssertionError("1-A objective coverage differs from the world starts")
+    return f"1-A: {len(captions)} captions follow the world starts, including conditional starts and the prologue"
 
 
 def main() -> None:
-    print("\n".join(check()))
+    from build_mod import CODE_DATA, MOD_DIR
+
+    print("\n".join([*check(), check_world_objectives(MOD_DIR / CODE_DATA)]))
 
 
 if __name__ == "__main__":

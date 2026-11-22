@@ -1353,8 +1353,8 @@ In order:
 - [ ] The party menu with a unit away on an errand: it can change equipment but not its job, and whether it can set
   abilities (ReMixed: no). Which menus let it in tells which lock-check caller is which (MECHANICS.md, Job and
   equipment locks).
-- [ ] Riding, the mount's skill: a rider's menu shows its chocobo's skillset (with Choco Cure and the rest listed),
-  using it doesn't end the turn after the rider's own action, and the damage or healing is the chocobo's.
+- [ ] Riding in the battle menu: after boarding, take one mounted Move and use a rider action and a chocobo skill
+  (including Choco Cure) in either order. Acting on foot first should leave only the chocobo skill after boarding.
 - [ ] Riding: a unit with Pass and Train can stop on an enemy's chocobo and wins it at its next turn (it joins after
   the battle); without them it can't board one. The White Chocobo can be ridden.
 - [ ] Move-Find: a unit with Move-Find Item finds an item on a hidden panel, and the same panel gives its common item

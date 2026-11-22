@@ -416,7 +416,8 @@ internal static unsafe class TwoSpells
                 var unit = _game.TurnCode.Units + index * Battle.UnitSize;
                 var record = ui + UiRecord;
                 var ability = *(ushort*)(record + 2);
-                if (record[0] == index && OpensPair(unit, ability, Pair[index] != 0 ? *(ushort*)(unit + UnitRecord + 2) : -1))
+                if (record[0] == index && !RidingActions.IsMountSkill(record)
+                    && OpensPair(unit, ability, Pair[index] != 0 ? *(ushort*)(unit + UnitRecord + 2) : -1))
                 {
                     if (Pair[index] == 0)
                     {

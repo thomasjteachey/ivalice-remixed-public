@@ -34,6 +34,9 @@ public class Startup : IMod
             if (events == null)
                 log.Error("the Event Instruction Upgrade mod isn't loaded; ReMixed's events won't run");
             var modDir = loader.GetDirectoryForModId(modConfig.ModId);
+            Patches.PackFiles.PackDirectory = Path.Combine(modDir, "FFTIVC", "data", "enhanced", "fftpack");
+            Patches.PackFiles.FileList = Path.Combine(loader.GetDirectoryForModId("fftivc.utility.modloader"),
+                                                      "FileLists", "fftpack.txt");
             var optionsPath = Path.Combine(loader.GetModConfigDirectory(modConfig.ModId), Options.FileName);
             Options.Current = Options.Read(optionsPath, out var problem);
             Options.Settings = Options.Current.Copy();

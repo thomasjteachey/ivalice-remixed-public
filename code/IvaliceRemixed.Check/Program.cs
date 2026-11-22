@@ -106,6 +106,7 @@ try
         problems += SelfTest.ErrandAndListRules(game, log);
         problems += SelfTest.MonsterWriteBackRule(game, log);
         problems += SelfTest.FormationStartRule(game, log);
+        problems += SelfTest.GuestFormationRule(log);
         problems += SelfTest.SixPlacesRule(game, log);
         problems += SelfTest.ErrandLockRules(game, log);
         problems += SelfTest.OneHandingRules(game, log);
@@ -509,6 +510,8 @@ internal static unsafe class SelfTest
         Check("a Transparent attacker can't be evaded", Rules.IsUnevadable(unit, 0x001));
         unit[Battle.UnitStatuses + 2] = 0;
         Check("ReMixed's Aimed Shot (0x19C) can't be evaded", Rules.IsUnevadable(unit, 0x19C));
+        Check("a stale Aimed Shot id doesn't make a plain weapon preview unevadable",
+              !Rules.IsUnevadable(unit, 0x19C, false));
         System.Runtime.InteropServices.NativeMemory.Free(unit);
 
         var result = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(0x40);
@@ -1808,21 +1811,49 @@ internal static unsafe class SelfTest
         var evasion = InPlace.Applied.FirstOrDefault(a => a.Name.StartsWith("weapon evasion"));
         if (evasion.Name == null)
             return failures;
-        var setup = game.RuleCode.EvadeSetup;               // through the unevadable rule's hook; no attacker here
+        var setup = game.RuleCode.EvadeSetup;               // through the unevadable rule's hook
         var rightEv = (byte*)game.RuleCode.Evades + 1;        // the right hand's evade byte (0x7B0782)
         var item = RandomEquipment.ItemData;
         var weapon = RandomEquipment.WeaponData;
         var sword = Enumerable.Range(1, 0x7F).FirstOrDefault(id => (item(id)[3] & 0x80) != 0 && weapon(id)[5] > 0);
         var unit = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(0x200);
+        var attacker = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(0x200);
         unit[6] = 0x80;
         *(ushort*)(unit + 0x20) = (ushort)sword;
         var target = game.Routines.Target;
+        var attackerSlot = game.Battle.Attacker;
         var saved = *target;
+        var savedAttacker = *attackerSlot;
+        var savedAbility = *game.Battle.AbilityId;
+        var savedFormula = *game.Battle.EffectiveFormula;
+        var savedActionFormula = game.Battle.Ability[8];
         *target = unit;
+        *attackerSlot = attacker;
+        *game.Battle.AbilityId = 0;
+        *game.Battle.EffectiveFormula = game.Battle.Ability[8] = 1;
         setup();
-        *target = saved;
         Check($"a weapon's evasion counts without Weapon Guard (item 0x{sword:X2}: {rightEv[0]}%, its data's {weapon(sword)[5]}%)",
               sword != 0 && weapon(sword)[5] > 0 && rightEv[0] == weapon(sword)[5]);
+        // The menu may leave Aimed Shot's id and action copy behind while it previews a plain weapon formula.  The
+        // shared hook must keep the target's evasion on every such preview, then still remove it for the real skill.
+        *game.Battle.AbilityId = 0x19C;
+        game.Battle.Ability[8] = 5;
+        *game.Battle.EffectiveFormula = 1;
+        setup();
+        var firstPlain = rightEv[0];
+        setup();
+        var repeatedPlain = rightEv[0];
+        *game.Battle.EffectiveFormula = 5;
+        setup();
+        var aimed = *(uint*)game.RuleCode.Evades;
+        Check("stale Aimed Shot -> melee/ranged previews keep evasion repeatedly; the real Aimed Shot removes it",
+              firstPlain == weapon(sword)[5] && repeatedPlain == weapon(sword)[5] && aimed == 0);
+        game.Battle.Ability[8] = savedActionFormula;
+        *game.Battle.EffectiveFormula = savedFormula;
+        *game.Battle.AbilityId = savedAbility;
+        *attackerSlot = savedAttacker;
+        *target = saved;
+        System.Runtime.InteropServices.NativeMemory.Free(attacker);
         System.Runtime.InteropServices.NativeMemory.Free(unit);
         return failures;
     }
@@ -3732,8 +3763,31 @@ internal static unsafe class SelfTest
             rider[1] = 0; mount[1] = 0;
             rider[Battle.UnitIndex] = 3; mount[Battle.UnitIndex] = 4;
             rider[6] = 0x80; mount[6] = 0x20;
-            rider[RidingActions.Link] = 0x84; mount[RidingActions.Link] = 0x43;
             rider[RidingActions.Primary] = 0x05; mount[RidingActions.Primary] = 0xB0;
+            // Place an on-foot human on a yellow chocobo using the installed hook and the game's own tile lookup.
+            var place = (delegate* unmanaged<int, int, int, int, int, int>)(game.Image.ImageStart + 0x27192C);
+            var dimensions = (ushort*)(game.Image.ImageStart + 0xC6AD6A);
+            var oldDimensions = *dimensions;
+            var tileFlags = (byte*)(game.Image.ImageStart + 0xD8DCB6 + (256 + 3) * 8);
+            var oldFlags = *tileFlags;
+            try
+            {
+                *dimensions = 0x0202;
+                *tileFlags = 0;
+                rider[RidingActions.Link] = mount[RidingActions.Link] = 0;
+                mount[3] = 0x5E;
+                mount[0x4F] = mount[0x50] = 1;
+                mount[0x51] = 0x80;
+                new Span<byte>(mount + Battle.UnitStatuses, 5).Clear();
+                Check("boarding links the pair and forwards level 1 and facing 3",
+                      place(3, 1, 1, 1, 3) == 0 && (rider[0x51] & 0x8F) == 0x83
+                      && rider[RidingActions.Link] == 0x84 && mount[RidingActions.Link] == 0x43);
+            }
+            finally
+            {
+                *dimensions = oldDimensions;
+                *tileFlags = oldFlags;
+            }
             RidingActions.Reset();
             string List()
             {
@@ -3755,13 +3809,52 @@ internal static unsafe class SelfTest
             var afterMount = List();
             RidingActions.TurnEnded(3);
             var first = Act(0xB0);
+            var afterMountFirst = List();
+            rider[RidingActions.UnitActed] = 1; // the game's queue always writes its own mark
+            RidingActions.AfterQueue(record, record, 1); // a scratch record must not consume the pending mark
+            RidingActions.AfterQueue(record, rider + RidingActions.UnitRecord, 1);
+            var keptOwn = rider[RidingActions.UnitActed] == 0;
             var thenOwn = Act(0x05);
             var jumpSet = Enumerable.Range(1, 0xA7).FirstOrDefault(s => (TwoSpells.TypeTable[s] & 0x0F) == RidingActions.JumpType);
             RidingActions.TurnEnded(3);
             var jump = jumpSet > 0 ? Act(jumpSet) : -1;
             Check($"the list {start}; the rider's own action marks {own} (not acted), then {afterOwn}; the mount's skill marks {mountSkill}, then {afterMount}; mount first {first}, then the rider's own {thenOwn}; a Jump (skillset {jumpSet:X2}) {jump}",
                   start == "01 05 B0 02 03" && own == 0 && afterOwn == "B0" && mountSkill == 1 && afterMount == "01 05 02 03"
-                  && first == 1 && thenOwn == 1 && jump == 1);
+                  && first == 0 && afterMountFirst == "01 05 02 03" && keptOwn && thenOwn == 1 && jump == 1);
+            RidingActions.TurnEnded(3);
+            // Call the installed walk-check stub with rcx = unit and rbx = sprite, as at 0x20BA7B.
+            var walkCheck = GameImage.Rip(game.Image.ImageStart + 0x20BA7B, 1, 5);
+            var walkCaller = new List<byte> { 0x53, 0x48, 0x83, 0xEC, 0x20, 0x48, 0x8B, 0xDA, 0x48, 0xB8 };
+            walkCaller.AddRange(BitConverter.GetBytes((long)walkCheck));
+            walkCaller.AddRange([0xFF, 0xD0, 0x48, 0x83, 0xC4, 0x20, 0x5B, 0xC3]);
+            var walkCode = GameImage.AllocateCode(walkCaller.Count);
+            walkCaller.ToArray().CopyTo(new Span<byte>(walkCode, walkCaller.Count));
+            void Walk(byte roles)
+            {
+                ui[0x12C] = roles;
+                ui[0x153] = 1; // the sprite and unit have both been marked moved at 0x20BA7B
+                rider[0x1B9] = 1;
+                ((delegate* unmanaged<byte*, byte*, int>)walkCode)(rider, ui);
+            }
+            rider[Battle.UnitTurn] = 1;
+            rider[RidingActions.UnitActed] = 0;
+            Walk(1); // on foot -> mounted
+            Check("boarding before acting leaves one mounted move and both action lists",
+                  rider[0x1B9] == 0 && ui[0x153] == 0 && List() == "01 05 B0 02 03");
+            Walk(5); // mounted -> mounted
+            Check("riding to the next tile consumes the mounted move", rider[0x1B9] == 1 && ui[0x153] == 1);
+            rider[RidingActions.UnitActed] = 1;
+            Walk(1);
+            Check("acting on foot before boarding leaves a mounted move and only the chocobo action",
+                  rider[0x1B9] == 0 && rider[RidingActions.UnitActed] == 0 && List() == "B0");
+            rider[RidingActions.Link] = 0;
+            Walk(4);
+            Check("dismounting after the rider acted spends the move and preserves its spent action",
+                  rider[0x1B9] == 1 && rider[RidingActions.UnitActed] == 1);
+            rider[RidingActions.Link] = 0x84;
+            rider[Battle.UnitTurn] = 0;
+            Walk(1);
+            Check("placement outside the rider's turn leaves the native flags", rider[0x1B9] == 1 && rider[RidingActions.UnitActed] == 1);
             // The queue: "acted" given back after the rider's own action; the mount skill's charge time 0, then put back.
             RidingActions.TurnEnded(3);
             Act(0x05);
@@ -3856,6 +3949,23 @@ internal static unsafe class SelfTest
                 TwoSpells.Acts(3, 0, 1, ui);
                 return _actedCalls.Count == 1 ? _actedCalls[0].Acted : -1;
             }
+            // A mount's action remains instant even if the ability data would qualify for Two Spells.
+            rider[Battle.UnitSupports + 1] |= 0x20;
+            var priorMp = data[0xD];
+            var priorFlags = data[5];
+            try
+            {
+                data[0xC] = 3; data[0xD] = 5; data[5] = 0;
+                var mountFirstMark = Mark(0xB0, ability);
+                Check("a mount skill with CT and MP leaves the rider's own lists with Two Spells equipped",
+                      mountFirstMark == 0 && List() == "01 05 02 03");
+            }
+            finally
+            {
+                data[0xD] = priorMp; data[5] = priorFlags;
+            }
+            TwoSpells.TurnEnded(3);
+            rider[Battle.UnitSupports + 1] &= unchecked((byte)~0x20);
             _turnsEnded = 0;
             var chargeMark = Mark(0x05, 0x10);
             RidingActions.BeforeQueue(uiRecord, ownRecord, 1);
@@ -6486,7 +6596,7 @@ internal static unsafe class SelfTest
         return failures;
     }
 
-    /// <summary>The mod's fftpack files: numbered from the mod loader's list (or the known ENTD numbers), and a read's
+    /// <summary>The mod's fftpack files: numbered from the mod loader's list (or the known fallback numbers), and a read's
     /// range given from them.</summary>
     public static int PackFileGiving(Log log)
     {
@@ -6496,27 +6606,43 @@ internal static unsafe class SelfTest
             if (!ok) failures++;
             log.Info($"self-test: the mod's fftpack files, {name}{(ok ? "" : ": WRONG")}");
         }
-        var root = Path.Combine(Path.GetTempPath(), "ivalice-packfiles-test");
-        if (Directory.Exists(root))
-            Directory.Delete(root, true);
+        var root = Directory.CreateTempSubdirectory("ivalice-packfiles-test-").FullName;
         var mod = Path.Combine(root, "Mods", "fftivc.gameplay.ivaliceremixed");
         var pack = Path.Combine(mod, "FFTIVC", "data", "enhanced", "fftpack");
         Directory.CreateDirectory(pack);
-        Directory.CreateDirectory(Path.Combine(root, "Mods", "fftivc.utility.modloader", "FileLists"));
-        File.WriteAllText(Path.Combine(root, "Mods", "fftivc.utility.modloader", "FileLists", "fftpack.txt"),
-                          "226|battle_entd3_ent.bin\n892|event_btlevt_bin_entrydata_add_ent.bin\n");
+        var list = Path.Combine(root, "Renamed loader", "FileLists", "fftpack.txt");
+        Directory.CreateDirectory(Path.GetDirectoryName(list)!);
+        File.WriteAllText(list, "226|battle_entd3_ent.bin\n892|event_btlevt_bin_entrydata_add_ent.bin\n"
+                              + "3149|map\\map_map075_9.bin\n3883|map/new_map_new_map075_9.bin\n"
+                              + "3558|MAP/map_map098_7.bin\n3747|map/map_map119_6.bin\n3748|map\\map_map119_7.bin\n");
         var entd4 = new byte[0x1000];
         for (var k = 0; k < entd4.Length; k++) entd4[k] = (byte)(k / 0x800 + 1);
         File.WriteAllBytes(Path.Combine(pack, "battle_entd4_ent.bin"), entd4);
         File.WriteAllBytes(Path.Combine(pack, "event_btlevt_bin_entrydata_add_ent.bin"), [7, 7]);
         Directory.CreateDirectory(Path.Combine(pack, "text"));
-        PackFiles.Load(mod, pack);
+        Directory.CreateDirectory(Path.Combine(pack, "map"));
+        File.WriteAllBytes(Path.Combine(pack, "map", "map_map075_9.bin"), [75]);
+        File.WriteAllBytes(Path.Combine(pack, "map", "new_map_new_map075_9.bin"), [76]);
+        File.WriteAllBytes(Path.Combine(pack, "map", "map_map098_7.bin"), [98]);
+        File.WriteAllBytes(Path.Combine(pack, "map", "map_map119_6.bin"), [118]);
+        File.WriteAllBytes(Path.Combine(pack, "map", "map_map119_7.bin"), [119]);
+        PackFiles.Load(list, pack);
         var buffer = stackalloc byte[0x10];
         var given = PackFiles.Give(227, 1, 0x10, buffer);
         var other = PackFiles.Give(225, 0, 0x10, buffer);
-        Check($"numbers {string.Join(" ", PackFiles.Files.Keys.Order())}; ENTD4 from sector 1 given {given} (0x{buffer[0]:X2}), "
-              + $"ENTD2 (not the mod's) {other}",
-              string.Join(" ", PackFiles.Files.Keys.Order()) == "227 892" && given && buffer[0] == 2 && !other);
+        Check($"ENTD4 from sector 1 given {given} (0x{buffer[0]:X2}), ENTD2 (not the mod's) {other}",
+              given && buffer[0] == 2 && !other);
+        Check("all installed replacements resolve by file number under a renamed loader directory",
+              PackFiles.Files.Keys.Order().SequenceEqual([227u, 892u, 3149u, 3558u, 3747u, 3748u, 3883u])
+              && PackFiles.Give(3558, 0, 1, buffer) && buffer[0] == 98);
+        bool BerveniaFiles() => PackFiles.Give(3149, 0, 1, buffer) && buffer[0] == 75
+                               && PackFiles.Give(3883, 0, 1, buffer) && buffer[0] == 76
+                               && PackFiles.Give(3747, 0, 1, buffer) && buffer[0] == 118
+                               && PackFiles.Give(3748, 0, 1, buffer) && buffer[0] == 119;
+        Check("Bervenia's mesh variants and texture resolve through the loader list", BerveniaFiles());
+        PackFiles.Load(Path.Combine(root, "missing.txt"), pack);
+        Check("known files resolve without a loader list and the old file list is discarded",
+              PackFiles.Files.Keys.Order().SequenceEqual([227u, 3149u, 3747u, 3748u, 3883u]) && BerveniaFiles());
         PackFiles.Files.Clear();
         Directory.Delete(root, true);
         return failures;
@@ -7179,6 +7305,83 @@ internal static unsafe class SelfTest
         Check($"the remaster's own Start check (0x{FormationStart.SecondGroupAt - game.Image.ImageStart:X}) goes past "
               + "its refusal of an empty second group",
               FormationStart.SecondGroupAt != 0 && *(byte*)FormationStart.SecondGroupAt == 0xEB);
+        return failures;
+    }
+
+    /// <summary>Check the patched guest decision with synthetic candidate, roster and event state.</summary>
+    public static int GuestFormationRule(Log log)
+    {
+        var failures = 0;
+        void Check(string name, bool ok)
+        {
+            if (!ok) failures++;
+            log.Info($"self-test: guest deployment, {name}{(ok ? "" : ": WRONG")}");
+        }
+        Check("the patch is installed at the guest check", GuestDeployment.At != 0 &&
+              *(byte*)GuestDeployment.At == 0xE9);
+        var roster = stackalloc byte[UnitTables.RosterSlots * UnitTables.RosterSize];
+        var battle = stackalloc byte[OldGuests.EntryUnits * OldGuests.EntryUnitSize];
+        new Span<byte>(roster, UnitTables.RosterSlots * UnitTables.RosterSize).Clear();
+        new Span<byte>(battle, OldGuests.EntryUnits * OldGuests.EntryUnitSize).Clear();
+        for (var k = 0; k < OldGuests.GuestSlots; k++)
+        {
+            var guest = roster + (OldGuests.FirstGuestSlot + k) * UnitTables.RosterSize;
+            guest[1] = (byte)(OldGuests.FirstGuestSlot + k);
+            *(int*)(guest + OldGuests.RosterName) = 0x21 + k;
+        }
+        void Add(int slot, byte name, byte presence)
+        {
+            var actor = battle + slot * OldGuests.EntryUnitSize;
+            actor[0] = name;
+            actor[OldGuests.EntryName] = name;
+            actor[OldGuests.EntryTeam] = presence;
+        }
+        Add(0, 0x21, 0);    // named friendly stand-in
+        Add(1, 0x22, 0x10); // hostile
+        Add(2, 0x23, 0);    // named friendly stand-in, and deployed separately by the battle
+        Add(3, 0x23, 0x80);
+        var mask = GuestDeployment.EligibleSlots(battle, roster);
+        Check("only the optional friendly actor is eligible", mask == 1);
+        Add(4, 0x24, 0);
+        (roster + 53 * UnitTables.RosterSize)[OldGuests.RosterErrand] = 1;
+        Check("an away guest is excluded", GuestDeployment.EligibleSlots(battle, roster) == 1);
+        var variables = stackalloc int[0x28];
+        var words = variables;
+        var candidate = stackalloc byte[0x2E];
+
+        var entry = GameImage.AllocateCode(48 + GuestDeployment.StubSize);
+        var stub = entry + 48;
+        byte[] setup = [0x53, 0x56, 0x48, 0x8B, 0xD9, 0x33, 0xF6, 0xFF, 0x25, 0, 0, 0, 0];
+        setup.CopyTo(new Span<byte>(entry, setup.Length)); // push rbx/rsi; rbx = candidate; rsi = 0; jump to stub
+        *(long*)(entry + setup.Length) = (long)stub;
+        var accepted = entry + setup.Length + 8;
+        byte[] yes = [0xB8, 1, 0, 0, 0, 0x5E, 0x5B, 0xC3];
+        yes.CopyTo(new Span<byte>(accepted, yes.Length)); // return 1; restore rsi/rbx
+        var rejected = accepted + yes.Length;
+        byte[] no = [0x33, 0xC0, 0x5E, 0x5B, 0xC3];
+        no.CopyTo(new Span<byte>(rejected, no.Length)); // return 0; restore rsi/rbx
+        var prepared = new GuestDeployment.Formation { Slots = mask };
+        GuestDeployment.WriteStub(stub, &words, &prepared, (nint)accepted, (nint)rejected);
+        var filter = (delegate* unmanaged<byte*, int>)entry;
+
+        *(ushort*)(candidate + 0xA) = 50;
+        *(ushort*)(candidate + 0x2C) = 50;
+        prepared.Scenario = variables[OldGuests.ScenarioVar] = 0x34A;
+        Check("Yardrow admits its named optional guest", filter(candidate) == 1);
+        prepared.Scenario = variables[OldGuests.ScenarioVar] = 0x2E8;
+        Check("Yuguo admits its named optional guest", filter(candidate) == 1);
+        *(ushort*)(candidate + 0xA) = 53;
+        Check("unrelated guests remain excluded", filter(candidate) == 0);
+        *(ushort*)(candidate + 0xA) = 50;
+        variables[OldGuests.ScenarioVar] = 0x14;
+        Check("another scenario cannot inherit the previous result", filter(candidate) == 0);
+        *(ushort*)(candidate + 0x2C) = 0;
+        Check("a regular slot passes without an exception", filter(candidate) == 1);
+        Check("extended status modes preserve their bit and operation",
+              RemixedEvents.DecodeExtendedStatus(0x83) == (3, true) &&
+              RemixedEvents.DecodeExtendedStatus(0x88) == (8, true) &&
+              RemixedEvents.DecodeExtendedStatus(0xDD) == (29, false) &&
+              RemixedEvents.DecodeExtendedStatus(0x04) == null && RemixedEvents.DecodeExtendedStatus(0xFF) == null);
         return failures;
     }
 

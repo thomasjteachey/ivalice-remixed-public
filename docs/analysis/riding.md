@@ -9,8 +9,8 @@ remaster's (FFT_enhanced.exe RVAs), not tried in the game. Unit offsets are PS1'
 In vanilla, and in the remaster unchanged, a ridden mount is frozen: no CT, no turns, no commands, it can't react or be
 targeted, and it only walks for its rider. ReMixed keeps it from taking its own turns too, but makes it useful: in each
 of its rider's turns the rider may use the mount's skillset once, as an extra action (instant, with the mount as the
-attacker, and the EXP and JP going to the mount). A rider that acts first may still use the mount's skill; using the
-mount's skill first ends the rider's actions. Train converts an enemy mount at the rider's turn start, and only a
+attacker, and the EXP and JP going to the mount). Boarding on foot leaves one mounted Move. The rider and the chocobo
+can each act once, in either order. An action taken on foot still counts as the rider's action. Train converts an enemy mount at the rider's turn start, and only a
 rider with Pass and Train can board an enemy's chocobo in the first place. The White Chocobo (job 0x95) is a mount too.
 
 ## The pieces
@@ -26,7 +26,7 @@ rider with Pass and Train can board an enemy's chocobo in the first place. The W
 | 7 | A charging rider keeps its charge | The queue parks the rider's pending charge (+0x15D, +0x16E) on the mount (0x8015DE00/0x8015DE40); neither the queue's reset after an instant action (0x8017C438 → 0x80183DE0, its call at 0x80183DE8) nor the action start (0x8017DA64) clears the rider's Charging while parked (0x8015F400 on both); the action display gives it back (0x8007781C → 0x8015DD00) | The queue (hooked; the record +0x1A0 and CT +0x18D), the queue wrapper's reset 0x281476 (persistent performances' stub) and the action start 0x2828E4 (hooked by Two Spells, which already keeps Charging for its second slot), and the end of the rider's turn, or the battle's step before the turn loop (0x2029E8) when the turn ended first, instead of the display | medium |
 | 8 | EXP and JP to the mount | The award (0x8017E86C → 0x8015E150: a non-monster rider whose action's skillset is 0xA8+ hands the award to its mount) and the EXP amount (0x8018D620, the mount's level) | The award 0x28338C and the action EXP step, both already hooked (`Patches/Gains.cs`) | small |
 | 9 | Train converts an enemy mount | At the rider's turn start: a mount on another team (+0x1BA & 0x30) under a rider with Train (+0x91 & 0x80) takes the rider's team bits (+0x1BA, +5) and Invite (+0x59, +0x1BC \| 0x40) | Turn start 0x30F8D4 | small |
-| 10 | Unlinking | Placement (0x8017FDDC) hooks: a dead rider's CT goes to its mount (0x8015DF20, at the unlink); at boarding (the link set, 0x8017FEF4), 0x80156000 saves the mount into ReMixed's own move undo (0x80153F64; not ported, the remaster has its own Reset Move) and 0x8015F300 squares the pair's move flags in ReMixed's own +0x187/+0x188 scheme (a rider boarding a mount that has moved counts as moved; a rider that had acted hands the mount 0x80) | The place-unit routine 0x27192C (the only link writer; 24 callers; index, x, y, level and facing in four registers) | medium |
+| 10 | Boarding and unlinking | A dead rider's CT goes to its mount at unlink (0x8015DF20). At boarding, 0x80156000 backs up the mount for move undo. The first placement on a new mount marks the mount's +0x187 with 0x20. Placement again at the same coordinates (0x8015A1D0, 0x8015F300) moves the 0x20 marker to the rider, clears the mount's acted byte and converts a spent rider action (0x80) to mount-only (0x08). The move mark (0x8015F188) takes 0x20 to 0x40. The menu (0x8018128C) treats only 0x80 as spent, reached by the next walk. | The place-unit routine 0x27192C writes the links and takes index, x, y, level and a fifth argument for facing. The PC move commit checks turn completion at 0x20BA7B. | medium |
 | 11 | The action window names the mount | 0x80071E18 → 0x8015E100 | Battle UI (rebuilt) | display |
 
 Already ported and riding-aware: water movement for linked units (`MovementMode.cs`), knockback skips linked units
@@ -67,8 +67,10 @@ Already ported and riding-aware: water movement for linked units (`MovementMode.
    step before the turn loop (0x2029E8), as a kept song does, in case that second end of turn doesn't come. Seen in
    the hidden PC game: `tests/quick/riding-charge.txt`. Pieces 8 and 10's dead rider: **ported** (`RidingActions.ActingMount`, used by `Patches/Gains.cs`' award and
    EXP hooks; a hook on the place-unit routine 0x27192C gives a dead rider's CT to its mount before the unlink).
-   Left: 10's boarding bookkeeping, which belongs to ReMixed's own move flags and move undo; the remaster's moved
-   flag (+0x1B9) and its own undo may already behave (to check in the game).
+   The PC walk commit now compares the sprite's saved and current riding roles (+0x12C). A newly boarded rider has
+   one mounted Move and retains a spent personal action in the riding command list. On either action order, the
+   first partner leaves an action for the other (PS1 0x8015F248–0x8015F270, 0x8015E53C–0x8015E55C and 0x8015E604).
+   The offline check exercises the installed walk hook and both action orders. The PC uses its own Reset Move.
 
 ## Open questions
 

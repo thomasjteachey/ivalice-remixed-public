@@ -1,0 +1,27 @@
+# The second Bervenia fight. Play the summoning scene before deploying any of the real party.
+# The native encounter uses the same number as existing battle saves (0x2EB).
+name Bervenia summoning and manifestation battle
+wait world depth=1 state=0 timeout=25
+send poke +0x11A7D10 1E
+send poke +0x11A7D12 1E
+send poke +0x11A7F40 1E 00
+scenario 0x1B6
+wait log "loaded event 438" timeout=90
+send speed 5
+wait log "event 438's message 29 shown" press=RETURN every=0.8 timeout=160
+expect unit battle_id=0x80 present=1
+shot manifestation
+wait log "scenario 0x2EB takes ReMixed's battle conditions" press=RETURN every=0.8 timeout=240
+wait log "formation: screen open" timeout=150
+formation units=1 second=1
+wait unit battle_id=0x80 present=1 timeout=100
+expect unit battle_id=0x85 present=1
+expect unit battle_id=0x8B present=0
+show slots
+shot battle
+defeat
+wait log "event 746's message 32 shown" press=RETURN every=0.8 timeout=150
+shot victory
+advance world every=0.8 timeout=300
+expect var 0x6E 0xB
+expect var 0x282 1

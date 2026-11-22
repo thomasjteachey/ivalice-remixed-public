@@ -759,7 +759,8 @@ internal static unsafe class Rules
         {
             try
             {
-                RemixedScenarios.Install(game);
+                data.TryGetProperty("side-chapter-objectives", out var objectives);
+                RemixedScenarios.Install(game, objectives);
                 enabled.Add("ReMixed's own scenarios (its missions, side stories and campaigns) in the remaster's tables");
             }
             catch (Exception e)
@@ -966,7 +967,13 @@ internal static unsafe class Rules
         try
         {
             var attacker = *_game.Battle.Attacker;
-            var unevadable = attacker != null && IsUnevadable(attacker, *_game.Battle.AbilityId);
+            var ability = *_game.Battle.AbilityId;
+            // The remaster can ask for a weapon preview before replacing the previous menu ability id.  Do not let
+            // an unevadable ability selected earlier (Aimed Shot, currently) leak into that ordinary strike: its
+            // copied action formula and the formula being previewed have to agree.  Transparent is an attacker
+            // status, so it remains unevadable independently of the action globals.
+            var currentAbility = _game.Battle.Ability[8] == *_game.Battle.EffectiveFormula;
+            var unevadable = attacker != null && IsUnevadable(attacker, ability, currentAbility);
             if (EvadeChecks.Unevadable != null)
                 *EvadeChecks.Unevadable = (byte)(unevadable ? 1 : 0); // a blind attacker's +25 rather than +50
             if (unevadable)
@@ -982,8 +989,8 @@ internal static unsafe class Rules
     }
 
     /// <summary>The attacker is Transparent (status byte 2, 0x10), or the ability is marked unevadable.</summary>
-    internal static bool IsUnevadable(byte* attacker, int ability) =>
-        (attacker[Battle.UnitStatuses + 2] & 0x10) != 0 || UnevadableAbilities.Contains(ability);
+    internal static bool IsUnevadable(byte* attacker, int ability, bool currentAbility = true) =>
+        (attacker[Battle.UnitStatuses + 2] & 0x10) != 0 || (currentAbility && UnevadableAbilities.Contains(ability));
 
     // ---------------------------------------------------------------- team-only targeting
 

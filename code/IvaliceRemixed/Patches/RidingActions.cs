@@ -5,7 +5,7 @@ namespace IvaliceRemixed.Patches;
 /// <summary>
 /// ReMixed's riding rework, steps 2 and 3 (docs/analysis/riding.md, pieces 3–8 and 10): in each of its rider's turns a mount gives one
 /// extra action, its own skillset, instant, with the mount as the attacker. A rider that uses its own action first may
-/// then use the mount's skill (its list then holds only that); using the mount's skill first ends the rider's actions.
+/// then use the mount's skill (its list then holds only that). Using the mount's skill first leaves the rider's own action.
 /// Installed by <see cref="Rules"/> with "riding-actions".
 /// </summary>
 /// <remarks>
@@ -52,7 +52,7 @@ internal static unsafe class RidingActions
     private static int _failed;
 
     internal static bool On => _on;
-    private static delegate* unmanaged<int, int, int, int, int> _place;
+    private static delegate* unmanaged<int, int, int, int, int, int> _place;
 
     public static void Install(Game game)
     {
@@ -61,16 +61,25 @@ internal static unsafe class RidingActions
         _game = game;
         // The queue's reset after an instant action and the battle's step, shared with persistent performances.
         Performances.HookAfterAction(game);
-        // The place-unit routine (PS1 0x8017FDDC; index, x, y, level and facing), the only link writer.
+        // At the committed walk's turn-over check, rcx is the rider's unit and rbx its sprite.
+        var walkCheck = game.Image.FindUnique("80 89 B9 01 00 00 01 E8 ?? ?? ?? ?? 85 C0 74 07 8B CF E8") + 7;
+        if (GameImage.Rip(walkCheck, 1, 5) != (nint)game.TurnCode.TurnOver)
+            throw new InvalidDataException("the completed walk doesn't call the turn-over check");
+        var walkStub = GameImage.AllocateCodeNear(walkCheck, 32);
+        var code = new List<byte> { 0x48, 0x8B, 0xD3 }; // mov rdx,rbx
+        TwoSpells.AbsoluteJump(code, (nint)(delegate* unmanaged<byte*, byte*, int>)&WalkTurnOver);
+        code.ToArray().CopyTo(new Span<byte>(walkStub, 32));
+        TwoSpells.WriteCall(walkCheck, (nint)walkStub);
+        // The fifth argument is on the stack (read at 0x271A23), outside KeepingRegisters' four-argument ABI.
         var place = game.Image.FindUnique(
             "48 89 5C 24 08 44 88 44 24 18 88 54 24 10 55 56 57 41 54 41 55 41 56 41 57 48 83 EC 20 45 0F B6 F1");
-        _place = (delegate* unmanaged<int, int, int, int, int>)game.Hooks.Hook(
-            place, Stub.KeepingRegisters((nint)(delegate* unmanaged<int, int, int, int, int>)&Place), "placing a unit");
+        _place = (delegate* unmanaged<int, int, int, int, int, int>)game.Hooks.Hook(
+            place, (nint)(delegate* unmanaged<int, int, int, int, int, int>)&Place, "placing a unit");
         _on = true;
     }
 
     [UnmanagedCallersOnly]
-    private static int Place(int index, int x, int y, int levelFacing)
+    private static int Place(int index, int x, int y, int level, int facing)
     {
         try
         {
@@ -81,7 +90,48 @@ internal static unsafe class RidingActions
         {
             Failed("placing a unit", e);
         }
-        return _place(index, x, y, levelFacing);
+        return _place(index, x, y, level, facing);
+    }
+
+    [UnmanagedCallersOnly]
+    private static int WalkTurnOver(byte* unit, byte* sprite)
+    {
+        try
+        {
+            FinishWalk(unit, sprite);
+        }
+        catch (Exception e)
+        {
+            Failed("finishing a walk", e);
+        }
+        return _game.TurnCode.TurnOver(unit);
+    }
+
+    // The sprite backs up its riding role in bits 2–3 at move selection (0x203E01); bits 0–1
+    // hold the role after the walk (0 on foot, 1 rider, 2 mount). Preview and undo skip this call.
+    private static void FinishWalk(byte* unit, byte* sprite)
+    {
+        var index = unit[Battle.UnitIndex];
+        if (index >= Battle.UnitCount || unit[Battle.UnitTurn] == 0 || *_game.Routines.Simulating != 0)
+            return;
+        var roles = sprite[0x12C] & 0x0F;
+        if (roles == 1 && MountSkillset(unit) >= 0)
+        {
+            // ReMixed 0x8015F300: boarding leaves a mounted Move. If the human already
+            // acted on foot, only the newly boarded chocobo's action becomes available.
+            unit[0x1B9] &= 0xFC;
+            sprite[0x153] &= 0xFE;
+            if (unit[UnitActed] != 0)
+            {
+                RiderActed[index] = 1;
+                unit[UnitActed] = 0;
+            }
+        }
+        else if (roles == 4 && RiderActed[index] != 0 && (unit[Link] & 0x80) == 0)
+        {
+            // The rider can no longer spend the mount-only action after dismounting.
+            unit[UnitActed] = 1;
+        }
     }
 
     /// <summary>
@@ -115,6 +165,8 @@ internal static unsafe class RidingActions
     {
         var link = rider[Link];
         if ((link & 0x80) == 0)
+            return null;
+        if ((link & 0x1F) >= Battle.UnitCount)
             return null;
         var mount = _game.TurnCode.Units + (link & 0x1F) * Battle.UnitSize;
         return mount[1] != 0xFF && mount[Link] == (0x40 | rider[Battle.UnitIndex]) ? mount : null;
@@ -155,8 +207,7 @@ internal static unsafe class RidingActions
 
     /// <summary>
     /// The turn's action mark for the player's action (from <see cref="TwoSpells.Acts"/>, after its own rule): the
-    /// mount's skill counts as the action; the rider's own action doesn't while the mount's skill is still there (not
-    /// for a Jump, which leaves the mount). Returns the acted flag to mark.
+    /// first of the pair leaves the other's action. A Jump leaves the mount. Returns the acted flag to mark.
     /// </summary>
     internal static int Acts(int index, int acted, byte* record)
     {
@@ -168,15 +219,20 @@ internal static unsafe class RidingActions
             return acted;
         if (record[1] == skillset)
         {
+            var first = MountUsed[index] == 0 && RiderActed[index] == 0;
             MountUsed[index] = 1;
             Tracer.Line(_game.Log, $"riding: unit {index} uses its mount's skill 0x{*(ushort*)(record + 2):X3}");
-            return acted;
+            if (!first)
+                return acted;
         }
-        if (MountUsed[index] != 0 || (TwoSpells.TypeTable[record[1]] & 0x0F) == JumpType)
-            return acted;
-        RiderActed[index] = 1;
+        else
+        {
+            if (RiderActed[index] != 0 || MountUsed[index] != 0 || (TwoSpells.TypeTable[record[1]] & 0x0F) == JumpType)
+                return acted;
+            RiderActed[index] = 1;
+            Tracer.Line(_game.Log, $"riding: unit {index} has acted; its mount's skill is left");
+        }
         Pending[index] = 1;
-        Tracer.Line(_game.Log, $"riding: unit {index} has acted; its mount's skill is left");
         return 0;
     }
 
@@ -219,7 +275,7 @@ internal static unsafe class RidingActions
 
     /// <summary>
     /// After the queue: the charge time put back, a charge the mount's skill replaced parked (PS1 0x8015DE40), and a
-    /// rider's own action not counted (its "acted" byte).
+    /// first action of the pair given back in the rider's "acted" byte.
     /// </summary>
     internal static void AfterQueue(byte* record, byte* queued, int commit)
     {
@@ -236,12 +292,14 @@ internal static unsafe class RidingActions
             Note($"riding: unit {index}'s charge 0x{SnapRecord[2] | (SnapRecord[3] << 8):X3} (CT {_snapCt}) waits while its mount acts");
             _snapCt = Empty;
         }
-        if (!_on || commit == 0 || record == null || record[0] >= Battle.UnitCount || Pending[record[0]] == 0)
+        if (!_on)
             return;
-        var unit = _game.TurnCode.Units + record[0] * Battle.UnitSize;
-        if (queued == unit + UnitRecord)
-            unit[UnitActed] = 0;
-        Pending[record[0]] = 0;
+        var committed = TwoSpells.Queued(record, queued, commit);
+        if (committed >= 0 && Pending[committed] != 0)
+        {
+            (queued - UnitRecord)[UnitActed] = 0;
+            Pending[committed] = 0;
+        }
     }
 
     /// <summary>

@@ -14,7 +14,7 @@ namespace IvaliceRemixed.Patches;
 /// bytes read, logged after the read, were vanilla's). So this hooks the game's read (0x2F40C4: the file's number, the
 /// sector to start at, the size, the buffer; most files come from one pack container at the file's offset) and, after
 /// it, copies the mod's bytes for the same range over the buffer. A file's number comes from the mod loader's list
-/// (Mods/fftivc.utility.modloader/FileLists/fftpack.txt, "number|path"), else the four ENTD files' known numbers.
+/// (FileLists/fftpack.txt, "number|path"), with known numbers for ENTD and the Bervenia maps.
 /// The files in fftpack/text/ (the event text) aren't read by number and aren't handled here.
 /// </remarks>
 internal static unsafe class PackFiles
@@ -29,6 +29,8 @@ internal static unsafe class PackFiles
     {
         ["battle_entd1_ent.bin"] = 224, ["battle_entd2_ent.bin"] = 225,
         ["battle_entd3_ent.bin"] = 226, ["battle_entd4_ent.bin"] = 227,
+        ["map/map_map075_9.bin"] = 3149, ["map/new_map_new_map075_9.bin"] = 3883,
+        ["map/map_map119_6.bin"] = 3747, ["map/map_map119_7.bin"] = 3748,
     };
 
     /// <summary>The mod's files by the game's number for them.</summary>
@@ -40,6 +42,7 @@ internal static unsafe class PackFiles
     /// in its pack's offsets unchecked), and the mod's bytes go over what it read.
     /// </summary>
     internal static readonly Dictionary<uint, uint> StandIns = [];
+    internal static string PackDirectory = "", FileList = "";
     internal static nint ReadFileAt;
     private static delegate* unmanaged<uint, int, int, nint, long> _gameReadFile;
     private static Log _log = null!;
@@ -52,24 +55,22 @@ internal static unsafe class PackFiles
     {
         _log = game.Log;
         ReadFileAt = game.Image.FindUnique(ReadFilePattern);
-        var folder = Path.GetDirectoryName(typeof(PackFiles).Assembly.Location) ?? "";
-        Load(folder, Path.Combine(folder, "FFTIVC", "data", "enhanced", "fftpack"));
+        Load(FileList, PackDirectory);
         _gameReadFile = (delegate* unmanaged<uint, int, int, nint, long>)game.Hooks.Hook(
             ReadFileAt, (nint)(delegate* unmanaged<uint, int, int, nint, long>)&ReadFile, "the fftpack file read");
         _log.Info($"pack files: {Files.Count} of the mod's fftpack files given to the game by number "
                   + $"({string.Join(", ", Files.Select(f => $"{f.Key}: {f.Value.Length} bytes"))})");
     }
 
-    /// <summary>The mod's fftpack files in <paramref name="pack"/>, numbered from the mod loader's list beside
-    /// <paramref name="modFolder"/>'s mod (or the known numbers).</summary>
-    internal static void Load(string modFolder, string pack)
+    /// <summary>Number the replaced files using the loader's installed file list. Reloaded resolves each mod's
+    /// directory by ID, including installs with a renamed folder.</summary>
+    internal static void Load(string list, string pack)
     {
         Files.Clear();
         StandIns.Clear();
         if (!Directory.Exists(pack))
             return;
         var numbers = new Dictionary<string, uint>(KnownNumbers, StringComparer.OrdinalIgnoreCase);
-        var list = Path.Combine(Path.GetDirectoryName(modFolder) ?? "", "fftivc.utility.modloader", "FileLists", "fftpack.txt");
         if (File.Exists(list))
         {
             foreach (var line in File.ReadLines(list))

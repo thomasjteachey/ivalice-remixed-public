@@ -126,6 +126,8 @@ internal static unsafe class OldGuests
                 if (_noted++ < 8)
                     _log.Info($"old guests: roster slot {slot} (name id 0x{guest.Name:X}) moved from sprite set "
                               + $"0x{guest.Old:X2} to 0x{guest.Sprites:X2} at story progress 0x{progress:X}");
+            var scenario = _getVariable(ScenarioVar);
+            GuestDeployment.Prepare(scenario, (byte*)records, _roster);
             if (leader)
             {
                 var guest = _roster + FirstGuestSlot * UnitTables.RosterSize;
@@ -133,7 +135,6 @@ internal static unsafe class OldGuests
                 new Span<byte>(_roster, UnitTables.RosterSize).CopyTo(new Span<byte>(guest, UnitTables.RosterSize));
                 guestCopied = true;
             }
-            var scenario = _getVariable(ScenarioVar);
             if (RemixedScenarios.Presets.ContainsKey(scenario))
             {
                 var fromData = LoadFromRoster((byte*)records, _roster, madeFromData, borrowed, savedGuests);

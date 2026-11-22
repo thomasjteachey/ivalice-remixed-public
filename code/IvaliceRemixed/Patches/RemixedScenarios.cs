@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json;
 
 namespace IvaliceRemixed.Patches;
 
@@ -93,6 +94,14 @@ internal static unsafe class RemixedScenarios
     /// 6 a tavern's rumor list (at depth 3, over the tavern's menu, 5, which replaces the town's, 4).</summary>
     internal const int MapState = 0, TavernMenuState = 5, RumorListState = 6;
     internal const int StoryProgress = 0x6E, NoProgress = 0xFFFF;
+    private const int SideChapter = 0x2EC;
+
+    // WorldMapProgressInfo.Caption lookup (0x15E0FC). The world-map banner's caller selects a vanilla
+    // GameProgress row, whose caption can describe a different chapter while 1-A is active.
+    private const string WorldCaptionPattern =
+        "48 89 5C 24 08 55 56 57 48 83 EC 40 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 44 24 30 41 8B D8 8B EA 85 D2";
+    private static delegate* unmanaged<nint, int, int, byte*> GameWorldCaption;
+    private static readonly Dictionary<int, byte[]> SideChapterCaptions = [];
     /// <summary>Per ReMixed event: the remaster's message number for its message 0 (its first line's Id less 0x40001
     /// plus 1), and how many it has.</summary>
     internal static readonly Dictionary<int, (int Base, int Count)> Messages = [];
@@ -297,7 +306,7 @@ internal static unsafe class RemixedScenarios
     /// pressed word before a mod hook can observe it, so Dispatch uses this non-consuming edge as a fallback.</summary>
     internal static uint NewlyHeldButtons => _heldNow == null || _heldBefore == null ? 0 : *_heldNow & ~*_heldBefore;
 
-    public static void Install(Game game)
+    public static void Install(Game game, JsonElement sideChapterObjectives)
     {
         var image = game.Image;
         _log = game.Log;
@@ -371,6 +380,8 @@ internal static unsafe class RemixedScenarios
             game.Log.Info($"remixed scenarios: no {FileName} beside the DLL; none added");
             return;
         }
+        LoadSideChapterCaptions(sideChapterObjectives);
+        var captionLookup = SideChapterCaptions.Count > 0 ? game.Image.FindUnique(WorldCaptionPattern) : 0;
         var presets = Path.Combine(folder, PresetsFileName);
         _presets = File.Exists(presets) ? File.ReadAllBytes(presets) : null;
         var (scenarios, formations) = Add(File.ReadAllBytes(file));
@@ -396,6 +407,10 @@ internal static unsafe class RemixedScenarios
         GameImage.WriteCode(WalkAt, jump);
         GameButtons = (delegate* unmanaged<void>)game.Hooks.Hook(
             ButtonsAt, (nint)(delegate* unmanaged<void>)&Buttons, "the world map's buttons");
+        if (captionLookup != 0)
+            GameWorldCaption = (delegate* unmanaged<nint, int, int, byte*>)game.Hooks.Hook(
+                captionLookup, (nint)(delegate* unmanaged<nint, int, int, byte*>)&WorldCaption,
+                "the world map's objective caption");
         PackFiles.Watch = WatchRead;
         GameLoadEvent = (delegate* unmanaged<int, void>)game.Hooks.Hook(
             LoadEventAt, (nint)(delegate* unmanaged<int, void>)&LoadEvent, "the event loader");
@@ -415,6 +430,36 @@ internal static unsafe class RemixedScenarios
                       + $", {ConditionalRumors.Count} conditional rumor(s) ({string.Join(", ", ConditionalRumors.Select(p => p.Rumor))})"
                       + (_presets == null ? $"; no {PresetsFileName}, so their conditions are the remaster's" : ""));
     }
+
+    [UnmanagedCallersOnly]
+    private static byte* WorldCaption(nint world, int chapter, int progress)
+    {
+        if (Nemesis.GetVariable(SideChapter) == 0)
+            return GameWorldCaption(world, chapter, progress);
+
+        fixed (byte* caption = SideChapterCaption(Nemesis.GetVariable(StoryProgress)))
+            return caption;
+    }
+
+    /// <summary>Read the route's objectives from the build, in storage whose address the game can retain.</summary>
+    private static void LoadSideChapterCaptions(JsonElement objectives)
+    {
+        SideChapterCaptions.Clear();
+        if (objectives.ValueKind != JsonValueKind.Object)
+            return;
+        foreach (var entry in objectives.EnumerateObject())
+        {
+            var text = entry.Value.GetString()!;
+            var size = Encoding.UTF8.GetByteCount(text);
+            var caption = GC.AllocateArray<byte>(size + 1, pinned: true);
+            Encoding.UTF8.GetBytes(text, caption);
+            SideChapterCaptions.Add(int.Parse(entry.Name, System.Globalization.CultureInfo.InvariantCulture), caption);
+        }
+    }
+
+    private static ReadOnlySpan<byte> SideChapterCaption(int progress) =>
+        SideChapterCaptions.TryGetValue(progress, out var caption) ? caption.AsSpan(0, caption.Length - 1) :
+        "Continue Chapter 1-A."u8;
 
     /// <summary>The setup, then for one of ReMixed's scenarios its preset in place of the conditions it loaded. A battle
     /// played after a scene gets its record set for the run first (<see cref="PrepareMenuBattle"/>).</summary>

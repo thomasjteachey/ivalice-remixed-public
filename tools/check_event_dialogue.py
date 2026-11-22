@@ -7,6 +7,7 @@ check of every marked event shipped by the mod; it does not launch the game.
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 import sys
 from pathlib import Path
@@ -42,6 +43,47 @@ def message_ranges(data: bytes) -> dict[int, range]:
         first = LINE_ID_BASE + base + 1
         out[event] = range(first, first + lines)
     return out
+
+
+def dialogue_rows(key: int, lines: range) -> dict[int, tuple[str, int]]:
+    path = ROOT / "work" / "remaster" / "build" / "pzd" / f"scenario{key:04d}.en.yaml"
+    pattern = r"(?m)^- Id: (\d+)\n  Line: (.*)\n  Speaker:\n    Type: 24\n    Value: (\d+)$"
+    return {int(line) - lines.start + 1: (json.loads(text), int(speaker)) for line, text, speaker in
+            re.findall(pattern, path.read_text(encoding="utf-8"))}
+
+
+def check_chapter_opening_speakers(rows: dict[int, tuple[str, int]]) -> None:
+    for intro, continuing in ((2, (*range(4, 23, 2), 24)), (3, (*range(5, 22, 2), 25))):
+        speaker = rows[intro][1]
+        if not speaker or any(rows[message][1] != speaker for message in continuing):
+            raise AssertionError(f"side chapter 1-A's PSP opening lost the speaker introduced in message {intro}")
+
+
+def check_parallel_speakers(psp: dict[int, tuple[str, int]], psx: dict[int, tuple[str, int]], count: int) -> None:
+    for message in range(1, count + 1):
+        text, speaker = psp[message]
+        if psx[message][1] and (not speaker or "<cursor>" in text and not text.startswith("<speaker=")):
+            raise AssertionError(f"PSP counterpart message {message} lost its speaker")
+
+
+def check_chapter_opening_notices(code: bytes, lengths: bytes, lines: range) -> None:
+    shown, at = [], 0
+    sizing_label = code[1] if code[0] == 0x0D else None  # the jump over the sizing-only messages
+    while at < len(code):
+        op = code[at]
+        if sizing_label is not None:
+            if op == 0x0E and code[at + 1] == sizing_label:
+                sizing_label = None
+        elif op == 0x10:
+            message = int.from_bytes(code[at + 3:at + 7], "little") - lines.start + 1
+            style = code[at + 2]
+            if style == 0x9B or (style == 0x96 and message == 27):
+                shown.append(message)
+        at += 1 + lengths[op]
+    # The option's inventory warning continues as page 35. The prologue's own pages start at 36.
+    expected = [26, 35, 27, 28, *range(36, 42)]
+    if shown != expected:
+        raise AssertionError(f"side chapter 1-A's opening shows notices and choice {shown}, expected {expected}")
 
 
 def check() -> str:
@@ -108,9 +150,18 @@ def check() -> str:
     if bad_owners:
         raise AssertionError("generated dialogue has non-unique ScenarioId ownership:\n  "
                              + "\n  ".join(f"event 0x{event:X}: {keys}" for event, keys in sorted(bad_owners.items())))
+    opening, opening_psx = 0x2F0, 0x193
+    for psp, psx, count in ((opening, opening_psx, 28), (0x2F2, 0x197, 45)):
+        psp_rows = dialogue_rows(owners[psp][0], ranges[psp])
+        check_parallel_speakers(psp_rows, dialogue_rows(owners[psx][0], ranges[psx]), count)
+        if psp == opening:
+            check_chapter_opening_speakers(psp_rows)
+    for event in (opening_psx, opening):
+        code = (SCRIPT / f"event{event}.e").read_bytes()[len(MARKER):]
+        check_chapter_opening_notices(code, lengths, ranges[event])
     return (f"{len(scripts) - skipped} marked scripts: {messages} MESSAGE/ChangeDialog references valid "
             f"({dynamic} runtime-selected, {closes} intentional closes; {skipped} stock-format overrides skipped); "
-            f"{len(owners)} events have one ScenarioId text owner each")
+            f"{len(owners)} events have one ScenarioId text owner each; 1-A's opening speakers and notices verified")
 
 
 def main() -> None:

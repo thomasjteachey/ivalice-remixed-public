@@ -91,6 +91,14 @@ internal static unsafe class RemixedEvents
         {
             _log.Error($"remixed events: DismissUnit doesn't find units by name: {e.Message}");
         }
+        try
+        {
+            GuestDeployment.Install(game);
+        }
+        catch (Exception e)
+        {
+            _log.Error($"remixed events: guest formation availability couldn't be set: {e.Message}");
+        }
         api.OnUnitPreset(preset => UnitPresets.Pending = preset);
         api.AddStepObserver(at =>
         {
@@ -114,6 +122,14 @@ internal static unsafe class RemixedEvents
         });
         api.AddRoutine(MirrorCopy, () => Note(CopyParty(battleUnits, (uint)api.GetVariable(1), (uint)api.GetVariable(MirrorLast),
                                                         k => api.GetVariable(MirrorSources + k))));
+        var applyEventStatus = FindEventStatus(game.Image);
+        api.AddRoutine(ApplyExtendedStatus, () =>
+        {
+            var actor = api.GetVariable(ExtendedStatusActor);
+            var mode = api.GetVariable(ExtendedStatusMode);
+            if (DecodeExtendedStatus(mode) is { } status)
+                applyEventStatus(RemixedScenarios.EventUnitId(battleUnits, actor), status.Bit, status.Add ? 1 : 0);
+        });
         BattleEnd.Install(game);
         api.AddRoutine(LiveBattleWriteBack, () =>
         {
@@ -268,6 +284,17 @@ internal static unsafe class RemixedEvents
     /// here without the remaster's display-state-7 teardown, then resumes its post-battle scene on the same map.
     /// </summary>
     internal const uint LiveBattleWriteBack = 0x000000C5;
+    internal const uint ApplyExtendedStatus = 0x000000C6;
+    internal const int ExtendedStatusActor = 0xB7E, ExtendedStatusMode = 0xB7F;
+
+    /// <summary>ReMixed's extended status mode: bit 7 selects it, bit 6 removes the status, low six bits choose it.</summary>
+    internal static (int Bit, bool Add)? DecodeExtendedStatus(int mode) =>
+        mode is >= 0x80 and <= 0xFF && (mode & 0x3F) < 40 ? (mode & 0x3F, (mode & 0x40) == 0) : null;
+
+    // The stock event's status setter (0x241BD0) queues the selected status's bit and starts its battle action.
+    internal static delegate* unmanaged<int, int, int, void> FindEventStatus(GameImage image) =>
+        (delegate* unmanaged<int, int, int, void>)image.FindUnique(
+            "48 89 5C 24 08 57 48 83 EC 30 41 8B D8 8B FA E8 ?? ?? ?? ?? 41 B8 D0 07 00 00");
     internal const int MirrorLast = 0x74, MirrorSources = 0x7A;
 
     /// <summary><see cref="MirrorCopy"/>: the units from PS1 address <paramref name="first"/> through
