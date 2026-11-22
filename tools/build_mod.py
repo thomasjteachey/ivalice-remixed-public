@@ -1910,15 +1910,23 @@ def parallel_speakers(lines: list[tuple[str, str]], psx: list[tuple[str, str]]) 
 
 
 def fitted_boxes(code: bytes, lengths: bytes, sizes: dict[int, int],
-                 pages: dict[int, list[int]], menus: set[int] | frozenset[int] = frozenset()) -> tuple[bytes, int, int]:
+                 pages: dict[int, list[int]], menus: set[int] | frozenset[int] = frozenset()
+                 ) -> tuple[bytes, int, int, int]:
     """ReMixed's event code (the PS1 layout) with its swaps to longer lines made boxes of their own (see CLOSE_BOX) and
-    its long lines' later pages shown after their first (PAGE_CHARS), and how many of each. sizes: each message's
-    length (its line's characters), by number; menus, the messages that are lists of answers (a swap to or from one
-    opens its box again). Acknowledged notices can page in box 3 as well. For numbers written in as ReMixed runs,
-    message_numbers works them out for the PSP script (SCRIPT_VERSION); where it can't, the box is left as it is."""
-    out, at, openers, pending, reopened, paged = bytearray(), 0, {}, [], 0, 0
+    its long lines' later pages shown after their first (PAGE_CHARS). ReMixed kept both speakers' boxes open and
+    alternated their text with ChangeDialog. The remaster clears an acknowledged box's text but leaves its frame,
+    producing an empty box beside the next speaker; close the inactive speech box and reopen the active one instead.
+    Returns the numbers of resized swaps, later pages and speech-box switches. sizes: each message's length (its
+    line's characters), by number; menus, the messages that are lists of answers (a swap to or from one opens its box
+    again). Acknowledged notices can page in box 3 as well. For numbers written in as ReMixed runs, message_numbers
+    works them out for the PSP script (SCRIPT_VERSION); where it can't, its valid template still reopens the box."""
+    out, at, openers, pending, reopened, paged, switched = bytearray(), 0, {}, [], 0, 0, 0
     menu_open: dict[int, bool] = {}  # each box: whether a list of answers holds it
+    active_speech: int | None = None
     numbers = message_numbers(code, lengths)
+
+    def close(kind: int) -> bytes:
+        return bytes([0x51, kind]) + CLOSE_BOX.to_bytes(2, "little") + bytes(2)
 
     def pageable(opener: bytes) -> bool:
         style = opener[2]
@@ -1949,26 +1957,45 @@ def fitted_boxes(code: bytes, lengths: bytes, sizes: dict[int, int],
             continue
         if op == 0x10 and len(ins) == 15:
             message = numbers[start] if start in numbers else u16(ins, 3)
+            kind = ins[2] & 0x0F
+            if kind in SPEECH_BOXES and active_speech is not None and active_speech != kind:
+                out += close(active_speech)
+                switched += 1
             out += b"".join(pending) + ins
             pending = []
-            kind = ins[2] & 0x0F
             openers[kind] = (ins, None if message is None else sizes.get(message, 0))
             menu_open[kind] = message in menus
+            if kind in SPEECH_BOXES:
+                active_speech = kind
             if message is not None and pageable(ins):
                 later_pages(kind, message, ins[7])
+            continue
+        if op == 0x51 and len(ins) == 6 and u16(ins, 2) == CLOSE_BOX:
+            out += b"".join(pending) + ins
+            pending = []
+            if active_speech == ins[1]:
+                active_speech = None
             continue
         if (op == 0x51 and len(ins) == 6 and u16(ins, 2) != CLOSE_BOX and ins[1] in openers
                 and pageable(openers[ins[1]][0]) and all(p[1] & 0x3F == 1 for p in pending)):
             opener, size = openers[ins[1]]
             message = numbers[start] if start in numbers else u16(ins, 2)
             menu_swap = message is not None and (message in menus) != menu_open.get(ins[1], False)
-            if message is not None and (menu_swap or size is not None and sizes.get(message, 0) > size):
+            speech_switch = ins[1] in SPEECH_BOXES and active_speech != ins[1]
+            resize = message is not None and (menu_swap or size is not None and sizes.get(message, 0) > size)
+            if speech_switch or resize:
+                if speech_switch and active_speech is not None:
+                    out += close(active_speech)
                 again = box(opener, u16(ins, 2), ins[4])
                 # the message's offset in a 0x51 (1) is 2 in a MESSAGE: its PATCH_NEXTs go right before the MESSAGE
                 out += again[:6] + b"".join(bytes([0xE6, p[1] + 1]) + p[2:] for p in pending) + again[6:]
-                openers[ins[1]] = (again[6:], sizes.get(message, 0))
-                menu_open[ins[1]] = message in menus
-                reopened += 1
+                openers[ins[1]] = (again[6:], None if message is None else sizes.get(message, 0))
+                menu_open[ins[1]] = message is not None and message in menus
+                if speech_switch:
+                    active_speech = ins[1]
+                    switched += 1
+                if resize:
+                    reopened += 1
             else:
                 out += b"".join(pending) + ins
             pending = []
@@ -1977,7 +2004,7 @@ def fitted_boxes(code: bytes, lengths: bytes, sizes: dict[int, int],
             continue
         out += b"".join(pending) + ins
         pending = []
-    return bytes(out), reopened, paged
+    return bytes(out), reopened, paged, switched
 
 
 def remaster_message_layout(code: bytes, lengths: bytes, first_line: int | None,
@@ -5353,6 +5380,7 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
     sync_sets = 0  # waits for ReMixed's text code made sets (TEXT_SYNC)
     boxes_reopened = 0  # swaps to a longer line made boxes of their own (CLOSE_BOX)
     pages_shown = 0  # long lines' later pages shown after their first (PAGE_CHARS)
+    speech_boxes_switched = 0  # inactive remaster speech boxes closed before the other speaker's line
     objects_dropped = 0  # 3D-object instructions on maps the build makes looks for (MAP_OBJECT_USE)
     graphics_rerouted = 0  # LoadEVTCHR instructions moved to ReMixed-only copies of redrawn graphics
     twin_named = 0  # PSP-script lines named from their PSX twins (script_twins)
@@ -5776,11 +5804,13 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
             expected = len(templates)
             if made != expected:
                 sys.exit(f"ReMixed's event 0x{theirs:X} has {made} dynamic menu placeholder(s), expected {expected}")
-        ps1, made, paged = fitted_boxes(ps1, lengths, {n: len(text) for n, (_, text) in enumerate(lines, 1)},
-                                        pages, menus if theirs not in SLOTTED and theirs not in DYNAMIC_MENU_PLACEHOLDERS
-                                        else frozenset())  # the tavern's menus are its own (TallMenus)
+        ps1, made, paged, switched = fitted_boxes(
+            ps1, lengths, {n: len(text) for n, (_, text) in enumerate(lines, 1)}, pages,
+            menus if theirs not in SLOTTED and theirs not in DYNAMIC_MENU_PLACEHOLDERS else frozenset()
+        )  # the tavern's menus are its own (TallMenus)
         boxes_reopened += made
         pages_shown += paged
+        speech_boxes_switched += switched
         if record[2] in set(NEW_LOOKS) | set(REMIXED_MAPS) | set(REMIXED_MAP_EDITS):
             ps1, dropped = without_map_objects(ps1, lengths)
             objects_dropped += dropped
@@ -5825,6 +5855,7 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
     done.append(f"{menus_all} menu(s), {menus_shown} named by a MESSAGE as it stands (the rest through 0xE6)")
     done.append(f"{sync_sets} wait(s) for ReMixed's text code made sets")
     done.append(f"{boxes_reopened} swap(s) to a longer line made boxes of their own, {pages_shown} later page(s) of long lines shown in boxes of their own")
+    done.append(f"{speech_boxes_switched} speaker switch(es) close the inactive speech box before the next line")
     done.append(f"{objects_dropped} 3D-object instruction(s) on the build's own map looks made waits")
     done.append(f"{graphics_rerouted} LoadEVTCHR instruction(s) routed to ReMixed-only redraws")
     done.append(f"{twin_named} PSP-script line(s) named from their PSX twins")
@@ -7899,7 +7930,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata. The title screen's plaque shows it (write_title_screen).
-RELEASE_VERSION = "0.9.27"
+RELEASE_VERSION = "0.9.28"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:

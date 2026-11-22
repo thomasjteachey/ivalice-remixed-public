@@ -86,6 +86,44 @@ def check_chapter_opening_notices(code: bytes, lengths: bytes, lines: range) -> 
         raise AssertionError(f"side chapter 1-A's opening shows notices and choice {shown}, expected {expected}")
 
 
+def check_chapter_opening_speech_boxes(code: bytes, lengths: bytes, lines: range) -> None:
+    """The remaster must never leave the other speaker's acknowledged, empty frame on screen."""
+    active: set[int] = set()
+    opened, at = [], 0
+    sizing_label = code[1] if code[0] == 0x0D else None
+    while at < len(code):
+        op = code[at]
+        if sizing_label is not None:
+            if op == 0x0E and code[at + 1] == sizing_label:
+                sizing_label = None
+            at += 1 + lengths[op]
+            continue
+        if op == 0x51:
+            box = code[at + 1]
+            line = int.from_bytes(code[at + 2:at + 6], "little")
+            if line == 0xFFFFFFFF:
+                active.discard(box)
+            elif box in (1, 2) and line in lines:
+                message = line - lines.start + 1
+                if message <= 25:
+                    raise AssertionError(f"1-A opening message {message} swaps into persistent speech box {box}")
+        elif op == 0x10:
+            box = code[at + 2] & 0x0F
+            line = int.from_bytes(code[at + 3:at + 7], "little")
+            if box in (1, 2) and line in lines:
+                message = line - lines.start + 1
+                if message <= 25:
+                    if active:
+                        raise AssertionError(f"1-A opening message {message} opens box {box} while {sorted(active)} remains")
+                    active.add(box)
+                    opened.append(message)
+        at += 1 + lengths[op]
+    # Message 23 is an empty spacer in both source texts; 24 and 25 are the conditional continuation.
+    expected = [*range(1, 23), 24, 25]
+    if sorted(opened) != expected:
+        raise AssertionError(f"1-A opening speech boxes cover {sorted(opened)}, expected {expected}")
+
+
 def check() -> str:
     lengths = remaster_lengths(read_lengths(BATTLE.read_bytes()))
     ranges = message_ranges(SCENARIOS.read_bytes())
@@ -159,6 +197,7 @@ def check() -> str:
     for event in (opening_psx, opening):
         code = (SCRIPT / f"event{event}.e").read_bytes()[len(MARKER):]
         check_chapter_opening_notices(code, lengths, ranges[event])
+        check_chapter_opening_speech_boxes(code, lengths, ranges[event])
     return (f"{len(scripts) - skipped} marked scripts: {messages} MESSAGE/ChangeDialog references valid "
             f"({dynamic} runtime-selected, {closes} intentional closes; {skipped} stock-format overrides skipped); "
             f"{len(owners)} events have one ScenarioId text owner each; 1-A's opening speakers and notices verified")
