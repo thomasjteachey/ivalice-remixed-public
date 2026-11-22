@@ -387,6 +387,7 @@ def check() -> list[str]:
     paths = [path for path in sorted(SCRIPT.glob("event*.e")) if path.read_bytes().startswith(MARKER)]
     handoffs = []
     direct_handoffs = []
+    unsupported_direct_modes = []
     stale = []
     clear = bytes([0xAE, 0x8E, 0x00, 0x00, 0x00])
     for path in paths:
@@ -396,10 +397,20 @@ def check() -> list[str]:
                 handoffs.append((path.name, at, bytes(params)))
                 if len(params) >= 3 and params[0] == 0x81:
                     direct_handoffs.append((int(path.stem[5:]), int.from_bytes(params[1:3], "little")))
+                elif len(params) >= 3 and params[0] & 0xF3 in (0x82, 0x83):
+                    unsupported_direct_modes.append((path.name, at, params[0], int.from_bytes(params[1:3], "little")))
         if WORLD + clear in code:
             stale.append(path.name)
     if stale:
         raise AssertionError(f"return flag clear follows a world handoff in: {', '.join(stale)}")
+    if unsupported_direct_modes:
+        raise AssertionError("direct scenario handoffs use remaster-incompatible modes: " + ", ".join(
+            f"{name}@0x{at:X} mode 0x{mode:X} -> 0x{target:X}"
+            for name, at, mode, target in unsupported_direct_modes))
+    opening_handoff = (0x193, 0x194)
+    psp_opening_handoff = (0x2F0, 0x194)
+    if direct_handoffs.count(opening_handoff) != 1 or direct_handoffs.count(psp_opening_handoff) != 1:
+        raise AssertionError("both 1-A opening scripts must chain once to 0x194 with direct mode 0x81")
 
     # A recruitment scene's join is display state 7 in a dark screen: the remaster's join screen, which writes the battle
     # back and shows each joiner. A silent join (0x43 1) there leaves the unit in the party with no screen.

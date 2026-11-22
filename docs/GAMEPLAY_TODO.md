@@ -387,6 +387,12 @@ battle, Testing).
 From the testers' 0.9.17 playthrough (2026-11-18, evening: chapter 2 cleared with no crashes, then side chapter 1-A;
 the Lionel scene's event art and Two Shots have sessions of their own):
 
+- [x] The 1-A offer's Agrias and Orlandeau scene ended on a black screen instead of continuing to Bryn and Lorne
+  (reported from the Steam Deck on 2026-11-21). Its PSP script used a PS1 hand-off mode the remaster does not support,
+  and its narration window could remain logically open after the picture faded. Both opening copies now use the
+  remaster's direct-scenario mode, and every generated ReMixed event closes all three message windows before its
+  terminal END. The dialogue audit checks that cleanup across all 126 generated scripts. Seen in the hidden PC game:
+  event 0x2F0 finished and loaded 0x194, with the 1-A flag and party changes preserved. *high*
 - [x] ReMixed's lines with no speaker's name: in 1-A's scenes most boxes showed an empty name tab. The port shows
   ReMixed's PSP script, which leaves most speakers' names out of its lines where its PSX script has them. Each such
   line now takes the name its PSX copy has (558 lines in 50 events; the 11 left are narration and the Lucavi, nameless

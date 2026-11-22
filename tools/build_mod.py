@@ -1916,6 +1916,8 @@ def fitted_boxes(code: bytes, lengths: bytes, sizes: dict[int, int],
     its long lines' later pages shown after their first (PAGE_CHARS). ReMixed kept both speakers' boxes open and
     alternated their text with ChangeDialog. The remaster clears an acknowledged box's text but leaves its frame,
     producing an empty box beside the next speaker; close the inactive speech box and reopen the active one instead.
+    It can also keep a scene at its final END on a black screen while any message window remains logically open, so
+    close every box the event opened before each END (closing an inactive box is a no-op in the remaster).
     Returns the numbers of resized swaps, later pages and speech-box switches. sizes: each message's length (its
     line's characters), by number; menus, the messages that are lists of answers (a swap to or from one opens its box
     again). Acknowledged notices can page in box 3 as well. For numbers written in as ReMixed runs, message_numbers
@@ -1952,6 +1954,18 @@ def fitted_boxes(code: bytes, lengths: bytes, sizes: dict[int, int],
         start, op = at, code[at]
         ins = bytes(code[at:at + 1 + lengths[op]])
         at += len(ins)
+        if op == 0xDB:  # END: no message window may survive an event's terminal cleanup
+            out += b"".join(pending)
+            pending = []
+            # MESSAGE styles are restyled later (for example, box 2's menu becomes style 0x96), but ChangeDialog's
+            # close operand remains the event window number. The remaster has the two speech windows and narration
+            # window 3; close all three so conditional branches cannot leave one behind.
+            if openers:
+                for kind in (1, 2, 3):
+                    out += close(kind)
+            active_speech = None
+            out += ins
+            continue
         if op == 0xE6:  # PATCH_NEXT: kept with the instruction it patches
             pending.append(ins)
             continue
@@ -2572,8 +2586,10 @@ EVENT_CODE_PATCHES: dict[int, list[tuple[bytes, bytes]]] = {
            # The chapter opens on Zeltennia itself. A world-map start at Zeltennia therefore isn't checked until the
            # party leaves and returns, letting Finath River be selected before 0x0ED recruits Bryn and Lorne. Chain
            # the taken chapter directly into 0x0ED; the earlier decline path has already handed off to chapter 2.
-           # Its world-map start remains as an existing-save fallback.
-           (bytes([0xCD, 0x80, 0x00, 0x00]), bytes([0xCD, 0x82, 0xED, 0x00]))],
+           # A direct remaster scenario chain is mode 0x81. ReMixed's PSP copy used 0x82 here; the remaster accepted
+           # its state writes but stopped at END on a black screen instead of loading 0x0ED. Its world-map start
+           # remains as an existing-save fallback.
+           (bytes([0xCD, 0x80, 0x00, 0x00]), bytes([0xCD, 0x81, 0xED, 0x00]))],
     # 0x0ED makes Bryn and Lorne join, then writes their final jobs into the live units. Its man's Bard is job 0x38
     # on the PS1; the entry-data conversion cannot see this later event write, and 0x38 is a Lucavi job whose command
     # appears as Mystic Arts in the remaster. Use its Bard job (0x5B), as REMIXED_UNIT_JOBS does for entry data.
@@ -7930,7 +7946,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata. The title screen's plaque shows it (write_title_screen).
-RELEASE_VERSION = "0.9.28"
+RELEASE_VERSION = "0.9.29"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:

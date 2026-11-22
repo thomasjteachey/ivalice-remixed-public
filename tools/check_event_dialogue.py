@@ -131,7 +131,7 @@ def check() -> str:
     if not scripts:
         raise AssertionError(f"no generated scripts in {SCRIPT}")
 
-    messages = dynamic = closes = skipped = 0
+    messages = dynamic = closes = terminal_closes = skipped = 0
     wrong: list[str] = []
     for path in scripts:
         event = int(path.stem[5:])
@@ -141,7 +141,7 @@ def check() -> str:
             # scripts are exactly the marked ones.
             skipped += 1
             continue
-        code, at, pending = marked[len(MARKER):], 0, []
+        code, at, pending, has_messages, recent_closes = marked[len(MARKER):], 0, [], False, set()
         while at < len(code):
             op = code[at]
             end = at + 1 + lengths[op]
@@ -163,11 +163,23 @@ def check() -> str:
                                      f"0x{line_id:08X}")
                 elif op == 0x51 and line_id == 0xFFFFFFFF:
                     closes += 1  # the PS1's intentional close-box ChangeDialog
+                    recent_closes.add(code[at + 1])
                 elif event not in ranges or line_id not in ranges[event]:
                     expected = ranges.get(event)
                     wanted = "no assigned text rows" if expected is None else \
                         f"0x{expected.start:X}..0x{expected.stop - 1:X}"
                     wrong.append(f"{path.name}: message at 0x{at:X} names 0x{line_id:X}, expected {wanted}")
+                if op == 0x10:
+                    has_messages = True
+                    recent_closes.clear()
+                elif line_id != 0xFFFFFFFF:
+                    recent_closes.clear()
+            elif op == 0xDB and has_messages:
+                missing = {1, 2, 3} - recent_closes
+                if missing:
+                    wrong.append(f"{path.name}: END at 0x{at:X} leaves message box(es) {sorted(missing)} open")
+                else:
+                    terminal_closes += 3
             pending = []
             at = end
     if wrong:
@@ -199,7 +211,8 @@ def check() -> str:
         check_chapter_opening_notices(code, lengths, ranges[event])
         check_chapter_opening_speech_boxes(code, lengths, ranges[event])
     return (f"{len(scripts) - skipped} marked scripts: {messages} MESSAGE/ChangeDialog references valid "
-            f"({dynamic} runtime-selected, {closes} intentional closes; {skipped} stock-format overrides skipped); "
+            f"({dynamic} runtime-selected, {closes} intentional closes, {terminal_closes} terminal box closes; "
+            f"{skipped} stock-format overrides skipped); "
             f"{len(owners)} events have one ScenarioId text owner each; 1-A's opening speakers and notices verified")
 
 
