@@ -387,6 +387,13 @@ battle, Testing).
 From the testers' 0.9.17 playthrough (2026-11-18, evening: chapter 2 cleared with no crashes, then side chapter 1-A;
 the Lionel scene's event art and Two Shots have sessions of their own):
 
+- [x] After 1-A's opening was chained directly into Bryn and Lorne's recruitment, it returned to Zeltennia at story
+  progress 2 while the world-map rows that reveal Finnath Creek and its route still required progress 0. The objective
+  named Finnath, but the party had nowhere it could travel. The opening route is now eligible through progress 2,
+  retaining its 1-A and one-time guards, so new runs and already-stuck saves both reveal it through the remaster's
+  native world events. Verified by cold-loading the Deck's exact stuck autosave: all eleven opening world actions
+  completed, traveling to Finnath selected scenario 0x1FE, and event 510 began. The generated world-event rows have a
+  regression audit for the progress-2 recovery path. *high*
 - [x] The 1-A offer's Agrias and Orlandeau scene ended on a black screen instead of continuing to Bryn and Lorne
   (reported from the Steam Deck on 2026-11-21). Its PSP script used a PS1 hand-off mode the remaster does not support,
   and its narration window could remain logically open after the picture faded. Both opening copies now use the

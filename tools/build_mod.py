@@ -3108,13 +3108,18 @@ def side_chapter_objectives() -> dict[int, str]:
 # places (their flags, 0x200 + the location, cleared) and shows Zeltennia (5), and at four points 1-A shows the next
 # stretch: the camera to a place (ReMixed's opcode 0x24, the remaster's EnhancedWorldEvent Type 36), a route drawn
 # between two places (0x20, Type 32: its flag from 0x22D) and a place shown (0x22, Type 34), each once, while its flag
-# is 0, as the remaster's own steps are. At location 27 with the story at 0xB (0x0F9's start) the way goes on to
+# is 0, as the remaster's own steps are. A story condition may be an exact value, or (comparison type, value). The
+# opening accepts progress through 2: 0x0EC can return at 0, while its direct 0x0ED chain recruits Bryn and Lorne and
+# reaches the world map at 2. That range also repairs a save made there before the route was revealed. At location 27
+# with the story at 0xB (0x0F9's start) the way goes on to
 # Dorter and Orbonne, where 1-A ends. (location, story, [(the flag, type, place, the other place), ...]), in ReMixed's
 # order; each step waits for 1-A as its starts do. ReMixed's two 0x1D steps (var 0x6D, at 5 and 27) are left out, as
 # the remaster leaves vanilla's out.
+WORLD_AT_LEAST, WORLD_AT_MOST = 2, 3
 WORLD_CAMERA, WORLD_ROUTE, WORLD_PLACE = 36, 32, 34
 REMIXED_WORLD_STEPS = [
-    (5, 0, [(0x200, WORLD_CAMERA, 13, None), (0x248, WORLD_ROUTE, 5, 40), (0x228, WORLD_PLACE, 40, None),
+    (5, (WORLD_AT_MOST, 2), [(0x200, WORLD_CAMERA, 13, None), (0x248, WORLD_ROUTE, 5, 40),
+            (0x228, WORLD_PLACE, 40, None),
             (0x247, WORLD_ROUTE, 40, 13), (0x20D, WORLD_PLACE, 13, None), (0x245, WORLD_ROUTE, 13, 38),
             (0x226, WORLD_PLACE, 38, None), (0x246, WORLD_ROUTE, 38, 33), (0x221, WORLD_PLACE, 33, None),
             (0x23C, WORLD_ROUTE, 33, 0), (0x200, WORLD_PLACE, 0, None)]),
@@ -3159,7 +3164,6 @@ ALGUS_WORLD_STEPS = [(24, 3, [(0x22D, WORLD_ROUTE, 24, 2), (0x202, WORLD_PLACE, 
 # and 0x80091518) read a variable and a value after it: so their rows carry both in Unknown8 (write_world_starts). Until
 # 2026-11-12 the build wrote only the value there, which made this start's program [2, 0x22] and read var 0x22 against
 # the next row's type, then the next row's variable as an opcode (past 0x2B: the location's check gave up).
-WORLD_AT_LEAST, WORLD_AT_MOST = 2, 3
 REMIXED_WORLD_STARTS += [(15, [(HIRAME_LOST, 0), (CHAPTER_3_BRANCH_OPEN, 1), (0x6E, 0x22, WORLD_AT_LEAST),
                                (ALGUS_FLAG, 0)], 0x104, 1)]
 # Beowulf's arc (BEOWULF_QUEST): 0x09C at location 3 with Beowulf (0x1F) and Reis (0x0F) in the party (a check of type
@@ -4851,7 +4855,15 @@ def write_world_starts(cfg: dict) -> str:
                 # the remaster animates every new road backwards, from the newly revealed node to the party.
                 first, second = ((other, place) if kind == WORLD_ROUTE else
                                  (place, WORLD_EVENT_UNUSED if other is None else other))
-                rows = [(1, json.dumps([story]), 0x6E, WORLD_EVENT_UNUSED, WORLD_EVENT_UNUSED),
+                if isinstance(story, tuple):
+                    comparison, story_value = story
+                    if comparison not in (WORLD_AT_LEAST, WORLD_AT_MOST):
+                        raise ValueError(f"unsupported world-step story comparison {comparison}")
+                    story_row = (comparison, json.dumps([0x6E, story_value]), 0,
+                                 WORLD_EVENT_UNUSED, WORLD_EVENT_UNUSED)
+                else:
+                    story_row = (1, json.dumps([story]), 0x6E, WORLD_EVENT_UNUSED, WORLD_EVENT_UNUSED)
+                rows = [story_row,
                         (1, json.dumps([0]), flag, WORLD_EVENT_UNUSED, WORLD_EVENT_UNUSED),
                         (1, json.dumps([1]), mark, WORLD_EVENT_UNUSED, WORLD_EVENT_UNUSED),
                         (kind, json.dumps([]), 0, first, second)]
@@ -7946,7 +7958,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata. The title screen's plaque shows it (write_title_screen).
-RELEASE_VERSION = "0.9.29"
+RELEASE_VERSION = "0.9.30"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:
@@ -8404,8 +8416,9 @@ def main() -> None:
             shutil.copy2(code / name, EIU_DIR / name)
         write_eiu_config()
         patches = write_code_data(source, code_patches)
-        from check_story_regressions import check_world_objectives
+        from check_story_regressions import check_side_chapter_opening_route, check_world_objectives
         print(f"  {'World objectives (offline)':24} " + check_world_objectives(patches))
+        print(f"  {'Opening route (offline)':24} " + check_side_chapter_opening_route())
         if not args.data_only:
             check_code(cfg, code, patches)
     else:

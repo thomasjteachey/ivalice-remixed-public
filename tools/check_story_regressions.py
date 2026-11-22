@@ -7,6 +7,7 @@ does not launch the game or depend on UI timing.
 from __future__ import annotations
 
 import json
+import sqlite3
 import sys
 from pathlib import Path
 
@@ -789,10 +790,47 @@ def check_world_objectives(path: Path) -> str:
     return f"1-A: {len(captions)} captions follow the world starts, including conditional starts and the prologue"
 
 
+def check_side_chapter_opening_route() -> str:
+    """The opening's direct recruitment chain must not outrun the first world-map route reveal."""
+    from build_mod import (REMIXED_WORLD_STEPS, SIDE_CHAPTER_A_FLAG, WORLD_AT_MOST, WORLD_CAMERA, WORLD_EVENT_UNUSED,
+                           WORLD_PLACE, WORLD_ROUTE)
+
+    path = ROOT / "work" / "remaster" / "build" / "enhancedworldevent" / "table.sqlite"
+    if not path.exists():
+        raise AssertionError(f"missing built world-event database {path}; run tools/build_mod.py first")
+    opening = [step for step in REMIXED_WORLD_STEPS if step[0] == 5]
+    if len(opening) != 1 or opening[0][1] != (WORLD_AT_MOST, 2):
+        raise AssertionError("1-A's Zeltennia route must remain eligible through post-recruitment progress 2")
+    expected = opening[0][2]
+    db = sqlite3.connect(path)
+    entries: dict[int, list[tuple[int, list[int], int, int, int]]] = {}
+    for entry, kind, values, variable, first, second in db.execute(
+            'select Key2, Type, Unknown8, Unknown10, Unknown14, Unknown18 from "EnhancedWorldEvent" '
+            'where Key = 5 order by Key2, Key3'):
+        entries.setdefault(entry, []).append((kind, json.loads(values), variable, first, second))
+    db.close()
+    for flag, kind, place, other in expected:
+        action_operands = ((other, place) if kind == WORLD_ROUTE else
+                           (place, WORLD_EVENT_UNUSED if other is None else other))
+        candidates = [rows for rows in entries.values()
+                      if (kind, [], 0, *action_operands) in rows
+                      and (1, [0], flag, WORLD_EVENT_UNUSED, WORLD_EVENT_UNUSED) in rows]
+        if len(candidates) != 1:
+            raise AssertionError(f"1-A opening world action flag 0x{flag:X} has {len(candidates)} generated rows")
+        rows = candidates[0]
+        if (WORLD_AT_MOST, [0x6E, 2], 0, WORLD_EVENT_UNUSED, WORLD_EVENT_UNUSED) not in rows \
+                or (1, [1], SIDE_CHAPTER_A_FLAG, WORLD_EVENT_UNUSED, WORLD_EVENT_UNUSED) not in rows:
+            raise AssertionError(f"1-A opening world action flag 0x{flag:X} cannot repair a progress-2 save")
+    kinds = {kind for _, kind, _, _ in expected}
+    if kinds != {WORLD_CAMERA, WORLD_ROUTE, WORLD_PLACE}:
+        raise AssertionError("1-A's opening route lost a camera, route, or place action")
+    return f"1-A: {len(expected)} opening world actions remain eligible through progress 2"
+
+
 def main() -> None:
     from build_mod import CODE_DATA, MOD_DIR
 
-    print("\n".join([*check(), check_world_objectives(MOD_DIR / CODE_DATA)]))
+    print("\n".join([*check(), check_world_objectives(MOD_DIR / CODE_DATA), check_side_chapter_opening_route()]))
 
 
 if __name__ == "__main__":
