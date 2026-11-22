@@ -128,9 +128,11 @@ the mod's own, so ReMixed's own data (0x8019FD50, the native routine's) reads ba
 in the test mode's trace. ReMixed's word variables (under 0x80) are read and written in the remaster's variable
 array ([0x7830D8], var 0 at +0): the getter and setter (0x2332D8, 0x233368) use var 0 as scratch and put it back,
 so through them var 0 always reads 0, and the setter cuts a negative value to its low byte (the first Deck run
-lost the high half of every PS1 address that way). The base team, PS1 +0x1BA (the remaster's +0x1EE), is read but not
-written: event 0x191 clears its enemy bits (0x30) on every unit it counts, which the PS1 survives (why isn't known
-yet) but which in the remaster leaves no enemies, so the second Deck run won the battle at once. Passed over for now, noted once: 0xCF's native calls, 0xE0, 0xCD and
+lost the high half of every PS1 address that way). EIU keeps the base team, PS1 +0x1BA (the remaster's +0x1EE), read
+only: event 0x191 clears its enemy bits (0x30) on every unit it counts, which the PS1 survives (why isn't known yet)
+but which in the remaster leaves no enemies, so the second Deck run won the battle at once. Ivalice ReMixed's step
+observer now mirrors deliberate SaveAddress writes there for every upgraded event except 0x191. Passed over for now,
+noted once: 0xCF's native calls, 0xE0, 0xCD and
 the rest.
 
 First event: 0x191, random battles' setup (2,885 bytes, 798 instructions). It renames guests to ReMixed's spellings

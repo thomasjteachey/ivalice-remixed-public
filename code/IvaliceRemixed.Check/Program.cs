@@ -3884,14 +3884,25 @@ internal static unsafe class SelfTest
             var notMount = RidingActions.SwapAttacker(out _);
             Check($"the mount's skill: swapped {swapped}, the attacker {during2}; put back {back}; the rider's own skillset swaps {notMount}",
                   swapped && during2 == "mount/mount's/0000000000000201" && back && !notMount);
-            // A dead rider placed off its mount: the mount takes its CT.
+            // A dead rider placed off its mount: the mount takes its CT without changing its allegiance. One already
+            // dismounted has nothing transferred, and its former mount's allegiance stays put too.
             rider[RidingActions.Ct] = 77; mount[RidingActions.Ct] = 100;
+            mount[Battle.UnitCurrentTeam] = mount[Battle.UnitTeam] = 0;
             rider[Battle.UnitStatuses] = 0;
             var alive = RidingActions.DeadRiderCt(rider);
             rider[Battle.UnitStatuses] = RidingActions.Dead;
             var dead = RidingActions.DeadRiderCt(rider);
-            Check($"a living rider placed: {alive}; a dead one: {dead}, the mount's CT {mount[RidingActions.Ct]}",
-                  !alive && dead && mount[RidingActions.Ct] == 77);
+            var mountedTeam = (mount[Battle.UnitCurrentTeam], mount[Battle.UnitTeam]);
+            rider[RidingActions.Link] = 0;
+            mount[RidingActions.Link] = 0;
+            mount[Battle.UnitCurrentTeam] = mount[Battle.UnitTeam] = 0x10;
+            var dismounted = RidingActions.DeadRiderCt(rider);
+            var dismountedTeam = (mount[Battle.UnitCurrentTeam], mount[Battle.UnitTeam]);
+            Check($"a living rider placed: {alive}; a dead one: {dead}, the mount's CT {mount[RidingActions.Ct]} and team {mountedTeam}; already dismounted: {dismounted}, former mount team {dismountedTeam}",
+                  !alive && dead && mount[RidingActions.Ct] == 77 && mountedTeam == (0, 0)
+                  && !dismounted && dismountedTeam == (0x10, 0x10));
+            rider[RidingActions.Link] = 0x84;
+            mount[RidingActions.Link] = 0x43;
             // EXP and JP: the mount's skill awards the mount; the rider's own skill, the rider.
             rider[Battle.UnitStatuses] = 0;
             rider[RidingActions.UnitRecord + 1] = 0xB0;
@@ -5297,6 +5308,36 @@ internal static unsafe class SelfTest
         var settingsAt = game.Image.FindUnique(EventTables.MapSettingsPattern);
         Check($"the per-event map settings (0xCD's table) at 0x{*(int*)(settingsAt + 21):X}", *(int*)(settingsAt + 21) == 0xD3F950);
 
+        // Ps1Memory keeps +0x1BA read-only so random-battle setup event 0x191 cannot clear every enemy team. The
+        // ReMixed observer mirrors deliberate writes from other events into the remaster's real +0x1EE instead.
+        var teamUnits = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(Battle.UnitCount * Battle.UnitSize);
+        try
+        {
+            var teamVars = new Dictionary<int, int>
+            {
+                [0x27] = 0x0EE, [0x70] = unchecked((int)(Ps1Memory.Units + 3 * Ps1Memory.UnitSize)), [0x71] = 0x08,
+            };
+            byte[] saveTeam = [0xC4, 0x71, 0xBA, 0x01, 0x70, 0x01];
+            fixed (byte* instruction = saveTeam)
+            {
+                var mirrored = RemixedEvents.MirrorBaseTeamWrite(instruction, id => teamVars.GetValueOrDefault(id), teamUnits);
+                var team = teamUnits[3 * Battle.UnitSize + Battle.UnitTeam];
+                teamVars[0x27] = 0x191;
+                teamVars[0x71] = 0x30;
+                var random = RemixedEvents.MirrorBaseTeamWrite(instruction, id => teamVars.GetValueOrDefault(id), teamUnits);
+                instruction[2] = 0xB9;
+                teamVars[0x27] = 0x0EE;
+                var adjacent = RemixedEvents.MirrorBaseTeamWrite(instruction, id => teamVars.GetValueOrDefault(id), teamUnits);
+                Check($"base-team SaveAddress: another event mirrored {mirrored} as 0x{team:X2}; random setup mirrored {random}; another field mirrored {adjacent}",
+                      mirrored && team == 0x08 && !random && !adjacent
+                      && teamUnits[3 * Battle.UnitSize + Battle.UnitTeam] == 0x08);
+            }
+        }
+        finally
+        {
+            System.Runtime.InteropServices.NativeMemory.Free(teamUnits);
+        }
+
         // The length stub: ReMixed's lengths inside marked code, the remaster's path elsewhere.
         var cell = (byte**)System.Runtime.InteropServices.NativeMemory.AllocZeroed(8);
         var table = (byte*)System.Runtime.InteropServices.NativeMemory.Alloc(256);
@@ -6417,7 +6458,7 @@ internal static unsafe class SelfTest
     /// (the party menu's unit screen and its dialogs, shops, the formation list, the join screen) the world menus'
     /// 0x2C06D4: its sprite set's PS1 portrait (0x32AB3C, the table 0x683A70), that portrait's graphic (0x274028, the
     /// table 0x7146D0), then the fold. Each story character shows its own face (Agrias 0x34, not Ashley's 0x14, whose
-    /// sprite set shared her portrait 0x17) and each of ReMixed's its own, by a portrait of its own.</summary>
+    /// sprite set shared her portrait 0x17) and each of ReMixed's its own, including graphics without a PS1 portrait.</summary>
     public static int FacePortraits(Game game, Log log)
     {
         var failures = 0;
@@ -6465,6 +6506,7 @@ internal static unsafe class SelfTest
         const int slot = 20;
         var unit = game.Units.Roster + slot * UnitTables.RosterSize;
         var saved = new Span<byte>(unit, UnitTables.RosterSize).ToArray();
+        unit[1] = slot;
         var drawn = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(0x100);
         string Face(int spriteSet)
         {
@@ -6477,6 +6519,13 @@ internal static unsafe class SelfTest
             return $"0x{fold(graphic):X2} (portrait 0x{portrait:X2}, 0x{graphic:X2}, palette {palette})"
                    + (menuGraphic == graphic && menuPalette == palette ? "" : $", the menus' 0x{menuGraphic:X2} palette {menuPalette}");
         }
+        (int Graphic, int Texture, int Palette) MenuFace(int spriteSet, int job, int gender)
+        {
+            (unit[0], unit[2], unit[UnitLooks.RosterGenderAt]) = ((byte)spriteSet, (byte)job, (byte)gender);
+            var palette = -1;
+            var graphic = screen(1, slot, &palette);
+            return (graphic, graphic >= 0 ? fold(graphic) : graphic, palette);
+        }
         // A locked look (Elias's 0x9C, a man, Black Mage 0x50) shows the face of the look it draws as, a generic man's
         // Black Mage (0x80 with that job), not table entry 0's, Ramza's chapter 1 (a tester on 0.9.22).
         (byte job, byte gender) = (unit[2], unit[UnitLooks.RosterGenderAt]);
@@ -6485,6 +6534,13 @@ internal static unsafe class SelfTest
         (unit[2], unit[UnitLooks.RosterGenderAt]) = (job, gender);
         string agrias = Face(0x1E), ashley = Face(0x34), rafa = Face(0x29), remixed19 = Face(0x19);
         string celia = Face(0x2D), remixed3A = Face(0x3A), lede = Face(0x2E), remixed3B = Face(0x3B), ramza = Face(2);
+        var lorne = MenuFace(0xB4, 0x5B, 0x80);
+        var lorneAfterJobChange = MenuFace(0xB4, 0x4A, 0x80);
+        var bryn = MenuFace(0xB5, 0x5C, 0x40);
+        var hirame = MenuFace(0x59, 0x59, 0x40);
+        *level = float.NegativeInfinity;
+        var hiddenLorne = MenuFace(0xB4, 0x5B, 0x80);
+        var rosterUnchanged = unit[0] == 0xB4 && unit[2] == 0x5B;
         (*mode, *level, *kind) = (savedMode, savedLevel, savedKind);
         new Span<byte>(saved).CopyTo(new Span<byte>(unit, UnitTables.RosterSize));
         System.Runtime.InteropServices.NativeMemory.Free(drawn);
@@ -6498,6 +6554,12 @@ internal static unsafe class SelfTest
         Check($"the world menus: Ramza's (2) as before: {ramza}", ramza == "0x02 (portrait 0x01, 0x02, palette 8)");
         Check($"the world menus: a locked look (0x9C, a man's Black Mage) {elias} as a generic man's Black Mage {genericBlackMage}",
               UnitLooks.PortraitAt != 0 && elias == genericBlackMage && !elias.Contains("portrait 0x00"));
+        Check($"Lorne's locked look takes the Bard texture at either job: {lorne}, after changing job {lorneAfterJobChange}",
+              lorne == (0x38, 0x82, 8) && lorneAfterJobChange == lorne);
+        Check($"Bryn's locked look takes the Dancer texture: {bryn}", bryn == (0x83, 0x83, 8));
+        Check($"Hirame's custom graphic with no stock portrait takes her own texture: {hirame}", hirame == (0x59, 0x59, 8));
+        Check("the normal visibility guard still hides Lorne and the resolver leaves his record intact",
+              hiddenLorne.Graphic == -1 && rosterUnchanged);
         int[] battle = [fold(0x1E), fold(0x34), fold(0x29), fold(0x19), fold(0x2D), fold(0x3A), fold(0x2E), fold(0x3B)];
         Check("in battle, by graphic: Agrias 0x1E, Ashley 0x34, Rafa 0x29, ReMixed's 0x19, Celia 0x2D, ReMixed's 0x3A, "
               + $"Lede 0x2E, ReMixed's 0x3B: {string.Join(", ", battle.Select(f => $"0x{f:X2}"))}",

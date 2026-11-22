@@ -419,6 +419,14 @@ the Lionel scene's event art and Two Shots have sessions of their own):
   (`tools/check_story_regressions.py` checks both). Seen in the hidden PC game (`tests/quick/river-camp-start.txt`):
   all five linked to their chocobos as the battle begins and riding them through its turns. 0x0FB's not seen in the
   game (its battle started on its own won't take a placement in the harness). *small*
+- [x] The river camp's freed chocobos ignored Agrias's answer about whose side they would take (a tester, 2026-11-22).
+  Her first, second and third answers are meant to give all five chocobos team 0x00, 0x10 or 0x20 before the battle;
+  once a Mindflayer falls, the normal riding unlink leaves that team in place. ReMixed's source event accidentally
+  replaced each UnitAddress result with the answer's message number before writing the teams, and the port also kept
+  its base-team write in the event-memory safety store (that safeguard stops random-battle event 0x191 from clearing
+  every enemy team). The stray assignment is now dropped, and deliberate base-team writes from every ReMixed event
+  except 0x191 are mirrored into the live battle unit. Offline checks cover the choice loop, the 0x191 exception, and
+  allegiance surviving a mounted rider's death or an already-completed dismount. *small*
 - [x] 1-A's Agrias with no face in its battles (the thief battle's "This chase is ended.", the river camp's closing
   line, testers 2026-11-18): ReMixed's events name her by its sprite set for her, 0x22, in some 320 instructions (her
   lines' boxes, poses, walks), which in its battles finds no one, as she's the remaster's Agrias (0x1E) from the
@@ -518,6 +526,11 @@ the Lionel scene's event art and Two Shots have sessions of their own):
   sprite sets now have portraits of their own, and the shared ones lead back to the story characters, so Agrias and
   Rafa show their own faces there (and on the formation and join screens and in the party menu's dialogs) while
   Ashley keeps hers. Checked offline through the game's own code; not seen in the game yet. *medium*
+- [x] Lorne showed chapter-one Ramza's portrait in the roster and outfitter (Steam Deck report). His locked sprite
+  set draws graphic 0x38, which aliases the Bard's art. The stock PS1 portrait table has no entry for that graphic
+  and gives him portrait 0. The enhanced roster menus now resolve locked looks and configured character and monster
+  graphics before the existing face aliases apply. They keep the game's palette and shared portrait mappings.
+  The offline check covers Lorne as a Bard and after changing jobs, Bryn, Elias, Hirame and the shared story portraits.
 - [x] Brave Story's pages for Gafgarion and Malak showed the faces of ReMixed's characters that share their numbers
   (ReMixed's character on Gafgarion's second sprite set, and Luso). Brave Story lists only the remaster's people, so it
   now gets their own faces back. Checked offline; not seen in the game yet. *small*

@@ -660,6 +660,14 @@ def check() -> list[str]:
                     if at < fade_at and op == 0x28 and params[6] == 0x63)
     if seated != [0xC0, 0xC2, 0xC4, 0xC6, 0xC8]:
         raise AssertionError(f"the river camp's battle run seats riders {[hex(u) for u in seated]}, not C0-C8")
+    # Its choice makes answer 1/2/3 team 0x00/0x10/0x20, then loops over chocobos C1,C3,...,C9. ReMixed's source
+    # accidentally replaced UnitAddress's var-0 pointer with the answer line number before the loop's IF and writes;
+    # the port drops that SET_VAR, leaving the address live through both the current-team and base-team stores.
+    if bytes.fromhex("af 00 00 78 00") in river:
+        raise AssertionError("the river camp's chocobo-team loop still clobbers UnitAddress's pointer")
+    choice_loop = bytes.fromhex("e6 00 72 c2 c1 00 01")
+    if river.count(choice_loop) != 1 or river.count(bytes.fromhex("c4 01 ba 01 00 01")) != 1:
+        raise AssertionError("the river camp's choice no longer loops from chocobo C1 with its base-team write")
     goblins = sorted(params[0] for _, op, params in instructions(event(843))
                      if op == 0x28 and params[6] == 0x63 and 0xC0 <= params[0] <= 0xCF)
     if goblins != [0xC0, 0xC4, 0xC8]:
@@ -677,7 +685,8 @@ def check() -> list[str]:
             "Mandalia: no duplicate Ramza, prepared and visibly activated Luso + nine enemies, "
             "scene fade cleared, one victory -> recruitment, stable actors, "
             "four runtime lines valid",
-            "Riders: the river camp's battle run seats its five, 0x0FB's battle its three",
+            "Riders: the river camp's battle run seats its five, its choice keeps their team pointers, "
+            "0x0FB's battle seats its three",
             check_places(), check_primaries(), check_map_reloads(), check_yardrow_battle(), check_yuguo_woods(),
             check_extended_statuses(),
             check_bervenia()]

@@ -104,6 +104,7 @@ internal static unsafe class RemixedEvents
         {
             RemixedScenarios.MoveMessage((byte*)at);
             RemixedText.Alternate((byte*)at);
+            MirrorBaseTeamWrite((byte*)at, api.GetVariable, game.TurnCode.Units);
         });
         var presets = Path.Combine(Path.GetDirectoryName(typeof(RemixedEvents).Assembly.Location) ?? "", PresetsFileName);
         if (File.Exists(presets))
@@ -164,6 +165,30 @@ internal static unsafe class RemixedEvents
             foreach (var (table, stride, field, length) in SnapshotPlaces)
                 map(Snapshot + (uint)(table + stride * k), length, (nint)(unit + Ps1Memory.UnitField(field)));
         }
+    }
+
+    /// <summary>
+    /// Mirrors an event's SaveAddress to a battle unit's PS1 base-team byte (+0x1BA) into the remaster's live
+    /// base-team byte (+0x1EE). <see cref="Ps1Memory"/> deliberately keeps that field read-only because random-battle
+    /// setup event 0x191 clears every enemy team's bits there, which makes the remaster declare victory immediately;
+    /// its other events' deliberate team and control changes must still reach the live field. Called before the
+    /// instruction runs, after AlterParameter has patched its operands.
+    /// </summary>
+    internal static bool MirrorBaseTeamWrite(byte* instruction, Func<int, int> variable, byte* units)
+    {
+        const int saveAddress = 0xC4, baseTeam = 0x1BA, randomBattleSetup = 0x191;
+        if (instruction == null || instruction[0] != saveAddress || units == null
+            || variable(0x27) == randomBattleSetup || instruction[5] is not (0 or 1))
+            return false;
+        var source = instruction[1] & 0x7F;
+        var offset = instruction[2] | instruction[3] << 8;
+        var address = unchecked((uint)(variable(instruction[4] & 0x7F) + offset));
+        var relative = address - Ps1Memory.Units;
+        if (relative >= Ps1Memory.UnitCount * Ps1Memory.UnitSize || relative % Ps1Memory.UnitSize != baseTeam)
+            return false;
+        var slot = (int)(relative / Ps1Memory.UnitSize);
+        units[slot * Battle.UnitSize + Battle.UnitTeam] = (byte)variable(source);
+        return true;
     }
 
     /// <summary>

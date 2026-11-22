@@ -34,6 +34,11 @@ namespace IvaliceRemixed.Patches;
 /// remaster's are left (0x08, Gafgarion's second, as ReMixed's 0x11): ReMixed redrew part of EVTFACE, and which of its
 /// events name one isn't known.
 ///
+/// In the enhanced roster menus, use a locked look or a graphic with a configured face before the fold
+/// (<see cref="RosterFace"/>). Some of those graphics have no PS1 portrait of their own: Lorne's locked look draws the
+/// Bard through graphic 0x38, but the stock portrait table for 0x38 points to chapter-one Ramza. This choice leaves the
+/// portrait palette and the shared tables alone.
+///
 /// A message's portrait 1-8 (the PS1's EVTFACE portrait of the set event op 0x50 loaded) is a graphic from the set's
 /// row of a table (.rdata 0x7141E0, copied to [0x37A1348] by 0x2459E0, read by 0x221798 for the box record's face),
 /// which the fold then takes. Set 4's portrait 4 is Rafa's, as 0x19, so her boxes in the frog scene (event 270, style
@@ -58,6 +63,10 @@ internal static unsafe class RemixedFaces
     /// ret.</summary>
     internal const string GraphicOfPortraitPattern =
         "83 C9 FF 81 FA 9F 00 00 00 77 ?? 48 63 C2 48 8D 0D ?? ?? ?? ?? 8B 04 81 C3";
+    // The roster path in 0x2C06D4: mov edx, ebx (portrait); call 0x274028; cmp eax, esi; je; mov ebx, eax;
+    // cmp ebx, 0xCD; cmova ebx, esi. EBP still holds the roster slot.
+    internal const string RosterFaceCallPattern = "8B D3 E8 ?? ?? ?? ?? 3B C6 74 0B 8B D8 81 FB CD 00 00 00 0F 47 DE";
+    private const int RosterJob = 2, MonsterSpriteSet = 0x82, MonsterGraphic = 0x2E, LastUnitGraphic = 0xA9;
     /// <summary>A roster unit's PS1 portrait by its sprite set (.rdata 0x683A70, 0xD3 halfwords: the portrait, and its
     /// palette shifted left 10), read in 0x32AB3C (r15 the image): cmp ecx, 0xD3; jae; movsxd rax, ecx;
     /// movzx r11d, word [r15+rax*2+table]; mov al, r8b.</summary>
@@ -134,6 +143,8 @@ internal static unsafe class RemixedFaces
     /// <summary>The graphic Brave Story means by each number (<see cref="RemasterPeople"/>).</summary>
     private static readonly int[] People = Enumerable.Range(0, 0x100).ToArray();
     private static delegate* unmanaged<int, int> _fold; // the original
+    private static UnitTables _rosterUnits = null!;
+    private static delegate* unmanaged<nint, int, int> _graphicOfPortrait;
     private static delegate* unmanaged<nint, nint, int> _personFace, _chronicleFace; // the originals
     private static Log _log = null!;
     private static int _failed;
@@ -203,6 +214,15 @@ internal static unsafe class RemixedFaces
             game.Log.Error($"faces: the world menus' portraits not separated (a story character there can show the "
                            + $"face of ReMixed's character on its second sprite set): {e.Message}");
         }
+        try
+        {
+            InstallRosterFaces(game);
+            game.Log.Info("faces: the enhanced roster menus use ReMixed's custom and locked graphics");
+        }
+        catch (Exception e)
+        {
+            game.Log.Error($"faces: the enhanced roster menus cannot look up faces by graphic: {e.Message}");
+        }
         var people = RemasterPeople();
         var sets = new List<string>();
         try
@@ -232,6 +252,55 @@ internal static unsafe class RemixedFaces
         }
         return $"ReMixed's characters' faces ({given.Count} graphics, {apart.Count} with portraits of their own, "
                + $"{sets.Count} event face set entries and Brave Story's people the remaster's)";
+    }
+
+    private static void InstallRosterFaces(Game game)
+    {
+        var call = game.Image.FindUnique(RosterFaceCallPattern) + 2;
+        var original = game.Image.FindUnique(GraphicOfPortraitPattern);
+        if (GameImage.Rip(call, 1, 5) != original)
+            throw new InvalidDataException("the enhanced roster face calls a different portrait lookup");
+
+        _rosterUnits = game.Units;
+        _graphicOfPortrait = (delegate* unmanaged<nint, int, int>)original;
+
+        // The roster path resumes with EAX as its graphic and keeps only nonvolatile registers across the call.
+        byte[] code = [0x8B, 0xCD, 0x48, 0xB8, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF, 0xE0];
+        BitConverter.GetBytes((long)(nint)(delegate* unmanaged<int, int, int>)&RosterFace).CopyTo(code, 4);
+        var stub = GameImage.AllocateCodeNear(call, code.Length);
+        code.CopyTo(new Span<byte>(stub, code.Length));
+        byte[] redirect = [0xE8, 0, 0, 0, 0];
+        BitConverter.GetBytes(checked((int)((nint)stub - (call + redirect.Length)))).CopyTo(redirect, 1);
+        GameImage.WriteCode(call, redirect);
+    }
+
+    [UnmanagedCallersOnly]
+    private static int RosterFace(int slot, int portrait)
+    {
+        if ((uint)slot < UnitTables.RosterSlots)
+        {
+            var record = _rosterUnits.Roster + slot * UnitTables.RosterSize;
+            if (record[1] != 0xFF)
+            {
+                var sprite = (int)record[0];
+                if (UnitLooks.IsLocked(sprite))
+                {
+                    var look = UnitLooks.LockedGraphic(sprite, record[UnitLooks.RosterGenderAt]);
+                    if ((uint)look <= LastUnitGraphic)
+                        return look;
+                }
+                if (sprite < 0x80 && Faces[sprite] >= 0)
+                    return sprite;
+                var job = record[RosterJob];
+                if (sprite == MonsterSpriteSet && job < UnitTables.JobCount)
+                {
+                    var graphic = _rosterUnits.Jobs[job * UnitTables.JobSize + MonsterGraphic];
+                    if (Faces[graphic] >= 0)
+                        return graphic;
+                }
+            }
+        }
+        return _graphicOfPortrait(0, portrait);
     }
 
     /// <summary>Points each EVTFACE set's graphic (.rdata 0x7141E0, 8 sets of 8) that the mod gives one of ReMixed's

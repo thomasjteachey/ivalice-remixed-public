@@ -97,10 +97,9 @@ internal static unsafe class UnitLooks
     private static byte* _roster;
     private static delegate* unmanaged<int, nint, nint, int*, int> _portrait; // the original
 
-    /// <summary>A locked look's portrait is that of the look it draws as (<see cref="LockedGraphic"/>): for the call,
-    /// its record names that graphic as its sprite set (a generic's graphic, or Lorne's 0x38, is under 0x80, which the
-    /// table takes as it is); Bryn's Dancer and the monster look (0x83, 0x82) stay the game's, which gives them by job.
-    /// </summary>
+    /// <summary>Use a locked look's graphic as the PS1 portrait table index wherever it is under 0x80. Higher graphics
+    /// keep the stock job lookup. The enhanced roster menus resolve the effective graphic in <see cref="RemixedFaces"/>
+    /// because the PS1 portrait table does not cover every graphic, including Lorne's 0x38.</summary>
     [UnmanagedCallersOnly]
     private static int Portrait(int slot, nint drawn, nint palette8, int* palette)
     {

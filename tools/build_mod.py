@@ -2744,6 +2744,11 @@ EVENT_CODE_PATCHES: dict[int, list[tuple[bytes, bytes]]] = {
 # camera/reveal setup and returns to label 0, where the player can choose a loot set.
 EVENT_CODE_DROPS: dict[int, list[bytes | tuple[bytes, int]]] = {
     WHEEL: [(bytes.fromhex("10 10 82 0a 00 90 00 00 00 00 5c 00 00 00 00 e5 01 00"), 2)],
+    # At the river camp, each chocobo's UnitAddress puts its address in var 0, but the next SET_VAR replaced it with
+    # the chosen reply's message number before the event read and changed the chocobo's teams. Leave the address for
+    # the IF and the +5/+0x1BA writes. The same stray instruction is in ReMixed's PS1 event; the dialogue and the
+    # surrounding team-change loop make its intended result unambiguous.
+    0x0EE: [bytes.fromhex("af 00 00 78 00")],
     # The PS1 waits for input after the victory sound. The remaster's Victory screen already waits for
     # input, so drop the earlier Pause that would leave the battlefield onscreen with no prompt.
     0x115: [bytes([0x16])],
@@ -7958,7 +7963,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata. The title screen's plaque shows it (write_title_screen).
-RELEASE_VERSION = "0.9.30"
+RELEASE_VERSION = "0.9.31"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:
