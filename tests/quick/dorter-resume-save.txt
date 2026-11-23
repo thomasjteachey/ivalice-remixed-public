@@ -1,0 +1,24 @@
+# 1-A's last battle saved in mid-battle after an in-battle event, for dorter-resume-load.txt (a tester, 2026-11-22: the
+# battle resumed from its autosave had lost its failure and its victory). Run with
+#   python -I tools/quick_test.py --restart --stop tests/quick/dorter-resume-save.txt
+# The battle begun as in dorter-child-falls.txt; on the party's first turn var 0x27 is set to 0x2FE, as any in-battle
+# event leaves it (the Nemesis's return, a phase's event), the unit waits, and the game's autosave at the party's next
+# turn carries that.
+name 1-A's last battle saved after an in-battle event
+send testmode record
+wait world depth=1 state=0 timeout=30
+scenario 0x34B noted
+wait log "formation: screen open" timeout=120
+formation units=1
+wait log "scenario 0x34B's first walk, battle-start flag 1" press=RETURN every=2 timeout=120
+wait unit player=1 present=1 turn=1 timeout=180
+send setvar 0x27 0x2FE
+key DOWN wait=1.5
+key DOWN wait=1.5
+key RETURN wait=1.5
+wait seconds 3
+key RETURN wait=1.5
+wait seconds 20
+wait unit player=1 present=1 turn=1 timeout=300
+wait seconds 5
+expect var 0x4E 0x1FE034B

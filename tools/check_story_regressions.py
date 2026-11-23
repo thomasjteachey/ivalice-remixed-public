@@ -307,8 +307,13 @@ def check_map_reloads() -> str:
 
 def check_yardrow_battle() -> str:
     record = scenario_records()[YARDROW_BATTLE]
-    if record[2] != 26 or record[5:7] != bytes([0x08, 0x29]):
+    if record[2] != 26 or record[5:7] != bytes([0x08, 0x08]):
         raise AssertionError("Yardrow Armory's battle lost its map or music from the Preparation Menu")
+    # Every battle with a scenario of its own after its scene has its two tracks (build_mod.py battle_music): 1-A's
+    # last (0x34B) and Mount Bervenia's second (0x2EB) began in silence without them.
+    for scenario, tracks in ((0x34B, (0x0E, 0x0C)), (0x2EB, (0x2B, 0x63))):
+        if scenario_records()[scenario][5:7] != bytes(tracks):
+            raise AssertionError(f"scenario 0x{scenario:X}'s battle lost its music from the Preparation Menu")
     opening = [(op, params) for _, op, params in instructions(event(YARDROW_BATTLE))]
     clear_fade = [(0x4D, b"\x1e"), (0xF1, b"\x1e\x00"), (0x0D, b"\xff")]
     if not any(opening[i:i + len(clear_fade)] == clear_fade for i in range(len(opening))):

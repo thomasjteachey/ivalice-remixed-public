@@ -15,7 +15,7 @@ from the PS1. ReMixed's value is used.
 
 | Table | Entries written | Fields written | Decoder check | Conflicts | Left out |
 |---|--:|--:|--:|--:|--:|
-| JobData | 88 | 569 | 97.5% | 0 | 300 |
+| JobData | 88 | 578 | 97.5% | 0 | 300 |
 | JobNeedLevelData | 1 | 20 | 87.4% | 0 | 0 |
 | JobCommandData | 85 | 2040 | 99.6% | 4 | 172 |
 | MonsterJobCommandData | 19 | 28 | 99.0% | 2 | 0 |

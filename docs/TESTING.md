@@ -330,6 +330,11 @@ unit rides the first enemy, whose primary skillset becomes the Chocobo's (`skill
 self` is the rider's Choco Cure (`tests/quick/riding-charge.txt`); `ride` alone takes a second party unit as the mount,
 which the formation helper can't place yet.
 
+A battle continued from its mid-battle save takes two cases: one saves (`--restart --stop`; the game autosaves at the
+party's next turn), then `python -I tools/harness.py start --keep-saves` leaves that autosave for Continue and the
+second case presses Enter from the title into it (`tests/quick/dorter-resume-save.txt`, `dorter-resume-load.txt`: about
+five minutes for both). Give the loaded battle some 12 s before its first key.
+
 To check the Dispatch navigation soft lock, start the disposable Eagrose fixture and run the full catalog check:
 
 ```powershell

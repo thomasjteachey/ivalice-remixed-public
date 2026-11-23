@@ -111,7 +111,9 @@ internal static unsafe class RemixedSprites
                 left.Add($"0x{graphic:X2} (not a graphic)");
             else if (Textures[graphic] != now)
                 left.Add($"0x{graphic:X2} (its texture is {Textures[graphic]}, not {now})");
-            else if (AnimationSets[graphic] != setNow)
+            // The height byte may be ReMixed's already: HittingBodies gives the children's graphics (0x4A, 0x4B) theirs.
+            else if (AnimationSets[graphic] != setNow
+                     && AnimationSets[graphic] != ((setNow & 0x00FFFFFF) | (remixedSet & 0xFF000000)))
                 left.Add($"0x{graphic:X2} (its animation set is 0x{AnimationSets[graphic]:X8}, not 0x{setNow:X8})");
             else if (!File.Exists(path))
                 left.Add($"0x{graphic:X2} (no sheet)");

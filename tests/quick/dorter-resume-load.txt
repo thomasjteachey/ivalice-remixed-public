@@ -1,0 +1,22 @@
+# 1-A's last battle resumed from the autosave dorter-resume-save.txt left: it is scenario 0x34B again with its own
+# conditions (RemixedScenarios.KeepBattleMark), so a child's fall fails it. Run right after that case with
+#   python -I tools/harness.py start --keep-saves
+#   python -I tools/quick_test.py --stop tests/quick/dorter-resume-load.txt
+# From the title: Enter to the menu and on Continue, which loads the newest save, the battle's autosave.
+name 1-A's last battle resumed keeps its conditions
+send testmode record
+wait seconds 20
+wait log "a battle resumed from a save is scenario 0x34B again, with its conditions 0x1FD" press=RETURN every=6 timeout=180
+expect var 0x27 0x34B
+wait unit player=1 present=1 turn=1 timeout=180
+wait seconds 12
+defeat 12
+key DOWN wait=1.5
+key DOWN wait=1.5
+key RETURN wait=1.5
+wait seconds 3
+key RETURN wait=1.5
+wait log "condition set 2 fires" timeout=120
+wait log "message \d+ shown" timeout=90
+wait seconds 10
+advance world every=2

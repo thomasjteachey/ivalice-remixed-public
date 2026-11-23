@@ -2764,7 +2764,35 @@ EVENT_CODE_DROPS: dict[int, list[bytes | tuple[bytes, int]]] = {
 # before Agrias's story (its narration, message 0x1C). Seen on the PC both ways.
 EVENT_CODE_MOVES: dict[int, tuple[bytes, bytes, bytes]] = {
     0xEC: (bytes([0xAF, 0x00, 0x00, 0xFC, 0x01]), bytes([0xAE, 0x31, 0x00, 0x05, 0x00]),
-           bytes([0x10, 0x10, 0x0B, 0x1C, 0x00, 0x01]))}
+           bytes([0x10, 0x10, 0x0B, 0x1C, 0x00, 0x01])),
+    # 1-A's last battle, a child falling (0x119's blocks 2 and 3): ReMixed patches the fallen child in as the speaker
+    # of its cry (PATCH_NEXT 04, var 0x70) before the script-version pick, so the patch lands on that pick's first
+    # instruction (SET var 0x71, 1: four parameter bytes) and overwrites the opcode after it. The PS1's code happens
+    # to fall back into step two instructions on (the cry then comes from unit 0x80, a goblin); the port's doesn't
+    # (its pick reads a constant, SCRIPT_VERSION): the block ran to the event's END without loading the failure's
+    # conditions, the child's fall ran it again, and the battle hung there for good (a tester on the Deck,
+    # 2026-11-22: a black screen; seen in the hidden PC game as event 766 loaded every 16 s). The patch goes with the
+    # MESSAGE's other one, so the child speaks. No other PATCH_NEXT in ReMixed's events misses its instruction
+    # (patch_next_targets checks each).
+    0x119: (bytes([0xE6, 0x04, 0x70]), bytes([0xAE, 0x71, 0x00, 0x01, 0x00]), bytes([0xE6, 0x42, 0x71]))}
+
+
+def patch_next_targets(code: bytes, lengths: bytes, event: int) -> None:
+    """Stop the build on a PATCH_NEXT (0xE6) that writes past the parameters of the instruction it patches (the next
+    one that isn't a PATCH_NEXT): it would overwrite the instruction after, as 0x119's did (EVENT_CODE_MOVES)."""
+    at = 0
+    while at < len(code):
+        op = code[at]
+        if op == 0xE6:
+            target = at + 3
+            while target < len(code) and code[target] == 0xE6:
+                target += 3
+            if target < len(code) and (code[at + 1] & 0x3F) + (code[at + 1] >> 6) + 1 > lengths[code[target]]:
+                sys.exit(f"ReMixed's event 0x{event:X}: the PATCH_NEXT at 0x{at:X} writes past instruction "
+                         f"0x{code[target]:02X}'s parameters (patch_next_targets)")
+        if op == 0xDB:  # END: nothing after it is code
+            break
+        at += 1 + lengths[op]
 
 
 def drop_code(code: bytes, lengths: bytes, drops: list[bytes | tuple[bytes, int]] | None) -> bytes:
@@ -3883,10 +3911,22 @@ BATTLE_SPLITS = {
     0xEA: 0x34D,
     0xF8: 0x2EB,
 }
-# Yardrow's Preparation Menu passes its two battle tracks in var 0x3C (0x0808 + 0x21).
-# The town's scenario has zeroes there because its scene plays its own music.
+# A battle's two tracks. ReMixed's battles after a scene take them from its Preparation Menu, which reads the battle's
+# record as the scene's opening leaves it in vars 0x3A-0x3C: SETHI var 0x3C's value is the record's bytes 10 and 11,
+# the track before the battle (8 in most) and the battle's own, which is also the last track the scene's intro on the
+# battle's map starts (0x0F4 8, 0x0F7 0x5C, 0x0F8 0x63, 0x0FB 0x0C; read 2026-11-22). The scene's own record has
+# zeroes there (it plays its own music, and fades it out as it ends), so a battle with a scenario of its own
+# (BATTLE_SPLITS) gets them in its record; the others are given theirs by the code mod at the battle's run
+# (RemixedScenarios.PrepareMenuBattle). Without them the battle began in silence, or with the scene's last track
+# until something stopped it (a tester, 2026-11-22: Mount Bervenia's battle and 1-A's last). Yardrow's armory battle
+# (0x0F4) had (8, 0x29) by hand until then, its second track misread from the low half; it's (8, 8), as ReMixed's.
 YARDROW_ARMORY = 0xF4
-YARDROW_BATTLE_MUSIC = bytes([0x08, 0x29])
+
+
+def battle_music(code: bytes) -> bytes | None:
+    """The two tracks a ReMixed scene's opening sets for its battle (SETHI var 0x3C, hi: its low and high byte)."""
+    at = code.find(bytes([0xAC, 0x3C, 0x00]))
+    return bytes([code[at + 3], code[at + 4]]) if at >= 0 and code[at + 3] and code[at + 4] else None
 # A map reload in an event (0x4C) loads the map and puts the units of the battle entry var 0x32 names in battle units
 # 0-15, on the PS1 and in the remaster (the setup 0x3044EC/0x30476C: [0x1856930] = var 0x32, its ENTD file, its
 # records through 0x28416C). ReMixed's code may set var 0x32 to one of its own entry numbers first: 0x0F4's opening
@@ -5495,8 +5535,8 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
             setup = opening_sets(raw_code, lengths, (MENU_ENTRY_VAR, MENU_MAP_VAR))
             record[2] = setup.get(MENU_MAP_VAR, record[2])
             record[7:9] = setup.get(MENU_ENTRY_VAR, u16(record, 7)).to_bytes(2, "little")
-            if theirs == YARDROW_ARMORY:
-                record[5:7] = YARDROW_BATTLE_MUSIC
+            if not any(record[5:7]):
+                record[5:7] = battle_music(raw_code) or bytes(2)
             # Its conditions: the scene's preset again, with the events it runs as the scene's run as the battle's. A
             # battle's opening starts through them ("var 0x1FD = 1 -> the event"), and with the scene's preset the
             # battle's start ran the scene again (seen on the PC), as did the preset its opening loads (0xCE).
@@ -5820,6 +5860,7 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
             ps1 = ps1.replace(MENU_CHECK + GOTO_END, MENU_CHECK + seats + MENU_FADE_IN + GOTO_END)
             remounted += bool(seats)
         ps1 = move_block(ps1, lengths, EVENT_CODE_MOVES.get(theirs))
+        patch_next_targets(ps1, lengths, theirs)
         ps1 = question_box(ps1, lengths, QUESTION_BOXES.get(theirs))
         ps1 = notice_boxes(ps1, lengths, NOTICE_MESSAGES.get(theirs))
         ps1 = timed_notice(ps1, TIMED_NOTICES.get(theirs))
@@ -6457,6 +6498,14 @@ REMIXED_SPRITES = {
     0x3B: "a woman in a purple and white robe (vanilla: Lede's second sprite set, unused)",
     0x46: "the purple-haired fighter again, 0x59's sheet (vanilla: a copy of the male Mystic)",
     0x47: "0x36's woman in other colours (vanilla: a copy of the female Summoner)",
+    # The children: vanilla's 10M and 10W sheets are a scene's (type2 frames and animations: walking, a few poses),
+    # and the remaster's redraws of them are too. ReMixed fields a boy and a girl as guests in 1-A's last battle
+    # (0x0FB), on sheets of its own with a battle unit's frames (type1, and shorter: height 0x18). On the remaster's
+    # art they stood there unseen but when walking or in water, with no face, and the camera had nothing to find
+    # for the scene of one falling (a tester, 2026-11-22; seen in the hidden PC game). ReMixed draws vanilla's scenes
+    # with these sheets too, so they take ReMixed's art everywhere.
+    0x4A: "a boy, with a battle unit's frames (vanilla: 10M.SPR, a scene's sheet)",
+    0x4B: "a girl, with a battle unit's frames (vanilla: 10W.SPR, a scene's sheet)",
     0x35: "a purple-haired fighter in green (vanilla: a copy of the female Chemist)",
     0x39: "a figure in a dark hooded cloak (vanilla: a copy of the male Squire)",
     0x57: "a grey dragon (vanilla: a copy of the male Squire); ReMixed's 0x198 and 0x1B2, the mod's 0x1F3",
@@ -6504,6 +6553,7 @@ REMASTER_ANIMATION_SETS, REMASTER_GRAPHICS = 0x673300, 0xAA
 SPRITE_TEXTURES = {0x11: (0x362, 0x45A), 0x12: (0x368, 0x460), 0x19: (0x366, 0x45C), 0x34: (0x392, 0x45E),
                    0x35: (0x394, 0x394), 0x36: (0x396, 0x396), 0x37: (0x398, 0x398), 0x39: (0x39C, 0x39C),
                    0x3A: (0x39E, 0x462), 0x3B: (0x3A0, 0x464), 0x46: (0x3B4, 0x3B4), 0x47: (0x402, 0x466),
+                   0x4A: (0x3BA, 0x3BA), 0x4B: (0x3BC, 0x3BC),
                    0x57: (0x3D4, 0x3D4), 0x58: (0x3D6, 0x3D6), 0x59: (0x3D8, 0x3D8), 0x5A: (0x3DA, 0x3DA),
                    0x5D: (-1, 0x370), 0x5E: (-1, 0x3DC), 0x5F: (-1, 0x3DE), 0x97: (0x44E, 0x44E),
                    0x98: (0x450, 0x450), 0x9F: (0x456, 0x39A)}
@@ -8031,11 +8081,18 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
                 if changed.pop(f, None) is not None:
                     result.skipped.append((rid, f, f"graphic {graphic} (sprite 0x{graphic + MONSTER_GRAPHICS:02X}) "
                                                    "is ReMixed's art the mod doesn't ship"))
+        elif rid >= 0x5E and "MonsterGraphic" in changed and graphic:
+            # The remaster draws a monster by its job's portrait byte, which holds the graphic's own number (its
+            # record's +0x2E into the unit's +0x18F, 0x27xxxx's unit build; the PS1's graphic byte goes to +0x18E):
+            # with only the graphic written, ReMixed's Tonberry (job 0x98, the Holy Dragon's) still drew as the
+            # Dragon, 0x94 (a tester, 2026-11-22: green dragons with a Tonberry's abilities; seen in the hidden PC
+            # game), and its jobs 0x92 and 0x95, whose byte the remaster leaves 0, had no graphic at all.
+            changed["MonsterPortrait"] = graphic + MONSTER_GRAPHICS
 
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata. The title screen's plaque shows it (write_title_screen).
-RELEASE_VERSION = "0.9.33"
+RELEASE_VERSION = "0.9.34"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:

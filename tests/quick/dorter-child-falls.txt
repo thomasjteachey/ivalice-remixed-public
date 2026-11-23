@@ -1,0 +1,30 @@
+# 1-A's last battle (ReMixed's 0x0FB, its battle the mod's 0x34B): a child falling fails it. A tester's game hung on a
+# black screen there (2026-11-22): 0x119's block for it ran to its END without loading the failure's conditions, so the
+# fall ran it again for good (build_mod.py EVENT_CODE_MOVES, 0x119). Run with
+#   python -I tools/quick_test.py --restart --stop tests/quick/dorter-child-falls.txt
+# The battle at its battle's run (its scene noted as seen), one unit placed (the test save has no Agrias, whom the
+# battle brings itself), the first child (battle unit 12, battle id 0x98) downed: the block runs once, the child's cry
+# shows, and the failure goes back to the world map (ReMixed's game-over menu's third choice; the mod has no such menu).
+name A child falls in 1-A's last battle
+send testmode record
+wait world depth=1 state=0 timeout=20
+scenario 0x34B noted
+wait log "formation: screen open" timeout=120
+formation units=1
+wait log "condition set 0 fires" press=RETURN every=2 timeout=120
+wait unit player=1 present=1 turn=1 timeout=180
+wait seconds 6
+expect unit battle_id=0x98 present=1
+shot children
+defeat 12
+# The conditions are walked as a turn ends: if the party's unit is up first, it waits (Wait, then its facing).
+key DOWN wait=1.5
+key DOWN wait=1.5
+key RETURN wait=1.5
+wait seconds 3
+key RETURN wait=1.5
+wait log "condition set 2 fires" timeout=120
+wait log "message \d+ shown" timeout=90
+wait seconds 10
+shot child-cry
+advance world every=2

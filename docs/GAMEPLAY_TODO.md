@@ -387,6 +387,48 @@ battle, Testing).
 From the testers' 0.9.17 playthrough (2026-11-18, evening: chapter 2 cleared with no crashes, then side chapter 1-A;
 the Lionel scene's event art and Two Shots have sessions of their own):
 
+- [x] 1-A's last battle hung on a black screen when a child fell (a tester on the Deck, 2026-11-22: a red chocobo's
+  Choco Meteor, then nothing answered, fast-forward included). ReMixed's event for the fall names the fallen child as
+  the speaker of its cry one instruction too early, so it overwrote the next instruction instead. The PS1's script
+  happens to fall back into step; the port's ran to its end without loading the failure, the fall started it again,
+  and so on for good (seen in the hidden PC game: the event loaded afresh every 16 seconds). The child now speaks its
+  line and the failure goes back to the world map (ReMixed's own game-over menu isn't ported; this is its third
+  choice). Every such write in ReMixed's events was checked: this was the only one out of place, and the build now
+  stops on another. Seen in the hidden PC game (`tests/quick/dorter-child-falls.txt`): the first child downed, "Child:
+  M-mother...", and the world map 14 seconds later. Still wrong: the map is black behind the cry's boxes. *high*
+- [x] A ReMixed battle continued from its mid-battle save lost its conditions (a tester, 2026-11-22: in 1-A's last
+  battle a child fell and nothing happened, then the other, then the battle went on with no enemy left while the
+  children's bodies turned to treasure). The remaster doesn't save a battle's conditions: it sets a continued battle
+  up again from the last event that ran in it, which in ReMixed's battles is an in-battle event (the Nemesis's
+  return, a phase's scene) whose own conditions are others or none. Each ReMixed battle now keeps its scenario and the
+  conditions it has loaded in the save (a variable neither game uses), and a continued battle gets both back before
+  its first check. This covers every ReMixed battle (its 108 condition sets, story battles, missions and rounds), not
+  only this one. Seen in the hidden PC game (`tests/quick/dorter-resume-save.txt`, then `dorter-resume-load.txt`):
+  before the fix the continued battle took event 0x2FE's conditions; now it is scenario 0x34B with its own, a child's
+  fall fails it, and the world map follows. A save made mid-battle on an earlier build still continues without them:
+  restart that battle. *high*
+- [x] The two children of 1-A's last battle stood unseen except while walking or in water, with no faces (a tester,
+  2026-11-22). ReMixed made its own sheets for the boy and the girl, with a battle unit's frames; the port had kept
+  the remaster's art for them, which is a scene's (walking and a few poses). They now take ReMixed's sheets, smoothed
+  like its other art, with faces from those sheets, wherever a boy or a girl of those two looks appears. Seen in the
+  hidden PC game (`tests/quick/dorter-child-falls.txt`): both children on the field, their faces on the timeline, and
+  the boy's face in his speech box. *medium*
+- [x] ReMixed's Tonberries drew as green dragons, with a Tonberry's abilities (a tester in 1-A, 2026-11-22). The
+  remaster draws a monster by the look its job names, and the port had written ReMixed's look in the wrong place of the
+  job, so the Tonberry kept the look of the job it replaced. The same mistake left two more of ReMixed's monster jobs
+  with no look at all: its Holy Dragon (a dragon in other colours) and the big chocobo's job. All nine monster jobs
+  whose look ReMixed changed now name it where the remaster reads it. Seen in the hidden PC game
+  (`tests/quick/tonberry-looks.txt`): the three in 1-A's desert battle are Tonberries, with their faces on the
+  timeline. The other two jobs are checked in the built table, not seen in the game. *medium*
+- [x] No music in ReMixed's battles that follow their own scene (a tester, 2026-11-22: Mount Bervenia's battle had
+  none, and 1-A's last lost its music partway). ReMixed's scene fades its own track out and its Preparation Menu
+  starts the battle's two (one before the battle, one in it); the port has no such menu and gave those battles no
+  tracks. Every such battle now has ReMixed's two: 1-A's nine battles after a scene, the Argath campaign's seven, Luso's
+  at Araguay, and the four with a scenario of their own (Yardrow's armory, 1-A's last, Mount Bervenia's second, Luso's
+  at Mandalia). Yardrow's second track had been set by hand to the wrong one (0x29 for 8). A continued battle starts
+  its track again too, as its setup reads the same place. Seen in the hidden PC game
+  (`tests/quick/bervenia-battle-music.txt`): after its scene Mount Bervenia's battle sets up with tracks 8 and 0x5C.
+  The hidden game is muted, so nobody has heard it yet: to hear on the Deck. *medium*
 - [x] After 1-A's opening was chained directly into Bryn and Lorne's recruitment, it returned to Zeltennia at story
   progress 2 while the world-map rows that reveal Finnath Creek and its route still required progress 0. The objective
   named Finnath, but the party had nowhere it could travel. The opening route is now eligible through progress 2,

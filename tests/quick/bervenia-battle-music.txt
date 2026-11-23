@@ -1,0 +1,12 @@
+# Mount Bervenia's first battle (ReMixed's 0x0F7, the mod's 0x2EA) gets its two tracks at the battle's run: its scene
+# leaves them in var 0x3C for ReMixed's Preparation Menu, and fades its own music out (a tester, 2026-11-22: the battle
+# had no music). Run with
+#   python -I tools/quick_test.py --restart --stop tests/quick/bervenia-battle-music.txt
+# The scene from the world map at five times the speed, Enter through its lines, to the battle's setup. The hidden
+# game is muted: the check is the record's tracks as the setup reads them (8 before the battle, 0x5C in it).
+name Mount Bervenia's battle has its tracks
+wait world depth=1 state=0 timeout=30
+send speed 5
+scenario 0x2EA
+wait log "scenario 0x2EA's battle plays tracks 0x08 and 0x5C \(the scene's, var 0x3C\)" press=RETURN every=1.5 timeout=420
+wait log "formation: screen open" timeout=120

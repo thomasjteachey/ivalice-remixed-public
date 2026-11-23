@@ -1,0 +1,14 @@
+# ReMixed's Tonberries (job 0x98, the Holy Dragon's slot) draw as Tonberries: graphic 0x98, ReMixed's sheet. A tester
+# saw green dragons with a Tonberry's abilities (2026-11-22): the remaster draws a monster by its job's portrait byte,
+# which the build held back (build_mod.py hold_custom_monster_graphics). Run with
+#   python -I tools/quick_test.py --restart --stop tests/quick/tonberry-looks.txt
+# 1-A's battle with three of them (ReMixed's 0x0FA, the mod's 0x2ED) at its battle's run.
+name Tonberries draw as Tonberries
+wait world depth=1 state=0 timeout=30
+scenario 0x2ED noted
+wait log "formation: screen open" timeout=120
+formation units=1
+wait log "condition set 0 fires" press=RETURN every=2 timeout=120
+expect unit job=0x98 graphic=0x98 count=3
+wait seconds 14
+shot battle

@@ -468,6 +468,7 @@ internal static unsafe class RemixedScenarios
     {
         ResetVictoryObservation();
         _lookupsAliased = 0;
+        _battleMarkPending = true;
         try
         {
             PrepareSplitBattle(Nemesis.GetVariable(0x27));
@@ -617,6 +618,9 @@ internal static unsafe class RemixedScenarios
         }
         GameButtons();
         WorldFrames++;
+        // No battle on the world map: its mark goes, so a later battle's setup can't be taken for its resuming.
+        if (Nemesis.GetVariable != null && Nemesis.SetVariable != null && Nemesis.GetVariable(BattleMarkVariable) != 0)
+            Nemesis.SetVariable(BattleMarkVariable, 0, 0);
         // A save is loaded after the rules install. Repair old 1-A records here, once a second, so the three
         // Lionsguard are available in the party menu before another battle is started.
         if (WorldFrames % 60 == 1)
@@ -889,6 +893,14 @@ internal static unsafe class RemixedScenarios
     [UnmanagedCallersOnly]
     private static long Walk()
     {
+        try
+        {
+            KeepBattleMark(); // first: a resumed battle is itself again before anything reads var 0x27
+        }
+        catch (Exception e)
+        {
+            _log.Error($"remixed scenarios: the battle's mark: {e.Message}");
+        }
         var request = Interlocked.Exchange(ref _requestedEventPhase, 0);
         if (request != 0)
         {
@@ -918,6 +930,100 @@ internal static unsafe class RemixedScenarios
         if (fired != 0)
             Rerun();
         return fired;
+    }
+
+    /// <summary>A save-carried event variable neither game's events nor the exe name (read 2026-11-22: ReMixed's 512
+    /// events, the remaster's 560 scripts, the decompile's direct reads): the battle's scenario in its low half and the
+    /// preset its conditions were last loaded from, plus one, in its high half (<see cref="KeepBattleMark"/>).</summary>
+    internal const int BattleMarkVariable = 0x4E;
+    /// <summary>The battle-start flag every opening set tests ("var 0x1FD = 1"): 1 at a new battle's first walk, 0 at
+    /// the first walk of one resumed from a save.</summary>
+    internal const int BattleStartFlag = 0x1FD;
+    private static bool _battleMarkPending;
+    private static int _markedPreset = -1;
+
+    /// <summary>
+    /// Keeps a ReMixed battle's scenario and conditions across a mid-battle save. The remaster doesn't save the
+    /// condition tables: a resumed battle is set up again from the record of the event var 0x27 names, which is the
+    /// last in-battle event run (the Nemesis's return, a phase event), not the battle. Its record names other
+    /// conditions or none, so a resumed battle lost its failure and its victory (a tester, 2026-11-22: 1-A's last
+    /// battle went on with a child down and again with no enemy left; seen in the hidden PC game: saved after event
+    /// 0x2FE, resumed as "scenario 0x2FE takes ReMixed's battle conditions 0x118"). So at each walk the battle's
+    /// scenario and the preset in the tables (found by its bytes, as events load others with 0xCE) go in
+    /// <see cref="BattleMarkVariable"/>; the first walk after a setup with the battle-start flag clear is a resumed
+    /// battle's, which gets var 0x27 and the tables back from it. A new battle's first walk writes its own.
+    /// </summary>
+    internal static void KeepBattleMark()
+    {
+        if (Nemesis.GetVariable == null || Nemesis.SetVariable == null || _presets == null)
+            return;
+        var pending = _battleMarkPending;
+        _battleMarkPending = false;
+        var mark = Nemesis.GetVariable(BattleMarkVariable);
+        if (pending && Nemesis.GetVariable(BattleStartFlag) == 0 && ResumedBattle(mark, out var scenario, out var preset))
+        {
+            Nemesis.SetVariable(0x27, scenario, 0);
+            LoadPreset(preset, scenario);
+            _markedPreset = preset;
+            _log?.Info($"remixed scenarios: a battle resumed from a save is scenario 0x{scenario:X} again, with its "
+                       + $"conditions 0x{preset:X} (var 0x{BattleMarkVariable:X})");
+            return;
+        }
+        var now = Nemesis.GetVariable(0x27);
+        if (pending)
+        {
+            // A new battle (or a scene): its own scenario, or none for one that isn't ReMixed's.
+            _markedPreset = -1;
+            _log?.Info($"remixed scenarios: scenario 0x{now:X}'s first walk, battle-start flag "
+                       + $"{Nemesis.GetVariable(BattleStartFlag)}, the mark 0x{mark:X}");
+            mark = Presets.ContainsKey(now) ? now : 0;
+        }
+        if ((mark & 0xFFFF) == 0)
+        {
+            if (Nemesis.GetVariable(BattleMarkVariable) != 0)
+                Nemesis.SetVariable(BattleMarkVariable, 0, 0);
+            return;
+        }
+        var loaded = LoadedPreset(_markedPreset);
+        if (loaded >= 0)
+            _markedPreset = loaded;
+        var next = (mark & 0xFFFF) | (_markedPreset + 1) << 16;
+        if (next != Nemesis.GetVariable(BattleMarkVariable))
+            Nemesis.SetVariable(BattleMarkVariable, next, 0);
+    }
+
+    /// <summary>A mark's scenario and preset, if it names one of ReMixed's scenarios and a preset the file has.</summary>
+    internal static bool ResumedBattle(int mark, out int scenario, out int preset)
+    {
+        scenario = mark & 0xFFFF;
+        preset = (mark >> 16 & 0xFFFF) - 1;
+        return scenario != 0 && Presets.ContainsKey(scenario) && _presets != null && preset >= 0
+               && (preset + 1) * RemixedEvents.PresetBytes <= _presets.Length;
+    }
+
+    /// <summary>The preset whose bytes the condition tables hold: <paramref name="guess"/> if it still matches, else
+    /// the first that does, or −1.</summary>
+    private static int LoadedPreset(int guess)
+    {
+        if (_presets == null || _sets == 0 || _records == 0)
+            return -1;
+        if (guess >= 0 && PresetLoaded(guess))
+            return guess;
+        for (var n = 0; (n + 1) * RemixedEvents.PresetBytes <= _presets.Length; n++)
+        {
+            if (PresetLoaded(n))
+                return n;
+        }
+        return -1;
+    }
+
+    private static bool PresetLoaded(int n)
+    {
+        const int bytes = RemixedEvents.PresetBytes, offsets = RemixedEvents.PresetOffsets;
+        return (n + 1) * bytes <= _presets!.Length
+               && new ReadOnlySpan<byte>((void*)_sets, offsets).SequenceEqual(_presets.AsSpan(n * bytes, offsets))
+               && new ReadOnlySpan<byte>((void*)_records, bytes - offsets)
+                   .SequenceEqual(_presets.AsSpan(n * bytes + offsets, bytes - offsets));
     }
 
     /// <summary>Queues a phase for the next battle condition walk. Available only through <see cref="Harness"/>, whose
@@ -1439,6 +1545,10 @@ internal static unsafe class RemixedScenarios
     /// up as the menu does.
     /// </summary>
     internal static readonly Dictionary<int, (ushort First, ushort Second, int[] Events)> MenuBattles = [];
+    /// <summary>A scenario record's two music tracks (+5, +6), and each of <see cref="MenuBattles"/>' own as the build
+    /// gave them (<see cref="PrepareMenuBattle"/>).</summary>
+    internal const int MusicAt = 5;
+    private static readonly Dictionary<int, (byte, byte)> MenuMusic = [];
 
     /// <summary>Before the setup reads the scenario's record (<see cref="Setup"/>): for a scenario of
     /// <see cref="MenuBattles"/>, its second run (var 0x3E names one of its events: its scene just ran and handed on to
@@ -1456,10 +1566,23 @@ internal static unsafe class RemixedScenarios
         var group = SecondGroup(battle.Second, SecondGroupsOn ? Nemesis.GetVariable(0x36) : 0);
         *(ushort*)(record + 9) = second ? battle.First : (ushort)0;
         *(ushort*)(record + 0xB) = second ? group : (ushort)0;
+        // Its two tracks, as the menu took them: the scene's opening leaves the battle's record in vars 0x3A-0x3C, its
+        // music in var 0x3C's high bytes (the build's battle_music). The scene fades its own track out as it ends, and
+        // the record has none (the scene's run plays its own), so the battle began in silence (a tester, 2026-11-22:
+        // Mount Bervenia's). The scene's run gets the record's own back.
+        if (!MenuMusic.TryGetValue(scenario, out var own))
+            MenuMusic[scenario] = own = (record[MusicAt], record[MusicAt + 1]);
+        var tracks = Nemesis.GetVariable(0x3C);
+        var (first, battleTrack) = ((byte)(tracks >> 16), (byte)(tracks >> 24));
+        var given = second && own == (0, 0) && first != 0 && battleTrack != 0;
+        record[MusicAt] = given ? first : own.Item1;
+        record[MusicAt + 1] = given ? battleTrack : own.Item2;
         if (second)
         {
             Nemesis.SetVariable(0x3A, noted, 0);
             Nemesis.SetVariable(0x3E, 0, 0);
+            _log?.Info($"remixed scenarios: scenario 0x{scenario:X}'s battle plays tracks 0x{record[MusicAt]:X2} and "
+                       + $"0x{record[MusicAt + 1]:X2}" + (given ? " (the scene's, var 0x3C)" : " (its record's)"));
         }
         _log?.Info($"remixed scenarios: scenario 0x{scenario:X} " + (second
             ? $"sets its battle up after event 0x{noted:X}'s scene (formations 0x{battle.First:X}, 0x{group:X})"
