@@ -387,6 +387,14 @@ battle, Testing).
 From the testers' 0.9.17 playthrough (2026-11-18, evening: chapter 2 cleared with no crashes, then side chapter 1-A;
 the Lionel scene's event art and Two Shots have sessions of their own):
 
+- [ ] Left from the same tester's 1-A (2026-11-22), each with what was found:
+  the dream's knight (ReMixed's 0x0F9) was reported with no sprite and no portrait on the Deck, and on the PC he
+  draws, with Orlandeau's face rather than a knight's; Agrias walking in place while Valmafra and Elias talk on
+  (the scene isn't found yet: 0x0F6 is the only one where Elias speaks, and she doesn't walk off there); the Dorter
+  to Zeklaus road grey though walkable after 1-A (its flag 0x236 and Zeklaus's 0x21C are both set by 1-A's end, so
+  the grey comes from another state of the world map's, not read yet); and the 1-A Agrias, Alicia and Lavian kept
+  beside chapter 2's new ones (ReMixed itself turns the 1-A three into chapter 2's guests; the port's chapter 2 makes
+  its own: a design choice to settle before building). *medium*
 - [x] 1-A's last battle hung on a black screen when a child fell (a tester on the Deck, 2026-11-22: a red chocobo's
   Choco Meteor, then nothing answered, fast-forward included). ReMixed's event for the fall names the fallen child as
   the speaker of its cry one instruction too early, so it overwrote the next instruction instead. The PS1's script
@@ -395,7 +403,13 @@ the Lionel scene's event art and Two Shots have sessions of their own):
   line and the failure goes back to the world map (ReMixed's own game-over menu isn't ported; this is its third
   choice). Every such write in ReMixed's events was checked: this was the only one out of place, and the build now
   stops on another. Seen in the hidden PC game (`tests/quick/dorter-child-falls.txt`): the first child downed, "Child:
-  M-mother...", and the world map 14 seconds later. Still wrong: the map is black behind the cry's boxes. *high*
+  M-mother...", and the world map 14 seconds later. *high*
+- [x] The scenes inside 1-A's last battle played over a black screen (a tester, 2026-11-22; left open in 0.9.34). The
+  scene before the battle fades the picture out, and ReMixed's Preparation Menu fades it back in; the port's battles
+  that have a scenario of their own do that themselves as they start, but only Yardrow's and Mount Bervenia's had been
+  given it. The battle's turns still drew, so it only showed when a scene started inside the battle. All four such
+  battles fade in now (Luso's at Mandalia has its own), and the build checks each. Seen in the hidden PC game
+  (`tests/quick/dorter-child-falls.txt`): the boy's cry over the map, the camera on him. *medium*
 - [x] A ReMixed battle continued from its mid-battle save lost its conditions (a tester, 2026-11-22: in 1-A's last
   battle a child fell and nothing happened, then the other, then the battle went on with no enemy left while the
   children's bodies turned to treasure). The remaster doesn't save a battle's conditions: it sets a continued battle

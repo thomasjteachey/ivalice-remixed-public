@@ -5827,8 +5827,12 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
             if scene is not None:
                 if theirs == 0xEA:
                     battle_start += MANDALIA_BATTLE_ACTIVATE
-                elif theirs in (YARDROW_ARMORY, 0xF8):
-                    # The scene fades out before handing off. The original menu clears this fade.
+                else:
+                    # The scene fades out before handing off, and ReMixed's menu clears that fade as it opens. Every
+                    # battle with a scenario of its own does so as it starts (MENU_FADE_IN): it was given only to
+                    # Yardrow's and Mount Bervenia's, and in 1-A's last (0x0FB) the turns drew, as the battle's own
+                    # screen does, but each scene inside it played over black (a tester, 2026-11-22: a black screen
+                    # as a child fell; seen in the hidden PC game with the scene's boxes over it).
                     battle_start += MENU_FADE_IN
             battle_start += bytes([0x0D, end_label])
             patches.append((bytes([0xCD, 0x81, PREPARATION_MENU & 0xFF, PREPARATION_MENU >> 8]),
@@ -8092,7 +8096,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata. The title screen's plaque shows it (write_title_screen).
-RELEASE_VERSION = "0.9.34"
+RELEASE_VERSION = "0.9.35"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:

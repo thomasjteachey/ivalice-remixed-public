@@ -314,10 +314,13 @@ def check_yardrow_battle() -> str:
     for scenario, tracks in ((0x34B, (0x0E, 0x0C)), (0x2EB, (0x2B, 0x63))):
         if scenario_records()[scenario][5:7] != bytes(tracks):
             raise AssertionError(f"scenario 0x{scenario:X}'s battle lost its music from the Preparation Menu")
-    opening = [(op, params) for _, op, params in instructions(event(YARDROW_BATTLE))]
-    clear_fade = [(0x4D, b"\x1e"), (0xF1, b"\x1e\x00"), (0x0D, b"\xff")]
-    if not any(opening[i:i + len(clear_fade)] == clear_fade for i in range(len(opening))):
-        raise AssertionError("Yardrow Armory's opening does not clear and wait out the town scene's fade")
+    # Each battle with a scenario of its own fades the picture in as it starts, as ReMixed's menu did: without it the
+    # scenes inside 1-A's last battle (0x34B) played over black. The label is the event's end (0x2EB's is 0xFA).
+    for battle, end in ((YARDROW_BATTLE, 0xFF), (0x34B, 0xFF), (0x2EB, 0xFA)):
+        opening = [(op, params) for _, op, params in instructions(event(battle))]
+        clear_fade = [(0x4D, bytes([0x1E])), (0xF1, bytes([0x1E, 0x00])), (0x0D, bytes([end]))]
+        if not any(opening[k:k + len(clear_fade)] == clear_fade for k in range(len(opening))):
+            raise AssertionError(f"scenario 0x{battle:X}'s opening does not clear and wait out its scene's fade")
     mesh = SCRIPT.parents[1] / "bg" / "meshes" / "map_026_mesh.bin"
     if b"_panel_ui\x00" not in mesh.read_bytes():
         raise AssertionError("Yardrow Armory's enhanced mesh has no tile highlights")
