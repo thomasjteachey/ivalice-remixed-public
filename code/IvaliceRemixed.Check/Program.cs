@@ -5110,26 +5110,47 @@ internal static unsafe class SelfTest
             Check($"a man's locked Mime look (0xB6), past Lorne's and Bryn's, as 0x{Pick(0xB6, 0x80, 0x4A):X2}; a locked "
                   + $"Ninja woman's (0xAE) as 0x{Pick(0xAE, 0x40, 0x4A):X2}", Pick(0xB6, 0x80, 0x4A) == 0x84 && Pick(0xAE, 0x40, 0x4A) == 0x7F);
         }
-        // The job list's base job (0x2864AC), through its stub's probe: a locked look starts at the Squire like a generic.
-        if (UnitLooks.JobListProbe == 0)
-            Check("the job list isn't patched", false);
+        if (UnitLooks.JobListAt == 0 || UnitLooks.AbilityBaseJobAt == 0)
+            Check("the base-job lookups aren't patched", false);
         else
         {
-            var probe = (delegate* unmanaged<long, long, byte*, int, int>)UnitLooks.JobListProbe;
-            var record = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(8);
-            int Base(int sprite, short job)
+            var getJobs = (delegate* unmanaged<ushort*, int, byte*, int>)UnitLooks.JobListAt;
+            var records = (byte**)GameImage.Rip(UnitLooks.AbilityBaseJobAt + 4, 3, 7);
+            var getAbilityBaseJob = (delegate* unmanaged<short, int>)UnitLooks.AbilityBaseJobAt;
+            ushort* jobs = stackalloc ushort[24];
+            byte* listRecord = stackalloc byte[5];
+            listRecord[3] = 0;
+            listRecord[4] = 1; // list only the base job
+            byte* menuRecord = stackalloc byte[0x73];
+            var previous = records[0];
+            records[0] = menuRecord;
+            try
             {
-                *(short*)record = job;
-                return probe(0, 0, record, sprite);
+                const short monsterJob = 0x5E;
+                *(short*)listRecord = monsterJob;
+                *(short*)(menuRecord + 0x24) = monsterJob;
+                var mismatches = new List<string>();
+                for (var sprite = 0; sprite <= byte.MaxValue; sprite++)
+                {
+                    listRecord[2] = menuRecord[0x72] = (byte)sprite;
+                    var expected = sprite switch
+                    {
+                        0x82 => monsterJob,
+                        0x80 or 0x81 or (>= 0x90 and <= 0xA1) or >= 0xAA => 0x4A,
+                        _ => sprite,
+                    };
+                    var count = getJobs(jobs, 0, listRecord);
+                    var abilityJob = getAbilityBaseJob(0);
+                    if (count != 1 || jobs[0] != expected || jobs[1] != 0xFFFF || abilityJob != expected)
+                        mismatches.Add($"sprite {sprite:X2}: list {jobs[0]:X2}, abilities {abilityJob:X2}, expected {expected:X2}");
+                }
+                Check("the party and equipment lists agree for every sprite set, including all locked looks"
+                      + (mismatches.Count == 0 ? "" : $"; {string.Join("; ", mismatches)}"), mismatches.Count == 0);
             }
-            var site = (byte*)UnitLooks.JobListAt;
-            Check($"the job list's base job: Lorne 0x{Base(0xB4, 0x5B):X}, Bryn 0x{Base(0xB5, 0x5C):X}, a locked Knight "
-                  + $"0x{Base(0x94, 0x4C):X}, a generic 0x{Base(0x80, 0x50):X}, a monster 0x{Base(0x82, 0x5E):X}, Agrias "
-                  + $"0x{Base(0x1E, 0x1E):X}, the remaster's 0xA5 0x{Base(0xA5, 0x4A):X}; its case jumps away ({site[0]:X2} {site[1]:X2})",
-                  Base(0xB4, 0x5B) == 0x4A && Base(0xB5, 0x5C) == 0x4A && Base(0x94, 0x4C) == 0x4A && Base(0x80, 0x50) == 0x4A
-                  && Base(0x82, 0x5E) == 0x5E && Base(0x1E, 0x1E) == 0x1E && Base(0xA5, 0x4A) == 0xA5
-                  && site[0] == 0x48 && site[1] == 0xB8);
-            System.Runtime.InteropServices.NativeMemory.Free(record);
+            finally
+            {
+                records[0] = previous;
+            }
         }
         saved.CopyTo(new Span<byte>(unit, Battle.UnitSize));
         UnitLooks.Clear();

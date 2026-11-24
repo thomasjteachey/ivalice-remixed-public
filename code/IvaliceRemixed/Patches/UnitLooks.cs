@@ -74,7 +74,7 @@ internal static unsafe class UnitLooks
             at, (nint)(delegate* unmanaged<int, byte*, byte*, void>)&Recompute, "the graphic's recompute");
         RecomputeAt = at;
         PatchPicker(game.Image);
-        PatchJobList(game.Image);
+        PatchBaseJobs(game.Image);
         _roster = game.Units.Roster;
         PortraitAt = game.Image.FindUnique(PortraitPattern);
         _portrait = (delegate* unmanaged<int, nint, nint, int*, int>)game.Hooks.Hook(
@@ -203,82 +203,77 @@ internal static unsafe class UnitLooks
         return a.Build();
     }
 
-    /// <summary>The job list's base job (0x2864AC: the list, its mode, a unit's record: +0 its job, +2 its sprite set,
-    /// +3 its gender), from 0x2864DD: the generics (0x80, 0x81) start at the Squire (0x4A), a monster (0x82) at its own
-    /// job, anyone else at the job of the sprite set's number, as the remaster's special characters are (Agrias 0x1E is
-    /// job 0x1E). ReMixed's locked looks broke that: Lorne's 0xB4 became job 0xB4, past the job table's 0xAE rows, and the
-    /// list's next call (0x2867BC) read address 0 (exe+0x286826) as the Units screen opened or his abilities showed (the
-    /// Bardsong crash, seen on the Deck with 0.9.7 and in the hidden PC game, 2026-11-18); one under 0xAE got a story
-    /// character's list. 33 bytes: sub r10d, 0x80; je; sub r10d, 1; je; cmp r10d, 1; jne; movsx r9d, word [r8]; jmp;
-    /// mov r9d, 0x4A.</summary>
-    internal const string JobListPattern =
-        "45 0F B6 48 02 49 8B F8 45 8B D1 44 8B E2 4C 8B F9 41 81 EA 80 00 00 00 74 12 41 83 EA 01 74 0C " +
-        "41 83 FA 01 75 0C 45 0F BF 08 EB 06 41 B9 4A 00 00 00 B9 00 40 00 00";
-    internal const int JobListCaseAt = 0x11, JobListCaseBytes = 0x21;
+    // These five copies classify 0x80/0x81 as Squire, 0x82 as the monster's actual job and other sprites as jobs.
+    // Locked looks have their own sprite IDs, so using them as jobs can index past the job table. The two preview
+    // builders use the same classification to choose the generic job display.
+    private static readonly (string Pattern, int Offset, bool UsesR10)[] BaseJobCases =
+    [
+        // 0x2864AC: the party job list, including the Bardsong crash at 0x286826.
+        ("48 8B C4 48 89 58 10 48 89 68 18 48 89 70 20 48 89 48 08 57 41 54 41 55 41 56 41 57 48 83 EC 20 " +
+         "45 0F B6 48 02 49 8B F8 45 8B D1 44 8B E2 4C 8B F9 41 81 EA 80 00 00 00 74 12 41 83 EA 01 74 0C " +
+         "41 83 FA 01 75 0C 45 0F BF 08 EB 06 41 B9 4A 00 00 00 B9 00 40 00 00", 0x31, true),
+        // 0x2863E4: the shared menu lookup, including the empty Reaction slot crash at 0x28A42C.
+        ("48 0F BF C1 4C 8D 05 ?? ?? ?? ?? 4D 8B 04 C0 41 0F B6 50 72 8B CA 81 E9 80 00 00 00 74 11 " +
+         "83 E9 01 74 0C 83 F9 01 75 0C 41 0F BF 50 24 EB 05 BA 4A 00 00 00 8B C2 C3", 0x16, false),
+        // 0x39254A: the older ability screen's job list, consumed by 0x392620.
+        ("41 0F B6 50 72 49 8D 40 78 8B CA 48 89 05 ?? ?? ?? ?? 81 E9 80 00 00 00 74 11 " +
+         "41 2B CF 74 0C 41 3B CF 75 0C 41 0F BF 50 24 EB 05 BA 4A 00 00 00 66 89 15", 0x12, false),
+        // 0x2C18DB: the equipment preview's job display.
+        ("41 0F B6 57 02 44 0F BF 46 02 8B CA 41 8A 07 44 89 45 B8 88 45 C0 81 E9 80 00 00 00 74 0F " +
+         "83 E9 01 74 0A 83 F9 01 75 0A 41 8B D0 EB 05 BA 4A 00 00 00 89 55 BC", 0x16, false),
+        // 0x337AA2: the shop equipment comparison's job display.
+        ("0F B6 51 72 8B CA 88 85 78 01 00 00 81 E9 80 00 00 00 74 1B 83 E9 01 74 16 83 F9 01 74 08 " +
+         "89 95 74 01 00 00 EB 13 44 89 85 74 01 00 00 EB 0A C7 85 74 01 00 00 4A 00 00 00", 0x0C, false),
+    ];
 
-    /// <summary>The job list's patched base job, for the offline check: where its case was, and a copy of its stub that
-    /// returns the base job in eax in place of going back (call it as (0, 0, record, sprite set)).</summary>
+    // Function entries for the offline check.
     internal static nint JobListAt { get; private set; }
-    internal static nint JobListProbe { get; private set; }
+    internal static nint AbilityBaseJobAt { get; private set; }
 
-    /// <summary>
-    /// The job list (0x2864AC) takes a locked look as a generic, starting at the Squire: its base-job case becomes a jump
-    /// (mov rax, stub; jmp rax) to <see cref="JobListCode"/>, which ends with a jump back past the case. rax is free there
-    /// (written before it's read again) and r10 isn't read after the case.
-    /// </summary>
-    private static void PatchJobList(GameImage image)
+    private static void PatchBaseJobs(GameImage image)
     {
-        var at = image.FindUnique(JobListPattern) + JobListCaseAt;
-        var code = JobListCode(at + JobListCaseBytes);
-        var stub = GameImage.AllocateCode(code.Length);
-        code.CopyTo(new Span<byte>(stub, code.Length));
-        var probe = JobListCode(0);
-        var probeStub = GameImage.AllocateCode(probe.Length);
-        probe.CopyTo(new Span<byte>(probeStub, probe.Length));
-        var jump = new byte[JobListCaseBytes];
-        Array.Fill(jump, (byte)0xCC);
-        jump[0] = 0x48; // mov rax, stub
-        jump[1] = 0xB8;
-        BitConverter.GetBytes((long)stub).CopyTo(jump, 2);
-        jump[10] = 0xFF; // jmp rax
-        jump[11] = 0xE0;
-        GameImage.WriteCode(at, jump);
-        JobListAt = at;
-        JobListProbe = (nint)probeStub;
+        var entries = BaseJobCases.Select(site => image.FindUnique(site.Pattern)).ToArray();
+        for (var i = 0; i < entries.Length; i++)
+        {
+            var (_, offset, usesR10) = BaseJobCases[i];
+            PatchBaseJobCase(entries[i] + offset, usesR10);
+        }
+        JobListAt = entries[0];
+        AbilityBaseJobAt = entries[1];
     }
 
-    /// <summary>The base job into r9d from the sprite set there (r8 the record), then on to <paramref name="back"/>;
-    /// with no address, mov eax, r9d; ret instead (the offline check's probe).</summary>
-    internal static byte[] JobListCode(nint back)
+    private static void PatchBaseJobCase(nint at, bool usesR10)
     {
+        // Normalize only the register the game's generic test subtracts from. Its result and flags feed the
+        // original branches, including the monster case. The roster and UI records keep the actual sprite set.
+        var rex = (byte)(usesR10 ? 0x41 : 0);
+        var compare = (byte)(usesR10 ? 0xFA : 0xF9);                // cmp r10d or ecx
+        var length = usesR10 ? 7 : 6;                               // sub r10d/ecx, 0x80
         var a = new Asm();
-        a.Cmp(0xF9, 0x80, rex: 0x41);                               // cmp r9d, 0x80
-        a.Jump(0x74, "generic");
-        a.Cmp(0xF9, 0x81, rex: 0x41);
-        a.Jump(0x74, "generic");
-        a.Cmp(0xF9, 0x82, rex: 0x41);
-        a.Jump(0x75, "locked");                                     // jne
-        a.Emit(0x45, 0x0F, 0xBF, 0x08);                             // movsx r9d, word [r8]: a monster's own job
-        a.Jump(0xEB, "back");
-        a.Label("locked");
-        a.Cmp(0xF9, LockedFrom, rex: 0x41);
-        a.Jump(0x72, "back");                                       // jb: a special character's
-        a.Cmp(0xF9, RemasterFirst, rex: 0x41);
+        a.Cmp(compare, LockedFrom, rex);
+        a.Jump(0x72, "game");                                       // jb
+        a.Cmp(compare, RemasterFirst, rex);
         a.Jump(0x72, "generic");
-        a.Cmp(0xF9, RemasterLast, rex: 0x41);
-        a.Jump(0x76, "back");                                       // jbe: the remaster's own
+        a.Cmp(compare, RemasterLast, rex);
+        a.Jump(0x76, "game");                                       // jbe
         a.Label("generic");
-        a.Emit(0x41, 0xB9, 0x4A, 0, 0, 0);                          // mov r9d, 0x4A: the Squire
-        a.Label("back");
-        if (back == 0)
-            a.Emit(0x44, 0x89, 0xC8, 0xC3);                         // mov eax, r9d; ret
+        if (usesR10)
+            a.Emit(0x41, 0xBA, 0x80, 0, 0, 0);                     // mov r10d, 0x80
         else
-        {
-            a.Emit(0x48, 0xB8);                                     // mov rax, back; jmp rax
-            a.Emit(BitConverter.GetBytes((long)back));
-            a.Emit(0xFF, 0xE0);
-        }
-        return a.Build();
+            a.Emit(0xB9, 0x80, 0, 0, 0);                           // mov ecx, 0x80
+        a.Label("game");
+        a.Emit(new ReadOnlySpan<byte>((void*)at, length).ToArray());
+        a.Emit(0xFF, 0x25, 0, 0, 0, 0);                             // jmp [rip], preserving the subtraction's flags
+        a.Emit(BitConverter.GetBytes((long)(at + length)));
+        var code = a.Build();
+        var stub = GameImage.AllocateCodeNear(at, code.Length);
+        code.CopyTo(new Span<byte>(stub, code.Length));
+
+        Span<byte> jump = stackalloc byte[length];
+        jump.Fill(0x90);
+        jump[0] = 0xE9;
+        BitConverter.TryWriteBytes(jump[1..], checked((int)((nint)stub - (at + 5))));
+        GameImage.WriteCode(at, jump);
     }
 
     /// <summary>A few bytes of x64 with short jumps to labels, for the stubs above.</summary>
@@ -290,7 +285,7 @@ internal static unsafe class UnitLooks
 
         public void Emit(params byte[] bytes) => _code.AddRange(bytes);
 
-        /// <summary>cmp reg, imm32 (ModRM <paramref name="modrm"/>: 0xF9 is ecx, or r9d with REX 0x41).</summary>
+        /// <summary>cmp reg, imm32 (ModRM <paramref name="modrm"/> selects the register with the optional REX prefix).</summary>
         public void Cmp(byte modrm, int value, byte rex = 0)
         {
             if (rex != 0)
