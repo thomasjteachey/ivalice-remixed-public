@@ -2796,6 +2796,39 @@ def patch_next_targets(code: bytes, lengths: bytes, event: int) -> None:
         at += 1 + lengths[op]
 
 
+# A PATCH_NEXT aimed at the value of a SET of its own variable (PATCH_NEXT 42 71, then SET var 0x71, n). 0x0F7's
+# closing after its first battle (its LABEL 01, Agrias's "We ought to seek out a more secluded venue.") works its
+# message number out twice, the PATCH_NEXT of the first copy left in front of the second: the second SET then keeps
+# the number the first worked out, and the second ADD puts the PSP script's offset on it again. In ReMixed's PSX script
+# (flag 0xB2 clear) the offset is 0 and both copies give 7; in the PSP script, which the port shows (SCRIPT_VERSION),
+# 7 + 0x18 became 55, past the event's 54 lines: the box opened with Agrias's face and no line (a tester, 2026-11-25:
+# "the finishing dialogue" of 1-A's volcano battle on map 75, a blank box with Agrias). ReMixed's own PSP script has
+# the same slip. Such a PATCH_NEXT is left out: the SET then sets its number, as the PSX script's run of it does. Only
+# 0x0F7 (and its private copy, AFTER_SPLITS) has one; check_event_dialogue.py stops on one in any shipped event.
+def self_patched_sets(code: bytes, lengths: bytes) -> tuple[bytes, int]:
+    """ReMixed's event code (the PS1 layout) without each PATCH_NEXT (0xE6) that writes its variable into the value of
+    a SET (0xAE) of that same variable, and how many were left out."""
+    out, at, dropped = bytearray(), 0, 0
+    while at < len(code):
+        op = code[at]
+        end = at + 1 + lengths[op]
+        if op == 0xE6:
+            target = end
+            while target < len(code) and code[target] == 0xE6:
+                target += 1 + lengths[0xE6]
+            if target + 3 <= len(code) and code[target] == SET_VALUE and code[at + 1] & 0x3F == 2 \
+                    and u16(code, target + 1) == code[at + 2]:
+                dropped += 1
+                at = end
+                continue
+        out += code[at:end]
+        if op == 0xDB:  # END: nothing after it is code
+            out += code[end:]
+            break
+        at = end
+    return bytes(out), dropped
+
+
 def drop_code(code: bytes, lengths: bytes, drops: list[bytes | tuple[bytes, int]] | None) -> bytes:
     """ReMixed's event code (the PS1 layout) without the runs of whole instructions EVENT_CODE_DROPS names.
 
@@ -4104,9 +4137,11 @@ FRESH_ENTRY_BATTLES = {0x6F, 0x9D, 0xF8}
 # the event, whose code loads the preset with "flag 0x8E = 1 -> that same event", and it runs again into its
 # post-battle scene. Run again under its own number, the scene's boxes showed the speaker's portrait without the line
 # (seen on the PC: 0x115 after 0x0F5's battle, 2026-11-07), where scenes the battle runs under other numbers showed
-# theirs (0x117, then 0x0F7's final closing, after 0x0F8's). 0x0F7 also needs a split for its own first battle: an END
-# has unloaded 0x0F7's scenario text before that battle's flag-0x8E return, and in 0.9.31 its first Agrias box opened
-# with no body. So each one's post-battle run is an event of its own: its code
+# theirs (0x117, then 0x0F7's final closing, after 0x0F8's). 0x0F7 gets one too: on VOLCANO the doppelganger's fall runs
+# it (preset 0xF7's set 7, its LABEL 17), which ends with the flag-0x8E return to the same preset, and that runs 0x0F7
+# again for its closing (LABEL 11). Its first battle's victory isn't one of these: preset 0xF6's victory set runs 0x0F7's
+# LABEL 01 directly. (The blank Agrias box after that first battle, from 0.9.31 on, was its line's number worked out
+# twice: self_patched_sets.) So each one's post-battle run is an event of its own: its code
 # and lines again under a number where the remaster has no event file or text, which every "flag 0x8E = 1" set that ran
 # the event runs instead. The code is the same: 0x115 tests the flag at its start, the others go to the label of the
 # set that ran them (var 1), as before. Why the lines went (read 2026-11-13): an event's END unloads its scenario text
@@ -5581,6 +5616,7 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
     graphics_rerouted = 0  # LoadEVTCHR instructions moved to ReMixed-only copies of redrawn graphics
     twin_named = 0  # PSP-script lines named from their PSX twins (script_twins)
     remounted = 0  # battles whose run seats ReMixed's riders on their mounts (seat_riders)
+    self_patches: dict[int, int] = {}  # event -> PATCH_NEXTs into a SET of their own variable left out
     messages_audited = dynamic_messages = message_closes = midscene_joins = postbattle_erases = 0
     write_backs: dict[int, int] = {}  # event -> ordinary exit hand-offs using display state 7 (AFTER_BATTLE_HOME)
     live_write_backs: dict[int, int] = {}  # event -> same-map returns using the synchronous native roster writer
@@ -5977,6 +6013,9 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
             ps1 = ps1.replace(MENU_CHECK + GOTO_END, MENU_CHECK + seats + MENU_FADE_IN + GOTO_END)
             remounted += bool(seats)
         ps1 = move_block(ps1, lengths, EVENT_CODE_MOVES.get(theirs))
+        ps1, made = self_patched_sets(ps1, lengths)
+        if made:
+            self_patches[ours] = made
         patch_next_targets(ps1, lengths, theirs)
         ps1 = question_box(ps1, lengths, QUESTION_BOXES.get(theirs))
         ps1 = notice_boxes(ps1, lengths, NOTICE_MESSAGES.get(theirs))
@@ -6071,6 +6110,8 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
     done.append(f"{graphics_rerouted} LoadEVTCHR instruction(s) routed to ReMixed-only redraws")
     done.append(f"{twin_named} PSP-script line(s) named from their PSX twins")
     done.append(f"{remounted} battle(s) seating ReMixed's riders on their mounts as they begin (seat_riders)")
+    done.append(f"{sum(self_patches.values())} PATCH_NEXT(s) into a SET of their own variable left out "
+                f"({', '.join(f'0x{e:X}' for e in sorted(self_patches)) or 'none'}; self_patched_sets)")
     done.append(f"{midscene_joins} mid-scene recruit(s) keep ReMixed's join screen (display state 7)")
     done.append(f"{postbattle_erases} post-battle actor removal(s) erase corpse/crystal drawables first")
     done.append(f"{messages_audited} real MESSAGE/ChangeDialog instruction(s) audited against their text rows "
@@ -8345,7 +8386,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata. The title screen's plaque shows it (write_title_screen).
-RELEASE_VERSION = "0.9.37"
+RELEASE_VERSION = "0.9.38"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:

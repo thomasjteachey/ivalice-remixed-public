@@ -129,7 +129,8 @@ def check_chapter_opening_speech_boxes(code: bytes, lengths: bytes, lines: range
 
 
 def check_bervenia_postbattle_copy(owners: dict[int, list[int]], ranges: dict[int, range]) -> None:
-    """The first Bervenia battle's same-map closing must own a populated copy of 0x2EA's dialogue."""
+    """The volcano battle's closing (0x355, which preset 0xF7's flag-0x8E set runs after the doppelganger falls) must own
+    a populated copy of 0x2EA's dialogue."""
     source, closing = 0x2EA, 0x355
     copied = dialogue_rows(owners[closing][0], ranges[closing])
     if copied != dialogue_rows(owners[source][0], ranges[source]):
@@ -156,7 +157,7 @@ def check() -> str:
             # scripts are exactly the marked ones.
             skipped += 1
             continue
-        code, at, pending, has_messages, recent_closes = marked[len(MARKER):], 0, [], False, set()
+        code, at, pending, self_sets, has_messages, recent_closes = marked[len(MARKER):], 0, [], [], False, set()
         while at < len(code):
             op = code[at]
             end = at + 1 + lengths[op]
@@ -165,8 +166,14 @@ def check() -> str:
                 break
             if op == 0xE6:  # PATCH_NEXT; low 6 bits are the patched parameter's byte offset
                 pending.append(code[at + 1] & 0x3F)
+                self_sets.append(code[at + 2])
                 at = end
                 continue
+            if op == 0xAE and 2 in pending and u16(code, at + 1) in self_sets:
+                # A PATCH_NEXT into the value of a SET of its own variable keeps the number the code worked out
+                # before, so a message number worked out again gets the PSP script's offset twice (build_mod.py's
+                # self_patched_sets leaves these out).
+                wrong.append(f"{path.name}: PATCH_NEXT into SET var 0x{u16(code, at + 1):X}'s value at 0x{at:X}")
             if op in (0x10, 0x51):
                 field, patched_at = (3, 2) if op == 0x10 else (2, 1)
                 line_id = int.from_bytes(code[at + field:at + field + 4], "little")
@@ -202,7 +209,7 @@ def check() -> str:
                         wrong.append(f"{path.name}: END at 0x{at:X} leaves message box(es) {sorted(missing)} open")
                     else:
                         terminal_closes += 3
-            pending = []
+            pending, self_sets = [], []
             at = end
     if wrong:
         raise AssertionError("broken generated dialogue:\n  " + "\n  ".join(wrong))

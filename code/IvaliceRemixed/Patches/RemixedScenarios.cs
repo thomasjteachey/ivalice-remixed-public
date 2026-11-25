@@ -755,6 +755,8 @@ internal static unsafe class RemixedScenarios
                 var now = (uint)EventUnitId(_battleUnits, (int)id);
                 if (now != id && _lookupsAliased++ < 8)
                     _log.Info($"remixed scenarios: event unit 0x{id:X} looked up as 0x{now:X} (UnitAliases)");
+                if (RemixedEvents.LastOp is DisplayMessage or ChangeDialog)
+                    NoteStandIn(now == id ? SpeakerStandIn(_battleUnits, (int)id) : -1, (int)id);
                 id = now;
             }
         }
@@ -1448,6 +1450,55 @@ internal static unsafe class RemixedScenarios
         [0x9A] = [0x69, 0x21],
         [0x9B] = [0x6A, 0x6B],
     };
+
+    /// <summary>The event instructions that open or swap a speech box (DisplayMessage, ChangeDialog).</summary>
+    private const int DisplayMessage = 0x10, ChangeDialog = 0x51;
+
+    /// <summary>A speech box naming a party member by name (<see cref="NameAliases"/>) who isn't on the field: the battle
+    /// data's off-field unit of that name, if the battle has one (its index), else −1. In 1-A's dark-Agrias battle
+    /// (0x2EB) the doppelganger's first turn ends with Elias's "..." (0x117, block 2), named 0x9B; with Elias not
+    /// deployed (ReMixed doesn't require him) the box had his name and no face, no tail and only the dots, which read
+    /// as an empty box (a tester, 2026-11-25; ReMixed on the PS1 has the same gap). That battle keeps the summoning
+    /// scene's actor of him off the field (battle id 0x92), whose graphic is his look there. The game's lookup gives a
+    /// box no off-field unit (seen on the PC: named 0x92, the box still had none), so the box keeps its place and the
+    /// face comes from that unit's graphic (<see cref="StandInFace"/>, read by <see cref="RemixedFaces"/>). Not his
+    /// doppelganger, an enemy on the field with the same name.</summary>
+    internal static int SpeakerStandIn(byte* units, int id)
+    {
+        if (!NameAliases.TryGetValue(id, out var names))
+            return -1;
+        for (var k = 0; k < Battle.UnitCount; k++)
+        {
+            var unit = units + k * Battle.UnitSize;
+            if (unit[0] != 0 && unit[1] == 0xFF && unit[0x191] is not (>= FirstPartyId and <= LastPartyId)
+                && Array.IndexOf(names, *(ushort*)(unit + 0x1FC)) >= 0)
+                return k;
+        }
+        return -1;
+    }
+
+    /// <summary>The stand-in's graphic for the speech box the event last opened or swapped (−1: none), and that
+    /// instruction's offset (<see cref="RemixedEvents.LastPc"/>).</summary>
+    private static int _standInGraphic = -1, _standInPc = -1;
+
+    /// <summary>Notes the speech box an instruction is opening: its stand-in (a battle unit's index, or −1).</summary>
+    private static void NoteStandIn(int standIn, int id)
+    {
+        var graphic = standIn >= 0 && _battleUnits != null ? _battleUnits[standIn * Battle.UnitSize + 0x18F] : -1;
+        if (graphic >= 0 && graphic != _standInGraphic)
+            _log.Info($"remixed scenarios: a speech box names 0x{id:X}, no one on the field: the face of its off-field "
+                      + $"stand-in 0x{_battleUnits![standIn * Battle.UnitSize + 0x191]:X} (battle unit {standIn}, graphic 0x{graphic:X2})");
+        _standInGraphic = graphic;
+        _standInPc = RemixedEvents.LastPc;
+    }
+
+    /// <summary>The face (a graphic) for a speech box with no battle unit while the event still stands on the box an
+    /// absent party member's line opened (that instruction, or the wait after it), or −1.</summary>
+    internal static int StandInFace()
+    {
+        var pc = RemixedEvents.LastPc;
+        return _standInGraphic >= 10 && pc >= _standInPc && pc - _standInPc <= 0x20 ? _standInGraphic : -1;
+    }
 
     /// <summary>The party unit on the field (battle id 0x78–0x7F) with one of the name ids, or −1.</summary>
     internal static int NamedPartyUnit(byte* units, ushort[] names)

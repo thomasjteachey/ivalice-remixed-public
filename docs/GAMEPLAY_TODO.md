@@ -5,7 +5,7 @@ is, and what it waits on. The technical details (what ReMixed's code does, where
 [MECHANICS.md](MECHANICS.md) and [REMASTER.md](REMASTER.md); data held back is in
 [the build report](generated/mod-build.md).
 
-**Progress: 97% of gameplay** (106 done, 3 open: 1 small, 2 medium, 0 large). Worked out from this list by
+**Progress: 96% of gameplay** (106 done, 4 open: 2 small, 2 medium, 0 large). Worked out from this list by
 `python -I tools/todo_progress.py`, open items weighted by size (small 1, medium 3, large 15) and done ones at 2 each,
 and updated with every change to the list. Everything outside the story and display ports is ported or settled
 (the formulas ReMixed rewrote in place were the last, 2026-11-12; ReMixed's own battles writing their units back,
@@ -411,6 +411,22 @@ battle, Testing).
   properly too); both of the System Menu's retries; a battle saved and continued on the same build. Not tried: the
   Steam Deck itself, and a child killed by Choco Meteor or while riding. `tests/quick/dorter-old-save.txt`, then
   `dorter-old-save-load.txt`. *high*
+- [x] Side chapter 1-A's two volcano battles (reported on the Deck, 2026-11-25), two empty boxes:
+  Agrias's closing line after the first battle ("We ought to seek out a more secluded venue.") came up as an empty
+  box with her face. ReMixed works that line's number out twice, and a leftover step made the second pass add the
+  translation's offset again, so the box asked for a line past the scene's last. ReMixed's own game hits the same slip
+  only with its newer translation switched on; the port always shows that translation. Fixed in the build: the
+  leftover step is dropped, and the dialogue check stops on any event that has one (this was the only one in
+  ReMixed's events). Seen in the hidden PC game: her line with her name and face after the battle.
+  The empty box as the dark-Agrias battle fades in: the doppelganger's first turn comes right after the fade-in, and
+  her scene there ends with Elias's reply ("..."). With Elias not deployed (ReMixed doesn't require him) no unit
+  answers to it, so the box had his name, no face, no tail and only the dots; ReMixed on the PS1 has the same gap. A
+  line of a party member who isn't on the field (Bryn, Valmafra, Lorne or Elias, in any of 1-A's battles) now takes
+  the face of the battle's off-field actor of that person, where it has one (your call, 2026-11-25). Seen in the
+  hidden PC game: Elias's reply with his Black Mage face (`tests/quick/bervenia-elias-stand-in.txt`). The music in
+  that battle is ReMixed's own track 99, still to port (the music item below); the remaster's track 99 plays in its
+  place. The harness's formation helper doesn't fill these 4 + 2 formations yet: their units were placed by hand.
+  *medium*
 - [x] Valmafra's unit card showed no primary skillset (seen on the Deck, 2026-11-25): her Arc Witch's Spell Strike
   had its name but no icon, and the remaster leaves a skillset with no icon off the card. All 21 skillsets ReMixed
   names that the remaster had left empty had the same gap (Blue Magic, Witchcraft, Combat Skill, Sorcery, Fellblade,

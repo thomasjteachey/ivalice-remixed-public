@@ -123,7 +123,7 @@ is side chapter 1-A's end and joined the list (story-flow-plan.md, "Side chapter
 | 0x0F4 | Side chapter 1-A | The cursed armory: its scene, the question to fight, and its battle on the armory's map (as 0x34A; story progress 8) | 0x1FF | 2026-11-07 |
 | 0x0F5 | Side chapter 1-A | A battle with a question to fight (answered to fight), then 0x115's scene after it (story progress 9) | 0x2E8 | 2026-11-07 |
 | 0x0F6 | Side chapter 1-A | A scene with a dialogue choice (both answers go on), on into 0x116's battle | 0x2E9 | 2026-11-07 |
-| 0x0F7 | Side chapter 1-A | Its battle on ReMixed's map 75, whose post-battle dialogue runs as private event 0x355, on into 0x0F8's battle, and its closing after that one (story progress 0xB) | 0x2EA | 2026-11-22 |
+| 0x0F7 | Side chapter 1-A | Its battle on ReMixed's map 75, on into 0x0F8's battle, and its closing after that one (as private event 0x355; story progress 0xB) | 0x2EA | 2026-11-22 |
 | 0x0F8 | Side chapter 1-A | Its battle on ReMixed's VOLCANO (map 119) | 0x2EB | 2026-11-06 |
 | 0x0F9 | Side chapter 1-A | Gareth's ghost (map 101; story progress 0xC) | 0x2EC | 2026-11-06 |
 | 0x0FA | Side chapter 1-A | A battle with a question to fight (answered to fight), then 0x118's scene after it (story progress 0xD) | 0x2ED | 2026-11-07 |

@@ -1121,9 +1121,14 @@ and 0xB4 (slots 0 and 3), once as generics (slots 4 and 5); to look at.
   and lines, which the "flag 0x8E = 1" sets run instead. Seen on the PC: 0x0F5's post-battle scene as event 844 shows
   its lines 30–37 in full, with the speakers' names, then story progress 9; 1-A's ending, 0x119's post-battle part as
   event 852 after 0x0FB's battle, shows its lines (its victory part, lines 16–18, in 0x119 itself before it). 0x0F7's
-  first battle has the same return: in 0.9.31 it reopened 0x0F7 after END had unloaded its text, so Agrias's portrait
-  box had no body. Its flag-0x8E set now runs a fifth copy, event 0x355, while 0x0F8's later victory still runs
-  0x0F7's original final closing.
+  closing has the same return: on VOLCANO (var 0x33 = 0x77 adds 0x10 to the set's number) the doppelganger's fall
+  (preset 0xF7's set 7) runs its LABEL 17, which ends by loading preset 0xF7 again with flag 0x8E set, and that set (1)
+  runs 0x0F7 for its closing, LABEL 11: now a fifth copy, event 0x355. Its first battle on map 75 doesn't return that
+  way: preset 0xF6's victory set (1) runs 0x0F7's LABEL 01, Agrias's "We ought to seek out a more secluded venue.", then
+  on to 0x0F8. That box was blank from 0.9.31 on for another reason (a tester, 2026-11-25): ReMixed works the line's
+  number out twice, with the first copy's PATCH_NEXT left in front of the second's SET var 0x71, 7, so the second
+  kept 31 and added the PSP offset again, 55, past the event's lines. The PSX script's offset is 0, so ReMixed on the
+  PS1 shows it; the build leaves that PATCH_NEXT out (`self_patched_sets`; 0x0F7's is the only one in ReMixed's events).
 - **Its optional battles:** its battles' openings ask whether to fight (the answer in var 0x18, 0 the first): 0x0F0
   ("There's no saving her..." skips the rescue, story progress 5), 0x0F4 ("Sorry, I'll have to pass", progress 8),
   0x0F5 ("Let us leave them be"), 0x0FA ("Very well": on to 0x118's scene without the battle) and 0x0FB ("No, forgive

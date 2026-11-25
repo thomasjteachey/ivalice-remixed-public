@@ -1,0 +1,27 @@
+# Mount Bervenia's second fight (the dark-Agrias battle, 0x2EB) after its summoning scene (0x1B6; started on its own,
+# 0x2EB hands off to another scene instead of setting its battle up), with no Elias in the party. The
+# doppelganger's first turn runs 0x117's block 2, whose last box is Elias's "..." named 0x9B: with Elias not deployed
+# it came up with no face, no tail and only the dots (a tester, 2026-11-25). The box now speaks through the battle's
+# off-field actor of him (0x92) with his face (RemixedScenarios.SpeakerStandIn).
+# The harness's formation helper doesn't fill this 4 + 2 formation yet: place the six units by hand at the pause
+# below (F on a tile, F on a unit, about 4 s apart, four times; the screen moves to the second group by itself;
+# twice more; F once "Commence battle?" shows), then let the case go on. Seen 2026-11-25: his Black Mage face.
+name Bervenia dark-Agrias battle: Elias's reply without Elias
+wait world depth=1 state=0 timeout=25
+send poke +0x11A7D10 1E
+send poke +0x11A7D12 1E
+send poke +0x11A7F40 1E 00
+copy roster 2 3
+scenario 0x1B6
+send speed 5
+wait log "scenario 0x2EB takes ReMixed's battle conditions" press=RETURN every=1 timeout=600
+send speed off
+# (the units are placed by hand here)
+wait log "scenario 0x2EB's first walk" timeout=900
+wait log "event 759's message 13 shown as line" timeout=180
+wait seconds 6
+shot agrias-double
+wait log "event 759's message 14 shown as line" press=RETURN every=4 timeout=40
+wait log "off-field stand-in 0x92" timeout=5
+wait seconds 5
+shot elias-reply

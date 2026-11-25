@@ -7150,6 +7150,20 @@ internal static unsafe class SelfTest
         Check($"1-A's second squad in event instructions: Bryn's place 0x91 looked up as 0x{brynLine:X} (her party unit), "
               + $"with no party unit of her name 0x{otherName:X}, with the place on the field 0x{placeOnField:X}",
               brynLine == 0x7A && otherName == 0x91 && placeOnField == 0x91);
+        // A speech box naming Elias (0x9B) with no Elias deployed speaks through the battle's off-field actor of him
+        // (0x92, the dark-Agrias battle's), not his doppelganger on the field with the same name (0x82, an enemy).
+        var standIn = units + 13 * Battle.UnitSize;
+        var double_ = units + 8 * Battle.UnitSize;
+        standIn[0] = 0x80; standIn[1] = 0xFF; standIn[0x191] = 0x92; *(ushort*)(standIn + 0x1FC) = 0x6B;
+        double_[0] = 0x80; double_[1] = 0x08; double_[0x191] = 0x82; *(ushort*)(double_ + 0x1FC) = 0x6B;
+        var eliasBox = RemixedScenarios.SpeakerStandIn(units, 0x9B);
+        var otherBox = RemixedScenarios.SpeakerStandIn(units, 0x93);
+        new Span<byte>(standIn, Battle.UnitSize).Clear();
+        var noStandIn = RemixedScenarios.SpeakerStandIn(units, 0x9B);
+        new Span<byte>(double_, Battle.UnitSize).Clear();
+        Check($"a speech box naming an undeployed Elias (0x9B): his off-field actor, battle unit {eliasBox} (not the "
+              + $"doppelganger's 8); 0x93: {otherBox}; with no actor of him: {noStandIn}",
+              eliasBox == 13 && otherBox == -1 && noStandIn == -1);
         Check($"1-A's battles' ids by name (ReMixed's 0x191): 0x9A looked up as 0x{brynNamed:X} and as a condition's "
               + $"0x{brynCondition:X} (Bryn's party unit), 0x9B with no Lorne 0x{lorneNamed:X}",
               brynNamed == 0x7A && brynCondition == 0x7A && lorneNamed == 0x9B);

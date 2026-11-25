@@ -531,6 +531,15 @@ internal static unsafe class RemixedFaces
         var face = _boxFace(layout, slot, found, palette);
         try
         {
+            // A box naming an absent party member, whom the game finds no unit for: his off-field stand-in's face
+            // (RemixedScenarios.SpeakerStandIn), while the event is on that box.
+            var standIn = face < 0 && (uint)slot > 0x14 ? RemixedScenarios.StandInFace() : -1;
+            if (standIn >= 0)
+            {
+                if (palette != null && *palette < 0)
+                    *palette = 8;
+                return standIn;
+            }
             if (face < 0)
                 NoFace(slot);
             if ((uint)slot <= 0x14 && _boxUnits != null)

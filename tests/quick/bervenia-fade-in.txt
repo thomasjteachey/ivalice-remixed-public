@@ -1,0 +1,41 @@
+# Mount Bervenia's second fight (the dark-Agrias battle) as it fades in after the summoning scene. A tester saw an empty
+# box over the battle as it faded in (2026-11-25). Frames every half second from the formation's commence, and the
+# battle's tracks from the log (ReMixed's own track 0x63 for this battle; the port has no copy of it yet).
+name Bervenia dark-Agrias battle fade-in
+wait world depth=1 state=0 timeout=25
+send poke +0x11A7D10 1E
+send poke +0x11A7D12 1E
+send poke +0x11A7F40 1E 00
+copy roster 2 3
+scenario 0x1B6
+wait log "loaded event 438" timeout=90
+wait log "scenario 0x2EB takes ReMixed's battle conditions" press=RETURN every=0.8 timeout=300
+wait log "formation: screen open" timeout=150
+shot formation
+# The harness's formation helper doesn't fill this 4 + 2 formation yet: on 2026-11-25 its placements stalled (the
+# screen moves to the second group by itself once the first is full, and the helper's Tab sends it back), and the
+# units were placed by hand (Tab, then F per unit until "Commence battle?" comes up, then F). Fix formation()
+# before running this unattended.
+formation units=5
+shot fade-00
+wait seconds 0.5
+shot fade-05
+wait seconds 0.5
+shot fade-10
+wait seconds 0.5
+shot fade-15
+wait seconds 0.5
+shot fade-20
+wait seconds 1
+shot fade-30
+wait seconds 1
+shot fade-40
+wait seconds 1
+shot fade-50
+wait seconds 2
+shot fade-70
+wait seconds 3
+shot fade-100
+wait seconds 5
+shot fade-150
+show slots

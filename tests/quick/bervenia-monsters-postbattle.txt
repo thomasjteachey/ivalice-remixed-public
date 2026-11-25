@@ -1,7 +1,9 @@
-# Mount Bervenia's first fight, starting after its pre-battle scene. Its victory used to run event 0x2EA again on the
-# live battlefield after END had unloaded that event's scenario text. Agrias's portrait box opened, but message 32
-# ("Nay... I'll not yield...") was blank. The flag-0x8E return now runs a private post-battle copy, 0x355.
-name Bervenia monster battle loads its post-battle dialogue copy
+# Mount Bervenia's first fight, starting after its pre-battle scene. Its victory (preset 0xF6's plain-victory set) runs
+# event 0x2EA's LABEL 01 on the live battlefield: Agrias's "We ought to seek out a more secluded venue." ReMixed works
+# that line's number out twice, and a PATCH_NEXT left between the two put the PSP script's offset on it twice: message
+# 55, past the event's lines, so her box opened with no text (a tester, 2026-11-25). The build leaves that PATCH_NEXT
+# out (build_mod.py self_patched_sets), and the line is message 31 (7 + 0x18).
+name Bervenia monster battle shows Agrias's closing line
 wait world depth=1 state=0 timeout=25
 send poke +0x11A7D10 1E
 send poke +0x11A7D12 1E
@@ -10,9 +12,12 @@ copy roster 2 3
 scenario 0x2EA noted
 wait log "scenario 0x2EA sets its battle up after event 0x2EA's scene" timeout=30
 wait log "formation: screen open" timeout=150
-formation units=4 second=2
+# The harness's formation helper doesn't fill this 4 + 2 formation yet: on 2026-11-25 its placements stalled (the
+# screen moves to the second group by itself once the first is full, and the helper's Tab sends it back), and the
+# units were placed by hand (Tab, then F per unit until "Commence battle?" comes up, then F). Fix formation()
+# before running this unattended.
+formation units=5
 advance opening timeout=120
 defeat
-wait log "loading event 853" timeout=150
-wait log "event 853's message 32 shown as line" timeout=150
+wait log "event 746's message 31 shown as line" timeout=150
 shot agrias-postbattle
