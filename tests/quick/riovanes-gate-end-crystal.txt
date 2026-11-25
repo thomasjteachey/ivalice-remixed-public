@@ -1,0 +1,33 @@
+# The end of the battle at Riovanes Castle's gate (event 281) with the guest Rafa a crystal: a tester on 0.9.38 had
+# the game close there three times on one save (crash at exe+0x360086 reading 0x29, a null unit in the status panel's
+# record 0x360048, 2026-11-25). Event 281's unit lookup (instruction 0xC3 0x19, 0x214284) asks for her battle unit by
+# her id; a unit that is a crystal or a chest isn't found that way (0x226A18 answers 2000), and the remaster's own
+# fallback for this one scene then looks for the battle unit whose sprite set is 0x19. The port moved her to 0x29, so
+# it found no one and gave the status panel a null unit. The code mod's rule "guest-lookup" moves the fallback's
+# sprite set with her (tools/build_mod.py REMASTER_CODE_SPRITE_SETS) and passes a null unit over.
+# The harness's save has no guest Rafa, so the case puts one in guest slot 50 first, for the battle to load, and
+# makes her a crystal once the battle is set up (her status byte +0x61, bit 0x40). A requested scenario runs its event
+# as event 2, so from Ramza's last line ("Pray let them be safe", a box with no battle unit) until the results'
+# module is read (file 4, after the lookup) the case gives the running event's number the value a played game has
+# there (0x119, [0x782A94]), which the fallback tests. The scene then goes through "Guest Departure" and takes her
+# out of the party, and the requested scenario's next event (4, by the harness's own numbering) starts. Run with
+#   python -I tools/quick_test.py --restart tests/quick/riovanes-gate-end-crystal.txt
+name Riovanes gate end with Rafa a crystal
+wait world depth=1 state=0 timeout=20
+copy roster 0 50 sprites=0x29 job=0x29 name_id=25
+expect roster name_id=25
+scenario 0x119 event=0x119
+wait log "reveal treasures: map 6" press=RETURN every=1 timeout=150
+formation units=1
+wait log "loads event 281 in place of event" timeout=60
+wait unit player=1 present=1 timeout=120 press=RETURN every=2
+show units
+poke unit job=0x29 offset=0x61 or=40
+wait seconds 5
+defeat
+wait log "a speech box names no battle unit" press=RETURN every=0.6 timeout=200
+send poke +0x782A94 19 01 00 00
+wait log "reading file 0x4 " press=RETURN every=0.6 timeout=60
+send poke +0x782A94 02 00 00 00
+advance event 4 every=0.6 shots=1 timeout=300
+expect roster name_id=25 count=0

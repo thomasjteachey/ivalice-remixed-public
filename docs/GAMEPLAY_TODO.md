@@ -785,7 +785,25 @@ Reported by a player:
   Rafa and missed both routes. Event 281 now validates the record at its point of use, clears a corrupt one, and runs
   the pages only for a valid record. The focused case injects the corrupt record after battle setup (past both earlier
   repair opportunities) and reaches event 282. The later rooftop entry supplies Rafa anew, so affected saves continue
-  in place and do not need a rollback. *medium*
+  in place and do not need a rollback. (That check in the scene was itself at fault and is out again: the next
+  entry.) *medium*
+- [x] The battle at Riovanes Castle's gate still couldn't be finished (a tester on 0.9.38, the game closing a few
+  seconds after the last enemy fell, three times on one save, 2026-11-25). Two faults sat at the same spot. First, his
+  guest Rafa had fallen during the battle and turned to a crystal; the scene after the battle shows her leaving the
+  party, and for a Rafa who is a crystal or a chest the game looks for her by her sprite, by a number written into
+  the game's own code. The port has her on another sprite (ReMixed's own character has hers), so no one was found and
+  the game closed. Second, 0.9.32's repair for the earlier report had put instructions into that scene which only
+  ReMixed's own scenes can use; the game ends a scene when it meets one, so with an ordinary living Rafa the scene
+  stopped after "Pray let them be safe. Alma...and Rapha, too." and stayed on a black screen for good. From 0.9.32 to
+  0.9.38 nobody could get past this battle. Now the scene is the game's own again, the code mod has the game look for
+  her on the sprite the port gave her, and a Rafa who can't be found at all (a save an earlier build left an empty
+  one in) is passed over instead of closing the game. A search of the game's code found no other place that names a
+  moved character's sprite this way. Seen in the hidden PC game, the battle won each time: on 0.9.38 with her a
+  crystal the game closed at the tester's spot (the same crash line), and with her alive it stayed black; on the fix,
+  alive, a crystal, and with an earlier build's empty Rafa, the scene goes through "Guest Departure", she is out of
+  the party, and the next scene starts (`tests/quick/riovanes-gate-end-healthy.txt`, `riovanes-gate-end-crystal.txt`,
+  `riovanes-gate-end.txt`). A battle autosave made at the gate on an earlier build continues from where it is.
+  *medium*
 - [x] The remaster's enhanced battle-unit overrides undid the port's units where they met: four story units got the
   remaster's secondary skillset and abilities back over ReMixed's (entries 0x14A, 0x183, 0x185, 0x197), and two of
   ReMixed's own battles (0x1E6, 0x1EE) gave units 2-5 a weapon of the remaster's choosing. The cells that meet the

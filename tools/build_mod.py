@@ -805,7 +805,7 @@ CODE_RULES = ["unevadable", "team-targeting", "auras", "limit-charge", "status-t
               "riding-actions", "persistent-performances", "hitting-bodies", "arc-obstacles",
               "taken-equipment", "victory-bonus",
               "move-find", "nemesis", "separate-saves", "remixed-events", "pack-files", "remixed-sprites",
-              "remixed-faces", "old-guests", "remixed-scenarios", "world-roads",
+              "remixed-faces", "old-guests", "guest-lookup", "remixed-scenarios", "world-roads",
               "unit-presets", "story-ai"]
 
 
@@ -3428,18 +3428,25 @@ GENERIC_SPRITE_SETS = (0x80, 0x81)  # a generic's graphic comes from its job (0x
 #   frog scene, walks Rafa in as AddGhostUnit 0x19; event 281 at Riovanes Castle's gate (entry 0x1AF) takes her out as
 #   DismissUnit 0x19 before she rejoins as 0x29 (entry 0x1B2). Until 0.9.23 only the two DismissUnits moved (a
 #   hand-kept list), and event 270 drew ReMixed's character for Rafa. write_remaster_sprite_sets now moves every one, in
-#   each remaster script the mod ships or leaves stock. Not WorldUnitAddress (0xC3): event 281's WorldUnitAddress 0x19
-#   finds the guest Rafa by her name id (25, "Rapha"), which stays; named 0x29 it found no one and the game closed on
-#   "Guest Departure" (seen in the hidden PC game, 2026-11-19), and as 0x19 it shows her leaving.
+#   each remaster script the mod ships or leaves stock. Not event 281's 0xC3 0x19: in a script the remaster runs
+#   that is its own unit lookup for the cards (0x214284, not the upgrade's WorldUnitAddress), which finds the guest
+#   Rafa's battle unit by her id (25, "Rapha"), which stays; named 0x29 it found no one and the game closed there
+#   (seen in the hidden PC game, 2026-11-19), and as 0x19 it shows her leaving (REMASTER_CODE_SPRITE_SETS below).
 # - Its enhanced battle-unit overrides (ENTRY_OVERRIDE_FIELDS, write_entry_overrides): entry 0x1AD's unit 1 is the
 #   guest Rafa loaded from the formation as 0x19.
 # - Its PS1 portrait table, which RemixedFaces separates (SeparatePortraits).
 REMASTER_SPRITE_SET_OPS = {0x47: "AddGhostUnit", 0x7A: "DismissUnit"}
-# A stock event that puts a roster address into var 0 and immediately gives it to battle-end screens which require a
-# record. A compatibility repair can deliberately remove a corrupt record, so the screens must be conditional on
-# WorldUnitAddress finding one. Event 281 is Riovanes Castle Gate's closing; screens 2-7 are its Guest Departure
-# pages. The tuple is event file -> (the character id, the consecutive DisplayConditions states).
-WORLD_UNIT_SCREEN_GUARDS = {"event281.e": (0x19, tuple(range(2, 8)))}
+# 0.9.32 to 0.9.38 shipped Riovanes Castle Gate's closing (event 281) with a "guard" around its six battle-end screens
+# (DisplayConditions 2-7), written in the upgrade's instructions (If, SETVar, LoadAddress, Else, SaveAddress, EndIf).
+# Event 281 is the remaster's own script, which the remaster's interpreter runs, and to it an opcode below 0x10 ends
+# the event (0x23A868's default, as END does): the scene stopped at the guard's first byte, after its dark screen came
+# up and before the screens, the write-back, the dark screen's removal and DismissUnit, and sat on a black screen for
+# good (seen in the hidden PC game with an ordinary guest Rafa, 2026-11-25). The guard's bytes come out again
+# (strip_world_unit_screen_guard), wherever a build left them; what it was for is the code mod's now
+# (Patches/GuestLookup.cs: a unit the event's lookup can't find is passed over instead of handed on as null).
+# The event file -> the bytes put before its first DisplayConditions and after its last screen's wait.
+STRIPPED_SCREEN_GUARDS = {"event281.e": (bytes.fromhex("01 AF 02 00 00 00 C1 00 16 00 02 01 01 AF 00 00 02 00"),
+                                         bytes.fromhex("03 AE 01 00 FF 00 C4 01 01 00 02 01 04 04"))}
 # A save made with an earlier build may hold a guest on its old sprite set, which the moved battle data would no longer
 # find: old sprite set -> (the guest's name id, the story progress (var 0x6E) from which the remaster's own event has
 # taken the guest out). The code mod moves such a roster record to the new sprite set (and job) as a battle's units
@@ -3448,6 +3455,15 @@ WORLD_UNIT_SCREEN_GUARDS = {"event281.e": (0x19, tuple(range(2, 8)))}
 # have had her guest record moved to Agrias's). Agrias is a guest from progress 0xF (event 117) until event 158 sets
 # 0x16; Rafa from 0x26 (event 261) until event 281 (progress 0x28; event 298 sets 0x29).
 REMASTER_OLD_GUESTS = {0x34: (0x34, 0x16), 0x19: (0x19, 0x29)}
+# The remaster's code names one sprite set itself: event instruction 0xC3 (0x214284) takes a character's battle unit for
+# the unit cards that follow, and when the unit can't be found by its id (a crystal, a chest: 0x226A18 answers 2000) it
+# looks, in event 0x119 for character 0x19 only (Riovanes Castle Gate's closing, event 281), for the battle unit
+# whose sprite set is 0x19, and hands the status panel a null unit when there is none: the game closed at
+# exe+0x360086 for a tester whose guest Rafa had become a crystal by the gate battle's end (0.9.38, 2026-11-25). The
+# code mod's rule "guest-lookup" writes her moved sprite set into that compare, and has the panel passed over for a
+# unit that isn't found at all (Patches/GuestLookup.cs). Character id -> the sprite set the code names. A scan of the exe for "cmp byte ptr [reg], a moved sprite set" finds no other
+# lookup like it (the other hits compare event opcodes and ranges).
+REMASTER_CODE_SPRITE_SETS = {0x19: 0x19}
 REMIXED_UNIT_SKILLSETS = {0x4D: 0x16, 0x16: 0xE0, 0x4E: 0xE0}
 # A unit's primary skillset (battle data +0x1D; 0 and 0xFF none) is a ReMixed skillset like its secondary, and the
 # remaster reads it as vanilla does. ReMixed's battle menu (BATTLE 0x80152750, 0x801818C4) reads its Dark Knight slot's
@@ -6856,6 +6872,13 @@ def old_guest_rows() -> list[list[int]]:
     return rows
 
 
+def guest_lookup_rows() -> list[list[int]]:
+    """The code mod's data for REMASTER_CODE_SPRITE_SETS (Patches/GuestLookup.cs): [the character id, the sprite set the
+    remaster's code looks for, the sprite set the port's battle data has the unit on]."""
+    return [[character, old, REMASTER_MOVED_SPRITE_SETS[old][0]]
+            for character, old in sorted(REMASTER_CODE_SPRITE_SETS.items())]
+
+
 def write_remaster_moves(cfg: dict) -> str:
     """The remaster's own added entries (ADDED_ENTRIES_FILE, from 0x200) with its units off the slots ReMixed gave its
     own characters (REMASTER_MOVED_SPRITE_SETS), into the mod. Returns a line for the report."""
@@ -6898,56 +6921,20 @@ def remaster_sprite_set_uses(table: bytes, code: bytes, name: str) -> list[tuple
     return uses
 
 
-def guard_missing_world_unit_screens(table: bytes, code: bytearray, name: str) -> bool:
-    """Wrap a stock event's roster-dependent DisplayConditions sequence in ``If(var 0)``.
-
-    WorldUnitAddress leaves var 0 at zero when a roster record is absent. DisplayConditions' unit pages do not
-    accept that null address. The surrounding fade, dismissal and story handoff remain unconditional: a missing
-    departing guest simply has no departure pages and the story can recreate them at their later join entry.
-    The edit is structural rather than offset-based, and idempotent for incremental builds.
-    """
-    wanted = WORLD_UNIT_SCREEN_GUARDS.get(name)
+def strip_world_unit_screen_guard(code: bytearray, name: str) -> bool:
+    """Take an earlier build's guard out of a stock event (STRIPPED_SCREEN_GUARDS): its two runs of bytes, each found
+    once and in order, or neither. True if they were there."""
+    wanted = STRIPPED_SCREEN_GUARDS.get(name)
     if wanted is None:
         return False
-    character, states = wanted
-    instructions: list[tuple[int, int, int]] = []
-    at = 0
-    while at < len(code) and code[at] != 0xDB:
-        size = remaster_instruction_size(table, code, at)
-        if at + size > len(code):
-            raise ValueError(f"{name}: instruction 0x{code[at]:02X} at 0x{at:X} runs past the event")
-        instructions.append((at, code[at], size))
-        at += size
-    if at >= len(code):
-        raise ValueError(f"{name} can't be read to its END, so its roster screens can't be guarded")
-
-    world = [i for i, (offset, op, _) in enumerate(instructions)
-             if op == 0xC3 and code[offset + 1:offset + 3] == bytes([character, 0])]
-    if len(world) != 1:
-        raise ValueError(f"{name}: expected one WorldUnitAddress(0x{character:02X}, 0), found {len(world)}")
-    first = world[0]
-    displays = [(i, offset) for i, (offset, op, _) in enumerate(instructions[first + 1:], first + 1) if op == 0x78]
-    if [code[offset + 1] for _, offset in displays] != list(states):
-        raise ValueError(f"{name}: expected DisplayConditions states {list(states)}, found "
-                         + str([code[offset + 1] for _, offset in displays]))
-    for i, _ in displays:
-        if i + 1 >= len(instructions) or instructions[i + 1][1] != 0xE5 \
-                or code[instructions[i + 1][0] + 1:instructions[i + 1][0] + 3] != b"\x38\x00":
-            raise ValueError(f"{name}: DisplayConditions isn't followed by WaitForInstruction(0x38, 0)")
-
-    display_at = displays[0][1]
-    last_wait_at, _, last_wait_size = instructions[displays[-1][0] + 1]
-    # If(address) { var 2 = address; var 0 = byte[address + PS1 roster level 0x16]; If(level) {
-    # var 0 = address; ... pages ... } Else { byte[address + active/unit-id 1] = 0xFF; } }
-    # Besides avoiding a null page, this performs the old-save repair at its point of use even when a battle autosave
-    # resumes without ever running the world-map repair hook.
-    before = bytes.fromhex("01 AF 02 00 00 00 C1 00 16 00 02 01 01 AF 00 00 02 00")
-    after = bytes.fromhex("03 AE 01 00 FF 00 C4 01 01 00 02 01 04 04")
-    if code[display_at - len(before):display_at] == before \
-            and code[last_wait_at + last_wait_size:last_wait_at + last_wait_size + len(after)] == after:
-        return True
-    code[last_wait_at + last_wait_size:last_wait_at + last_wait_size] = after
-    code[display_at:display_at] = before
+    before, after = wanted
+    first, last = code.find(before), code.find(after)
+    if first < 0 and last < 0:
+        return False
+    if first < 0 or last < first or code.count(before) != 1 or code.count(after) != 1:
+        raise ValueError(f"{name}: half of an earlier build's guard is there (at {first} and {last})")
+    del code[last:last + len(after)]
+    del code[first:first + len(before)]
     return True
 
 
@@ -6958,14 +6945,14 @@ def write_remaster_sprite_sets(cfg: dict) -> str:
     report."""
     table = remaster_length_table(cfg)
     out = MOD_DIR / "FFTIVC" / "data" / "enhanced" / "script" / "enhanced"
-    done, guarded = [], []
+    done, stripped = [], []
     for stock in stock_event_paths(cfg):
         shipped = out / stock.name
         code = bytearray(shipped.read_bytes() if shipped.exists() else stock.read_bytes())
         if code.startswith(REMIXED_EVENT_MARK):
             continue
-        if guard_missing_world_unit_screens(table, code, stock.name):
-            guarded.append(stock.stem)
+        if strip_world_unit_screen_guard(code, stock.name):
+            stripped.append(stock.stem)
         uses = remaster_sprite_set_uses(table, bytes(code), stock.name)
         for at, op in uses:
             old = code[at + 1]
@@ -6975,15 +6962,20 @@ def write_remaster_sprite_sets(cfg: dict) -> str:
                          f"(0x{new:02X}), which have no sheet of their own to name")
             code[at + 1] = new
             done.append(f"{stock.stem} {REMASTER_SPRITE_SET_OPS[op]} 0x{old:02X} to 0x{new:02X}")
-        if uses or stock.stem in guarded:
+        if uses or stock.stem in stripped:
+            # Proof: what's shipped is the stock script but for the sprite sets moved (same length, those bytes only).
+            original = stock.read_bytes()
+            moved = {at + 1 for at, _ in uses}
+            if len(code) != len(original) or any(a != b and k not in moved for k, (a, b) in enumerate(zip(code, original))):
+                sys.exit(f"{stock.name} as shipped differs from the stock script in more than its moved sprite sets")
             out.mkdir(parents=True, exist_ok=True)
             shipped.write_bytes(code)
     for path in sorted(out.glob("event*.e")):  # proof: no unmarked script the mod ships names one still
         code = path.read_bytes()
         if not code.startswith(REMIXED_EVENT_MARK) and remaster_sprite_set_uses(table, code, path.name):
             sys.exit(f"{path.name} still names a moved sprite set")
-    return f"{len(done)} moved: " + ", ".join(done) + f"; {len(guarded)} missing roster unit guarded: " \
-           + ", ".join(guarded)
+    return f"{len(done)} moved: " + ", ".join(done) + f"; {len(stripped)} earlier build's guard taken out: " \
+           + ", ".join(stripped)
 
 
 # The remaster's enhanced battle-unit overrides (nxd/overrideentrydata.nxd, OverrideEntryData: Key a battle entry, Key2
@@ -8386,7 +8378,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata. The title screen's plaque shows it (write_title_screen).
-RELEASE_VERSION = "0.9.38"
+RELEASE_VERSION = "0.9.39"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:
@@ -8838,6 +8830,7 @@ def main() -> None:
                                                       "faces": face_data,
                                                       "sprite-aliases": sprite_aliases,
                                                       "old-guests": old_guest_rows(),
+                                                      "guest-lookup": guest_lookup_rows(),
                                                       "side-chapter-objectives": side_chapter_objectives(),
                                                       "own-story-flags": [mark for _, _, mark in OWN_STORY_STEPS],
                                                       "own-story-destinations": own_story_destinations(),

@@ -1,18 +1,19 @@
-# The end of the battle at Riovanes Castle's gate (event 281, entry 0x1AF): after "Pray let them be safe. Alma...and
-# Rapha, too." it loads the guest Rafa's roster record (WorldUnitAddress) for the screens that follow, then takes her
-# out of the party (DismissUnit, moved to her sprite set 0x29) before she rejoins as 0x29 (entry 0x1B2). A tester on
-# 0.9.22 had the game close a few seconds after that line. WorldUnitAddress finds her by her name id (25, the 0x19 it
-# names), not her sprite set: named 0x29 it found no one and the game closed on the same screens (seen here,
-# 2026-11-19), so it stays 0x19 (tools/build_mod.py REMASTER_SPRITE_SET_OPS). Reported again on 0.9.31: its old-save
-# repair removed 0.9.22's corrupt level-0 Rafa only on a world-map frame, while a gate battle autosave can resume
-# without one. Event 281 now checks the record and clears a level-0 one at its point of use; its six Guest Departure
-# pages run only for a valid record. This case injects the corrupt record after battle setup, bypassing both the world
-# map and setup repairs, then proves the closing reaches event 282. Run with
+# The end of the battle at Riovanes Castle's gate (event 281, entry 0x1AF) on a save an earlier build left a level-0
+# guest Rafa in (0.9.22's frog scene joined an empty one; reported at the gate on 0.9.22 and again on 0.9.31). The
+# roster repairs clear such a record on the world map and as a battle's units are made (Patches/OldGuests.cs); this
+# case puts it back after the battle is set up, past both, as a gate battle's autosave can hold it. The battle here
+# has no Rafa of its own (the harness's save has no guest), so the event's unit lookup (instruction 0xC3 0x19) has no
+# one to find: the code mod passes a null unit over (Patches/GuestLookup.cs) and the scene goes on through its
+# battle-end screens to DismissUnit, which takes the record out. 0.9.32 to 0.9.38 tried to do this inside the event,
+# with upgrade instructions the remaster's own interpreter ends the event at; that is out again (tools/build_mod.py
+# STRIPPED_SCREEN_GUARDS). See riovanes-gate-end-healthy.txt for the ordinary case and riovanes-gate-end-crystal.txt
+# for a Rafa who fell in the battle. Run with
 #   python -I tools/quick_test.py --restart tests/quick/riovanes-gate-end.txt
 # Scenario 0x119 is the gate battle (map 6); its victory runs event 281, which a requested scenario loads only with
-# event=0x119 (else event 2), as its battle begins. One unit placed, the enemies downed, then a
-# frame before each Enter through "Guest Departure" to the next scene's event (282); she's out of the roster after.
-name Riovanes gate end finds Rafa
+# event=0x119 (else event 2), as its battle begins. One unit placed, the enemies downed, then a frame before each
+# Enter until the requested scenario's next event (4, by the harness's own numbering) starts; she's out of the roster
+# after.
+name Riovanes gate end with an earlier build's empty Rafa
 wait world depth=1 state=0 timeout=20
 scenario 0x119 event=0x119
 wait log "reveal treasures: map 6" press=RETURN every=1 timeout=150
@@ -23,5 +24,5 @@ copy roster 0 50 sprites=0x29 job=0 name_id=25 level=0
 expect roster name_id=25
 wait seconds 5
 defeat
-advance event 282 every=0.6 shots=1 timeout=400
+advance event 4 every=0.6 shots=1 timeout=300
 expect roster name_id=25 count=0

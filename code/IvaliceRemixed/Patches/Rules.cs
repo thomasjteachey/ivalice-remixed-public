@@ -755,6 +755,17 @@ internal static unsafe class Rules
                 game.Log.Error($"rules: guests saved on the old sprite sets not moved: {e.Message}");
             }
         }
+        if (rules.Remove("guest-lookup"))
+        {
+            try
+            {
+                enabled.Add(GuestLookup.Install(game, data.GetProperty("guest-lookup")));
+            }
+            catch (Exception e)
+            {
+                game.Log.Error($"rules: the remaster's lookup of a guest by sprite set not moved: {e.Message}");
+            }
+        }
         if (rules.Remove("remixed-scenarios"))
         {
             try

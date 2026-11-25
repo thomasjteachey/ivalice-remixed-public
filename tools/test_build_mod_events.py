@@ -8,27 +8,40 @@ import build_mod  # noqa: E402
 
 
 class StockEventRepairsTests(unittest.TestCase):
-    def test_missing_or_level_zero_world_unit_skips_roster_screens(self) -> None:
-        # A small event with the same structural sequence as Riovanes event 281. The length table contains parameter
-        # counts, as the remaster's table does; irrelevant opcodes here have no parameters.
-        lengths = bytearray(256)
-        lengths[0xC3] = lengths[0x78] = lengths[0xE5] = lengths[0x7A] = 2
+    def stock(self) -> bytearray:
+        # A small event with the same sequence as Riovanes event 281: the unit lookup, the six battle-end screens with
+        # their waits, DismissUnit, END.
         code = bytearray([0xC3, 0x19, 0])
         for state in range(2, 8):
             code += bytes([0x78, state, 60, 0xE5, 0x38, 0])
         code += bytes([0x7A, 0x19, 0, 0xDB])
+        return code
 
-        self.assertTrue(build_mod.guard_missing_world_unit_screens(bytes(lengths), code, "event281.e"))
-        self.assertEqual(bytes.fromhex("01 AF 02 00 00 00 C1 00 16 00 02 01 01 AF 00 00 02 00"), code[3:21])
-        self.assertEqual(bytes.fromhex("03 AE 01 00 FF 00 C4 01 01 00 02 01 04 04 7A"), code[-18:-3])
-        once = bytes(code)
-        self.assertTrue(build_mod.guard_missing_world_unit_screens(bytes(lengths), code, "event281.e"))
-        self.assertEqual(once, bytes(code))
+    def test_an_earlier_builds_guard_comes_out(self) -> None:
+        # 0.9.32 to 0.9.38 put upgrade instructions around the screens of a script the remaster's own interpreter
+        # runs, which ends an event at an opcode below 0x10: the scene stopped at the guard's first byte.
+        before, after = build_mod.STRIPPED_SCREEN_GUARDS["event281.e"]
+        stock = self.stock()
+        code = bytearray(stock)
+        code[-4:-4] = after
+        code[3:3] = before
+        self.assertTrue(build_mod.strip_world_unit_screen_guard(code, "event281.e"))
+        self.assertEqual(bytes(stock), bytes(code))
+        self.assertFalse(build_mod.strip_world_unit_screen_guard(code, "event281.e"))
+        self.assertEqual(bytes(stock), bytes(code))
+
+    def test_half_a_guard_stops_the_build(self) -> None:
+        before, _ = build_mod.STRIPPED_SCREEN_GUARDS["event281.e"]
+        code = self.stock()
+        code[3:3] = before
+        with self.assertRaises(ValueError):
+            build_mod.strip_world_unit_screen_guard(code, "event281.e")
 
     def test_unrelated_event_is_untouched(self) -> None:
-        code = bytearray([0xDB])
-        self.assertFalse(build_mod.guard_missing_world_unit_screens(bytes(256), code, "event280.e"))
-        self.assertEqual(bytes([0xDB]), bytes(code))
+        before, after = build_mod.STRIPPED_SCREEN_GUARDS["event281.e"]
+        code = bytearray(before + after + bytes([0xDB]))
+        self.assertFalse(build_mod.strip_world_unit_screen_guard(code, "event280.e"))
+        self.assertEqual(before + after + bytes([0xDB]), bytes(code))
 
 
 if __name__ == "__main__":

@@ -1,0 +1,23 @@
+# The end of the battle at Riovanes Castle's gate (event 281) as most players meet it: the guest Rafa alive and well.
+# 0.9.32 to 0.9.38 shipped the event with a "guard" of upgrade instructions around its battle-end screens, but the
+# remaster's own interpreter runs this event and ends it at an opcode below 0x10: the scene stopped at the guard's
+# first byte, with its dark screen up and nothing after it run (no "Guest Departure", no write-back, Rafa still in the
+# party), and stayed black (seen here, 2026-11-25). The build takes the guard out again (tools/build_mod.py
+# STRIPPED_SCREEN_GUARDS). The harness's save has no guest Rafa, so the case puts one in guest slot 50 first, for the
+# battle to load. One unit placed, the enemies downed, then a frame before each Enter through "Guest Departure" until
+# the requested scenario's next event (4, by the harness's own numbering) starts; she's out of the roster after.
+#   python -I tools/quick_test.py --restart tests/quick/riovanes-gate-end-healthy.txt
+name Riovanes gate end with a healthy guest Rafa
+wait world depth=1 state=0 timeout=20
+copy roster 0 50 sprites=0x29 job=0x29 name_id=25
+expect roster name_id=25
+scenario 0x119 event=0x119
+wait log "reveal treasures: map 6" press=RETURN every=1 timeout=150
+formation units=1
+wait log "loads event 281 in place of event" timeout=60
+wait unit player=1 present=1 timeout=120 press=RETURN every=2
+show units
+wait seconds 5
+defeat
+advance event 4 every=0.6 shots=1 timeout=300
+expect roster name_id=25 count=0

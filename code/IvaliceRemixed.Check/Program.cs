@@ -140,6 +140,7 @@ try
         problems += SelfTest.FaceFold(log);
         problems += SelfTest.FacePortraits(game, log);
         problems += SelfTest.OldGuestMoves(game, log);
+        problems += SelfTest.GuestLookupRule(game, log);
         problems += SelfTest.RemixedMessageMoving(log);
         problems += SelfTest.RemixedConditionTypes(log);
         problems += SelfTest.RemixedWalkOrder(log);
@@ -6385,6 +6386,41 @@ internal static unsafe class SelfTest
     /// <summary>Guests saved on the old sprite sets (OldGuests): the battle units' making found, and the guest slots of
     /// a made-up roster moved or left as the story's progress and their name ids say; the Argath campaign's player
     /// Algus entry and made battle unit are recognized and linked to roster slot 0.</summary>
+    /// <summary>The remaster's lookup of Rafa's battle unit by a sprite set in its code (0x214284's fallback for event
+    /// 281) names the sprite set the port's battle data has her on, and its panel isn't called for a null unit.</summary>
+    public static int GuestLookupRule(Game game, Log log)
+    {
+        var failures = 0;
+        void Check(string name, bool ok)
+        {
+            if (!ok) failures++;
+            log.Info($"self-test: the guest lookup by sprite set, {name}{(ok ? "" : ": WRONG")}");
+        }
+        if (GuestLookup.SpriteSetByte == 0)
+        {
+            Check("isn't installed", false);
+            return failures;
+        }
+        var at = GuestLookup.SpriteSetByte - GuestLookup.SpriteSetAt;
+        Check($"the fallback's compare at 0x{GuestLookup.SpriteSetByte - 2 - game.Image.ImageStart:X}",
+              GuestLookup.SpriteSetByte - 2 - game.Image.ImageStart == 0x2142F1);
+        Check($"event 0x{*(int*)(at + 6):X}'s character 0x{*(byte*)(at + GuestLookup.CharacterAt):X2} is looked for on " +
+              $"sprite set 0x{*(byte*)GuestLookup.SpriteSetByte:X2}",
+              *(int*)(at + 6) == 0x119 && *(byte*)(at + GuestLookup.CharacterAt) == 0x19
+              && *(byte*)GuestLookup.SpriteSetByte == 0x29 && GuestLookup.SpriteSet == 0x29);
+        var target = GuestLookup.PanelCall + 5 + *(int*)(GuestLookup.PanelCall + 1);
+        Check($"the panel's call 0x{GuestLookup.PanelCall - game.Image.ImageStart:X} (the panel 0x{GuestLookup.Panel - game.Image.ImageStart:X}) goes " +
+              "to the stub",
+              GuestLookup.PanelCall - game.Image.ImageStart == 0x2143B0 && GuestLookup.Panel - game.Image.ImageStart == 0x2CBCA0
+              && *(byte*)GuestLookup.PanelCall == 0xE8 && target == GuestLookup.NullStub);
+        var stub = new ReadOnlySpan<byte>((void*)GuestLookup.NullStub, 11);
+        Check("the stub returns for a null unit and jumps to the panel otherwise",
+              stub.SequenceEqual(GuestLookup.NullUnitStub(GuestLookup.NullStub, GuestLookup.Panel))
+              && stub[..5].SequenceEqual(new byte[] { 0x48, 0x85, 0xD2, 0x74, 0x05 }) && stub[5] == 0xE9 && stub[10] == 0xC3
+              && GuestLookup.NullStub + 10 + BitConverter.ToInt32(stub[6..10]) == GuestLookup.Panel);
+        return failures;
+    }
+
     public static int OldGuestMoves(Game game, Log log)
     {
         var failures = 0;
