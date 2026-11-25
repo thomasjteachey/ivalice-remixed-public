@@ -49,6 +49,10 @@ internal static unsafe class BattleAct
     private static readonly System.Collections.Concurrent.ConcurrentQueue<Request> Requests = new();
     private static Request? _current; // the game thread's: set, until the confirm has run
     private static int _seenState = -1;
+    /// <summary>Frames an act has waited at a party unit's first command menu, the Fs pressed there, and when: the
+    /// first after <see cref="MenuPressAfter"/> frames, then every <see cref="MenuPressEvery"/>.</summary>
+    private static int _menuFrames, _menuPresses;
+    private const int MenuPressAfter = 30, MenuPressEvery = 150, MenuPressLimit = 5;
 
     public static void Install(Game game)
     {
@@ -119,17 +123,10 @@ internal static unsafe class BattleAct
                 Moved = moved,
             });
         // A party unit's turn already at its first command menu (state 4) has no window-less moment left: there the
-        // menu's cursor is on Move, and F opens the move selection, which takes the request.
-        var pressed = "";
-        var ui = *_state == CommandMenu ? _battleUi() : null;
-        var actor = ui == null ? null : *(byte**)(ui + UiUnit);
-        if (actor != null && actor[Battle.UnitTurn] != 0 && (actor[Battle.UnitCurrentTeam] & 0x08) != 0
-            && actor[Battle.UnitMoved] == 0 && actor[Battle.UnitActed] == 0)
-        {
-            Autopilot.Step("key F");
-            pressed = "; F pressed on Move for the move selection";
-        }
-        return $"act: {Requests.Count} queued for the party's next turn menus (the menu's state 0x{*_state:X}){pressed}";
+        // menu's cursor is on Move, and F opens the move selection, which takes the request. The menu's frame presses
+        // it (Step), whether the menu was open before the request or opened after it.
+        return $"act: {Requests.Count} queued for the party's next turn menus (the menu's state 0x{*_state:X})"
+               + (*_state == CommandMenu ? "; at an open command menu, F goes on Move for the move selection" : "");
     }
 
     [UnmanagedCallersOnly]
@@ -173,6 +170,24 @@ internal static unsafe class BattleAct
             _game.Log.Info($"harness: act waits ({Requests.Count} queued): the menu's state 0x{state:X}, "
                            + (actor == null ? "no unit" : $"unit {actor[UnitIndex]} (turn {actor[Battle.UnitTurn]}, +5 0x{actor[Battle.UnitCurrentTeam]:X2})"));
         }
+        // A turn can reach its first command menu (state 4) without a frame at its start (6) or at the menu's opening
+        // (3) on the way: acts queued before the battle then waited for good (tests/quick/two-shots.txt, one run in
+        // three on 2026-11-25, and once on 0.9.34). The same as an act asked for with the menu already open
+        // (tests/quick/two-shots-late.txt): F on Move, a little after the menu is seen open, opens the move selection,
+        // which takes the request. Again if it was lost.
+        if (state == CommandMenu && actor != null && actor[Battle.UnitTurn] != 0
+            && (actor[Battle.UnitCurrentTeam] & 0x08) != 0 && actor[Battle.UnitMoved] == 0 && actor[Battle.UnitActed] == 0)
+        {
+            if (_menuFrames++ % MenuPressEvery == MenuPressAfter && _menuPresses < MenuPressLimit)
+            {
+                _menuPresses++;
+                Autopilot.Step("key F");
+                _game.Log.Info($"harness: act waits at unit {actor[UnitIndex]}'s first command menu: F pressed on Move for the "
+                               + $"move selection (press {_menuPresses})");
+            }
+            return;
+        }
+        (_menuFrames, _menuPresses) = (0, 0);
         if (state is not (TurnStarts or CommandMenuOpens or MoveSelection))
             return;
         // A party unit (+5 & 8, the player's to command) whose turn it is.

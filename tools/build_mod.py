@@ -330,8 +330,9 @@ SPECS = [
 # Renamed by ReMixed, but the new name describes behaviour in its code
 # (Defense/Warding Aura), so the remaster keeps the vanilla name for now.
 RENAMES_NEED_CODE = {0x1D2, 0x1D4}
-# Names the port sets itself (see DARK_KNIGHT below): ReMixed's Dark Knight skillset's name goes with it.
-EXTRA_RENAMES = {"skillsets": {0xE0: "Darkness"}}
+# Names the port sets itself. Arc Witch keeps its PS1 name, so the ordinary rename comparison does not write it,
+# but the remaster's job 0x21 has no name. That blank also reaches its status card and job-level message.
+EXTRA_RENAMES = {"jobs": {0x21: "Arc Witch"}, "skillsets": {0xE0: "Darkness"}}
 # Ability slots the remaster left unused (no icon, no name, or a placeholder such as "A508" or "UNUSED") that a
 # skillset this build writes hands out. A name alone doesn't make the party menu show one (the Thief's Pass showed as
 # a blank line), so each gets ReMixed's name, an icon (from the skillset's other abilities, or its kind's) and a
@@ -804,7 +805,7 @@ CODE_RULES = ["unevadable", "team-targeting", "auras", "limit-charge", "status-t
               "riding-actions", "persistent-performances", "hitting-bodies", "arc-obstacles",
               "taken-equipment", "victory-bonus",
               "move-find", "nemesis", "separate-saves", "remixed-events", "pack-files", "remixed-sprites",
-              "remixed-faces", "old-guests", "remixed-scenarios",
+              "remixed-faces", "old-guests", "remixed-scenarios", "world-roads",
               "unit-presets", "story-ai"]
 
 
@@ -2944,8 +2945,22 @@ EVENT_CODE_INSERTS: dict[int, list[tuple[bytes, bytes]]] = {
     # number, SET var 0x71, 0xB), opens the chapter-3 branch: SET flag 0x2ED, 1, as ReMixed's 0x03A would in chapter 3
     # (CHAPTER_3_BRANCH). The first SET_VAR of flag 0x81 and IF in 0x112 (its scene's set-up) is followed by another
     # instruction, so the insert goes in the post-battle one.
-    0x112: [(bytes([0xAF, 0x00, 0x00, 0x81, 0x00, 0x01, 0xAE, 0x71, 0x00, 0x0B, 0x00]),
+    # The post-battle scene copies Bryn's and Lorne's graphics from roster records by name. If either is missing,
+    # the copied value stays zero and its scene actor draws as a different character. The scene also opens its first
+    # dialogue after a colour fade without revealing the map, as Grog Hill's closing did.
+    0x112: [(bytes.fromhex("0e 01"), bytes.fromhex("ae 79 00 83 00 ae 7a 00 38 00")),
+            (bytes.fromhex("3e 02 ff ff ff 00 00 00 80 00"), bytes.fromhex("4d 1e f1 1e 00")),
+            (bytes([0xAF, 0x00, 0x00, 0x81, 0x00, 0x01, 0xAE, 0x71, 0x00, 0x0B, 0x00]),
              bytes([0xAE, CHAPTER_3_BRANCH_OPEN & 0xFF, CHAPTER_3_BRANCH_OPEN >> 8, 0x01, 0x00]))],
+    # Grog Hill's battle entry reveals the map before formation, but its later 0x114 runs still open their dialogue
+    # over black: Agrias's turn (labels 03/04) and Bryn's post-battle scene (label 02, copied as 0x353).
+    # Reveal in each run, after the scene's own colour fade starts for label 02, so its map is drawn behind the boxes.
+    # Label 02 reads the scene actors' graphics from battle ids 0x9A/0x9B, which are absent after a resumed battle.
+    # Default to Bryn's Dancer and Lorne's Bard; a present source actor still replaces the default.
+    0x114: [(bytes.fromhex("0e 02"), bytes.fromhex("ae 79 00 83 00 ae 7a 00 38 00")),
+            (bytes.fromhex("3e 02 ff ff ff 00 00 00 80 00"), bytes.fromhex("4d 1e f1 1e 00")),
+            (bytes.fromhex("0e 03"), bytes.fromhex("4d 1e f1 1e 00")),
+            (bytes.fromhex("0e 04"), bytes.fromhex("4d 1e f1 1e 00"))],
     # The tavern's scene (0x0C7) reads flag 0x2D0 first: set, it came from the world map (ReMixed's mission list) and
     # Exit Tavern goes back there; clear, it came from the Preparation Menu (var 0x3E = 7) and goes back to the battle.
     # Nothing in ReMixed's events sets it. The mod reaches the tavern from the world map only (a posting), so the scene
@@ -3126,8 +3141,8 @@ SIDE_CHAPTER_DESTINATIONS = {
 }
 
 
-def side_chapter_objectives() -> dict[int, str]:
-    """World-map captions by story progress, from the same destinations that start the events."""
+def side_chapter_destinations() -> dict[int, int]:
+    """The place 1-A is headed for by its story progress: where its world-map start at that progress is."""
     route = {}
     for location, checks, _, _ in REMIXED_WORLD_STARTS:
         condition = {variable: value for variable, value, *kind in checks if not kind}
@@ -3137,7 +3152,13 @@ def side_chapter_objectives() -> dict[int, str]:
                 raise ValueError(f"1-A progress {progress} has multiple objective destinations")
     # Zeltennia runs some of its opening from the event, so progress 1 has no world start of its own.
     route.setdefault(1, route[0])
-    return {progress: f"Travel to {SIDE_CHAPTER_DESTINATIONS[location]}." for progress, location in sorted(route.items())}
+    return dict(sorted(route.items()))
+
+
+def side_chapter_objectives() -> dict[int, str]:
+    """World-map captions by story progress, from the same destinations that start the events."""
+    return {progress: f"Travel to {SIDE_CHAPTER_DESTINATIONS[location]}."
+            for progress, location in side_chapter_destinations().items()}
 
 
 # The world map's steps on 1-A's way (its WLDCORE statements before or beside those starts): 0x0EC hides chapter 1's
@@ -3191,6 +3212,43 @@ REMIXED_WORLD_STARTS += [(2, [(0x6E, 3), _G], 0x008, 2), (26, [(0x6E, 4), _G], 0
 # waits for the campaign ("flag ALGUS_FLAG = 1").
 ALGUS_WORLD_STEPS = [(24, 3, [(0x22D, WORLD_ROUTE, 24, 2), (0x202, WORLD_PLACE, 2, None)]),
                      (2, 4, [(0x22F, WORLD_ROUTE, 24, 6), (0x206, WORLD_PLACE, 6, None)])]
+SIDE_CHAPTER_A_START_PLACE = 5  # Zeltennia Castle, which 0x0EC itself shows as the chapter starts
+# ReMixed's own stories and the world-map steps each one's roads come from: (name, steps, the flag that says it runs).
+# write_world_starts writes every step from this list, and the code mod gets the flags from it (Patches/WorldRoads.cs):
+# the remaster draws a road grey while its own count of the story (the stage: GameFlowManager's, quest 0) says the road
+# isn't open yet, from a list of roads per stage (WorldMapProgressInfo's RouteIds, by way of GameProgress). Only the
+# remaster's own events move the stage (their instruction 0xE9), so in one of these stories it stays where the main
+# story stopped: 440 from chapter 1's end, whose row greys roads 11 and 10, and 1-A walks road 10 (the Zeklaus Desert to
+# Dorter) at its end (a tester, 2026-11-22: "grey though walkable"). While one of these flags is set no road is greyed.
+OWN_STORY_STEPS = [("1-A", REMIXED_WORLD_STEPS, SIDE_CHAPTER_A_FLAG), ("the Algus campaign", ALGUS_WORLD_STEPS, ALGUS_FLAG)]
+# The remaster's events whose numbers ReMixed's events take (REUSED_SCENARIO_NUMBERS) no longer move the stage as they
+# end. Where the main story's progress (var 0x6E) says the story is past one, the stage follows it as the world map
+# starts: (var 0x6E at least, the stage at least, the stage it becomes). Araguay Woods' last scene (127) set the story
+# to 0x11 and the stage to 478 together; ReMixed's (0x01D, 0x107) set the story alone, which left the stage at Dorter's
+# 465 and the road on from the woods to Zeirchele Falls (road 21) grey until the falls.
+STORY_STAGE_FLOORS = [(0x11, 465, 478)]
+# The stages the reused numbers' events set that nothing sets now, each with why that is left: (the remaster's event,
+# quest, stage). check_story_stages stops the build on one that isn't here or in STORY_STAGE_FLOORS.
+STORY_STAGES_LEFT = {
+    (122, 0, 470): "Araguay Woods, inside the battle: the same roads and objective as 465, and 478 follows",
+    (123, 0, 472): "Araguay Woods, inside the battle: as 470",
+    (124, 0, 474): "Araguay Woods, inside the battle: as 470",
+    (434, 0, 1720): "Eagrose's end: no road greyed at 1710 or 1720, but the objective line stays \"Meet with Dycedarg at "
+                    "Eagrose Castle.\" until 1760 at Mullonde (open: docs/GAMEPLAY_TODO.md; the story's progress doesn't "
+                    "tell the two apart, so it needs the stage set as ReMixed's Eagrose ends)",
+    (436, 0, 1730): "Eagrose's end: as 1720",
+    (452, 0, 1830): "the temple: the same roads and objective as 1820",
+    (469, 2, 35): "a side quest's stage (quest 2): the same roads and objective as its 30",
+}
+STAGE_OPCODE = 0xE9  # the remaster's own events': a u32 quest and a u32 stage (0x23B5xx hands them to 0xFF660)
+
+
+def own_story_destinations() -> dict[int, dict[int, int]]:
+    """Where each of ReMixed's own stories is headed for by its progress (var 0x6E), by the story's flag, for the world
+    map's objective marker (the code mod's WorldRoads): the remaster puts its diamond on the place its own stage names
+    (Dorter all through 1-A, from stage 440). 1-A's are its world-map starts' places, as its objective lines are; the
+    Algus campaign has none worked out, so its map shows no marker."""
+    return {SIDE_CHAPTER_A_FLAG: side_chapter_destinations()}
 # The chapter-3 branch (CHAPTER_3_BRANCH): location 15, ReMixed's two flags in its order, 0xAE clear (Hirame not lost)
 # and 0x2ED set (opened by her rescue, shut once taken), then the story at least 0x22, outside the Algus campaign; mode
 # 1, as ReMixed's. A check may name a row type: EnhancedWorldEvent's 2 is "at least" (it fails
@@ -3838,15 +3896,71 @@ def seat_riders(battle_ids: set[int]) -> bytes:
 #   which queues the joiners not in the roster yet and returns how many. With none it ends there. With some it parks
 #   task 1 (its 0x800-byte context saved, the task made inactive), plays the join fanfare, shows each joiner's "New
 #   Party Member" screen (the PS1's "JOIN UP!" over the unit's status) and writes them on Accept, then restores task 1
-#   and makes it active again. Nothing in it tears the map down (read from the decompile, 2026-11-18).
-# ReMixed makes its recruits join through state 7 in a dark screen, then goes on talking on the same map: Luso at
-# Mandalia (0x0EB), Luso and Boco after Araguay (0x107), Zalbag at Eagrose (0x06E: three), the chapter-3 branch's
-# 0x11B. From 2026-11-16 the build made those 0x43 1 and the live writer instead, on the belief that state 7 destroys
+#   and makes it active again. Its exit sets the battle-renderer exit flag (0x2FF9E00) to 1, leaving a continuing
+#   scene's map black. Each midscene join calls routine C7 after its wait to restore the live field.
+# ReMixed makes its recruits join through state 7 in a dark screen, often continuing on the same map. This includes
+# Ashley after the Lich (0x040: two), the Depths hub (0x0A3), Dycedarg's scene (0x008), the final battle (0x07B),
+# Luso at Mandalia (0x0EB), Luso and Boco after Araguay (0x107), Zalbag at Eagrose (0x06E: three), and the
+# chapter-3 branch (0x11B). From 2026-11-16 the build made four of these 0x43 1 and the live writer instead, on the
+# belief that state 7 destroys
 # the map; that was seen while battles' exits still jumped to state 7 without the results states 2-6 first
 # (AFTER_BATTLE_RESULTS, fixed 2026-11-17). Every recruit then joined with no screen: the scene ended and the unit was simply in the party
 # (reported 2026-11-18, Boco; Luso's before). ReMixed's own state 7 stays now, as on the PS1, and each scene's count of
 # them is checked, so a later change can't quietly make those joins silent again.
-MIDSCENE_JOIN_SCREENS = {0x107: 1, 0x0EB: 1, 0x06E: 3, 0x11B: 1}
+MIDSCENE_JOIN_SCREENS = {0x008: 1, 0x040: 2, 0x06E: 3, 0x07B: 1,
+                         0x0A3: 1, 0x0EB: 1, 0x107: 1, 0x11B: 1}
+
+# ReMixed's 1-A rescue names Agrias while she is off the field, so a unit portrait resolves to none. Its EVTFACE
+# set 0 portrait 7 is her own ReMixed face. Gareth's dream scene names portrait 6 of set 1 (Orlandeau) for the knight,
+# but ReMixed drew Gareth in portrait 8. The remaster face-set table is remapped to those source pictures by
+# RemixedFaces.RemasterEventFaces, and the build ships their textures (EVENT_FACE_ART).
+# event -> (speaker battle id, old portrait, new portrait, set to load before the message, exact message count).
+SCENE_PORTRAIT_FIXES = {0x112: (0x22, 0, 7, 0, 5), 0x0F9: (0x0B, 6, 8, None, 15)}
+
+
+def fix_scene_portraits(code: bytes, lengths: bytes, event: int) -> bytes:
+    """Give the two scene speakers their intended explicit ReMixed EVTFACE portrait."""
+    if event not in SCENE_PORTRAIT_FIXES:
+        return code
+    actor, before, after, face_set, expected = SCENE_PORTRAIT_FIXES[event]
+    out = bytearray()
+    at = count = 0
+    while at < len(code):
+        end = at + 1 + lengths[code[at]]
+        instruction = bytearray(code[at:end])
+        # At this stage the script still has PS1's 16-bit message numbers. The speaker and portrait are bytes 5/7;
+        # write_scenario_texts later expands the number to 32 bits, moving them to 7/9 in the shipped event.
+        if instruction[0] == 0x10 and instruction[5] == actor and instruction[7] == before:
+            if face_set is not None:
+                out.extend((0x50, face_set))
+            instruction[7] = after
+            count += 1
+        out.extend(instruction)
+        at = end
+    if count != expected:
+        sys.exit(f"event 0x{event:X}: changed {count} portraits for actor 0x{actor:X}, expected {expected}")
+    return bytes(out)
+
+
+def insert_midscene_join_return(code: bytes, lengths: bytes, expected: int) -> bytes:
+    """Restore the field after every midscene display-state-7 wait, before its dark screen is removed."""
+    display, wait = bytes.fromhex("78 07 3c"), bytes.fromhex("e5 38 00")
+    restore = bytes.fromhex("cf c7 00 00 00")  # RemixedEvents.MidsceneJoinReturn
+    out = bytearray()
+    at = count = 0
+    while at < len(code):
+        end = at + 1 + lengths[code[at]]
+        if code[at:end] == display and code[end:end + len(wait)] == wait:
+            out.extend(code[at:end + len(wait)])
+            out.extend(restore)
+            at = end + len(wait)
+            count += 1
+        else:
+            out.extend(code[at:end])
+            at = end
+    if count != expected:
+        sys.exit(f"midscene join return: found {count} display-state waits, expected {expected}")
+    return bytes(out)
 
 
 def midscene_join_screens(code: bytes, lengths: bytes) -> int:
@@ -4898,8 +5012,7 @@ def write_world_starts(cfg: dict) -> str:
     # 1-A's world-map steps (REMIXED_WORLD_STEPS) and the Algus campaign's (ALGUS_WORLD_STEPS), an entry each, before
     # the starts at the same place: a start that cuts straight to its event (0x0F9 at location 27) would otherwise come
     # first, and the story moves on past them. Each waits for its own mode (its flag = 1).
-    for name, all_steps, mark in (("1-A", REMIXED_WORLD_STEPS, SIDE_CHAPTER_A_FLAG),
-                                  ("the Algus campaign", ALGUS_WORLD_STEPS, ALGUS_FLAG)):
+    for name, all_steps, mark in OWN_STORY_STEPS:
         steps = 0
         for location, story, actions in all_steps:
             for flag, kind, place, other in actions:
@@ -5869,12 +5982,15 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
         ps1 = notice_boxes(ps1, lengths, NOTICE_MESSAGES.get(theirs))
         ps1 = timed_notice(ps1, TIMED_NOTICES.get(theirs))
         ps1 = insert_code(ps1, lengths, EVENT_CODE_INSERTS.get(theirs))
+        if theirs in MIDSCENE_JOIN_SCREENS:
+            ps1 = insert_midscene_join_return(ps1, lengths, MIDSCENE_JOIN_SCREENS[theirs])
         ps1, made = erase_postbattle_cleanup(ps1, POSTBATTLE_CLEANUP.get(theirs))
         postbattle_erases += made
         made = midscene_join_screens(ps1, lengths)
-        if made != MIDSCENE_JOIN_SCREENS.get(theirs, made):
+        expected_joins = MIDSCENE_JOIN_SCREENS.get(theirs, 0)
+        if made != expected_joins:
             sys.exit(f"ReMixed's 0x{theirs:X} shows {made} join screen(s) in a dark screen, expected "
-                     f"{MIDSCENE_JOIN_SCREENS[theirs]} (MIDSCENE_JOIN_SCREENS)")
+                     f"{expected_joins} (MIDSCENE_JOIN_SCREENS)")
         if theirs in MIDSCENE_JOIN_SCREENS:
             midscene_joins += made
         ps1, made = route_event_graphics(ps1, lengths)
@@ -5905,6 +6021,7 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
         boxes_reopened += made
         pages_shown += paged
         speech_boxes_switched += switched
+        ps1 = fix_scene_portraits(ps1, lengths, theirs)
         if record[2] in set(NEW_LOOKS) | set(REMIXED_MAPS) | set(REMIXED_MAP_EDITS):
             ps1, dropped = without_map_objects(ps1, lengths)
             objects_dropped += dropped
@@ -6204,11 +6321,19 @@ EVENT_NEUTRAL_PALETTE_TEXTURE = 0x515
 EVENT_TEXTURE_RANGE = (*range(0x47A, 0x506), *range(0x468, 0x46C))
 
 
+# ReMixed's event graphics whose textures stay plain doubled pixels: 0x6F, the Treasure Wheel's chests and Reveal
+# Treasures' arrows, seen so on the PC beside the PS1 (2026-11-12) and not looked at smoothed. Every other one is
+# people's poses, drawn on a field beside the remaster's own sprites, and is smoothed with Scale2x as ReMixed's unit
+# sprites are (REMIXED_SPRITES): until 2026-11-25 only 0x2E was (0.9.27), and the rest stood out as blocky (a tester,
+# 2026-11-21: the dream's knight carrying the child is 0x1B's).
+EVENT_TEXTURES_PLAIN = {0x6F}
+
+
 def event_texture(graphic: bytes, source: int) -> bytes:
     """An event graphic's pixels at twice the size, as the enhanced sprites' texture of it (4 bits a pixel, the left one
-    in the low bits, 256 bytes a row)."""
+    in the low bits, 256 bytes a row): smoothed with Scale2x, but for EVENT_TEXTURES_PLAIN."""
     pixels, out = graphic[EVTCHR_PIXELS:], bytearray()
-    if source == 0x2E:  # ReMixed's stockade actor, redrawn for the enhanced sprite scale.
+    if source not in EVENT_TEXTURES_PLAIN:
         return sprites.pack4(sprites.scale2x(sprites.unpack4(pixels), 256, len(pixels) // 128))
     for y in range(len(pixels) // 128):
         row = bytearray()
@@ -6329,6 +6454,74 @@ def remaster_instruction_size(table: bytes, code: bytes, at: int) -> int:
     if op == 0xE6:
         return code[at + 1] + 2 if at + 1 < len(code) else 1
     return table[op] + 1 + REMASTER_ENHANCED_LENGTHS.get(op, 0)
+
+
+def check_story_stages(cfg: dict) -> str:
+    """The remaster's count of the story (the stage its events set with STAGE_OPCODE as they end) against the events
+    the mod ships: a stock event the mod ships under the upgrade's mark is one of ReMixed's with the remaster's number,
+    and sets no stage, so each stage lost that way has to be one the story's progress brings back (STORY_STAGE_FLOORS)
+    or one looked at and left (STORY_STAGES_LEFT); a stock event shipped without the mark has to set what it did. And
+    every story whose roads the mod opens itself is in OWN_STORY_STEPS, which the code mod greys no road in. Exits with
+    what's wrong. Returns a line for the report."""
+    table = remaster_length_table(cfg)
+    ours = MOD_DIR / "FFTIVC" / "data" / "enhanced" / "script" / "enhanced"
+
+    def stages(code: bytes, name: str) -> list[tuple[int, int]]:
+        found, at = [], 0
+        while at < len(code) and code[at] != 0xDB:
+            size = remaster_instruction_size(table, code, at)
+            if code[at] == STAGE_OPCODE:
+                if size != 9:
+                    sys.exit(f"{name}: the remaster's stage instruction isn't 8 bytes of parameters (check_story_stages)")
+                found.append((int.from_bytes(code[at + 1:at + 5], "little"), int.from_bytes(code[at + 5:at + 9], "little")))
+            at += size
+        return found
+
+    lost, kept, wrong = set(), 0, []
+    for path in stock_event_paths(cfg):
+        theirs = stages(path.read_bytes(), path.name)
+        mine = ours / path.name
+        if not theirs or not mine.exists():
+            continue
+        code = mine.read_bytes()
+        if code.startswith(REMIXED_EVENT_MARK):
+            lost |= {(int(path.stem[5:]), quest, stage) for quest, stage in theirs}
+        elif stages(code, f"the mod's {path.name}") != theirs:
+            wrong.append(f"the mod's {path.name} no longer sets the remaster's stage(s) {theirs}")
+        else:
+            kept += len(theirs)
+    floors = {to for _, _, to in STORY_STAGE_FLOORS}
+    for number, quest, stage in sorted(lost):
+        if (number, quest, stage) not in STORY_STAGES_LEFT and not (quest == 0 and stage in floors):
+            wrong.append(f"event {number}, now one of ReMixed's, set the remaster's stage {stage} (quest {quest}): the "
+                         "world map's grey roads and objective line follow the stage (STORY_STAGE_FLOORS, or "
+                         "STORY_STAGES_LEFT with why)")
+    wrong += [f"STORY_STAGES_LEFT names event {number}'s stage {stage} (quest {quest}), which no reused event set"
+              for number, quest, stage in sorted(set(STORY_STAGES_LEFT) - lost)]
+    wrong += [f"STORY_STAGE_FLOORS brings back stage {to}, which no reused event set"
+              for to in sorted(floors - {stage for _, quest, stage in lost if quest == 0})]
+    wrong += [f"STORY_STAGE_FLOORS: the stage has to rise ({low} to {to})"
+              for _, low, to in STORY_STAGE_FLOORS if low >= to]
+    marks = {mark for _, _, mark in OWN_STORY_STEPS}
+    for flag in (SIDE_CHAPTER_A_FLAG, ALGUS_FLAG):
+        if flag not in marks:
+            wrong.append(f"flag 0x{flag:X}'s story isn't in OWN_STORY_STEPS: the remaster's stage would grey its roads")
+    for flag, places in own_story_destinations().items():
+        if flag not in marks:
+            wrong.append(f"flag 0x{flag:X} has destinations but isn't a story in OWN_STORY_STEPS")
+        shown = {place for name, steps, mark in OWN_STORY_STEPS if mark == flag for _, _, actions in steps
+                 for _, kind, place, _ in actions if kind == WORLD_PLACE}
+        for progress, place in places.items():
+            if not 0 <= place < WORLD_EVENT_UNUSED:
+                wrong.append(f"flag 0x{flag:X}'s destination at progress 0x{progress:X} isn't a place ({place})")
+            elif flag == SIDE_CHAPTER_A_FLAG and place not in shown and place != SIDE_CHAPTER_A_START_PLACE:
+                wrong.append(f"1-A's destination at progress 0x{progress:X}, place {place}, is one none of its "
+                             "world-map steps shows: its marker would stand on a hidden place")
+    if wrong:
+        sys.exit("the remaster's story stage: " + "; ".join(wrong))
+    return (f"{len(lost)} stage(s) of the remaster's lost with reused numbers: {len(floors)} follow the story's "
+            f"progress, {len(STORY_STAGES_LEFT)} left with a reason; {kept} kept in the stock events the mod ships; no "
+            f"road greyed in {len(OWN_STORY_STEPS)} stories of ReMixed's own")
 
 
 def audit_stock_event_graphics(cfg: dict, graphics: set[int]) -> int:
@@ -6988,6 +7181,10 @@ REMASTER_FACE_FOLDS = {0x11: 0x17, 0x12: 0x1A, 0x14: 0x30, 0x16: 0x22, 0x1E: 0x3
 # man's Dark Knight, 0x9F, under 0x5B (a male Squire copy's, which the fold sends to 0x60), not its own 159, which
 # GenericJobs ships a face as (DARK_KNIGHT_GRAPHICS).
 FACE_NUMBERS = {0x34: 0x14, 0x19: 0x28, 0x3A: 0x2A, 0x3B: 0x2C, 0x9F: 0x5B}
+# ReMixed changes four EVTFACE portraits in sets 0 and 1. The remaster's table still points their slots at a stock
+# placeholder (0xB7), so message portraits using them draw the wrong person or none. Numbers 0x9B-0x9E are the four
+# unused unit graphic slots, within the message palette-cap table; each gets the portrait ReMixed drew for that slot.
+EVENT_FACE_ART = {(0, 7): 0x9B, (0, 8): 0x9C, (1, 6): 0x9D, (1, 8): 0x9E}
 
 
 def face_number(graphic: int, given: set[int]) -> int:
@@ -7028,8 +7225,24 @@ def write_remixed_faces(cfg: dict, sprite_data: list[list[int]]) -> tuple[str, l
     FACE_STAGING.mkdir(parents=True)
     FACE_CACHE.mkdir(parents=True, exist_ok=True)
     data, made, none = [], 0, []
+    def put_face(face: int, palette: int, rgba: bytes) -> None:
+        nonlocal made
+        name = f"wldface_{face:03d}_{palette:02d}_uitx"
+        cached = FACE_CACHE / f"{hashlib.sha1(rgba).hexdigest()}.tex"
+        if not cached.exists():
+            png = FACE_STAGING / f"{name}.png"
+            sprites.write_rgba_png(png, rgba, atlas_w, atlas_h)
+            subprocess.run([exe, "img-conv", "-i", png], check=True, capture_output=True)
+            if not png.with_suffix(".tex").exists():
+                sys.exit(f"FF16Tools made no texture of {png}")
+            shutil.move(png.with_suffix(".tex"), cached)
+            made += 1
+        shutil.copy2(cached, out / "texture" / f"{name}.tex")
+        (out / "textureparts" / f"{name}.utexpt").write_bytes(
+            template.replace(FACE_TEMPLATE.encode(), name.encode()))
+
     given = {row[0] for row in sprite_data}
-    with Disc(remixed_bin(cfg)) as patched:
+    with Disc(remixed_bin(cfg)) as patched, Disc(vanilla_bin(cfg)) as vanilla:
         for graphic in [row[0] for row in sprite_data]:
             source = REMIXED_SPRITE_SHEETS.get(graphic, graphic)
             faces = sprites.face_atlas(patched.read(patched.find(f"BATTLE/{source:02X}.SPR")), parts)
@@ -7038,23 +7251,29 @@ def write_remixed_faces(cfg: dict, sprite_data: list[list[int]]) -> tuple[str, l
                 continue
             face = face_number(graphic, given)
             for palette, rgba in faces.items():
-                name = f"wldface_{face:03d}_{palette:02d}_uitx"
-                cached = FACE_CACHE / f"{hashlib.sha1(rgba).hexdigest()}.tex"
-                if not cached.exists():
-                    png = FACE_STAGING / f"{name}.png"
-                    sprites.write_rgba_png(png, rgba, atlas_w, atlas_h)
-                    subprocess.run([exe, "img-conv", "-i", png], check=True, capture_output=True)
-                    if not png.with_suffix(".tex").exists():  # it answers 0 when it fails
-                        sys.exit(f"FF16Tools made no texture of {png}")
-                    shutil.move(png.with_suffix(".tex"), cached)
-                    made += 1
-                shutil.copy2(cached, out / "texture" / f"{name}.tex")
-                (out / "textureparts" / f"{name}.utexpt").write_bytes(
-                    template.replace(FACE_TEMPLATE.encode(), name.encode()))
+                put_face(face, palette, rgba)
             data.append([graphic, face])
+        source_face = patched.read(patched.find("EVENT/EVTFACE.BIN"))
+        stock_face = vanilla.read(vanilla.find("EVENT/EVTFACE.BIN"))
+        changed = set()
+        for face_set in range(8):
+            for portrait_number in range(1, 9):
+                base = face_set * 0x2000
+                pixels = base + (portrait_number - 1) * 0x300
+                palette = base + 0x1800 + (portrait_number - 1) * 0x20
+                if (source_face[pixels:pixels + 0x300] != stock_face[pixels:pixels + 0x300]
+                    or source_face[palette:palette + 0x20] != stock_face[palette:palette + 0x20]):
+                    changed.add((face_set, portrait_number))
+        if changed != set(EVENT_FACE_ART):
+            sys.exit(f"ReMixed's changed EVTFACE portraits are {sorted(changed)}, expected {sorted(EVENT_FACE_ART)}")
+        for (face_set, portrait_number), face in EVENT_FACE_ART.items():
+            rgba = sprites.event_face_atlas(source_face, face_set, portrait_number, parts)
+            for palette in sprites.FACE_PALETTES:
+                put_face(face, palette, rgba)
     shutil.rmtree(FACE_STAGING, ignore_errors=True)
     names = ", ".join(f"0x{g:02X} as {face}" for g, face in data)
     return (f"{len(data)} faces from ReMixed's portraits ({names}), palettes 8-15, {made} textures made"
+            + f"; {len(EVENT_FACE_ART)} EVTFACE portraits from ReMixed"
             + (f"; no portrait: {', '.join(none)}" if none else "")), data
 
 
@@ -7412,6 +7631,32 @@ def fill_placeholder_abilities(db: sqlite3.Connection, table: str, handed_out: d
     return filled
 
 
+# The remaster's icons for special commands (JobCommand's IconId, `job_comm/jc_NNN`): 21 a special job's (Mettle, Holy
+# Sword, Spellcraft), 22 a boss monster's (Bio, Dark Arts, Demon Magicks).
+SPECIAL_COMMAND_ICONS = (21, 22)
+
+
+def fill_command_icons(db: sqlite3.Connection, commands: str, jobs: str,
+                       job_commands: dict[int, int]) -> dict[int, int]:
+    """Icons for the skillsets the port names in rows the remaster left without one (ReMixed's own: Spell Strike,
+    Witchcraft, Blue Magic, its bosses' lists...). A unit card's skillset row shows its icon and its name only for an
+    icon above 0 (0x29AF64), so a skillset with none was a blank row: Valmafra's Spell Strike, seen on the Deck
+    (2026-11-25). Each takes the special icon (SPECIAL_COMMAND_ICONS) of the command its jobs had in the remaster (the
+    job table's link, which mirrors the remaster's own JobData), else a special job's. `job_commands` is the port's
+    job -> command. Returns skillset -> the icon given."""
+    icon = dict(db.execute(f'select Key, IconId from "{commands}"').fetchall())
+    stock = dict(db.execute(f'select Key, "jobcommand+Id" from "{jobs}"').fetchall())
+    given: dict[int, int] = {}
+    for key, name in db.execute(f'select Key, Name from "{commands}" where IconId = 0').fetchall():
+        if not name:
+            continue
+        theirs = {icon.get(stock.get(job)) for job, command in job_commands.items() if command == key}
+        theirs &= set(SPECIAL_COMMAND_ICONS)
+        given[key] = theirs.pop() if len(theirs) == 1 else SPECIAL_COMMAND_ICONS[0]
+        db.execute(f'update "{commands}" set IconId = ? where Key = ?', (given[key], key))
+    return given
+
+
 def write_descriptions(db: sqlite3.Connection, table: str, name: str, changed: dict[int, str], every: dict[int, str],
                        skip: set[int], names: list[tuple[str, str]]) -> int:
     """ReMixed's descriptions (remixed_descriptions) into a name table: the ones it changed, and its own where the
@@ -7434,8 +7679,10 @@ def write_descriptions(db: sqlite3.Connection, table: str, name: str, changed: d
 def build_name_tables(cfg: dict, renames: dict[str, dict[int, str]], skip: dict[str, set[int]],
                       costs: dict[int, int], handed_out: dict[int, set[int]], all_names: dict[int, str],
                       descriptions: tuple[dict[str, dict[int, str]], dict[str, dict[int, str]]] | None = None,
-                      names_old: dict[str, dict[int, str]] | None = None) -> dict:
-    """Write ReMixed's renames, its descriptions and its JP costs into the enhanced build's English name tables.
+                      names_old: dict[str, dict[int, str]] | None = None,
+                      job_commands: dict[int, int] | None = None) -> dict:
+    """Write ReMixed's renames, its descriptions and its JP costs into the enhanced build's English name tables, and
+    icons for the skillsets it names that have none (fill_command_icons; `job_commands`, the port's job -> command).
     Returns counts."""
     work = WORK / "remaster" / "build" / "names"
     shutil.rmtree(work, ignore_errors=True)
@@ -7463,6 +7710,8 @@ def build_name_tables(cfg: dict, renames: dict[str, dict[int, str]], skip: dict[
         counts[name] = len(rows)
     jp = write_jp_costs(db, f"{NAME_LISTS['abilities'][0]}-en", costs)
     counts["Dark Knight's rows"] = write_dark_knight_rows(db)
+    counts["skillset icons"] = len(fill_command_icons(db, f"{NAME_LISTS['skillsets'][0]}-en",
+                                                      f"{NAME_LISTS['jobs'][0]}-en", job_commands or {}))
     counts["jobs"] = counts["jobs"] or 1  # the job and command tables carry the Dark Knight's rows either way
     counts["skillsets"] = counts["skillsets"] or 1
     db.commit()
@@ -8096,7 +8345,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata. The title screen's plaque shows it (write_title_screen).
-RELEASE_VERSION = "0.9.36"
+RELEASE_VERSION = "0.9.37"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:
@@ -8477,9 +8726,13 @@ def main() -> None:
         with Disc(vanilla_bin(cfg)) as vanilla, Disc(remixed_bin(cfg)) as patched:
             help_old, help_new = FilePair(vanilla, patched).get("EVENT/HELP.LZW")
         two_letters = remixed_help.digraphs(scus_new, SCUS_FILE)
+        jobs_ported = next(r for t, rs in builds if t == "enhanced" for r in rs if r.spec.xml == "JobData")
+        job_commands = {job: fields["JobCommandId"] for job, fields in jobs_ported.entries.items()
+                        if "JobCommandId" in fields}
         name_counts = build_name_tables(cfg, renames, skip_names, jp_costs(scus_old, scus_new, set(held)),
                                         handed_out, presentation.ability_names,
-                                        remixed_descriptions(help_old, help_new, two_letters), presentation.names_old)
+                                        remixed_descriptions(help_old, help_new, two_letters), presentation.names_old,
+                                        job_commands)
         print(f"  {'Story experiment':24} " + write_story_experiment(cfg))
         print(f"  {'ReMixed events':24} " + write_remixed_events(test_evt, battle_new))
         with Disc(remixed_bin(cfg)) as patched:
@@ -8522,6 +8775,7 @@ def main() -> None:
                       for graphic, _, source in sprite_aliases]
         print(f"  {'Dark Knight shapes':24} " + write_dark_knight_shapes(cfg))
         print(f"  {'Table list':24} " + update_root_nxl(cfg))
+        print(f"  {'Story stages (offline)':24} " + check_story_stages(cfg))
 
     # Patches for the DLL: exe name -> patch name -> data (see code/IvaliceRemixed/Patcher.cs).
     # The DLL only ships once something needs it.
@@ -8543,7 +8797,10 @@ def main() -> None:
                                                       "faces": face_data,
                                                       "sprite-aliases": sprite_aliases,
                                                       "old-guests": old_guest_rows(),
-                                                      "side-chapter-objectives": side_chapter_objectives()}}
+                                                      "side-chapter-objectives": side_chapter_objectives(),
+                                                      "own-story-flags": [mark for _, _, mark in OWN_STORY_STEPS],
+                                                      "own-story-destinations": own_story_destinations(),
+                                                      "story-stage-floors": [list(row) for row in STORY_STAGE_FLOORS]}}
     shipped = code is not None and bool(code_patches)
     if code and shipped:
         for name in CODE_FILES + SHARED_CODE_FILES:

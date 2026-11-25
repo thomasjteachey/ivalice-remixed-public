@@ -267,6 +267,29 @@ internal static unsafe class Harness
                     : parts.Length > 1 && parts[1].Equals("auto", StringComparison.OrdinalIgnoreCase)
                         ? TestRecorder.SetMode(Options.TestModeRule.RecordAndAutoBattle)
                         : "error: testmode record|auto";
+            case "battlemark":
+                // battlemark off: ReMixed's battles keep no mark (var 0x4E) from now on, as before 0.9.34, so a
+                // mid-battle save made in this run is an older build's; battlemark on: kept again.
+                if (parts.Length < 2 || (parts[1] != "off" && parts[1] != "on"))
+                    return "error: battlemark off|on";
+                Patches.RemixedScenarios.BattleMarksOff = parts[1] == "off";
+                return $"battle marks: {(Patches.RemixedScenarios.BattleMarksOff ? "not kept (an older build's saves)" : "kept")}";
+            case "stage":
+            {
+                // stage [QUEST]: the remaster's own count of the story (quest 0 the main story), which its world map
+                // greys roads and words the objective by; stage QUEST VALUE: set it, as an event of its own would.
+                var quest = parts.Length > 1 ? Number(parts[1]) : 0;
+                if (parts.Length > 2 && !Patches.WorldRoads.Poke(quest, Number(parts[2])))
+                    return "error: the game's story stages aren't there yet";
+                return $"stage of quest {quest} = {Patches.WorldRoads.Stage(quest)}";
+            }
+            case "roads":
+                // roads off: the world map's roads as the remaster colours them (grey by its stage) even in a story of
+                // ReMixed's own, as before Patches/WorldRoads.cs; roads on: no road greyed there again.
+                if (parts.Length < 2 || (parts[1] != "off" && parts[1] != "on"))
+                    return "error: roads off|on";
+                Patches.WorldRoads.Off = parts[1] == "off";
+                return $"world roads: {(Patches.WorldRoads.Off ? "the remaster's colours (a road greyed by its stage)" : "none greyed in ReMixed's own stories")}";
             case "snap":
             {
                 // A copy of a range, for "diff" to compare with later.
@@ -302,7 +325,7 @@ internal static unsafe class Harness
                 return "state | peek ADDR [N] | poke ADDR HEX | var ID | setvar ID VALUE | event HEX PHASE | "
                        + "entries | dispatch KIND [STORY] [MONTH] | dispatchinfo | find text T | find hex H | call ADDR ARGS | "
                        + "snap ADDR N | diff [OLD NEW] | worldpad BITS [FRAMES] | code | line ID [TEXT] | testmode record|auto | "
-                       + "speed 5|3|off | "
+                       + "speed 5|3|off | battlemark off|on | stage [QUEST [VALUE]] | roads off|on | "
                        + "act SKILLSET ABILITY foe|INDEX|X,Y[,LEVEL] [TIMES] | act clear | "
                        + "an autopilot step (key K, press B, scenario S, units, action A, ui0-2 A, pad BITS, log T, quit)";
             default:
@@ -316,12 +339,26 @@ internal static unsafe class Harness
     /// <summary>0x... absolute, +0x... (or +...) an RVA in the exe, [..] the pointer stored there.</summary>
     internal static nint Address(string text)
     {
-        if (text.StartsWith('[') && text.EndsWith(']'))
+        // [X] is the pointer kept at X, and a +N after the bracket adds to it, so a chain of the game's objects can be
+        // walked: [[[+0x3CD9DA8]+0x10]+0xA0]+0x40 is the world module's map screen pointer's place.
+        if (text.StartsWith('['))
         {
-            var at = Address(text[1..^1]);
+            var depth = 0;
+            var close = -1;
+            for (var k = 0; k < text.Length && close < 0; k++)
+            {
+                depth += text[k] == '[' ? 1 : text[k] == ']' ? -1 : 0;
+                if (depth == 0)
+                    close = k;
+            }
+            if (close < 0)
+                throw new InvalidOperationException($"{text}: a bracket isn't closed");
+            var at = Address(text[1..close]);
             if (!Readable(at, 8))
                 throw new InvalidOperationException($"0x{at:X} isn't mapped");
-            return *(nint*)at;
+            var rest = text[(close + 1)..].TrimStart('+');
+            return *(nint*)at
+                   + (rest.Length == 0 ? 0 : (nint)Convert.ToInt64(rest.Replace("0x", "", StringComparison.OrdinalIgnoreCase), 16));
         }
         if (text.StartsWith('+'))
             return _game.Image.ImageStart + (nint)Convert.ToInt64(text[1..].Replace("0x", "", StringComparison.OrdinalIgnoreCase), 16);

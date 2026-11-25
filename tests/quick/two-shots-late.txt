@@ -1,0 +1,32 @@
+# Two Shots asked for with the unit's command menu already open (the harness's `act`). An act is taken as the menu
+# is about to open; with the menu up already there is no such moment, and the harness presses F on Move itself, so the
+# move selection takes the act. Acts queued before the battle met the same now and then, when the unit's first turn
+# reached its menu without a frame on the way (tests/quick/two-shots.txt failed so one run in three, 2026-11-25): its
+# acts then waited for good. Run with
+#   python -I tools/quick_test.py --restart --location 24 --stop tests/quick/two-shots-late.txt
+# As two-shots.txt, but the acts are queued once the party's unit has its turn and its menu has been up six seconds.
+name Two Shots asked for at the open command menu
+send testmode record
+wait world depth=1 state=0 timeout=20
+key RETURN
+wait log "reveal treasures: map" press=RETURN every=3 timeout=180
+formation units=1
+poke unit player=1 present=1 offset=0x13 hex=08
+poke unit player=1 present=1 offset=0xAB or=04
+poke unit player=1 present=1 offset=0x20 hex=5100
+wait unit player=1 present=1 turn=1 timeout=240
+wait seconds 6
+send act 08 195 foe 2
+wait log "harness: act waits at unit \d+'s first command menu: F pressed on Move" timeout=20
+wait log "harness: unit \d+ used 0x195" timeout=240
+wait log "first spell 0x195 keeps the action" timeout=10
+wait log "harness: unit \d+ used 0x195" timeout=30
+wait log "turn ends as its second action is marked; the second still goes to the slot" timeout=10
+wait log "second slot holds the second, 0x195 at CT" timeout=10
+shot queued
+# The turn ends with the facing choice, which F confirms (pressed until the first shot fires, long before the unit's
+# next turn).
+wait log "keeps charging its second spell" press=F every=2 timeout=300
+wait log "second spell 0x195 takes the charge" timeout=60
+wait unit player=1 present=1 ability=0x195 charge=0xFF statuses=0 timeout=60
+shot fired

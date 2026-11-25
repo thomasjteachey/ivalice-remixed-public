@@ -1,0 +1,28 @@
+# Skillsets ReMixed names that the remaster had left empty, on a unit card's Equipment & Abilities rows. Without an
+# icon such a row was blank (Valmafra's Spell Strike, seen on the Deck 2026-11-25); the build gives each one
+# (build_mod.fill_command_icons). Run with
+#   python -I tools/quick_test.py --restart --stop tests/quick/skillset-icons-card.txt
+# The card's primary and secondary rows are drawn alike (a skillset row), so the save's generics David (roster slot 7)
+# and Alexis (slot 8) keep their jobs and take ReMixed's skillsets as secondaries (the roster record's +7): Spell
+# Strike (0x52, a special job's icon) for one, the Reaver's Bio list (0x96, a boss's icon) for the other. Ramza
+# (slot 0) gets Blue Magic (0x50). Each card framed.
+name ReMixed's skillsets on unit cards
+wait world depth=1 state=0 timeout=20
+send poke +0x11A7D17 50
+send poke +0x11A8D7F 52
+send poke +0x11A8FD7 96
+key ESCAPE wait=1.5
+wait world depth=2 state=1 timeout=10
+shot units
+key F wait=1.5
+shot ramza-blue-magic
+key ESCAPE wait=1.2
+key RIGHT wait=0.8
+key F wait=1.5
+shot second-unit
+key ESCAPE wait=1.2
+key RIGHT wait=0.8
+key F wait=1.5
+shot third-unit
+key ESCAPE times=3 wait=1.2
+wait world depth=1 state=0 timeout=15

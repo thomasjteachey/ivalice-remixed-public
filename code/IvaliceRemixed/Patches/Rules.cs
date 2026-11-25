@@ -768,6 +768,19 @@ internal static unsafe class Rules
                 game.Log.Error($"rules: ReMixed's scenarios not added: {e.Message}");
             }
         }
+        if (rules.Remove("world-roads"))
+        {
+            try
+            {
+                enabled.Add(WorldRoads.Install(game, data.GetProperty("own-story-flags"),
+                                               data.GetProperty("story-stage-floors"),
+                                               data.GetProperty("own-story-destinations")));
+            }
+            catch (Exception e)
+            {
+                game.Log.Error($"rules: the world map's grey roads not put right: {e.Message}");
+            }
+        }
         if (rules.Remove("unit-presets"))
         {
             try
@@ -1079,7 +1092,11 @@ internal static unsafe class Rules
         // check (a gun's Mug, say) can't take an earlier attack's "from behind" for Banditry.
         if (Banditry.Facing != null)
             *Banditry.Facing = 0;
-        ((delegate* unmanaged<void>)_formulas[formula])();
+        var actor = *_game.Battle.Attacker;
+        var weaponStrike = actor != null && SkillsetTypes.IsWeaponSkillset(actor[Battle.UnitAction + 1])
+                           && *(ushort*)(actor + Battle.UnitAction + 2) == *_game.Battle.AbilityId;
+        if (!weaponStrike || !Formulas.WeaponStrike())
+            ((delegate* unmanaged<void>)_formulas[formula])();
         _vanillaStatusRoll = outer;
         if (swapped)
             RidingActions.Restore(swap);
@@ -1143,7 +1160,8 @@ internal static unsafe class Rules
             var chance = ChanceFor(tier, _category);
             if (SeparateChance != null)
                 *SeparateChance = (byte)chance;
-            if ((tier != 0 || _category == 19) && *_game.Routines.Simulating == 0 && (copy[0] & 0x20) == 0
+            if ((tier != 0 || _category == 19 || _category is >= 60 and <= 74)
+                && *_game.Routines.Simulating == 0 && (copy[0] & 0x20) == 0
                 && _game.TurnCode.Roll(100, chance) != 0)
             {
                 Miss($"misses: its {chance}% status chance failed");
@@ -1173,7 +1191,8 @@ internal static unsafe class Rules
     internal static int TierChance(int tier) => (tier & 8) != 0 ? 75 : (tier & 4) != 0 ? 50 : (tier & 2) != 0 ? 25 : 10;
 
     /// <summary>The status step's chance (ReMixed's s4): category 19 first, then the tier's, else 100.</summary>
-    internal static int ChanceFor(int tier, int category) => category == 19 ? 19 : tier != 0 ? TierChance(tier) : 100;
+    internal static int ChanceFor(int tier, int category) => category == 19 ? 19
+        : category is >= 60 and <= 74 ? category : tier != 0 ? TierChance(tier) : 100;
 
     /// <summary>For the offline check: set the category, as formula 0x02's roll does.</summary>
     internal static void SetCategory(int category) => _category = category;
@@ -1348,7 +1367,17 @@ internal static unsafe class Rules
         byte before = 0;
         try
         {
-            if (_limitCharge && record != null && record[1] == LimitSkillset && record[0] < Battle.UnitCount)
+            if (record != null && SkillsetTypes.IsWeaponSkillset(record[1]) && record[0] < Battle.UnitCount)
+            {
+                var ability = _code.GetAbilityAction(*(ushort*)(record + 2));
+                if (ability != null)
+                {
+                    ct = ability + 0xC;
+                    before = *ct;
+                    *ct &= 0x80; // ReMixed type 5 executes immediately.
+                }
+            }
+            else if (_limitCharge && record != null && record[1] == LimitSkillset && record[0] < Battle.UnitCount)
             {
                 var unit = _game.TurnCode.Units + record[0] * Battle.UnitSize;
                 var ability = _code.GetAbilityAction(*(ushort*)(record + 2));
@@ -1389,7 +1418,8 @@ internal static unsafe class Rules
         var queuedOk = _queueAction(record, queued, commit);
         if (ct != null)
         {
-            Tracer.Line(_game.Log, $"rules: Limit 0x{*(ushort*)(record + 2):X3} charges in {*ct & 0x7F} instead of {before & 0x7F}");
+            if (record[1] == LimitSkillset)
+                Tracer.Line(_game.Log, $"rules: Limit 0x{*(ushort*)(record + 2):X3} charges in {*ct & 0x7F} instead of {before & 0x7F}");
             *ct = before;
         }
         TwoSpells.AfterQueue(record, queued, commit);

@@ -268,7 +268,10 @@ marks the unit as having moved just before that act's confirm, so its mark ends 
 move). Acts are queued (`send act clear`
 drops them; `send act menu` logs the menu's state and its action record, as the menus filled it) and taken as a party unit's command menu is about to open, at its turn's start or again after an action
 that leaves the turn going; a turn already at its first command menu gets an F on Move, and the move selection takes
-it. Then the battle
+it (the menu's own frame presses it half a second after it sees the menu up with acts waiting, whether the acts
+came before or after the menu: a first turn sometimes reaches its menu with no frame on the way, which left
+acts queued before the battle waiting for good, one run of two-shots.txt in three until 2026-11-25;
+`tests/quick/two-shots-late.txt` queues them at the open menu on purpose). Then the battle
 menu's action record is filled and the menu put in its confirm state, so the game's own confirm does the rest (the
 action marked, queued, the turn going on or ending). The log says `harness: unit N used ...` with the unit's action
 and charge after each, which a case waits for. Only a fast way into a battle is needed around it: a
@@ -310,7 +313,9 @@ sprite: `palette` is +0x190, which stays 0 for a generic), and `unit` and
 `knight_level`, `black_mage_level`, `bard_level`, `dancer_level` and `dark_knight_level`; `roster` records also have
 `errand` (+0x11E, which the remaster shows as an errand when it isn't 0). `count=N` on an `expect` wants N records so
 (`count=0`: none). An event's opening block can be checked at once, without playing its scene
-(`tests/quick/performer-join.txt`; `river-camp-leave.txt` and `remixed-job-levels.txt` likewise). The job menu's second page and roster Dark Knights in the party menus: `tests/quick/dark-knight-page.txt` (the roster record's job, +2, poked to 0xA0; a job's level follows its JP, so poking the level nibbles at +0x74 doesn't open a job). A guest the story would have saved by then is
+(`tests/quick/performer-join.txt`; `river-camp-leave.txt` and `remixed-job-levels.txt` likewise). The job menu's second page and roster Dark Knights in the party menus: `tests/quick/dark-knight-page.txt` (the roster record's job, +2, poked to 0xA0; a job's level follows its JP, so poking the level nibbles at +0x74 doesn't open a job). ReMixed's skillsets on unit cards (each needs an icon, or the
+card leaves its row blank): `tests/quick/skillset-icons-card.txt` (the roster record's secondary, +7, poked; offline,
+`python -I tools/test_name_tables.py`). A guest the story would have saved by then is
 made with `copy roster 0 50 sprites=0x29 job=0x29 name_id=25` (slot 50, the first guest slot: the guest Rafa), so the
 remaster's scenes that load her from the formation or name her by sprite set run from the test save
 (`tests/quick/rafa-frog-scene.txt`, `riovanes-gate-end.txt`). Screenshots are
@@ -334,6 +339,42 @@ A battle continued from its mid-battle save takes two cases: one saves (`--resta
 party's next turn), then `python -I tools/harness.py start --keep-saves` leaves that autosave for Continue and the
 second case presses Enter from the title into it (`tests/quick/dorter-resume-save.txt`, `dorter-resume-load.txt`: about
 five minutes for both). Give the loaded battle some 12 s before its first key.
+
+A save as an older build left it: `send battlemark off` keeps no mark of a ReMixed battle (var 0x4E) for the rest of
+the run, as before 0.9.34, so the autosave a case makes then is one a tester may still have. `dorter-old-save.txt`
+makes one in 1-A's last battle with a Nemesis stored (the Nemesis's return leaves var 0x27 = 0x1B5, whose own
+conditions are empty) and `dorter-old-save-load.txt` continues it on the build under test, which has to find the
+battle again by its map, entry and units. The same case shows the two things a real party needs in that battle:
+Agrias in the roster (`copy roster 0 3 sprites=0x1E job=0x1E name_id=0x1E right_hand=0x13`: the copy takes a sword,
+since the formation stops on a warning box for a Holy Knight whose weapon can't use Holy Sword, and the helper's keys
+are lost in it), and `formation units=1 second=1` for its two groups (1 + 3 places). `wait unit battle_id=0x98
+gone=1` waits for a fallen unit's body to turn to a crystal or a treasure chest.
+
+What a player can do in a battle besides fight, each worth a run when a battle's start or end changes: the System
+Menu (Tab) has Retry (Enter on it asks "Change Formation and Retry" or "Retry from Start of Battle"; the second
+reloads a snapshot of the battle's first turn, which the mod sees as a battle continued from a save), Load and Return
+to World Map; a wiped-out party gets the remaster's own Game Over screen with the same choices. And the world map
+starts a location's story event again by itself a few seconds after an event leaves the party standing there with the
+event's conditions still true (1-A's last battle failed at Dorter: its scene plays again, no walking needed). The
+world map only does that for the place the party stands on and the story state it has: `--location 9` and `setvar`
+of the story progress (0x6E), the side chapter's flag (0x2EC) and whatever else the start checks
+(`REMIXED_WORLD_STARTS` in tools/build_mod.py) set a test save up for it. A `scenario` request sent while the party
+stands on a battleground can come up as "Enemy encountered!" instead (seen at Mandalia after a battle): start from a
+town.
+
+The world map's roads, objective line and markers come from the remaster's own count of the story, the stage
+(`Patches/WorldRoads.cs`): `send stage` prints the main story's (the test save's is 160, "Head to Dorter"), `send stage
+0 440` sets it (440 is where chapter 1 ends; the second word is the quest, 0 the main story). The open map only reads
+the stage as it starts (after a scene or battle, not after a menu), so a case that sets one either plays a scene
+next or tells the map screen itself: `send poke [[[[+0x3CD9DA8]+0x10]+0xA0]+0x40]+0xCEC 64 00 00 00 5A 00 00 00` writes
+stage 440's two keys (100, 90) where the map keeps them. `peek` and `poke` take such chains: `[X]` is the pointer kept
+at X, and a `+N` after the bracket adds to it. The world map's own steps (a road or place a story shows: 1-A's, by
+flags and var 0x6E) run when the map comes back from the main menu (`key ESCAPE` twice), not while it idles; its
+story events start only as the map starts or the party arrives, so a case starts the scene itself (`scenario`).
+`send roads off` leaves the roads and markers as the remaster has them even in a story of ReMixed's own, to show what
+the patch puts right; `roads on` ends that. `tests/quick/side-chapter-roads.txt` (`--location 27`, 2.5 minutes) is
+the pattern, and plays 1-A's dream on the way. The test save shows a tip ("Strengthening Units") the first time the
+map comes back at such a stage; Enter closes it, and the presses of a `wait log ... press=RETURN` do.
 
 To check the Dispatch navigation soft lock, start the disposable Eagrose fixture and run the full catalog check:
 

@@ -2,7 +2,7 @@ namespace IvaliceRemixed.Patches;
 
 /// <summary>
 /// ReMixed's skillset types (docs/MECHANICS.md: "Skillset types"; SCUS 0x80065CB4, a byte per skillset): Elemental
-/// (0x11) is ordinary, its weapon skillsets are type 5, and its monster lists are type 6. Installed by
+/// (0x11) is ordinary, its weapon skillsets use the ordinary menu with weapon targeting, and its monster lists are type 6. Installed by
 /// <see cref="Rules"/> with "skillset-types".
 /// </summary>
 /// <remarks>
@@ -11,7 +11,8 @@ namespace IvaliceRemixed.Patches;
 /// 0x7E–0x89). ReMixed's Elemental holds four abilities on the first four ids (Elemental Strike, Lance, Pulse and
 /// Wave) and gave 0x82–0x89 to others (Chef's Knife, the Bio spells, First Aid), and its formula 0x24 works out
 /// the terrain itself (<see cref="Formulas"/>), so with type 4 a Geomancer would cast whatever the terrain's id
-/// now holds. Type 5 is ReMixed's weapon-range family (Magic Blade, Spell Strike and Fellblade); type 6 is the
+/// now holds. ReMixed's type 5 was its weapon-range family (Magic Blade, Spell Strike and Fellblade); the remaster has
+/// no type-5 command or queue path, so those use type 0 with range, area, charge and formula overrides. Type 6 is the
 /// remaster's own monster-list path, including Monster Skill's fourth-slot handling.
 /// <para>The remaster's battle menus also know Elemental by its id, 0x11, beside the table, and those places go too
 /// (a player's report, 2026-11-19: Elemental Strike was "a melee ability that has a 0% chance of hitting"). The menu's
@@ -49,6 +50,12 @@ internal static unsafe class SkillsetTypes
     internal static nint RequestAt { get; private set; }
     internal static nint LabelAt { get; private set; }
     internal static IReadOnlyList<nint> InfoAt { get; private set; } = [];
+    internal static nint RangeAt { get; private set; }
+    internal static nint AreaAt { get; private set; }
+    private static delegate* unmanaged<byte*, int> _range;
+    private static delegate* unmanaged<byte*, int> _area;
+
+    internal static bool IsWeaponSkillset(int skillset) => skillset is 0x49 or 0x52 or 0x55;
 
     /// <summary>The remaster's table (.rdata 0x67E010), from the action queue's switch on its skillset's type:
     /// lea r9, [image]; mov ebx, 1; movzx ecx, byte [rax+r9+table]; lea edx, [rbx+6]; cmp ecx, edx; ja.</summary>
@@ -67,8 +74,11 @@ internal static unsafe class SkillsetTypes
         GameImage.Unprotected((nint)table, 0x100, () =>
         {
             table[Elemental] = Ordinary;
+            // The remaster has no type-5 command handler. Its type-0 list and action paths
+            // provide the chosen ability; WeaponSkillsets' special range and strike are
+            // installed separately below instead of sending the menu to an empty case.
             foreach (var skillset in WeaponSkillsets)
-                table[skillset] = Weapon;
+                table[skillset] = Ordinary;
             foreach (var skillset in MonsterSkillsets)
                 table[skillset] = Monster;
         });
@@ -86,6 +96,37 @@ internal static unsafe class SkillsetTypes
         RequestAt = request;
         LabelAt = label;
         InfoAt = info;
+
+        // The ordinary list path gives the selected spell to the menu. For its range and
+        // area, use Attack's existing weapon path while keeping the real skillset in the
+        // action record the menu queues. Both routines work on a copy of that record.
+        var range = image.FindUnique("48 89 5C 24 10 48 89 74 24 18 57 48 83 EC 40 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 44 24 38 BB 14 00 00 00");
+        var area = range + 0x1C8;
+        if (*(uint*)area != 0x48EC8348 || *(uint*)(area + 0x13) != 0x000014BA)
+            throw new InvalidDataException("the action's range and area routines aren't the pair this DLL expects");
+        _range = (delegate* unmanaged<byte*, int>)game.Hooks.Hook(range,
+            (nint)(delegate* unmanaged<byte*, int>)&Range, "weapon skillset range");
+        _area = (delegate* unmanaged<byte*, int>)game.Hooks.Hook(area,
+            (nint)(delegate* unmanaged<byte*, int>)&Area, "weapon skillset area");
+        RangeAt = range;
+        AreaAt = area;
+        Rules.HookQueue(game);
+    }
+
+    [System.Runtime.InteropServices.UnmanagedCallersOnly]
+    private static int Range(byte* record) => WeaponTarget(record, _range);
+
+    [System.Runtime.InteropServices.UnmanagedCallersOnly]
+    private static int Area(byte* record) => WeaponTarget(record, _area);
+
+    private static int WeaponTarget(byte* record, delegate* unmanaged<byte*, int> original)
+    {
+        if (record == null || !IsWeaponSkillset(record[1]))
+            return original(record);
+        var skillset = record[1];
+        record[1] = 1; // Attack's type 8: weapon range and single-target area
+        try { return original(record); }
+        finally { record[1] = skillset; }
     }
 
     /// <summary>A jne (short, or near when <paramref name="size"/> is 6) made a jmp to the same place.</summary>

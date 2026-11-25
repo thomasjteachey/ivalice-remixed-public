@@ -1,0 +1,30 @@
+# 1-A's last battle saved in mid-battle as 0.9.33 and earlier left it, for dorter-old-save-load.txt (a tester,
+# 2026-11-23: "still locked up" on 0.9.35, most likely his autosave from the older build continued). Run with
+#   python -I tools/quick_test.py --restart --stop tests/quick/dorter-old-save.txt
+# `battlemark off` keeps no mark of the battle (var 0x4E), as before 0.9.34. With a Nemesis stored the Nemesis's
+# return runs as the battle begins and leaves var 0x27 = 0x1B5, whose own conditions are empty: that is what the save
+# carries. Agrias is in the party (a copy of Ramza made her, with a sword: the formation stops on a warning for a Holy
+# Knight who can't use Holy Sword). The party's first unit waits, and the game autosaves at the party's next turn.
+name 1-A's last battle saved as an older build left it
+send testmode record
+send battlemark off
+wait world depth=1 state=0 timeout=30
+copy roster 0 3 sprites=0x1E job=0x1E name_id=0x1E right_hand=0x13
+send setvar 0x40 0x800123
+scenario 0x34B noted
+wait log "formation: screen open" timeout=120
+formation units=1 second=1
+wait log "condition set 5 fires" press=RETURN every=2 timeout=180
+wait unit player=1 present=1 turn=1 press=RETURN every=2 timeout=240
+wait seconds 6
+expect var 0x27 0x1B5
+key DOWN wait=1.5
+key DOWN wait=1.5
+key RETURN wait=1.5
+wait seconds 3
+key RETURN wait=1.5
+wait seconds 20
+wait unit player=1 present=1 turn=1 timeout=300
+wait seconds 5
+expect var 0x4E 0
+expect var 0x27 0x1B5

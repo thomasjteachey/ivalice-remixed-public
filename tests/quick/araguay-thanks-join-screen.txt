@@ -47,7 +47,8 @@ wait log "join screen: battle id" timeout=30
 wait seconds 2
 shot joined-2
 wait log "event 122's message (21|22) shown" press=RETURN every=2 timeout=60
-wait seconds 4
+wait world depth=2 state=35 timeout=5
+expect field-visible
 shot after-join
 advance world timeout=200
 expect var 0x6E 0x11

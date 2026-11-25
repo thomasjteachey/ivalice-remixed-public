@@ -1,0 +1,12 @@
+# 1-A's dream at event 0x0F9 / scenario 0x2EC. Gareth is the knight actor 0x0B.
+# Advance from Agrias's opening lines to his first named line, then inspect the box and actor.
+name Gareth's dream portrait and sprite
+wait world depth=1 state=0 timeout=30
+scenario 0x2EC
+send speed 5
+wait log "event 748's message (3|35) shown" press=RETURN every=2 timeout=120
+send speed off
+wait log "event 748's message (4|36) shown" press=RETURN every=3 timeout=60
+wait seconds 2
+show slots
+shot gareth

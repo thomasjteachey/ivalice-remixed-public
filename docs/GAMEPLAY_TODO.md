@@ -5,7 +5,7 @@ is, and what it waits on. The technical details (what ReMixed's code does, where
 [MECHANICS.md](MECHANICS.md) and [REMASTER.md](REMASTER.md); data held back is in
 [the build report](generated/mod-build.md).
 
-**Progress: 100% of gameplay** (106 done, 1 open: 1 small, 0 medium, 0 large). Worked out from this list by
+**Progress: 97% of gameplay** (106 done, 3 open: 1 small, 2 medium, 0 large). Worked out from this list by
 `python -I tools/todo_progress.py`, open items weighted by size (small 1, medium 3, large 15) and done ones at 2 each,
 and updated with every change to the list. Everything outside the story and display ports is ported or settled
 (the formulas ReMixed rewrote in place were the last, 2026-11-12; ReMixed's own battles writing their units back,
@@ -271,8 +271,9 @@ What the events need:
   now, still checked first after the opening. Seen on the PC (2026-11-13), beside the PS1: revived, her "U-ugh...
   What... what has transpired?" and Agrias's three lines on the battle map, then after the birds all 17 lines of the
   scene where she lives ("'Tis a blessing you live..." to "Very well. If your mind is resolved."), then the world
-  map. Left as before: Agrias's in-battle boxes have no portrait (her unit is off the field), and a line with no
-  speaker's name shows an empty name tab over its box, where the PS1 shows none.
+  map. Agrias's five in-battle boxes now explicitly select her ReMixed event portrait, since her unit is off the
+  field (built and checked in the generated events 2026-11-24; the revival branch still needs a visual PC capture).
+  A line with no speaker's name still shows an empty name tab over its box, where the PS1 shows none.
 - [x] ReMixed's lines inside a battle came up as empty speech boxes (seen on the PC, 2026-11-12, evening: Algus's
   "Reinforcements? Thank God!" in the Argath campaign's second battle, a face and no text; the scene after 1-A's
   rescue over and over; Luso's lines after his battle at Mandalia). Found 2026-11-13: the remaster lets go of a
@@ -384,17 +385,97 @@ Everything else ReMixed's gameplay changes is ported or settled (Done), or waits
 or the story port (below). The formulas ReMixed rewrote in place were ported on 2026-11-12 (Done; to see in a
 battle, Testing).
 
+- [ ] The lock-up a tester still had in 1-A's last battle on 0.9.35 (2026-11-23) is fixed for the way that could be
+  found, a battle continued from an older build's autosave (below). A battle begun anew did not hang on the PC in any
+  way tried. Still to hear from him: whether he pressed Continue or began the battle again, what the screen showed,
+  and his log from the Deck. *high*
+- [x] 1-A's last battle, continued from an autosave made before 0.9.35, still went wrong on 0.9.35 (a tester,
+  2026-11-23: "still locked up here"). Three faults, each seen in the hidden PC game (2026-11-25) and fixed:
+  - A save from 0.9.33 or earlier carries no note of which battle it is. With a Nemesis stored, the last event run
+    in the battle is the Nemesis's return, which has no conditions of its own, so the continued battle had no failure
+    and no victory: it went on for good, with no enemy left. A battle continued without that note is now told from
+    its map and its units, and gets its own conditions back. This covers every ReMixed battle that begins under its
+    own number (48 of them; two later phases that run under another battle's opening are taken for that battle), and
+    the build stops if two battles could be taken for each other. The System Menu's "Retry from Start of Battle"
+    reloads the battle's first turn the same way, so on such a save it had the same fault.
+  - A save from before 0.9.35 keeps the faded-out picture the scene before the battle left, so each scene inside the
+    continued battle still played over black, only its speech box showing. The first event of a continued battle now
+    fades the picture in.
+  - Once a fallen child's body had turned to a crystal or a treasure chest, the remaster no longer counted the child
+    as fallen. A battle that got its conditions back in that state, with no enemy left, went to its victory scene.
+    A unit whose body is gone counts as fallen, as in ReMixed.
+
+  Tried on the PC as a player meets the battle, and working on 0.9.35 as released: from its scene, with Agrias in
+  the party and a Nemesis returning, a child killed mid-turn by a goblin; the failure with the party standing on
+  Dorter (the world map plays the scene again by itself five seconds later, and that second battle fails and ends
+  properly too); both of the System Menu's retries; a battle saved and continued on the same build. Not tried: the
+  Steam Deck itself, and a child killed by Choco Meteor or while riding. `tests/quick/dorter-old-save.txt`, then
+  `dorter-old-save-load.txt`. *high*
+- [x] Valmafra's unit card showed no primary skillset (seen on the Deck, 2026-11-25): her Arc Witch's Spell Strike
+  had its name but no icon, and the remaster leaves a skillset with no icon off the card. All 21 skillsets ReMixed
+  names that the remaster had left empty had the same gap (Blue Magic, Witchcraft, Combat Skill, Sorcery, Fellblade,
+  its bosses' lists and others), on a unit's primary or secondary row alike. Each gets the icon the remaster gives the
+  same kind of command now: its special jobs' one, or its boss monsters' where the job had one before (the Reaver,
+  the Archaeodaemon, the Ultima Demon, the Lamia). Checked offline (`tools/test_name_tables.py` and the built table)
+  and seen on the PC (`tests/quick/skillset-icons-card.txt`): Blue Magic, Spell Strike and the Reaver's Bio list on
+  three units' cards, each with its icon. Valmafra's own card not seen yet (the fixed table is on the Deck).
+
 From the testers' 0.9.17 playthrough (2026-11-18, evening: chapter 2 cleared with no crashes, then side chapter 1-A;
 the Lionel scene's event art and Two Shots have sessions of their own):
 
-- [ ] Left from the same tester's 1-A (2026-11-22), each with what was found:
-  the dream's knight (ReMixed's 0x0F9) was reported with no sprite and no portrait on the Deck, and on the PC he
-  draws, with Orlandeau's face rather than a knight's; Agrias walking in place while Valmafra and Elias talk on
-  (the scene isn't found yet: 0x0F6 is the only one where Elias speaks, and she doesn't walk off there); the Dorter
-  to Zeklaus road grey though walkable after 1-A (its flag 0x236 and Zeklaus's 0x21C are both set by 1-A's end, so
-  the grey comes from another state of the world map's, not read yet); and the 1-A Agrias, Alicia and Lavian kept
-  beside chapter 2's new ones (ReMixed itself turns the 1-A three into chapter 2's guests; the port's chapter 2 makes
-  its own: a design choice to settle before building). *medium*
+- [ ] Left from the same tester's 1-A (2026-11-21 and 2026-11-22), each with what was found (2026-11-25):
+  - The dream's knight, reported with no sprite and no portrait on the Deck: on the PC he draws, under the name
+    "Knight" with a knight's own face, not Orlandeau's (the dream is played on the way in
+    `tests/quick/side-chapter-roads.txt`). Not seen on a Deck.
+  - Agrias "walking in place while Valmafra and Elias talk on": the scene is the chapel at Riovanes, after the
+    Yuguewood. She stands at the foot of the aisle seen from behind, in poses of ReMixed's own with her feet apart
+    as in mid-stride, and holds each while the others speak. Seen on the PC both ways through the scene (her first
+    answer, and her second, where Elias speaks, three frames in a row at seven of its lines): she never moves
+    between frames. Beside ReMixed on the PS1 the staging is the same, so this is ReMixed's own, plainer to see at
+    the remaster's size; nothing to fix unless the tester saw her legs actually moving on the Deck.
+  - The "vessel" Valmafra seemed to draw water from, possibly missing: it is a figure in a white hooded cloak (the
+    game's priest) beside the altar's candles in that chapel. On the PS1 it is bright white. On the PC it is
+    there, but so dark a blue-grey that it is nearly lost against the wall. Its art and its colours are the right
+    ones (the remaster's own priest, first colour set), and no instruction of the scene colours it; what darkens
+    it isn't found. Still to try: the same figure on another tile or another map, to tell the map's lighting from
+    the way the unit is drawn.
+  - The 1-A Agrias, Alicia and Lavian kept beside chapter 2's new ones: a design choice to settle before building.
+    ReMixed turns the 1-A three into chapter 2's guests; the remaster's chapter 2 makes its own at its opening
+    (two Lv 8 knights who join, a Lv 10 guest Agrias), so a player has both. What each way would take is written
+    up for the choice (keep the levelled three, or let them leave as 1-A ends).
+
+  *medium*
+- [x] The road from the Zeklaus Desert to Dorter was drawn grey in side chapter 1-A, though the party walks it (a
+  tester, 2026-11-22), and the objective's diamond stood on Dorter all through the chapter, whatever its objective line
+  said. The remaster keeps its own count of the story, which only its own scenes move on. From it the world map takes
+  the place the story is headed for (the diamond), the next stop on the way, and the roads it draws grey because the
+  story hasn't opened them yet. 1-A is offered where chapter 1 ends, and none of ReMixed's scenes moves that count, so
+  for the whole chapter the map showed chapter 2's first step: Dorter as the goal, and the roads beyond it (to Sweegy
+  Woods and to the Zeklaus Desert) grey. Now, while one of ReMixed's own stories runs (1-A, the Argath campaign), no
+  road is greyed, and in 1-A the diamond stands on the place its objective line names (the Argath campaign has no
+  list of destinations yet, so its map shows no diamond rather than a wrong one). The same count was also left behind
+  in the main story wherever a ReMixed scene stands in for the remaster's: after Araguay Woods the road on to
+  Zeirchele Falls stayed grey, with the next-stop mark still on the woods, until the falls. There the count now
+  follows the story. The build lists every scene of the remaster's that moved the count and is now ReMixed's (eight)
+  and stops on a new one. Seen in the hidden PC game (2026-11-25): on Mount Bervenia 1-A's roads are drawn as a player
+  meets them, the Zeklaus road grey with the fix switched off; with it on, after the dream there, both roads are in
+  colour and the diamond is on the Zeklaus Desert under "Travel to the Zeklaus Desert."
+  (`tests/quick/side-chapter-roads.txt`); and Araguay's battle, begun at the count Dorter leaves, ends on the world
+  map with the count where the remaster's own scenes would leave it (`tests/quick/araguay-battle.txt`; the test
+  save has none of chapter 2's roads to show, so that one is seen in the count, not on the map). *medium*
+- [x] ReMixed's event art looked blocky beside the remaster's sprites (a tester, 2026-11-21). The poses ReMixed
+  drew itself (a character kneeling, carrying someone, turned away) ship at twice their size for the enhanced
+  sprites, and only one of the eleven pictures had been smoothed the way ReMixed's unit sprites are (0.9.27's); the
+  rest were plain doubled pixels. All the pictures of people are smoothed now (nine more, used in Luso's scenes,
+  all through side chapter 1-A, in the Argath campaign and in Beowulf's arc). The Treasure Wheel's chests and Reveal
+  Treasures' arrows stay as they were seen beside the PS1. Seen in the hidden PC game (2026-11-25): the dream's
+  knight carrying the child, before and after, in `tests/quick/side-chapter-roads.txt`'s frame of him. *small*
+- [ ] After Eagrose in chapter 4 the world map's objective line stays "Meet with Dycedarg at Eagrose Castle." until
+  Mullonde (found 2026-11-25, reading the scenes; not seen in the game). ReMixed's Eagrose scenes stand in for the
+  remaster's two that moved its count of the story on to "Rescue Alma from Mullonde Cathedral.", and the story's own
+  progress doesn't change between the two, so the count can't follow it as it does after Araguay: it has to be set as
+  ReMixed's Eagrose ends. No road is greyed by it. The other scenes whose count is left behind change nothing a player
+  sees (the build names each, with why). *small*
 - [x] 1-A's last battle hung on a black screen when a child fell (a tester on the Deck, 2026-11-22: a red chocobo's
   Choco Meteor, then nothing answered, fast-forward included). ReMixed's event for the fall names the fallen child as
   the speaker of its cry one instruction too early, so it overwrote the next instruction instead. The PS1's script
@@ -419,8 +500,8 @@ the Lionel scene's event art and Two Shots have sessions of their own):
   its first check. This covers every ReMixed battle (its 108 condition sets, story battles, missions and rounds), not
   only this one. Seen in the hidden PC game (`tests/quick/dorter-resume-save.txt`, then `dorter-resume-load.txt`):
   before the fix the continued battle took event 0x2FE's conditions; now it is scenario 0x34B with its own, a child's
-  fall fails it, and the world map follows. A save made mid-battle on an earlier build still continues without them:
-  restart that battle. *high*
+  fall fails it, and the world map follows. A save made mid-battle on an earlier build still continued without them
+  (fixed 2026-11-25, above). *high*
 - [x] The two children of 1-A's last battle stood unseen except while walking or in water, with no faces (a tester,
   2026-11-22). ReMixed made its own sheets for the boy and the girl, with a battle unit's frames; the port had kept
   the remaster's art for them, which is a scene's (walking and a few poses). They now take ReMixed's sheets, smoothed
@@ -1147,10 +1228,11 @@ In order:
   ReMixed's units get their presets too: Marach lies dead on the Rooftop of Riovanes as ReMixed's corpse, on his usual
   sprite slot (Luso has his old job and slot, for Luso's own art), and Gafgarion at Golgorand and Lionel's gate has
   ReMixed's immunities. Not seen in the game yet.
-- [x] Skillset types 5 and 6 for story characters' skillsets and ReMixed's own monsters' (2026-11-15): Magic Blade,
-  Spell Strike and Fellblade use ReMixed's weapon type 5; Monster Skill and ReMixed's eight monster lists use the
-  remaster's monster-list type 6. Elemental is ordinary instead of the remaster's terrain-substitution type 4, since
-  ReMixed's formula chooses its terrain itself. Self-tested against the live type table offline.
+- [x] Weapon skillsets and monster lists (2026-11-25): Magic Blade, Spell Strike and Fellblade use the remaster's
+  ordinary list and action path because it has no type-5 handler. Their targeting calls Attack's weapon range and
+  area; their queued CT is zero, and their selected ability runs ReMixed's MA and weapon-power strike formula.
+  Monster Skill and ReMixed's eight monster lists use the remaster's monster-list type 6. Elemental is ordinary
+  instead of terrain substitution. Spell Strike's list, weapon targeting and a Fire strike were checked in a PC battle.
 - [x] Some story battles skip the level options (2026-11-12): three of ReMixed's story events set their units up with
   the Enemy Level Boost, Enemy Job Settings and fixed-or-minimum levels off. Only one of those battles is in the
   remaster's story, the opening battle at Orbonne; its units ignore those settings now. The other two are battles of

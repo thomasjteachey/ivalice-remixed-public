@@ -1,0 +1,27 @@
+# 1-A's last battle continued from the save dorter-old-save.txt left, one with no mark of its battle (0.9.33 and
+# earlier): the battle is told from its map, entry and units (RemixedScenarios.LoadedBattle), so it is scenario 0x34B
+# with its own conditions again. Before that it came back as "scenario 0x1B5" with the Nemesis's return's empty
+# conditions: no failure when a child fell and no victory, for good. Run right after that case with
+#   python -I tools/harness.py start --keep-saves
+#   python -I tools/quick_test.py --stop tests/quick/dorter-old-save-load.txt
+# From the title: Enter to the menu and on Continue, which loads the newest save, the battle's autosave.
+name 1-A's last battle continued from an older build's save
+send testmode record
+wait seconds 20
+wait log "a battle continued from an older build's save \(no mark, var 0x27 = 0x1B5\) is scenario 0x34B" press=RETURN every=6 timeout=180
+expect var 0x27 0x34B
+wait unit player=1 present=1 turn=1 timeout=180
+wait seconds 12
+expect var 0x4E 0x1FE034B
+shot continued
+defeat 12
+key DOWN wait=1.5
+key DOWN wait=1.5
+key RETURN wait=1.5
+wait seconds 3
+key RETURN wait=1.5
+wait log "condition set 2 fires" timeout=120
+wait log "message \d+ shown" timeout=90
+wait seconds 10
+shot child-cry
+advance world every=2

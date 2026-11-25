@@ -102,6 +102,7 @@ internal static unsafe class RemixedEvents
         api.OnUnitPreset(preset => UnitPresets.Pending = preset);
         api.AddStepObserver(at =>
         {
+            RemixedScenarios.RevealContinued();
             RemixedScenarios.MoveMessage((byte*)at);
             RemixedText.Alternate((byte*)at);
             MirrorBaseTeamWrite((byte*)at, api.GetVariable, game.TurnCode.Units);
@@ -132,6 +133,7 @@ internal static unsafe class RemixedEvents
                 applyEventStatus(RemixedScenarios.EventUnitId(battleUnits, actor), status.Bit, status.Add ? 1 : 0);
         });
         BattleEnd.Install(game);
+        api.AddRoutine(MidsceneJoinReturn, BattleEnd.RestoreMidsceneField);
         api.AddRoutine(LiveBattleWriteBack, () =>
         {
             // What it returns is the joiners it queued for a join screen, which this call doesn't show: none join.
@@ -310,6 +312,7 @@ internal static unsafe class RemixedEvents
     /// </summary>
     internal const uint LiveBattleWriteBack = 0x000000C5;
     internal const uint ApplyExtendedStatus = 0x000000C6;
+    internal const uint MidsceneJoinReturn = 0x000000C7;
     internal const int ExtendedStatusActor = 0xB7E, ExtendedStatusMode = 0xB7F;
 
     /// <summary>ReMixed's extended status mode: bit 7 selects it, bit 6 removes the status, low six bits choose it.</summary>

@@ -67,7 +67,7 @@ differences don't count), written into the English `ability`, `job` and
 text or the remaster's slot has a placeholder: 204 abilities, 98 jobs, 55 skillsets.
 
 - Abilities: 104 of 108 renames written (the rest belong to held-back entries)
-- Jobs: 20 of 24 renames written (the rest belong to held-back entries)
+- Jobs: 21 of 24 renames written (the rest belong to held-back entries)
 - Skillsets: 28 of 31 renames written (the rest belong to held-back entries)
 - Abilities handed out in remaster slots with a placeholder name or description ("A187", "UNUSED"), given ReMixed's name where the slot has none, an icon, and a description (PLACEHOLDER_DESCRIPTIONS; the rest say theirs isn't ported yet): 0x028 Crushing Blow, 0x0B8 Abyssal Blade, 0x0BB Petrify, 0x0BD Embrace, 0x0BF Aphony, 0x0C0 Befuddle, 0x0C1 Bind, 0x0C2 Nightmare, 0x0C3 Ague, 0x0DB Unholy Sacrifice, 0x0E3 Confuseja, 0x0E4 Sleepja, 0x0E5 Ultima 2, 0x0E6 Divine Ultima, 0x0E8 Dispel 2, 0x0E9 Return, 0x159 Snakecharm, 0x15A Poison Frog 2, 0x15B Midgardsormr, 0x165 Shadoweave, 0x166 Wyrm Scorn, 0x167 Vile Scar, 0x168 Cherry Ronde, 0x169 Iron Ripper, 0x16A Ignis Wheel, 0x16B Ruination, 0x16C Scythe Wind, 0x16D Brimstone Hail, 0x16E Sanctus Flare, 0x1B8 Reflect, 0x1BB MP Rage, 0x1E1 Armsmaster, 0x1E3 Non-charge, 0x1E4 Adeptness, 0x1E5 Two Jobs, 0x1FC Pass
 - JP costs: 90 of ReMixed's, in the same English `ability` table (the game reads the price there; other languages keep the remaster's)

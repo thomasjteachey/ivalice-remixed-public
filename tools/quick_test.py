@@ -8,7 +8,8 @@ Case files live in tests/quick and contain one command per line. Values use Pyth
     expect unit battle_id=0x91 job=0x5b graphic=0x38
 
 For a picture to check by eye, `shot NAME` saves the hidden window to work/harness/quick/CASE/NAME.png at that step;
-every case also leaves pass.png (or fail.png) there as it ends. Pictures are evidence only: no step reads them.
+every case also leaves pass.png (or fail.png) there as it ends. `expect field-visible` checks the battle renderer's
+exit flag after a midscene join, where a set flag leaves dialogue over black.
 `scenario 0x79 noted` starts a scene-first battle at its battle (its scene counted as seen). `defeat [UNIT...]`
 downs the enemies (or those units); `expect roster name_id=0x76` wants exactly one roster record so, and
 `count=N` another number of them (`count=0`: a recruit turned down on its join screen isn't there).
@@ -145,6 +146,8 @@ def unit_records() -> list[dict]:
             u[name] = int.from_bytes(record[offset:offset + size], "little")
         u["player"] = 1 if u["team"] & 0x08 else 0  # the player's to command (+5 & 8)
         u["present"] = 0 if u["id"] == 0xFF else 1  # on the field (a formation's spare records have id 0xFF)
+        # a body that has turned to a crystal (+0x61 & 0x40) or a treasure chest (+0x62 & 1)
+        u["gone"] = 1 if record[0x61] & 0x40 or record[0x62] & 0x01 else 0
         u.update(job_fields(record, UNIT_JOBS))
         u.update(level_fields(record, UNIT_LEVELS))
     return units
@@ -313,7 +316,7 @@ def run_case(path: Path) -> None:
             elif command == "ride":
                 ride(args, case)
             elif command == "copy" and args and args[0] == "roster":
-                # copy roster FROM TO [sprites=S] [job=J] [name_id=N] [level=N]: a party member more, or with those fields
+                # copy roster FROM TO [sprites=S] [job=J] [name_id=N] [level=N] [right_hand=I]: a party member more, or with those fields
                 # someone else (a guest in slots 50-53: sprites=0x29 job=0x29 name_id=25 is the guest Rafa)
                 source, target = number(args[1]), number(args[2])
                 base = harness.image_base() + harness.ROSTER
@@ -329,6 +332,10 @@ def run_case(path: Path) -> None:
                         record[harness.ROSTER_NAME_ID:harness.ROSTER_NAME_ID + 4] = number(value).to_bytes(4, "little")
                     elif field == "level":
                         record[0x1D] = number(value)
+                    elif field == "right_hand":
+                        # its weapon (+0x14; 0x13 a Broadsword): the formation stops on a warning box for a unit
+                        # whose job command its weapon can't use (a copy of Ramza made a Holy Knight)
+                        record[0x14:0x16] = number(value).to_bytes(2, "little")
                     else:
                         raise CaseFailure(f"copy roster: unknown field {field!r}")
                 reply = harness.send(f"poke 0x{base + target * harness.ROSTER_SIZE:X} {record.hex(' ')}")
@@ -437,6 +444,8 @@ def run_case(path: Path) -> None:
                 harness.shot(argparse.Namespace(file=path))
             elif command == "defeat":
                 chosen = harness.defeat([number(a) for a in args] or None)
+                if not chosen:
+                    raise CaseFailure("defeat found no active enemy units")
                 print(f"PASS {case}: defeated units {chosen}")
             elif command == "expect":
                 kind = args[0].lower()
@@ -451,8 +460,13 @@ def run_case(path: Path) -> None:
                     if actual != expected:
                         raise CaseFailure(f"var 0x{variable:X}: expected 0x{expected:X}, got 0x{actual:X}")
                     print(f"PASS {case}: var 0x{variable:X}=0x{actual:X}")
+                elif kind == "field-visible":
+                    flag = int.from_bytes(harness.peek_bytes(harness.image_base() + 0x2FF9E00, 4), "little")
+                    if flag:
+                        raise CaseFailure(f"battle renderer exit flag is {flag}; the field is hidden")
+                    print(f"PASS {case}: battle renderer remains active")
                 else:
-                    raise CaseFailure("expect supports unit, entry, or var")
+                    raise CaseFailure("expect supports unit, entry, var, or field-visible")
             else:
                 raise CaseFailure(f"unknown command {command!r}")
         except (IndexError, ValueError) as error:

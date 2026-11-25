@@ -16,7 +16,7 @@ namespace IvaliceRemixed.Patches;
 /// turn-order preview (0x30E2F0) and keeps it in the list. ReMixed cuts the Limit skillset's CT
 /// just before Short Charge, as in the queue. Each copy's Short Charge test becomes a jump to a
 /// stub that asks <see cref="Charge"/> first, then runs the test. ReMixed's same spot also zeroes
-/// the CT of a type 5 skillset, which comes with that skillset type.
+/// the CT of a weapon skillset, which the remaster runs as an ordinary list.
 /// </remarks>
 internal static unsafe class LimitPreview
 {
@@ -144,6 +144,8 @@ internal static unsafe class LimitPreview
     {
         try
         {
+            if (SkillsetTypes.IsWeaponSkillset(skillset))
+                return 0;
             if (skillset != Rules.LimitSkillset || (uint)index >= Battle.UnitCount)
                 return ct;
             var unit = _game.TurnCode.Units + index * Battle.UnitSize;

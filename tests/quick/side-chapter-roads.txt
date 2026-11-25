@@ -1,0 +1,53 @@
+# No road greyed in side chapter 1-A (a tester, 2026-11-22: the road from the Zeklaus Desert to Dorter drawn grey,
+# though the party walks it). The remaster greys the roads its own count of the story (the stage) says aren't open
+# yet; chapter 1 ends at stage 440, which greys roads 11 and 10 (Sweegy Woods and the Zeklaus Desert to Dorter), and
+# 1-A's events don't move the stage (Patches/WorldRoads.cs). Run with
+#   python -I tools/quick_test.py --restart --location 27 --stop tests/quick/side-chapter-roads.txt
+# The party on Mount Bervenia with the story where 1-A stands there (var 0x6E 0xB), the stage chapter 1 ends at (the
+# test save's is 160: set, and the open map told as its start would have told it, the keys of stage 440's row at the
+# map screen's +0xCEC), and 1-A's roads on to the Zeklaus Desert, Dorter and Orbonne not shown yet. Back from the main
+# menu the world map draws them by itself, as a player meets them. First with the patch off (`roads off`): road 10 is
+# drawn grey. Then the patch on and the dream that follows there (0x0F9, started as the world map starts it; its
+# knight, Gareth, framed on the way): back on the world map, which starts afresh, roads 10 and 11 are in colour, and
+# the objective's diamond stands on the Zeklaus Desert (place 28), where 1-A goes next ("Travel to the Zeklaus
+# Desert."), not on Dorter, where the remaster's stage would have it.
+name No road greyed in side chapter 1-A
+wait world depth=1 state=0 timeout=30
+send stage
+send stage 0 440
+send poke [[[[+0x3CD9DA8]+0x10]+0xA0]+0x40]+0xCEC 64 00 00 00 5A 00 00 00
+send roads off
+setvar 0x212 0
+setvar 0x235 0
+setvar 0x21C 0
+setvar 0x236 0
+setvar 0x209 0
+setvar 0x23F 0
+setvar 0x6E 0xB
+setvar 0x2EC 1
+key ESCAPE wait=1.5
+wait world depth=2 state=1 timeout=10
+key ESCAPE
+wait log "world roads: road 10 left grey" timeout=60
+wait seconds 2
+shot grey-before
+wait world depth=1 state=0 timeout=60
+wait seconds 4
+shot steps-done
+send roads on
+scenario 0x2EC
+send speed 5
+wait log "event 748's message (3|35) shown" press=RETURN every=2 timeout=150
+send speed off
+wait log "event 748's message (4|36) shown" press=RETURN every=3 timeout=60
+wait seconds 2
+show slots
+shot gareth
+send speed 5
+wait log "world roads: the objective's marker on place 28" press=RETURN every=1.5 timeout=600
+send speed off
+wait log "world roads: road 10 drawn in colour" timeout=10
+wait log "world roads: road 11 drawn in colour" timeout=10
+wait world depth=1 state=0 timeout=60
+wait seconds 4
+shot colour-after

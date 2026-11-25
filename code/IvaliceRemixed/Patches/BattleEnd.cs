@@ -16,6 +16,7 @@ internal static unsafe class BattleEnd
 {
     private static readonly List<(string Name, Action Run)> Before = [], After = [];
     private static delegate* unmanaged<int> _writeBack; // the original
+    private static int* _joinExit; // 0x2FF9E00: the join screen sets this to 1 on its way out
     private static Log _log = null!;
 
     /// <summary>Whether a battle has started since the last write-back (the offline check sets it).</summary>
@@ -79,7 +80,20 @@ internal static unsafe class BattleEnd
         WriteBackAt = writeBack;
         _writeBack = (delegate* unmanaged<int>)game.Hooks.Hook(
             writeBack, (nint)(delegate* unmanaged<int>)&WriteBack, "the battle end's write-back to the roster");
+        var exitFlag = game.Image.FindUnique("44 89 3D ?? ?? ?? ?? 41 BF 00 01 00 00 89 1D ?? ?? ?? ?? 89 1D");
+        _joinExit = (int*)GameImage.Rip(exitFlag, 3, 7);
         BattleEvents.OnStart(game, "the battle end", () => Armed = true);
+    }
+
+    /// <summary>Called by a ReMixed event immediately after a midscene recruit screen closes (native routine C7).
+    /// The remaster's exit flag hides the field even though that event continues on the same map.</summary>
+    internal static void RestoreMidsceneField()
+    {
+        if (_joinExit != null && *_joinExit == 1)
+        {
+            *_joinExit = 0;
+            _log.Info("battle end: midscene recruit screen returned to its live battlefield");
+        }
     }
 
     /// <summary>The game's own call: display state 7 (0x2C8818), whose join screen follows for what it returns.</summary>

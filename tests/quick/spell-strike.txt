@@ -1,0 +1,30 @@
+# Spell Strike's command should open its eleven-ability list and target with a weapon.
+# Run with python -I tools/quick_test.py --restart --location 24 --stop tests/quick/spell-strike.txt
+name Spell Strike opens its ability list
+send testmode record
+wait world depth=1 state=0 timeout=20
+key RETURN
+wait log "reveal treasures: map" press=RETURN every=3 timeout=180
+formation units=1
+poke unit player=1 present=1 offset=0x13 hex=52
+wait unit player=1 present=1 turn=1 timeout=240
+wait seconds 3
+shot command-menu
+key DOWN wait=1
+key RETURN wait=1.5
+key DOWN times=2 wait=1
+shot act-list
+key RETURN wait=1.5
+shot spell-strike-list
+key RETURN wait=2
+shot targeting
+send act menu
+wait log "harness: the menu's state 0x17, its record unit \\d+, skillset 0x52, ability 0x010" timeout=5
+key ESCAPE times=3 wait=1
+key UP wait=1
+wait seconds 1
+send act 52 010 foe
+wait log "harness: unit \\d+ uses 0x010" timeout=60
+wait log "formula 0x65, ability 0x010: weapon strike" timeout=30
+wait log "harness: unit \\d+ used 0x010" timeout=60
+shot struck

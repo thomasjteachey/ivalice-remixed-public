@@ -131,6 +131,7 @@ try
         problems += SelfTest.PerformerJobRules(game, log);
         problems += SelfTest.DismissByNameRule(game, log);
         problems += SelfTest.SideChapterRepair(log);
+        problems += SelfTest.WorldRoadRules(game, log);
         problems += SelfTest.EventUnitNumbers(game, log);
         problems += SelfTest.RemixedScenarioTables(game, log);
         problems += SelfTest.PackFileGiving(log);
@@ -4931,6 +4932,65 @@ internal static unsafe class SelfTest
     }
 
     /// <summary>
+    /// The world map's grey roads (WorldRoads): the road's colour, the map's stage, the stage's setter and the manager
+    /// where the game has them; the build's flags for ReMixed's own stories, each of which stops the greying; the
+    /// markers' function, its bytes and the game's modules, and 1-A's destination by its progress; and the stage
+    /// following the story's progress past Araguay Woods only.
+    /// </summary>
+    public static int WorldRoadRules(Game game, Log log)
+    {
+        var failures = 0;
+        void Check(string name, bool ok)
+        {
+            if (!ok) failures++;
+            log.Info($"self-test: world roads, {name}{(ok ? "" : ": WRONG")}");
+        }
+        if (WorldRoads.RoadColourAt == 0)
+        {
+            Check("isn't installed", false);
+            return failures;
+        }
+        long Off(nint at) => at - game.Image.ImageStart;
+        Check($"a road's colour 0x{Off(WorldRoads.RoadColourAt):X}, the map's stage 0x{Off(WorldRoads.MapStageAt):X}, the " +
+              $"stage's setter 0x{Off(WorldRoads.SetStageAt):X}, the manager 0x{Off(WorldRoads.ManagerAt):X}",
+              Off(WorldRoads.RoadColourAt) == 0x15DFCC && Off(WorldRoads.MapStageAt) == 0x15A754
+              && Off(WorldRoads.SetStageAt) == 0xFF660 && Off(WorldRoads.ManagerAt) == 0x3CD9DE0);
+        Check($"the markers 0x{Off(WorldRoads.MarkersAt):X}, their bytes 0x{Off(WorldRoads.MarkerBytes):X}, the game's " +
+              $"modules 0x{Off(WorldRoads.Modules):X}",
+              Off(WorldRoads.MarkersAt) == 0x341094 && Off(WorldRoads.MarkerBytes) == 0x11A73F3
+              && Off(WorldRoads.Modules) == 0x3CD9DA8);
+        var set = new Dictionary<int, int>();
+        int Variable(int id) => set.GetValueOrDefault(id);
+        var main = WorldRoads.OwnStory(Variable);
+        set[0x2EC] = 1;
+        var sideChapter = WorldRoads.OwnStory(Variable);
+        set.Clear();
+        set[0xAF] = 1;
+        var campaign = WorldRoads.OwnStory(Variable);
+        Check($"ReMixed's own stories (flags {string.Join(", ", WorldRoads.OwnStories.Select(f => $"0x{f:X}"))}): the main " +
+              $"story {main}, side chapter 1-A {sideChapter}, the Algus campaign {campaign}",
+              !main && sideChapter && campaign && WorldRoads.OwnStories.Length == 2);
+        var campaignPlace = WorldRoads.Destination(Variable, 3);
+        set.Clear();
+        var mainPlace = WorldRoads.Destination(Variable, 0xC);
+        set[0x2EC] = 1;
+        Check($"the objective's place: none in the main story ({mainPlace}) or the Algus campaign ({campaignPlace}); 1-A's " +
+              $"at 0, 0xB, 0xC, 0xD, 0xE: {WorldRoads.Destination(Variable, 0)}, {WorldRoads.Destination(Variable, 0xB)}, " +
+              $"{WorldRoads.Destination(Variable, 0xC)}, {WorldRoads.Destination(Variable, 0xD)}, " +
+              $"{WorldRoads.Destination(Variable, 0xE)}; past its end {WorldRoads.Destination(Variable, 0xF)}",
+              mainPlace == -1 && campaignPlace == -1 && WorldRoads.Destination(Variable, 0) == 5
+              && WorldRoads.Destination(Variable, 0xB) == 27 && WorldRoads.Destination(Variable, 0xC) == 28
+              && WorldRoads.Destination(Variable, 0xD) == 9 && WorldRoads.Destination(Variable, 0xE) == 18
+              && WorldRoads.Destination(Variable, 0xF) == -1);
+        Check($"the stage past Araguay Woods: 465 with the story at 0x11 is {WorldRoads.Floor(465, 0x11)}, 474 at 0x12 " +
+              $"{WorldRoads.Floor(474, 0x12)}; 465 at 0x10 stays {WorldRoads.Floor(465, 0x10)}, and 440, 478 and 540 stay " +
+              $"{WorldRoads.Floor(440, 0x11)}, {WorldRoads.Floor(478, 0x11)}, {WorldRoads.Floor(540, 0x20)}",
+              WorldRoads.Floor(465, 0x11) == 478 && WorldRoads.Floor(474, 0x12) == 478 && WorldRoads.Floor(465, 0x10) == 465
+              && WorldRoads.Floor(440, 0x11) == 440 && WorldRoads.Floor(478, 0x11) == 478 && WorldRoads.Floor(540, 0x20) == 540);
+        return failures;
+    }
+
+    /// <summary>
     /// ReMixed's event instructions: the two hooks' places, the length stub on a made-up code buffer, and the
     /// interpreter on a small ReMixed program (IF/ELSE nesting, SWITCH, CALL/RETURN, GOTO, a unit's address, PEEK and
     /// POKE through the PS1 map, PATCH_NEXT, HAS_CHARACTER), the remaster's own ZERO run by the test as it would.
@@ -6639,6 +6699,9 @@ internal static unsafe class SelfTest
         // An event's or a list's portrait of Agrias (0x17, the PS1's for her) is hers, through the game's own lookup.
         var agriasPortrait = fold(graphicOf(0, 0x17));
         Check($"Agrias's portrait 0x17 gives her face: 0x{agriasPortrait:X2}", agriasPortrait == 0x34);
+        var valensPortrait = fold(graphicOf(0, 0x65));
+        Check($"Valens's portrait 0x65 gives the male Thief face: 0x{valensPortrait:X2}",
+              valensPortrait == 0x72 && RemixedFaces.GraphicOfPortrait[0x65] == 0x72);
         // An event's speech box takes a portrait of 0x51 or less through its own table (0x714D50): Rafa's 0x0E and
         // Agrias's 0x17 give their faces there too (they gave ReMixed's 0x19's and Ashley's, a tester on 0.9.22), and
         // the entries no separated portrait names stay the game's (Ramza's 1 and 2, Gafgarion's second's 8).
@@ -6692,6 +6755,12 @@ internal static unsafe class SelfTest
                   sets[4][3] == (0x29, 8) && fold(0x29) == 0x19 && sets[4][7] == (0x1A, 8) && fold(0x1A) == 0x1A
                   && sets[0][0].Graphic == 0xB7 && others.Length == 0 && all.Length == 64
                   && RemixedFaces.EventFaceSet[4 * RemixedFaces.EventFacesPerSet + 3] == 0x29);
+            Check($"ReMixed's EVTFACE redraws: set 0's 7 {Shown(sets[0][6])}, 8 {Shown(sets[0][7])}; "
+                  + $"set 1's 6 {Shown(sets[1][5])}, 8 {Shown(sets[1][7])}",
+                  sets[0][6] == (0x9B, 8) && sets[0][7] == (0x9C, 8)
+                  && sets[1][5] == (0x9D, 8) && sets[1][7] == (0x9E, 8)
+                  && fold(0x9B) == 0x9B && fold(0x9C) == 0x9C
+                  && fold(0x9D) == 0x9D && fold(0x9E) == 0x9E);
         }
         // A battle unit's speech box takes its face from the unit's sheet (0x22AA88: a sheet slot, through the slot
         // table): Rafa (0x29) and Agrias (0x1E) draw from 0x19's and 0x34's sheets, ReMixed's characters' numbers, so
@@ -6701,6 +6770,12 @@ internal static unsafe class SelfTest
             Check("a speech box's face isn't hooked", false);
         else
         {
+            Check("named scene actors: Bryn and Lorne keep their faces, a male Knight sharing Bryn's name id does not",
+                  RemixedFaces.NamedActorFace(0x69, 0x83) == 0x83
+                  && RemixedFaces.NamedActorFace(0x6A, 0x38) == 0x38
+                  && RemixedFaces.NamedActorFace(0x69, 0x63) == -1
+                  && RemixedFaces.NamedActorFace(0x69, 0x64) == -1
+                  && RemixedFaces.NamedActorFace(0x6A, 0x62) == -1);
             var slots = RemixedFaces.SheetSlots;
             var savedSlot = slots[3];
             slots[3] = 0x19;
@@ -7005,6 +7080,20 @@ internal static unsafe class SelfTest
         emptyActor[0] = 0;
         Check($"an absent roster-backed actor cannot satisfy HP <= 0: absent {absentHp}, present delegates {presentHp}",
               absentHp == 0 && presentHp == -1);
+        // A fallen unit whose body is gone (Hirame, a Treasure here, HP 0): the remaster's checker no longer finds
+        // it, so "HP at most 0" and "HP at least 1" are the mod's own for it; a unit still on the field delegates.
+        var chestFallen = Test(6, 0x93, 0);
+        var chestStands = Test(5, 0x93, 1);
+        hirame[0x62] = 0;
+        hirame[0x61] = 0x40; // Crystal, status 1
+        var crystalFallen = Test(6, 0x93, 0);
+        hirame[0x61] = 0x20; // Dead: its body still there
+        var bodyThere = Test(6, 0x93, 0);
+        hirame[0x61] = 0;
+        hirame[0x62] = 0x01;
+        Check($"a fallen unit whose body is gone: a treasure chest's HP <= 0 {chestFallen}, HP >= 1 {chestStands}; a "
+              + $"crystal's HP <= 0 {crystalFallen}; a body still there delegates {bodyThere}",
+              chestFallen == 1 && chestStands == 0 && crystalFallen == 1 && bodyThere == -1);
         // 1-A's Agrias, ReMixed's 0x22: the scene's actor (unit 11, sprite set 0x1E, battle id 0x90, off the field) and the
         // formation's (unit 16, battle id 0x78), Dead.
         var actor = units + 11 * Battle.UnitSize;
@@ -7264,6 +7353,8 @@ internal static unsafe class SelfTest
               RemixedScenarios.EntryRecordsAt - game.Image.ImageStart == 0x28416C);
         Check($"the entry the battle setup reads (var 0x32 as it took it): 0x{(nint)RemixedScenarios.EntryAsked - game.Image.ImageStart:X}",
               (nint)RemixedScenarios.EntryAsked - game.Image.ImageStart == 0x1856930);
+        Check($"the event runner's fade-in request a continued battle's first event sets: 0x{(nint)RemixedScenarios.RevealTimer - game.Image.ImageStart:X}",
+              (nint)RemixedScenarios.RevealTimer - game.Image.ImageStart == 0x2FEC528);
         {
             // A map reload's units by the scenario and the entry asked (the build's MAP_RELOAD; its data is checked by
             // tools/check_story_regressions.py check_map_reloads): 0x0F4's town scene (the mod's 0x1FF) reloads with
@@ -7385,6 +7476,88 @@ internal static unsafe class SelfTest
         Check($"the Fort Zeakden rumor: {conditional} conditional row, branch open {branchOpen}, Hirame lost {hirameLost}, "
               + $"branch taken {branchTaken}",
               conditional == 1 && branchOpen == 1 && hirameLost == 0 && branchTaken == 0);
+        {
+            // A battle continued with no mark (RemixedScenarios.LoadedBattle: a save from before 0.9.34, or the game's
+            // Retry of a battle begun on one): told from its map, its entry and its units' battle ids. Two made-up
+            // battles on one map and entry, 0x1EC and 0x1ED, whose units differ in one battle id; 0x1ED's conditions
+            // open with it only while flag 0xB2 is set (as 0x0F1's two scripts do).
+            const int size = RemixedScenarios.ScenarioSize, preset = RemixedEvents.PresetBytes;
+            var other = last + size;
+            new ReadOnlySpan<byte>(last, size).CopyTo(new Span<byte>(other, size));
+            *(ushort*)other = 0x1ED;
+            new Span<byte>(other + size, size).Clear();
+            foreach (var at in new[] { (nint)last, (nint)other })
+            {
+                var r = (byte*)at;
+                r[2] = 0x20;
+                *(ushort*)(r + 7) = 0x1FE;
+                *(ushort*)(r + 9) = 0x2F0;
+            }
+            var presets = new byte[3 * preset];
+            void Put(int number, int set, int at, params ushort[] words)
+            {
+                BitConverter.TryWriteBytes(presets.AsSpan(number * preset + 2 * set), (ushort)(2 * at));
+                for (var i = 0; i < words.Length; i++)
+                    BitConverter.TryWriteBytes(presets.AsSpan(number * preset + RemixedEvents.PresetOffsets + 2 * (at + i)), words[i]);
+            }
+            Put(1, 0, 0, 1, 0x1FD, 1, 0x19, 0x1EC, 1);              // 0x1EC's: "var 0x1FD = 1 -> 0x1EC"
+            Put(1, 1, 8, 6, 0x98, 0, 0x19, 0x2FE, 6);               // and a failure
+            Put(2, 0, 0, 1, 0x1FD, 1, 1, 0xB2, 1, 0x19, 0x1ED, 1);  // 0x1ED's: with flag 0xB2 set
+            Put(2, 1, 12, 1, 0x1FD, 1, 1, 0xB2, 0, 0x19, 0x1EC, 1); // else another's event
+            var hadFirst = RemixedScenarios.Presets.TryGetValue(0x1EC, out var keptFirst);
+            var hadOther = RemixedScenarios.Presets.TryGetValue(0x1ED, out var keptOther);
+            RemixedScenarios.Presets[0x1EC] = 1;
+            RemixedScenarios.Presets[0x1ED] = 2;
+            var field = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(Battle.UnitCount * Battle.UnitSize);
+            var entryData = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(2 * RemixedScenarios.EntryBytes);
+            void Record(int entry, int k, byte id)
+            {
+                entryData[entry * RemixedScenarios.EntryBytes + k * 40] = 0x82;
+                entryData[entry * RemixedScenarios.EntryBytes + k * 40 + 0x20] = id;
+            }
+            void Unit(int k, byte id)
+            {
+                field[k * Battle.UnitSize] = (byte)(id == 0 ? 0 : 0x82);
+                field[k * Battle.UnitSize + 0x191] = id;
+            }
+            Record(0, 0, 0xC0); Record(0, 1, 0xC1); Record(0, 12, 0x98);
+            Record(1, 0, 0xC0); Record(1, 1, 0xC1); Record(1, 12, 0x99);
+            Unit(0, 0xC0); Unit(12, 0x98); Unit(16, 0x78);   // unit 1 not made; the party's after the entry's
+            RemixedScenarios.OwnEntries[0x1EC] = (nint)entryData;
+            RemixedScenarios.OwnEntries[0x1ED] = (nint)(entryData + RemixedScenarios.EntryBytes);
+            var flags = new Dictionary<int, int> { [0xB2] = 1 };
+            var readBefore = RemixedScenarios.ReadVariable;
+            RemixedScenarios.ReadVariable = id => flags.GetValueOrDefault(id);
+            int Told(int entry, int map, out int fitting) => RemixedScenarios.LoadedBattle(field, entry, map, presets, out fitting);
+            var firstTold = Told(0x1FE, 0x20, out var firstFits);
+            Unit(12, 0x99);
+            var secondTold = Told(0x1FE, 0x20, out _);
+            flags[0xB2] = 0;
+            var otherScript = Told(0x1FE, 0x20, out var noneFit);
+            flags[0xB2] = 1;
+            var otherMap = Told(0x1FE, 0x21, out _);
+            var otherEntry = Told(0x1FD, 0x20, out _);
+            Unit(3, 0x9C);                                   // a unit the entry has no record for
+            var stranger = Told(0x1FE, 0x20, out _);
+            Unit(3, 0);
+            RemixedScenarios.OwnEntries.Remove(0x1EC);
+            RemixedScenarios.OwnEntries.Remove(0x1ED);
+            var either = Told(0x1FE, 0x20, out var bothFit);  // neither with units of its own: nothing to tell them by
+            *(ushort*)(other + 9) = 0;                        // 0x1ED a scene's run: no formation
+            var battleOnly = Told(0x1FE, 0x20, out _);
+            RemixedScenarios.ReadVariable = readBefore;
+            if (hadFirst) RemixedScenarios.Presets[0x1EC] = keptFirst; else RemixedScenarios.Presets.Remove(0x1EC);
+            if (hadOther) RemixedScenarios.Presets[0x1ED] = keptOther; else RemixedScenarios.Presets.Remove(0x1ED);
+            new Span<byte>(other, size).Clear();
+            System.Runtime.InteropServices.NativeMemory.Free(field);
+            System.Runtime.InteropServices.NativeMemory.Free(entryData);
+            Check($"a battle continued with no mark told from its map, entry and units: 0x{firstTold:X} ({firstFits} fits), with "
+                  + $"the other's unit 0x{secondTold:X}, in the other script 0x{otherScript:X} ({noneFit} fit), on another map "
+                  + $"0x{otherMap:X}, with another entry 0x{otherEntry:X}, with a unit its entry hasn't 0x{stranger:X}, "
+                  + $"two with no units of their own 0x{either:X} ({bothFit} fit), one of them a scene's run 0x{battleOnly:X}",
+                  firstTold == 0x1EC && firstFits == 1 && secondTold == 0x1ED && otherScript == 0 && noneFit == 0 && otherMap == 0
+                  && otherEntry == 0 && stranger == 0 && either == 0 && bothFit == 2 && battleOnly == 0x1EC);
+        }
         new Span<byte>(last, RemixedScenarios.ScenarioSize).Clear();
         savedFormation.CopyTo(new Span<byte>(formationAt, savedFormation.Length));
         return failures;
@@ -8669,11 +8842,11 @@ internal static unsafe class SelfTest
     {
         var table = SkillsetTypes.Table;
         var ok = table != null && table[SkillsetTypes.Elemental] == SkillsetTypes.Ordinary
-                 && SkillsetTypes.WeaponSkillsets.ToArray().All(s => table[s] == SkillsetTypes.Weapon)
+                 && SkillsetTypes.WeaponSkillsets.ToArray().All(s => table[s] == SkillsetTypes.Ordinary)
                  && SkillsetTypes.MonsterSkillsets.ToArray().All(s => table[s] == SkillsetTypes.Monster)
                  && table[1] == 8 && table[0x12] == 9 && table[0x13] == 7 && table[0x14] == 2 && table[0x15] == 3;
-        log.Info($"self-test: skillset types, Elemental (0x11) is ordinary, Magic Blade/Spell Strike/Fellblade are " +
-                 $"weapon type 5, and ReMixed's monster lists are type 6 in the table " +
+        log.Info($"self-test: skillset types, Elemental (0x11) and Magic Blade/Spell Strike/Fellblade use " +
+                 $"the remaster's ordinary menu path, and ReMixed's monster lists are type 6 in the table " +
                  $"(0x{(table == null ? 0 : (nint)table - game.Image.ImageStart):X}), Jump, Draw Out, Throw and Math Skill as " +
                  $"they were{(ok ? "" : ": WRONG")}");
 
@@ -8687,7 +8860,8 @@ internal static unsafe class SelfTest
         bool Jumps(nint at) => *(byte*)at == 0xEB
                                || (*(byte*)at == 0xE9 && *(byte*)(at + 5) == 0x90 && Math.Abs(*(int*)(at + 1)) < 0x400);
         var menusOk = request != 0 && *(byte*)(request + 6) == 0x0C && *(byte*)(request + 12) == 0x13
-                      && label != 0 && Jumps(label + 3) && info.Count == 6 && info.All(at => Jumps(at + 3));
+                      && label != 0 && Jumps(label + 3) && info.Count == 6 && info.All(at => Jumps(at + 3))
+                      && SkillsetTypes.RangeAt != 0 && SkillsetTypes.AreaAt != 0;
         log.Info($"self-test: skillset types, the menus take Elemental's chosen ability (request test at " +
                  $"0x{request - image:X}: skillsets 5-0x11 and from 0x13), its label and info panels the ordinary way " +
                  $"(0x{label - image:X}; {string.Join(" ", info.Select(at => $"0x{at - image:X}"))})" +

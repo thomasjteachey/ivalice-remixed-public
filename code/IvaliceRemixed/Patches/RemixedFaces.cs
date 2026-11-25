@@ -207,7 +207,7 @@ internal static unsafe class RemixedFaces
         try
         {
             apart = SeparatePortraits(game.Image);
-            game.Log.Info($"faces: the world menus' portraits apart: {string.Join(", ", apart)}");
+            game.Log.Info($"faces: portrait graphics mapped: {string.Join(", ", apart)}");
         }
         catch (Exception e)
         {
@@ -250,7 +250,7 @@ internal static unsafe class RemixedFaces
         {
             game.Log.Error($"faces: Brave Story's people not given the remaster's faces: {e.Message}");
         }
-        return $"ReMixed's characters' faces ({given.Count} graphics, {apart.Count} with portraits of their own, "
+        return $"ReMixed's characters' faces ({given.Count} graphics, {apart.Count} portrait mappings, "
                + $"{sets.Count} event face set entries and Brave Story's people the remaster's)";
     }
 
@@ -308,7 +308,9 @@ internal static unsafe class RemixedFaces
     /// remaster keeps her face, so the frog scene's boxes (op 0x50 4, then portrait 4) showed Balthier's (a tester on
     /// 0.9.22). EVTFACE's sets 2-7 are vanilla's in ReMixed too, so its events that load them mean the same people.
     /// The graphic it gives takes the palette cap of the one it replaces (Rafa's 0x29 has none of its own: the remaster
-    /// keeps her face under 0x19, and a box asked for 0x29's at palette 0 showed no face). Returns what it changed.
+    /// keeps her face under 0x19, and a box asked for 0x29's at palette 0 showed no face). ReMixed also redraws four
+    /// portraits in sets 0 and 1 that the remaster labels with placeholder 0xB7; use the four unique faces the build
+    /// makes from EVENT/EVTFACE.BIN for those slots. Returns what it changed.
     /// </summary>
     private static List<string> RemasterEventFaces(GameImage image)
     {
@@ -340,12 +342,33 @@ internal static unsafe class RemixedFaces
                     caps[move.Person] = Math.Max(caps[move.Person], caps[move.Graphic]);
             });
         }
+        // The build checked that these are exactly the four portraits ReMixed changed from vanilla EVTFACE and
+        // shipped wldface_155-158 for them. No stock enhanced script explicitly uses these four set/slot pairs.
+        var added = new (int At, int Graphic)[]
+        {
+            (0 * EventFacesPerSet + 6, 0x9B), (0 * EventFacesPerSet + 7, 0x9C),
+            (1 * EventFacesPerSet + 5, 0x9D), (1 * EventFacesPerSet + 7, 0x9E)
+        };
+        if (added.Any(face => sets[face.At] != 0xB7 || caps[face.Graphic] != 0))
+            throw new InvalidDataException("ReMixed's EVTFACE slots or their reserved face numbers have changed");
+        GameImage.Unprotected((nint)sets, count * sizeof(int), () =>
+        {
+            foreach (var face in added)
+                sets[face.At] = face.Graphic;
+        });
+        GameImage.Unprotected((nint)caps, Graphics, () =>
+        {
+            foreach (var face in added)
+                caps[face.Graphic] = 8;
+        });
         EventFaceSetAt = loader;
         EventFaceSet = sets;
         MessageFaceAt = messageFace;
         PaletteCaps = caps;
         return moves.Select(move => $"set {move.At / EventFacesPerSet} portrait {move.At % EventFacesPerSet + 1} "
                                     + $"0x{move.Graphic:X2} as 0x{move.Person:X2} (palette cap {caps[move.Person]})")
+                    .Concat(added.Select(face => $"set {face.At / EventFacesPerSet} portrait "
+                                                + $"{face.At % EventFacesPerSet + 1} as ReMixed face 0x{face.Graphic:X2}"))
                     .ToList();
     }
 
@@ -402,7 +425,7 @@ internal static unsafe class RemixedFaces
 
     /// <summary>Gives each listed graphic whose number holds a story character's face (Ashley's 0x34, where the remaster
     /// keeps Agrias's) an unused PS1 portrait that gives it, and the portrait it shared with the story character's own
-    /// sprite set (Agrias's 0x1E, which the game folds into 0x34) back to that sprite set. Returns what it moved.</summary>
+    /// sprite set (Agrias's 0x1E, which the game folds into 0x34) back to that sprite set. Returns what it mapped.</summary>
     private static List<string> SeparatePortraits(GameImage image)
     {
         var reader = image.FindUnique(GraphicOfPortraitPattern);
@@ -411,9 +434,14 @@ internal static unsafe class RemixedFaces
         var events = (int*)(image.ImageStart + *(int*)(image.FindUnique(EventGraphicOfPortraitPattern) + 17));
         // Ramza's portraits and graphics (sprite sets 2 and 3: portraits 1 and 2, graphics 2 and 3, the event table's
         // too), and Agrias's portrait, which this leaves as it is.
-        if (graphics[1] != 2 || graphics[2] != 3 || portraits[2] != 1 || portraits[3] != 2 || portraits[0x1E] != 0x17
+        if (graphics[1] != 2 || graphics[2] != 3 || graphics[0x65] != -1
+            || portraits[2] != 1 || portraits[3] != 2 || portraits[0x1E] != 0x17
             || events[1] != 2 || events[2] != 3)
             throw new InvalidDataException("the portrait tables aren't the ones this DLL expects");
+        // 1-A's second battle explicitly selects portrait 0x65 for Valens (battle id 0x80). The remaster
+        // leaves that portrait empty, though his unit draws as a male Thief, graphic 0x72. Both the event
+        // box and the unit card ask this portrait table for their graphic.
+        GameImage.Unprotected((nint)graphics, Portraits * sizeof(int), () => graphics[0x65] = 0x72);
         var unused = new Queue<int>();
         foreach (var portrait in UnusedPortraits)
             if (graphics[portrait] == -1)
@@ -469,7 +497,7 @@ internal static unsafe class RemixedFaces
         return moves.Select(move => $"0x{move.Graphic:X2} portrait 0x{move.Own:X2} (0x{move.Shared:X2} to "
                                     + $"0x{move.Story:X2}"
                                     + (move.Shared < EventPortraits && events[move.Shared] == move.Story ? ", events' too" : "")
-                                    + ")").ToList();
+                                    + ")").Append("Valens's portrait 0x65 to male Thief 0x72").ToList();
     }
 
     /// <summary>For the offline check: a graphic's face set, or (-1) left to the game.</summary>
@@ -488,6 +516,15 @@ internal static unsafe class RemixedFaces
         return found;
     }
 
+    /// <summary>The named scene actors at Grog and in the rescue use these graphics. A name alone is not enough:
+    /// unrelated event units can carry the same name id (the fortress Knight, for example).</summary>
+    internal static int NamedActorFace(int name, int graphic) => (name, graphic) switch
+    {
+        (0x69, 0x83) => 0x83, // Bryn's Dancer
+        (0x6A, 0x38) => 0x38, // Lorne's Bard
+        _ => -1
+    };
+
     [UnmanagedCallersOnly]
     private static int BoxFace(nint layout, int slot, nint found, int* palette)
     {
@@ -497,7 +534,21 @@ internal static unsafe class RemixedFaces
             if (face < 0)
                 NoFace(slot);
             if ((uint)slot <= 0x14 && _boxUnits != null)
-                return BoxFaceOf(face, _boxUnits[slot * 0x200 + 0x18F]);
+            {
+                var unit = _boxUnits + slot * 0x200;
+                // Grog Hill's closing scene speaks through generic event actors named Bryn and Lorne.
+                // Their sprite sets yield no dialogue portrait, though the same characters have Dancer and Bard
+                // faces in the roster. Give those named actors their own faces in speech boxes as well.
+                var name = *(ushort*)(unit + 0x1FC);
+                var actorFace = NamedActorFace(name, unit[0x18F]);
+                if (actorFace >= 0)
+                {
+                    if (palette != null && *palette < 0)
+                        *palette = 8;
+                    return actorFace;
+                }
+                return BoxFaceOf(face, unit[0x18F]);
+            }
         }
         catch (Exception e)
         {

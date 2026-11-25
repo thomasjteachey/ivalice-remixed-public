@@ -2,12 +2,17 @@
 # Mandalia join leaves him, on the save's David, slot 7), story 0x10, the units' inclusion flags 0xC0-0xC8 (0xC9, the
 # rider Luso, clear as with Luso recruited), flag 0x98 (the scene ran), and the scene noted as seen (`scenario 0x79 noted`),
 # so the mod sets the battle's run up at once (RemixedScenarios.PrepareMenuBattle). Then as araguay-luso.txt.
+# The remaster counts the story by a stage of its own, which its Araguay scenes moved on (to 478 as the story reaches
+# 0x11) and ReMixed's, under their numbers, don't: left at Dorter's 465 it kept the road on to Zeirchele Falls grey and
+# the next-stop marker on the woods (Patches/WorldRoads.cs). The case starts at 465, as Dorter leaves it, and back on
+# the world map the stage has followed the story to 478.
 name Araguay battle with the scene skipped
 wait world depth=1 state=0 timeout=20
 send poke +0x11A8D78 12
 send poke +0x11A8D7A 12
 send poke +0x11A8FA8 38 00
 setvar 0x6E 0x10
+send stage 0 465
 setvar 0xC0 1
 setvar 0xC1 1
 setvar 0xC2 1
@@ -33,3 +38,7 @@ shot victory
 advance world timeout=200
 expect var 0x6E 0x11
 expect roster name_id=0x76
+wait log "world roads: the remaster's stage 465 is 478" timeout=30
+send stage
+wait seconds 4
+shot world-after

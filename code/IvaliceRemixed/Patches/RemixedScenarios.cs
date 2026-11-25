@@ -367,6 +367,7 @@ internal static unsafe class RemixedScenarios
         LoadEventAt = image.FindUnique(LoadEventPattern) - 0x18;
         UnitLookupAt = image.FindExactly(UnitLookupPattern, 2)[0];
         EntryRecordsAt = image.FindUnique(EntryRecordsPattern);
+        RevealTimer = (ushort*)GameImage.Rip(image.FindUnique(RevealPattern) + 0x10, 4, 8);
         EntryAsked = (int*)GameImage.Rip(EntryRecordsAt, 2, 6); // mov eax, [the entry]
         if (*(uint*)ButtonsAt != 0xC1058B48)  // mov rax, [first pad]
             throw new InvalidDataException("the world's button function isn't laid out as this DLL expects");
@@ -469,6 +470,7 @@ internal static unsafe class RemixedScenarios
         ResetVictoryObservation();
         _lookupsAliased = 0;
         _battleMarkPending = true;
+        _revealPending = false;
         try
         {
             PrepareSplitBattle(Nemesis.GetVariable(0x27));
@@ -932,6 +934,34 @@ internal static unsafe class RemixedScenarios
         return fired;
     }
 
+    // The event runner's Reveal (instruction 0x4D, 0x23CCB0): cmp dword [the running event], 0x20E; mov r14d, 1;
+    // mov [the timer], r15w (its frames).
+    internal const string RevealPattern = "81 3D ?? ?? ?? ?? 0E 02 00 00 41 BE 01 00 00 00 66 44 89 3D";
+    /// <summary>The event runner's fade-in request (0x2FEC528): instruction 0x4D stores its frames here, and the
+    /// event's frame code (0x23A0B4) starts the fade from it and clears it.</summary>
+    internal static ushort* RevealTimer;
+    private static bool _revealPending;
+
+    /// <summary>
+    /// A continued battle's first event fades the picture in, as the battle's start does. A scene that hands on to
+    /// its battle ends faded out, and the battle's opening fades in again (the build's MENU_FADE_IN); that state is
+    /// saved with the battle. The four battles with a scenario of their own had no fade-in before 0.9.35, so their
+    /// saves from then keep the picture out for every scene in the battle, on any build (seen in the hidden PC game,
+    /// 2026-11-25: 1-A's last battle saved without the fade-in and continued, a child's cry in its box over black).
+    /// So the first instruction of the first ReMixed event to run after a continued battle's first walk asks for the
+    /// fade-in, as instruction 0x4D would (one frame: a battle that begins mid-fade crashed its first turn, see
+    /// MENU_FADE_IN). A picture that is in already stays in.
+    /// </summary>
+    internal static void RevealContinued()
+    {
+        if (!_revealPending || RevealTimer == null)
+            return;
+        _revealPending = false;
+        if (*RevealTimer == 0)
+            *RevealTimer = 1;
+        _log?.Info("remixed scenarios: a continued battle's first event fades the picture in");
+    }
+
     /// <summary>A save-carried event variable neither game's events nor the exe name (read 2026-11-22: ReMixed's 512
     /// events, the remaster's 560 scripts, the decompile's direct reads): the battle's scenario in its low half and the
     /// preset its conditions were last loaded from, plus one, in its high half (<see cref="KeepBattleMark"/>).</summary>
@@ -940,6 +970,9 @@ internal static unsafe class RemixedScenarios
     /// the first walk of one resumed from a save.</summary>
     internal const int BattleStartFlag = 0x1FD;
     private static bool _battleMarkPending;
+    /// <summary>For the harness (`battlemark off`): no mark is kept, as before 0.9.34, so a test can make a mid-battle
+    /// save as an older build left it and continue it on this one.</summary>
+    internal static volatile bool BattleMarksOff;
     private static int _markedPreset = -1;
 
     /// <summary>
@@ -957,6 +990,11 @@ internal static unsafe class RemixedScenarios
     {
         if (Nemesis.GetVariable == null || Nemesis.SetVariable == null || _presets == null)
             return;
+        if (BattleMarksOff)
+        {
+            _battleMarkPending = false;
+            return;
+        }
         var pending = _battleMarkPending;
         _battleMarkPending = false;
         var mark = Nemesis.GetVariable(BattleMarkVariable);
@@ -965,6 +1003,7 @@ internal static unsafe class RemixedScenarios
             Nemesis.SetVariable(0x27, scenario, 0);
             LoadPreset(preset, scenario);
             _markedPreset = preset;
+            _revealPending = true;
             _log?.Info($"remixed scenarios: a battle resumed from a save is scenario 0x{scenario:X} again, with its "
                        + $"conditions 0x{preset:X} (var 0x{BattleMarkVariable:X})");
             return;
@@ -977,6 +1016,27 @@ internal static unsafe class RemixedScenarios
             _log?.Info($"remixed scenarios: scenario 0x{now:X}'s first walk, battle-start flag "
                        + $"{Nemesis.GetVariable(BattleStartFlag)}, the mark 0x{mark:X}");
             mark = Presets.ContainsKey(now) ? now : 0;
+            // A battle continued with no mark: a save made before the mark was kept (0.9.33 and earlier), or the
+            // game's own Retry of a battle begun on one. Its var 0x27 is the last event run in it, as ever.
+            if (Nemesis.GetVariable(BattleStartFlag) == 0)
+            {
+                var battle = LoadedBattle(_battleUnits, Nemesis.GetVariable(0x32), Nemesis.GetVariable(0x33), _presets,
+                                          out var others);
+                if (battle != 0 && battle != now)
+                {
+                    Nemesis.SetVariable(0x27, battle, 0);
+                    LoadPreset(Presets[battle], battle);
+                    _markedPreset = Presets[battle];
+                    _log?.Info($"remixed scenarios: a battle continued from an older build's save (no mark, var 0x27 = "
+                               + $"0x{now:X}) is scenario 0x{battle:X} by its map, entry and units: its conditions "
+                               + $"0x{Presets[battle]:X} again");
+                    mark = battle;
+                }
+                else if (battle == 0 && others > 1)
+                    _log?.Warn($"remixed scenarios: a battle continued with no mark (var 0x27 = 0x{now:X}) could be "
+                               + $"any of {others} of ReMixed's: left as it is");
+                _revealPending = mark != 0;
+            }
         }
         if ((mark & 0xFFFF) == 0)
         {
@@ -990,6 +1050,92 @@ internal static unsafe class RemixedScenarios
         var next = (mark & 0xFFFF) | (_markedPreset + 1) << 16;
         if (next != Nemesis.GetVariable(BattleMarkVariable))
             Nemesis.SetVariable(BattleMarkVariable, next, 0);
+    }
+
+    /// <summary>
+    /// The ReMixed battle that is loaded, told from what every save keeps of one, for a continued battle with no mark
+    /// (<see cref="KeepBattleMark"/>): 0 for none, or when more than one fits (<paramref name="fitting"/>, how many
+    /// did). A battle's scenario is one whose conditions open with its own event (<see cref="OpensItself"/>: an
+    /// in-battle event's or a post-battle run's open with another's), with a formation (or one of
+    /// <see cref="MenuBattles"/>, whose record gets its formation for the battle's run), on the map loaded (var 0x33,
+    /// <paramref name="map"/>) with the entry loaded (var 0x32, <paramref name="entry"/>; or one its map reload brings
+    /// in, <see cref="ReloadEntries"/>). The battles whose units are the mod's file's share two entry numbers
+    /// (<see cref="OwnEntries"/>), so each of those also needs its units' battle ids where the field has a unit
+    /// (<see cref="SameUnits"/>). A tester's 1-A battle at Dorter, saved on 0.9.33 after the Nemesis's return (var
+    /// 0x27 = 0x1B5, whose conditions are empty), continued on 0.9.35 with no failure and no victory (seen in the
+    /// hidden PC game, 2026-11-25); tools/check_story_regressions.py checks no two battles fit the same save.
+    /// </summary>
+    internal static int LoadedBattle(byte* units, int entry, int map, ReadOnlySpan<byte> presets, out int fitting)
+    {
+        fitting = 0;
+        var found = 0;
+        if (units == null)
+            return 0;
+        foreach (var (scenario, preset) in Presets)
+        {
+            if (!OpensItself(presets, preset, scenario))
+                continue;
+            var record = FindRecord(scenario);
+            if (record == null || record[2] != map || (*(ushort*)(record + 9) == 0 && !MenuBattles.ContainsKey(scenario)))
+                continue;
+            if (*(ushort*)(record + 7) != entry && !ReloadEntries.ContainsKey((scenario, entry)))
+                continue;
+            if (OwnEntries.TryGetValue(scenario, out var own) && !SameUnits(units, (byte*)own))
+                continue;
+            fitting++;
+            found = scenario;
+        }
+        return fitting == 1 ? found : 0;
+    }
+
+    /// <summary>Whether a preset opens with <paramref name="scenario"/>'s own event as things stand: one of its sets is
+    /// "var 0x1FD = 1" (type 1), any more "variable = value" conditions that hold now (0x0F1's battle is told in two
+    /// scripts, picked by flag 0xB2: the mod's 0x197 and 0x2F2, with the same map, entry and conditions), then "run
+    /// the event" (0x19) with that number.</summary>
+    internal static bool OpensItself(ReadOnlySpan<byte> presets, int preset, int scenario)
+    {
+        const int bytes = RemixedEvents.PresetBytes, offsets = RemixedEvents.PresetOffsets;
+        if (preset < 0 || (preset + 1) * bytes > presets.Length)
+            return false;
+        var p = presets.Slice(preset * bytes, bytes);
+        for (var k = 0; k < 16; k++)
+        {
+            var at = offsets + (Word(p, 2 * k) & ~1);
+            if (k != 0 && at == offsets)
+                break;
+            if (Word(p, at) != 1 || Word(p, at + 2) != BattleStartFlag || Word(p, at + 4) != 1)
+                continue;
+            at += 6;
+            while (at + 6 <= bytes && Word(p, at) == 1 && ReadVariable(Word(p, at + 2)) == Word(p, at + 4))
+                at += 6;
+            if (Word(p, at) == 0x19 && Word(p, at + 2) == scenario)
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>A preset's halfword at a byte offset, or −1 past its end.</summary>
+    private static int Word(ReadOnlySpan<byte> preset, int at) =>
+        at >= 0 && at + 2 <= preset.Length ? BitConverter.ToUInt16(preset[at..]) : -1;
+
+    /// <summary>Whether the battle's units are an entry's (16 records of 40 bytes, the battle id at +0x20): each of the
+    /// first 16 battle units that exists (the entry's, in its order; the party's come after them) has its record's
+    /// battle id, and at least one does. A unit keeps its battle id through a battle (the events name units by it),
+    /// whatever its job or look has become.</summary>
+    internal static bool SameUnits(byte* units, byte* entry)
+    {
+        var same = 0;
+        for (var k = 0; k < 16; k++)
+        {
+            var unit = units + k * Battle.UnitSize;
+            var record = entry + k * 40;
+            if (unit[0] == 0)
+                continue;
+            if (record[0] == 0 || unit[0x191] != record[0x20])
+                return false;
+            same++;
+        }
+        return same > 0;
     }
 
     /// <summary>A mark's scenario and preset, if it names one of ReMixed's scenarios and a preset the file has.</summary>
@@ -1187,7 +1333,19 @@ internal static unsafe class RemixedScenarios
             case >= 4 and <= 8:
             {
                 var id = record[1];
-                if (RemixedUnit(units, id) >= 0)
+                var found = RemixedUnit(units, id);
+                // A fallen unit whose body has turned to a crystal or a treasure chest: the remaster's checker no
+                // longer finds it, so "its HP is at most 0" stopped holding. ReMixed's lookup is by the unit's record,
+                // which is still there with HP 0. A fall fails its battle at the end of that turn, long before the
+                // body goes; but a battle that ran without its conditions (continued from a save of 0.9.33 or
+                // earlier) and got them back with both children of 1-A's last battle gone and no enemy left went to
+                // its victory scene (seen in the hidden PC game, 2026-11-25).
+                if (found >= 0 && record[0] is 5 or 6 && BodyGone(units + found * Battle.UnitSize))
+                {
+                    int hp = *(ushort*)(units + found * Battle.UnitSize + UnitHp);
+                    return (record[0] == 5 ? hp >= record[2] : hp <= record[2]) ? 1 : 0;
+                }
+                if (found >= 0)
                     return -1;
                 if (UnitAliases.TryGetValue(id, out var alias) && AliasUnit(units, alias) >= 0)
                     return -1;
@@ -1249,7 +1407,10 @@ internal static unsafe class RemixedScenarios
 
     /// <summary>A battle unit's current statuses (the PS1's +0x58), its tile (+0x4F x, +0x50 y, +0x51's top bit the level;
     /// the PS1's +0x47) and its base team byte (+0x1EE, the PS1's +0x1BA).</summary>
-    private const int UnitStatuses = 0x61, UnitX = 0x4F, UnitY = 0x50, UnitBaseTeam = 0x1EE;
+    private const int UnitStatuses = 0x61, UnitX = 0x4F, UnitY = 0x50, UnitBaseTeam = 0x1EE, UnitHp = 0x30;
+
+    /// <summary>A unit whose body is a crystal (+0x61 &amp; 0x40) or a treasure chest (+0x62 &amp; 1).</summary>
+    internal static bool BodyGone(byte* unit) => (unit[UnitStatuses] & 0x40) != 0 || (unit[UnitStatuses + 1] & 0x01) != 0;
 
     /// <summary>A new scenario setup cannot inherit an earlier battle's observed enemies.</summary>
     internal static void ResetVictoryObservation() => _victorySawEnemy = false;

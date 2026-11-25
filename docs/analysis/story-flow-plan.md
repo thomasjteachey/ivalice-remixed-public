@@ -1212,7 +1212,8 @@ own aren't in the remaster (the art port). Seen again after the fixes (the fade-
 the question answered to fight, the formation, the battle's first turns, Hirame revived and 0x112's lines on the
 battle map (no longer black), the victory and 0x112's scene after it, line for line with the PS1, the world map at
 progress 5. Differences left: ReMixed's results screens (Congratulations, the bonus money and war trophies) aren't
-shown; in the in-battle scene Agrias's boxes have no portrait (her unit isn't on the field; the PS1 shows it); and
+shown; the in-battle Agrias boxes had no portrait while her unit was off the field (the generated event now selects
+her ReMixed event portrait explicitly; its revival branch still needs a visual replay); and
 0x112 sets flag 0xAE only when Hirame's unit has ReMixed's name id 0x46 (it reads unit +0x16C), while the port gave
 her the remaster's blank 0x35, so the flag stayed 0. Only 0x104 (then not shipped) read it. Since 2026-11-12 it
 compares with the port's id; since 2026-11-15 that is her named CharaName row 0x36. 0xAE is set on the way where

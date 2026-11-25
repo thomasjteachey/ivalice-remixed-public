@@ -32,6 +32,8 @@ internal static unsafe class Formulas
     private static Log _log = null!;
     private static readonly nint[] Original = new nint[0x6B];
     private static int _failed;
+    private static delegate* unmanaged<void> _hpDrain;
+    private static delegate* unmanaged<void> _mpDrain;
 
     private static readonly Dictionary<int, (nint Routine, Slot Slot)> Implemented = new()
     {
@@ -97,6 +99,15 @@ internal static unsafe class Formulas
         var table = _battle.FormulaTable;
         nint Entry(int id) => image.Pointer(table[id - 1]);
         var stub = Entry(0x11); // vanilla leaves 0x11, 0x13, 0x18, 0x19 and 0x46 empty; they share one stub
+
+        // ReMixed's type-5 weapon formula uses the same drain tails as the native
+        // Life Drain and Spell Absorb formulas after calculating its weapon hit.
+        var hpDrainCall = Entry(0x10) + 0x47;
+        var mpDrainCall = Entry(0x0F) + 0x4B;
+        if (*(byte*)hpDrainCall != 0xE8 || *(byte*)mpDrainCall != 0xE8)
+            throw new InvalidDataException("the drain formulas aren't the ones this DLL expects");
+        _hpDrain = (delegate* unmanaged<void>)GameImage.Rip(hpDrainCall, 1, 5);
+        _mpDrain = (delegate* unmanaged<void>)GameImage.Rip(mpDrainCall, 1, 5);
 
         // Data: {"install": [formula ids], "geomancy": [12 x [status set, element, effect]]}.
         if (data.TryGetProperty("geomancy", out var geomancy))
@@ -222,6 +233,60 @@ internal static unsafe class Formulas
             installed.Add($"0x{id:X2}");
         }
         log.Info($"formulas: installed {string.Join(", ", installed)} (table at 0x{(nint)table:X})");
+    }
+
+    /// <summary>
+    /// ReMixed's type-5 spell and blade action (PS1 0x8015D700): physical evade,
+    /// MA times weapon power (plus Y/8 for formula 8), the magic modifiers and
+    /// element, then the selected ability's status or drain effect.
+    /// </summary>
+    internal static bool WeaponStrike()
+    {
+        try
+        {
+            var ability = _battle.Ability;
+            var source = ability[8];
+            if (source is not (0x08 or 0x0A or 0x0F or 0x10 or 0x38))
+                return false;
+            if (_r.Evade() != 0)
+                return true;
+            var attacker = *_battle.Attacker;
+            if (attacker == null)
+                return false;
+            *_battle.XA = attacker[Battle.UnitMa];
+            *_battle.YA = (short)(_battle.Weapon[4] + (source == 0x08 ? ability[10] >> 3 : 0));
+            _r.MagicMod1();
+            _r.MagicMod2();
+            _r.MagicMod3();
+            _r.MagicMod4();
+            _r.HpDamage();
+            _r.MagicFinish();
+            _r.MagicElement();
+            if (**_battle.TargetResult == 0)
+                return true;
+            _r.ApplyHit();
+            switch (source)
+            {
+                case 0x0F: _mpDrain(); break;
+                case 0x10: _hpDrain(); break;
+                default:
+                    if (ability[11] != 0)
+                    {
+                        Rules.SetCategory(Math.Clamp((ability[9] >> 3) + 50, 60, 74));
+                        try { _r.Statuses(); }
+                        finally { Rules.SetCategory(0); }
+                    }
+                    break;
+            }
+            Trace(0x65, $"weapon strike, ability 0x{*_battle.AbilityId:X3}, source formula 0x{source:X2}, " +
+                        $"XA {*_battle.XA}, YA {*_battle.YA}, HP damage {Result(Battle.HpDamage)}");
+            return true;
+        }
+        catch (Exception e)
+        {
+            Failed(nameof(WeaponStrike), e);
+            return true;
+        }
     }
 
     /// <summary>

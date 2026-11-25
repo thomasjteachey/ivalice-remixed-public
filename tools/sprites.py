@@ -262,6 +262,42 @@ def face_atlas(spr: bytes, parts: dict[str, tuple[int, int, int, int]]) -> dict[
     return out
 
 
+def event_face_atlas(evtface: bytes, face_set: int, portrait_number: int,
+                     parts: dict[str, tuple[int, int, int, int]]) -> bytes:
+    """One upright EVTFACE portrait as a remaster face atlas (RGBA, four times its PS1 size).
+
+    Each 0x2000-byte set holds eight consecutive 32 x 48 4-bit portraits, then eight 16-colour CLUTs.
+    Portrait numbers are 1-8, as the event message instruction names them.
+    """
+    if len(evtface) != 8 * 0x2000 or not 0 <= face_set < 8 or not 1 <= portrait_number <= 8:
+        raise ValueError("EVTFACE has an unexpected size, set or portrait")
+    base = face_set * 0x2000
+    pixels_at = base + (portrait_number - 1) * 0x300
+    raw = evtface[pixels_at:pixels_at + 0x300]
+    face = bytearray(FACE_WIDTH * FACE_HEIGHT)
+    for at, byte in enumerate(raw):
+        face[2 * at] = byte & 0x0F
+        face[2 * at + 1] = byte >> 4
+    palette_at = base + 0x1800 + (portrait_number - 1) * 0x20
+    palette = struct.unpack_from("<16H", evtface, palette_at)
+    colours = [b"\0\0\0\0"] + [bytes((*rgb(c), 255)) if c else b"\0\0\0\0" for c in palette[1:]]
+    big = scale2x(face, FACE_WIDTH, FACE_HEIGHT)
+    w2 = 2 * FACE_WIDTH
+    width, height = FACE_SCALE * FACE_WIDTH, FACE_SCALE * FACE_HEIGHT
+    cells = [corners for name, corners in parts.items() if name != "TexturePart"]
+    _, _, atlas_w, atlas_h = parts["TexturePart"]
+    if any((x1 - x0, y1 - y0) != (width, height) for x0, y0, x1, y1 in cells):
+        raise ValueError("the remaster's face atlas cells have an unexpected size")
+    rgba = bytearray(4 * atlas_w * atlas_h)
+    for y in range(height):
+        src = big[(y // 2) * w2:(y // 2 + 1) * w2]
+        row = b"".join(colours[index] * 2 for index in src)
+        for x0, y0, _, _ in cells:
+            at = 4 * ((y0 + y) * atlas_w + x0)
+            rgba[at:at + len(row)] = row
+    return bytes(rgba)
+
+
 # ------------------------------------------------------------------ previews (PNG, standard library only)
 
 def rgb(colour: int) -> tuple[int, int, int]:

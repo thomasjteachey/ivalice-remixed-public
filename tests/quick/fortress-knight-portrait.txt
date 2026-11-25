@@ -1,0 +1,9 @@
+# The fortress Knight in 1-A's event 0x0F4 has the same unit-name id as Bryn, but draws as a male Knight.
+# The face hook must not substitute Bryn's Dancer portrait for him.
+name Fortress Knight keeps his own portrait
+wait world depth=1 state=0 timeout=30
+scenario 0x1FF noted
+wait log "loaded event 511" timeout=90
+wait log "event 511's message" press=RETURN every=2 timeout=120
+wait seconds 1
+shot knight

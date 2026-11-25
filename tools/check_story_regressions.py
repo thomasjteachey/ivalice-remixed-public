@@ -346,6 +346,75 @@ def check_primaries() -> str:
     return f"Primary skillsets: {dark_knights} Dark Knights, {darkness} with Darkness known in full, none singing"
 
 
+BATTLE_START_FLAG, RUN_EVENT, VARIABLE_IS = 0x1FD, 0x19, 1
+
+
+def battle_openings(preset: int, scenario: int) -> list[dict[int, int]]:
+    """The ways a preset opens with scenario's own event (RemixedScenarios.OpensItself): for each of its sets that is
+    "var 0x1FD = 1", more "variable = value" conditions, then "run the event" with that number, those conditions."""
+    data = PRESETS.read_bytes()[preset * PRESET_BYTES:(preset + 1) * PRESET_BYTES]
+    if len(data) != PRESET_BYTES:
+        return []
+    word = lambda at: int.from_bytes(data[at:at + 2], "little") if at + 2 <= len(data) else -1  # noqa: E731
+    found = []
+    for k in range(16):
+        at = PRESET_OFFSETS + (word(2 * k) & ~1)
+        if k and at == PRESET_OFFSETS:
+            break
+        if (word(at), word(at + 2), word(at + 4)) != (VARIABLE_IS, BATTLE_START_FLAG, 1):
+            continue
+        at, wanted = at + 6, {}
+        while word(at) == VARIABLE_IS:
+            wanted[word(at + 2)] = word(at + 4)
+            at += 6
+        if (word(at), word(at + 2)) == (RUN_EVENT, scenario):
+            found.append(wanted)
+    return found
+
+
+def check_continued_battles() -> str:
+    """A battle continued from a save with no mark of its scenario (one made before 0.9.34, or the game's Retry of a
+    battle begun on one) is told from its map, its entry and its units' battle ids (RemixedScenarios.LoadedBattle; a
+    tester's 1-A battle at Dorter came back with the Nemesis's return's empty conditions, 2026-11-25). No two battles
+    may fit the same save: the same map and entry, openings that can both hold, and no unit that tells them apart."""
+    data = SCENARIOS.read_bytes()
+    records, own, reloads = scenario_records(), scenario_own_entries(), scenario_reloads(data)
+    menu = scenario_sections(data)[2]
+    u16 = lambda record, at: int.from_bytes(record[at:at + 2], "little")  # noqa: E731
+    battles = {}
+    for scenario, record in records.items():
+        openings = battle_openings(u16(record, 0x16), scenario)
+        if not openings or (u16(record, 9) == 0 and scenario not in menu):
+            continue
+        entries = {u16(record, 7)} | {entry for (other, entry) in reloads if other == scenario}
+        units = own.get(scenario)
+        ids = None if units is None else [units[k * UNIT_BYTES + 0x20] if units[k * UNIT_BYTES] else None
+                                         for k in range(16)]
+        battles[scenario] = (record[2], entries, ids, openings)
+
+    def apart(a: tuple, b: tuple) -> bool:
+        if a[0] != b[0] or not a[1] & b[1]:
+            return True
+        if all(any(x[v] != y[v] for v in x.keys() & y.keys()) for x in a[3] for y in b[3]):
+            return True  # their openings never hold together (two scripts of one battle, picked by a flag)
+        return a[2] is not None and b[2] is not None and any(
+            x is not None and y is not None and x != y for x, y in zip(a[2], b[2]))
+
+    alike = [(a, b) for a in battles for b in battles if a < b and not apart(battles[a], battles[b])]
+    if alike:
+        raise AssertionError("battles a continued save can't tell apart (LoadedBattle): "
+                             + ", ".join(f"0x{a:X} and 0x{b:X}" for a, b in alike))
+    dorter = battles.get(0x34B)
+    if not dorter or dorter[2] is None or 0x98 not in dorter[2] or 0x99 not in dorter[2]:
+        raise AssertionError("1-A's last battle (0x34B) isn't a battle a continued save can be told to be")
+    # Battles whose conditions open with another scenario's event (a later phase of a battle that begins under
+    # another number) are found as that one.
+    under = sorted(scenario for scenario, record in records.items()
+                   if (u16(record, 9) or scenario in menu) and scenario not in battles)
+    return (f"Continued battles: {len(battles)} told apart by map, entry and units ({sum(1 for b in battles.values() if b[2])} "
+            f"by their units), {len(under)} run under another's opening ({', '.join(f'0x{s:X}' for s in under)})")
+
+
 def preset_sets(number: int) -> list[list[tuple[int, tuple[int, ...]]]]:
     """Condition records in each set of a generated ReMixed preset, excluding its event action only by type."""
     data = PRESETS.read_bytes()[number * PRESET_BYTES:(number + 1) * PRESET_BYTES]
@@ -699,7 +768,7 @@ def check() -> list[str]:
             "0x0FB's battle seats its three",
             check_places(), check_primaries(), check_map_reloads(), check_yardrow_battle(), check_yuguo_woods(),
             check_extended_statuses(),
-            check_bervenia()]
+            check_bervenia(), check_continued_battles()]
 
 
 def check_bervenia() -> str:
