@@ -5,7 +5,7 @@ is, and what it waits on. The technical details (what ReMixed's code does, where
 [MECHANICS.md](MECHANICS.md) and [REMASTER.md](REMASTER.md); data held back is in
 [the build report](generated/mod-build.md).
 
-**Progress: 96% of gameplay** (106 done, 4 open: 2 small, 2 medium, 0 large). Worked out from this list by
+**Progress: 94% of gameplay** (106 done, 6 open: 2 small, 4 medium, 0 large). Worked out from this list by
 `python -I tools/todo_progress.py`, open items weighted by size (small 1, medium 3, large 15) and done ones at 2 each,
 and updated with every change to the list. Everything outside the story and display ports is ported or settled
 (the formulas ReMixed rewrote in place were the last, 2026-11-12; ReMixed's own battles writing their units back,
@@ -439,6 +439,78 @@ battle, Testing).
 From the testers' 0.9.17 playthrough (2026-11-18, evening: chapter 2 cleared with no crashes, then side chapter 1-A;
 the Lionel scene's event art and Two Shots have sessions of their own):
 
+- [x] The dragon hunters' scene at the Gollund colliery's first floor ended after four lines and put the party back
+  on the map, with Beowulf a guest in the party (a tester on 0.9.39, 2026-11-25). ReMixed's scene asks whether
+  Beowulf is in the party and took its "he's not here now" way out, which also takes him off the field. The
+  upgrade's "is this character in the party" test, and its lookup of a party member, looked only at the first 20
+  places, which is the PS1's whole party; the remaster keeps guests in the last four of its 54, so a guest was never
+  seen, and neither was anyone past the 20th place of a big party. Fixed in the upgrade (its 1.0.2): both look
+  through all 54 places, as does the search that makes a battle unit from a party member, and an event can read and
+  change a place past the 20th like any other. 79 of ReMixed's events ask one of the two. 42 of them run in the
+  port: 41 story events and the random battles' setup, which asks about seven characters. Each was open to it
+  whenever the one asked about was a guest or sat past the 20th place: Beowulf and Reis all through their quest,
+  Zalbag at Eagrose, Agrias and her knights, Luso, Ashley, the Argath campaign's people among them. The three that
+  only ask about Ramza never were (he is always first). Seen in the hidden PC game: on 0.9.39 the scene left for
+  the world map; on the fix Beowulf answers the hunters ("I've been searching for the Holy Dragon for too long"),
+  they know the heretics, and the battle starts with him on the field
+  (`tests/quick/gollund-hunters-guest-beowulf.txt`). Not changed: the same test can also ask about ReMixed's units
+  away on its dispatch missions, a list of its own that the port doesn't keep. *medium*
+- [x] A save's own Extra Options didn't hold for a battle continued from its autosave, nor after either Retry in
+  the System Menu: the mod's settings were in effect until the world map came back (a tester on 0.9.39: Mustadio
+  turned to a crystal and left the party with Player Deaths on "Revive after battle", and JP came at 125% for the
+  save's 200%). The game sets such a battle up before it puts the save's variables back, so the mod's check at the
+  setup found no options there, took its own settings and kept them. The save itself was never changed: the game
+  puts its variables back over what the check wrote (read back as the save's own every time), so no save needs
+  repairing. Now the check at the setup writes nothing and leaves the options as they are, and they are read again
+  as the battle's first turn comes, when the save's are there. Seen in the hidden PC game all three ways
+  (Continue, "Retry from Start of Battle", "Change Formation and Retry"): the mod's settings on 0.9.39, the save's
+  own on the fix (`tests/quick/options-continued-save.txt`, then `options-continued-load.txt`). One case is left
+  as it is: a new game begun right after playing another save, without closing the game, keeps that save's options
+  until its first battle's first turn. *medium*
+- [x] Rapha's "Guest Departure" card showed Balthier's face when she left as a crystal (the same tester, on
+  0.9.39). For a guest it can't find the usual way, the game names the card's face by a number in its own code,
+  her old one, which is ReMixed's Balthier in the port; that number is what the card shows once her body is gone
+  from the field. The mod puts her own number there. Seen in the hidden PC game: Balthier's face on her card on
+  0.9.39, her own on the fix (`tests/quick/riovanes-gate-end-real-crystal.txt`). The test takes her sprite away at
+  the moment the game looks her up, because the harness's copy of that battle doesn't play turns: it has not been
+  played through with a body counted down to a crystal. *small*
+- [x] Zalbag's mount at Eagrose Castle's gate was a black shape (a tester on 0.9.39, 2026-11-26: "looks like a
+  missing sprite"). The mount is ReMixed's White Chocobo: the ordinary chocobo drawn in a fourth set of colours
+  that ReMixed added to the chocobo's art. The port didn't ship that set, and the remaster's own fourth set is
+  empty, so every White Chocobo drew black, wherever one appears. ReMixed's art was checked sheet by sheet for the
+  same thing: one other has it, Zalbag's own, with two more outfits' colours. Both sets ship now, on the
+  remaster's redrawn art (the pictures themselves are unchanged), with a face for each from ReMixed's portrait.
+  Seen in the hidden PC game: the black shape on 0.9.39, the white bird on the fix
+  (`tests/quick/eagrose-gate-arrival.txt`). Not seen: Zalbag in his other colours, and a White Chocobo's face on
+  a unit card. *small*
+- [ ] Eagrose Castle's gate stands still after Ramza uses the switch, and he walks in through it (the same
+  tester, same scene; seen in the hidden PC game: the portcullis down as he walks into it). Looked into
+  (2026-11-26), not fixed. It isn't ReMixed's script: with the remaster's own script for this scene put in its
+  place the gate stayed down just the same, and so it did with the game's own table of map movements instead of
+  the mod's. The remaster's script has nothing in it that moves the redrawn gate, where its other gate scenes
+  (Lionel's among them) do carry an instruction for that. So either the remaster's own scene leaves this gate
+  down too, or something in how the port sets the scene up stops it. Next: watch this scene in the game without
+  the mod (Eagrose Castle at the start of chapter 4's ending, a save just before it). If the gate rises there,
+  compare how the two scenes are set up; if not, it is the remaster's own and stays. Found on the way: ReMixed's
+  scenes at Lionel's gate (Beowulf and Reis's story) and one in the Argath campaign retell scenes where the
+  remaster does move a part of the map, with an instruction ReMixed's scenes can't carry yet; not seen in the
+  game, and likely still as well. *medium*
+- [ ] ReMixed's choice before the duel with Wiegraf inside Riovanes Castle ("Reject duel" or "Accept duel", so the
+  fight needn't be fought alone) isn't in the port: the remaster's scene and its solo fight play (the same tester
+  remembered it rightly). Looked into (2026-11-26), not built: it is story-port work, bigger than the three fixes
+  above together. ReMixed asks after Wiegraf's "Draw your sword". Refused, Ramza tells him to change into his true
+  self, Wiegraf answers ("Very well. If you're so eager to die, I'll oblige you."), Belias and his demons come in at
+  once, and the party, which never left the field, fights from the start. Accepted, everything goes on as in the
+  remaster. By the port's rules the remaster's scene, lines and voices stay, and only the choice and the two new
+  lines come over with ReMixed's text. What that takes:
+  - The remaster's opening scene of that battle has to become one the upgrade runs, since only those can ask a
+    question and branch. No scene of the remaster's own has been converted that way yet.
+  - Three new lines (the choice, Ramza's refusal, Wiegraf's answer) added to that scene's text, without voices.
+  - The refusal's staging written in the remaster's terms: what its "Wiegraf changes" scene does from Belias's
+    arrival on, without the party walking in again.
+  - The battle's own conditions told that the duel is over, so the mid-duel talk and the change don't fire later
+    (ReMixed sets two of its variables for this; the remaster's conditions for this battle haven't been read yet).
+  - Both answers played in the hidden PC game, and frames checked beside ReMixed on the PS1. *medium*
 - [ ] Left from the same tester's 1-A (2026-11-21 and 2026-11-22), each with what was found (2026-11-25):
   - The dream's knight, reported with no sprite and no portrait on the Deck: on the PC he draws, under the name
     "Knight" with a knight's own face, not Orlandeau's (the dream is played on the way in

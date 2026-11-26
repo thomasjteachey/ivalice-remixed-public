@@ -1,0 +1,18 @@
+# ReMixed's arrival at Eagrose Castle (its event 0x06E, scenario 0x36A, in the remaster's Eagrose scene's place):
+# "No guards.", Zalbag's mount by the gate, the switch, and Ramza walking in. A tester on 0.9.39 (2026-11-26) saw
+# the mount as a black shape and the gate standing still after the switch; both seen here the same day.
+# The mount is ReMixed's White Chocobo, the chocobo's art in a fourth palette ReMixed added to its sheet, which
+# the port didn't ship (tools/build_mod.py REMIXED_PALETTE_SHEETS): white on this build, in the `mount` frame.
+# The gate still stands (docs/GAMEPLAY_TODO.md: it does with the remaster's own script in this scene's place too);
+# the frames before each Enter, to the hand-on to the confrontation (event 883), show it as Ramza walks in.
+#   python -I tools/quick_test.py --restart tests/quick/eagrose-gate-arrival.txt
+name Eagrose's gate: Zalbag's mount and the gate
+wait world depth=1 state=0 timeout=20
+scenario 0x36A
+wait log "loaded event 874" timeout=90
+wait unit job=0x95 present=1 timeout=60
+expect unit job=0x95 sprite_palette=3
+wait log "event 874's message (2|15) shown" press=RETURN every=1.5 timeout=200
+wait seconds 5
+shot mount
+advance event 883 every=1.5 shots=1 timeout=300

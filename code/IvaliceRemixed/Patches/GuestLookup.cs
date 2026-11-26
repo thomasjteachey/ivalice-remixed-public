@@ -15,6 +15,13 @@ namespace IvaliceRemixed.Patches;
 /// the remaster's Rafa on sprite set 0x29 (tools/build_mod.py REMASTER_MOVED_SPRITE_SETS), so a Rafa who had become a
 /// crystal or a chest by the battle's end was never found (a tester on 0.9.38, three times on one save, 2026-11-25).
 /// The rule writes her sprite set there; the event and the character id it tests stay the remaster's.</item>
+/// <item>The fallback also names the face for the cards that follow, in its own code: "mov dword ptr [0x2FCF86C],
+/// 0x19" at 0x21430C, a graphic the faces' fold (0x0F8338) turns into a face. The panel puts its own number there
+/// unless it has none (−1, its record's +0x9C from 0x214134: a unit whose sprite is gone, as a body that has turned
+/// to a crystal), and the departure card (0x214404) takes the number when its own panel has none. In the port
+/// graphic 0x19 is ReMixed's Balthier and Rafa's is 0x29, which the fold sends to her face: a Rafa who left as a
+/// crystal had Balthier's face on her "Guest Departure" card (a tester on 0.9.39, 2026-11-25). The rule writes her
+/// sprite set there too.</item>
 /// <item>The panel's call (0x2143B0) goes through a stub that returns at once for a null unit, so a unit the lookup
 /// can't find at all (no guest in the battle, a record an earlier build left) is passed over: the instruction's
 /// other work is skipped by the game itself for a null unit, and the event goes on to its screens.</item>
@@ -25,11 +32,13 @@ namespace IvaliceRemixed.Patches;
 internal static unsafe class GuestLookup
 {
     // cmp dword ptr [the running event], 0x119; jne; cmp esi, 0x19; jne; mov ecx, ebp; lea rdx, [the battle units];
-    // movsxd rax, ecx; shl rax, 9; add rax, rdx; cmp byte ptr [rax], 0x19.
+    // movsxd rax, ecx; shl rax, 9; add rax, rdx; cmp byte ptr [rax], 0x19; je; inc ecx; cmp ecx, 0x15; jl; jmp;
+    // movzx edi, byte ptr [rax+1]; mov rbx, rax; mov [rax+1], cl; mov dword ptr [the cards' face], 0x19.
     internal const string Pattern =
         "81 3D ?? ?? ?? ?? 19 01 00 00 0F 85 ?? ?? ?? ?? 83 FE 19 0F 85 ?? ?? ?? ?? 8B CD 48 8D 15 ?? ?? ?? ?? " +
-        "48 63 C1 48 C1 E0 09 48 03 C2 80 38 19";
-    internal const int CharacterAt = 18, SpriteSetAt = 46;
+        "48 63 C1 48 C1 E0 09 48 03 C2 80 38 19 74 0C FF C1 83 F9 15 7C EA E9 ?? ?? ?? ?? 0F B6 78 01 48 8B D8 " +
+        "88 48 01 C7 05 ?? ?? ?? ?? 19 00 00 00";
+    internal const int CharacterAt = 18, SpriteSetAt = 46, FaceAt = 77;
     // mov rdx, rbx; lea rcx, [rsp+0x20]; call the panel; cmp [rsp+0xBC], r14d.
     internal const string PanelCallPattern = "48 8B D3 48 8D 4C 24 20 E8 ?? ?? ?? ?? 44 39 B4 24 BC 00 00 00";
     internal const int PanelCallAt = 8;
@@ -39,6 +48,9 @@ internal static unsafe class GuestLookup
 
     /// <summary>The sprite set written, for the offline check.</summary>
     internal static byte SpriteSet { get; private set; }
+
+    /// <summary>Where the fallback's face for the cards is (the immediate's address, a dword), for the offline check.</summary>
+    internal static nint FaceNumber { get; private set; }
 
     /// <summary>The panel's call in the lookup, the panel's own start and the stub the call goes to now.</summary>
     internal static nint PanelCall { get; private set; }
@@ -52,10 +64,10 @@ internal static unsafe class GuestLookup
         var row = rows[0];
         byte character = row[0].GetByte(), old = row[1].GetByte(), moved = row[2].GetByte();
         var at = game.Image.FindUnique(Pattern);
-        if (*(byte*)(at + CharacterAt) != character || *(byte*)(at + SpriteSetAt) != old)
+        if (*(byte*)(at + CharacterAt) != character || *(byte*)(at + SpriteSetAt) != old || *(int*)(at + FaceAt) != old)
             throw new InvalidOperationException(
                 $"the lookup is for character 0x{*(byte*)(at + CharacterAt):X2} by sprite set " +
-                $"0x{*(byte*)(at + SpriteSetAt):X2}, not 0x{character:X2} by 0x{old:X2}");
+                $"0x{*(byte*)(at + SpriteSetAt):X2} with the face 0x{*(int*)(at + FaceAt):X}, not 0x{character:X2} by 0x{old:X2}");
         var call = game.Image.FindUnique(PanelCallPattern) + PanelCallAt;
         if (call < at || call > at + 0x200)
             throw new InvalidOperationException("the panel's call isn't the lookup's");
@@ -71,13 +83,16 @@ internal static unsafe class GuestLookup
         BitConverter.TryWriteBytes(patch.AsSpan(1), (int)rel);
         GameImage.WriteCode(call, patch);
         GameImage.WriteCode(at + SpriteSetAt, [moved]);
+        GameImage.WriteCode(at + FaceAt, [moved, 0, 0, 0]);
+        FaceNumber = at + FaceAt;
         SpriteSetByte = at + SpriteSetAt;
         SpriteSet = moved;
         PanelCall = call;
         Panel = panel;
         NullStub = stub;
         return $"character 0x{character:X2}'s battle unit found by sprite set 0x{moved:X2} (the remaster's 0x{old:X2}) " +
-               "when it's a crystal or a chest at the Riovanes gate's end, and a unit that isn't found passed over";
+               "when it's a crystal or a chest at the Riovanes gate's end, with that graphic's face on its cards, " +
+               "and a unit that isn't found passed over";
     }
 
     /// <summary>test rdx, rdx; jz the ret; jmp <paramref name="panel"/>; ret: the panel for a unit, nothing for none.</summary>

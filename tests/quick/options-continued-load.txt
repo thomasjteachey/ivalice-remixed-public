@@ -1,0 +1,50 @@
+# The battle options-continued-save.txt left, continued from its autosave, then begun again both ways from the
+# System Menu: each time the save's own Extra Options are in effect from the battle's first walk. Run right after
+# that case with
+#   python -I tools/harness.py start --keep-saves
+#   python -I tools/quick_test.py --stop tests/quick/options-continued-load.txt
+# From the title: Enter to the menu and on Continue, which loads the newest save, the battle's autosave. A continued
+# battle is set up while the variables are empty, before the save's are put back, and so is one begun again with
+# "Retry from Start of Battle" or "Change Formation and Retry". 0.9.39 found no options there at the setup, took
+# the mod's settings (logged "the save in play had none of its own") and kept them until the world map came back
+# (seen here all three ways, 2026-11-25). The variables themselves were the save's again by the first walk each
+# time (the `expect var` lines: the game puts them over what the setup wrote, so the save kept its options); only
+# the options in effect were wrong. Now the setup writes nothing and the first walk reads the save's.
+# The System Menu is Tab: Units, Retry, Load ...; Retry asks "Change Formation and Retry", "Retry from Start of
+# Battle" or Cancel.
+name A continued battle keeps the save's own Extra Options
+send testmode record
+wait seconds 20
+wait log "a battle resumed from a save is scenario 0x34B again" press=RETURN every=6 timeout=180
+wait seconds 2
+expect var 0x14 0x1002C8C8
+expect var 0xDD 1
+wait log "options: the save's: player deaths ReviveAfterBattle, .* JP 200%" timeout=5
+# Retry from Start of Battle
+wait unit player=1 present=1 turn=1 timeout=180
+wait seconds 12
+key TAB wait=2
+key DOWN wait=2
+key RETURN wait=2.5
+key DOWN wait=2
+key RETURN wait=2
+wait log "options: no options in the variables at this battle's setup" timeout=60
+wait log "a battle resumed from a save is scenario 0x34B again" timeout=90
+wait seconds 2
+expect var 0x14 0x1002C8C8
+wait log "options: the save's: player deaths ReviveAfterBattle, .* JP 200%" timeout=5
+# Change Formation and Retry
+wait unit player=1 present=1 turn=1 timeout=180
+wait seconds 12
+key TAB wait=2
+key DOWN wait=2
+key RETURN wait=2.5
+key RETURN wait=2
+wait log "options: no options in the variables at this battle's setup" timeout=60
+wait log "formation: screen open" timeout=120
+formation units=1
+wait log "scenario 0x34B's first walk, battle-start flag 1" press=RETURN every=2 timeout=120
+wait seconds 2
+expect var 0x14 0x1002C8C8
+expect var 0xDD 1
+wait log "options: the save's: player deaths ReviveAfterBattle, .* JP 200%" timeout=5

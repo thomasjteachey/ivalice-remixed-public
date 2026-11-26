@@ -1,0 +1,30 @@
+# A battle saved in mid-battle on a save with Extra Options of its own, for options-continued-load.txt (a tester on
+# 0.9.39, 2026-11-25: a battle continued from its autosave ran on the mod's settings, not the save's: a party member
+# turned to a crystal for good with Player Deaths on "Revive after battle", and JP came at 125% for the save's 200%).
+# Run with
+#   python -I tools/quick_test.py --restart --stop tests/quick/options-continued-save.txt
+# On the world map the save is given options the mod's settings don't have: JP and EXP 200%, spillover 1/2 (var
+# 0x14 with its marker) and "Revive after battle" (flag 0xDD). Then 1-A's last battle as in dorter-resume-save.txt:
+# the party's first turn waits, and the game's autosave at its next turn carries the variables.
+name A battle saved on a save with its own Extra Options
+send testmode record
+wait world depth=1 state=0 timeout=30
+wait seconds 2
+setvar 0x14 0x1002C8C8
+setvar 0xDD 1
+wait log "options: the save's: player deaths ReviveAfterBattle, .* JP 200%" timeout=10
+scenario 0x34B noted
+wait log "formation: screen open" timeout=120
+formation units=1
+wait log "scenario 0x34B's first walk, battle-start flag 1" press=RETURN every=2 timeout=120
+wait unit player=1 present=1 turn=1 timeout=180
+key DOWN wait=1.5
+key DOWN wait=1.5
+key RETURN wait=1.5
+wait seconds 3
+key RETURN wait=1.5
+wait seconds 20
+wait unit player=1 present=1 turn=1 timeout=300
+wait seconds 5
+expect var 0x14 0x1002C8C8
+expect var 0xDD 1

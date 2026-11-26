@@ -1,0 +1,24 @@
+# The dragon hunters at the Gollund colliery's first floor (ReMixed's event 0x091, scenario 0x1D4) with Beowulf a
+# guest, as every player has him there. The scene asks whether he is in the party; a tester on 0.9.39 (2026-11-25)
+# got its "he's not here now" way out after four lines and was put back on the map (seen here the same day: the
+# world map 100 s after the scene began). The upgrade's test looked at the first 20 roster places only (the PS1's
+# whole party), and the remaster keeps guests in places 50-53 of its 54.
+# The harness's save has no Beowulf, so the case puts a guest copy in place 50 first. One unit placed, then a frame
+# before each Enter through the scene (the hunter's first line, Beowulf's answer, "They're the heretics!", the
+# hunters' "Everyone! Get them!") until the scene's end; Beowulf is on the field then and the battle's first turn
+# comes (the PC's test mode hands the party to the AI, so it is any unit's turn that is waited for). On 0.9.39 the
+# scene's other way took him off the field and left for the map.
+#   python -I tools/quick_test.py --restart tests/quick/gollund-hunters-guest-beowulf.txt
+name Gollund's dragon hunters with Beowulf a guest
+wait world depth=1 state=0 timeout=20
+copy roster 0 50 sprites=0x1F job=0x1F name_id=31
+expect roster name_id=31
+scenario 0x1D4
+wait log "formation: screen open" press=RETURN every=1 timeout=150
+formation units=1
+wait log "loaded event 468" timeout=90
+advance opening every=1.5 shots=1 timeout=300
+show units
+expect unit job=0x1F present=1
+wait unit present=1 turn=1 timeout=240
+shot battle

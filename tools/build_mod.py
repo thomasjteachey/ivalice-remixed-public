@@ -3034,8 +3034,6 @@ EVENT_CODE_INSERTS: dict[int, list[tuple[bytes, bytes]]] = {
 # 0x111, 1-A's start in the PSP script (SCRIPT_VERSION_SET), is 0x0EC's code but for the preset it loads: its fixes too.
 for _fixes in (EVENT_CODE_PATCHES, EVENT_CODE_MOVES, QUESTION_BOXES, EVENT_CODE_INSERTS):
     _fixes[0x111] = _fixes[0xEC]
-NOTICE_MESSAGES[0x111] = NOTICE_MESSAGES[0xEC]
-EVENT_BOXES[0x111] = EVENT_BOXES[0xEC]
 # The Algus campaign's chapter-1 battles (0x00A, 0x00B, 0x00D, 0x010) open by marking Ramza (in roster slot 10 while
 # Algus leads) and Delita away: roster +0xD0 = 3 (the remaster's +0x11E), which keeps him out of the formation's list
 # (0x2FB4F8 lists no unit with that byte set). The remaster's formation screen still asks for Ramza while a place is
@@ -3461,7 +3459,9 @@ REMASTER_OLD_GUESTS = {0x34: (0x34, 0x16), 0x19: (0x19, 0x29)}
 # whose sprite set is 0x19, and hands the status panel a null unit when there is none: the game closed at
 # exe+0x360086 for a tester whose guest Rafa had become a crystal by the gate battle's end (0.9.38, 2026-11-25). The
 # code mod's rule "guest-lookup" writes her moved sprite set into that compare, and has the panel passed over for a
-# unit that isn't found at all (Patches/GuestLookup.cs). Character id -> the sprite set the code names. A scan of the exe for "cmp byte ptr [reg], a moved sprite set" finds no other
+# unit that isn't found at all (Patches/GuestLookup.cs). The same fallback names the face for the cards that follow
+# (mov dword [0x2FCF86C], 0x19 at 0x21430C), which the "Guest Departure" card shows when the status panel can't
+# name one (a body gone to a crystal): Balthier's in the port, on 0.9.39; the rule writes her sprite set there too. Character id -> the sprite set the code names. A scan of the exe for "cmp byte ptr [reg], a moved sprite set" finds no other
 # lookup like it (the other hits compare event opcodes and ranges).
 REMASTER_CODE_SPRITE_SETS = {0x19: 0x19}
 REMIXED_UNIT_SKILLSETS = {0x4D: 0x16, 0x16: 0xE0, 0x4E: 0xE0}
@@ -6834,6 +6834,16 @@ SPRITE_ANIMATIONS = 0x2D748
 # Lamia; the remaster's redraw is 0x97's two textures (0x44E-0x44F), which the Lamia's take over in the mod, so 0x5A gets
 # a copy of them from the remaster's g2d.dat under its own (0x3DA-0x3DB), not Scale2x. The build checks the sheets match.
 SPRITE_REMASTER_ART = {0x5A: 0x97}
+# ReMixed's sheets that are vanilla's pixel for pixel with palettes of its own added: graphic -> the palettes that
+# differ (0-7 a unit's, 8-15 its portrait's). The chocobo's fourth is its White Chocobo's (job 0x95: the chocobo's
+# graphic, palette 3) and Zalbag's second and third are his other outfits'; all but the chocobo's 11 are empty in
+# vanilla, so the remaster drew such a unit black: Zalbag's mount at Eagrose's gate, a black shape (a tester on
+# 0.9.39, 2026-11-26). A scan of ReMixed's BATTLE/*.SPR finds these two and no other (every other sheet of its own
+# has pixels of its own: REMIXED_SPRITES, or art the port doesn't draw). The remaster colours its redrawn textures
+# by the sheet's palettes, so the mod gives the game ReMixed's sheet in the graphic's place and leaves its textures,
+# animation set and faces as they are; the added portrait palettes get faces made from the sheet's portrait.
+REMIXED_PALETTE_SHEETS = {0x08: (1, 2, 9, 10), 0x86: (3, 11)}
+REMASTER_SPRITE_TEXTURES = 0x7151F0  # .rdata: a graphic's first texture, a dword each (-1 none)
 SPRITE_SHEETS = 0x2DCD4  # BATTLE.BIN: {sector, size} a graphic, its sheet on the disc
 SPRITES_DIR = "Sprites"
 
@@ -7054,12 +7064,15 @@ def _moved_copy(path: Path, first_entry: int) -> bytearray:
     return data
 
 
-def write_remixed_sprites(cfg: dict, battle_old: bytes, battle_new: bytes) -> tuple[str, list[list[int]]]:
+def write_remixed_sprites(cfg: dict, battle_old: bytes, battle_new: bytes
+                          ) -> tuple[str, list[list[int]], list[list[int]]]:
     """REMIXED_SPRITES from ReMixed's disc: each sheet as Sprites/XX.spr in the mod (the DLL gives the game it in the
     graphic's place, RemixedSprites.cs) and its two textures as system/ffto/g2d/tex_N.bin (the mod loader serves
     them), with its animation set from BATTLE.BIN (SPRITE_ANIMATIONS). A graphic of REMIXED_SPRITE_SHEETS takes that
-    sheet and its animation set. Returns a line for the report and the DLL's data: [graphic, its texture now, its
-    texture, its animation set now (the remaster's), ReMixed's]."""
+    sheet and its animation set. REMIXED_PALETTE_SHEETS' sheets go in as well, with the remaster's own textures.
+    Returns a line for the report, the DLL's data: [graphic, its texture now, its texture, its animation set now
+    (the remaster's), ReMixed's], and the same rows for the palette sheets (which get no faces or aliases of the
+    mod's: write_remixed_faces makes only their added palettes')."""
     sheets = MOD_DIR / SPRITES_DIR
     textures = MOD_DIR / "FFTIVC" / "data" / "enhanced" / "system" / "ffto" / "g2d"
     if sheets.exists():
@@ -7110,12 +7123,36 @@ def write_remixed_sprites(cfg: dict, battle_old: bytes, battle_new: bytes) -> tu
             set_now = remaster_sets[graphic]
             remixed_set, = struct.unpack_from("<I", battle_new, SPRITE_ANIMATIONS + 4 * source)
             data.append([graphic, now, texture, set_now, remixed_set])
+        from exe import Exe  # noqa: PLC0415
+        image = Exe(Path(cfg["target"]["tic_dir"]) / "FFT_enhanced.exe")
+        recoloured = []
+        for graphic, palettes in sorted(REMIXED_PALETTE_SHEETS.items()):
+            if graphic in REMIXED_SPRITES:
+                sys.exit(f"0x{graphic:02X} is in REMIXED_SPRITES and REMIXED_PALETTE_SHEETS")
+            spr = patched.read(patched.find(f"BATTLE/{graphic:02X}.SPR"))
+            spr = spr[:sprites.sheet_length(spr)]
+            sector, _ = struct.unpack_from("<II", battle_old, SPRITE_SHEETS + 8 * graphic)
+            theirs = vanilla.read(vanilla.owner(sector))
+            differ = tuple(k for k in range(16) if spr[32 * k:32 * k + 32] != theirs[32 * k:32 * k + 32])
+            if spr[0x200:].rstrip(b"\0") != theirs[0x200:].rstrip(b"\0") or differ != palettes:
+                sys.exit(f"ReMixed's {graphic:02X}.SPR isn't vanilla's sheet with palettes {palettes} of its own "
+                         f"(palettes {differ} differ; REMIXED_PALETTE_SHEETS)")
+            texture, = struct.unpack("<i", image.read(REMASTER_SPRITE_TEXTURES + 4 * graphic, 4))
+            set_now = remaster_sets[graphic]
+            remixed_set, = struct.unpack_from("<I", battle_new, SPRITE_ANIMATIONS + 4 * graphic)
+            if texture < 0 or remixed_set != set_now:
+                sys.exit(f"0x{graphic:02X} has no texture of the remaster's, or ReMixed animates it otherwise "
+                         "(REMIXED_PALETTE_SHEETS)")
+            (sheets / f"{graphic:02X}.spr").write_bytes(spr)
+            recoloured.append([graphic, texture, texture, set_now, remixed_set])
     names = ", ".join(f"0x{row[0]:02X}" for row in data)
     sets = ", ".join(f"0x{g:02X} {animation_set_name(now)} -> {animation_set_name(new)}"
                      for g, _, _, now, new in data if now != new)
     line = (f"{len(data)} of ReMixed's graphics ({names}): sheets in {SPRITES_DIR}/, Scale2x textures in g2d/"
             + (f" (but {', '.join(redrawn)})" if redrawn else "") + f", ReMixed's animation sets ({sets})")
-    return line + (f"; held back: {'; '.join(held)}" if held else ""), data
+    line += "; ReMixed's added palettes on the remaster's art: " + ", ".join(
+        f"0x{row[0]:02X} ({', '.join(str(k) for k in REMIXED_PALETTE_SHEETS[row[0]])})" for row in recoloured)
+    return line + (f"; held back: {'; '.join(held)}" if held else ""), data, recoloured
 
 
 def remaster_animation_sets(cfg: dict, battle_old: bytes) -> list[int]:
@@ -7257,7 +7294,7 @@ def write_remixed_faces(cfg: dict, sprite_data: list[list[int]]) -> tuple[str, l
     shutil.rmtree(FACE_STAGING, ignore_errors=True)
     FACE_STAGING.mkdir(parents=True)
     FACE_CACHE.mkdir(parents=True, exist_ok=True)
-    data, made, none = [], 0, []
+    data, made, none, recoloured = [], 0, [], []
     def put_face(face: int, palette: int, rgba: bytes) -> None:
         nonlocal made
         name = f"wldface_{face:03d}_{palette:02d}_uitx"
@@ -7286,6 +7323,14 @@ def write_remixed_faces(cfg: dict, sprite_data: list[list[int]]) -> tuple[str, l
             for palette, rgba in faces.items():
                 put_face(face, palette, rgba)
             data.append([graphic, face])
+        # A sheet with palettes ReMixed added (REMIXED_PALETTE_SHEETS): a face for each added portrait palette, under
+        # the remaster's own face number for the graphic, whose other palettes' faces stay the remaster's.
+        for graphic, palettes in sorted(REMIXED_PALETTE_SHEETS.items()):
+            faces = sprites.face_atlas(patched.read(patched.find(f"BATTLE/{graphic:02X}.SPR")), parts)
+            for palette in palettes:
+                if palette >= 8 and faces is not None:
+                    put_face(REMASTER_FACE_FOLDS.get(graphic, graphic), palette, faces[palette])
+                    recoloured.append(f"0x{graphic:02X}'s {palette}")
         source_face = patched.read(patched.find("EVENT/EVTFACE.BIN"))
         stock_face = vanilla.read(vanilla.find("EVENT/EVTFACE.BIN"))
         changed = set()
@@ -7307,6 +7352,7 @@ def write_remixed_faces(cfg: dict, sprite_data: list[list[int]]) -> tuple[str, l
     names = ", ".join(f"0x{g:02X} as {face}" for g, face in data)
     return (f"{len(data)} faces from ReMixed's portraits ({names}), palettes 8-15, {made} textures made"
             + f"; {len(EVENT_FACE_ART)} EVTFACE portraits from ReMixed"
+            + f"; faces for ReMixed's added palettes: {', '.join(recoloured)}"
             + (f"; no portrait: {', '.join(none)}" if none else "")), data
 
 
@@ -8378,7 +8424,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata. The title screen's plaque shows it (write_title_screen).
-RELEASE_VERSION = "0.9.39"
+RELEASE_VERSION = "0.9.40"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:
@@ -8796,7 +8842,7 @@ def main() -> None:
         print(f"  {'Title screen':24} " + write_title_screen(cfg))
         print(f"  {'Event graphics':24} " + write_event_graphics(cfg))
         print(f"  {'Ability effects':24} " + write_remixed_effects(cfg))
-        line, sprite_data = write_remixed_sprites(cfg, battle_old, battle_new)
+        line, sprite_data, palette_sheets = write_remixed_sprites(cfg, battle_old, battle_new)
         print(f"  {'Unit sprites':24} " + line)
         line, face_data = write_remixed_faces(cfg, sprite_data)
         print(f"  {'Faces':24} " + line)
@@ -8826,7 +8872,7 @@ def main() -> None:
                                                       "monster-reactions": monster_reactions(scus_new),
                                                       "jump": jump_rework(battle_new, scus_new),
                                                       "equip-supports": equip_supports(scus_new),
-                                                      "sprites": sprite_data,
+                                                      "sprites": sprite_data + palette_sheets,
                                                       "faces": face_data,
                                                       "sprite-aliases": sprite_aliases,
                                                       "old-guests": old_guest_rows(),

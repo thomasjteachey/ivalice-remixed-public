@@ -11,7 +11,9 @@ For a picture to check by eye, `shot NAME` saves the hidden window to work/harne
 every case also leaves pass.png (or fail.png) there as it ends. `expect field-visible` checks the battle renderer's
 exit flag after a midscene join, where a set flag leaves dialogue over black.
 `scenario 0x79 noted` starts a scene-first battle at its battle (its scene counted as seen). `defeat [UNIT...]`
-downs the enemies (or those units); `expect roster name_id=0x76` wants exactly one roster record so, and
+downs the enemies (or those units, or with `defeat job=0x29` the units that match); `expect peek +0x2FCF86C 29 00 00 00`
+wants those bytes at an address in the game's image; `orphan sprite job=0x29` takes that unit's sprite away from it
+(no sprite answers for the unit, as once its body has gone to a crystal); `expect roster name_id=0x76` wants exactly one roster record so, and
 `count=N` another number of them (`count=0`: a recruit turned down on its join screen isn't there).
 `show slots` (or `roster`) prints the battle units' roster slots and ids into the case's output, `show units` their
 jobs, skillsets, unlocked jobs and job fields (levels, learned abilities, JP); `copy roster 2 3`
@@ -196,6 +198,40 @@ def poke_units(args: list[str], case: str) -> None:
     print(f"PASS {case}: poked +0x{offset:X} = {data.hex()} on unit(s) {[u['index'] for u in chosen]}")
 
 
+SPRITES, SPRITE_UNIT, UNIT_INDEX = 0xD3A410, 0x148, 0x1BC  # the unit sprites' list; a sprite's unit; a unit's index
+
+
+def orphan_sprite(args: list[str], case: str) -> None:
+    """orphan sprite FIELD=VALUE...: the matching unit's sprite is handed to an empty unit record, so no sprite answers
+    for the unit, as once its body has gone to a crystal or a chest (the game finds a unit's sprite by walking the
+    list at 0xD3A410 for the one whose unit, +0x148, has the unit's index, 0x22AA88). The battle isn't played on."""
+    wanted = fields(args)
+    chosen = find("unit", wanted)
+    if len(chosen) != 1:
+        raise CaseFailure(f"orphan sprite: {len(chosen)} units {describe(wanted)}")
+    unit = chosen[0]
+    base, _ = harness.battle_units()
+    spare = next((base + k * UNIT_SIZE for k in range(20, -1, -1)
+                  if harness.peek_bytes(base + k * UNIT_SIZE + 1, 1)[0] == 0xFF
+                  and harness.peek_bytes(base + k * UNIT_SIZE + UNIT_INDEX, 1)[0] not in (unit["index"], 0xFF)), None)
+    if spare is None:
+        raise CaseFailure("orphan sprite: no empty unit record to hand the sprite to")
+    node, moved = int.from_bytes(harness.peek_bytes(harness.image_base() + SPRITES, 8), "little"), 0
+    for _ in range(64):
+        if not node:
+            break
+        if int.from_bytes(harness.peek_bytes(node + SPRITE_UNIT, 8), "little") == unit["address"]:
+            reply = harness.send(f"poke 0x{node + SPRITE_UNIT:X} {spare.to_bytes(8, 'little').hex(' ')}")
+            if reply.startswith("error"):
+                raise CaseFailure(reply)
+            moved += 1
+        node = int.from_bytes(harness.peek_bytes(node, 8), "little")
+    if not moved:
+        raise CaseFailure(f"orphan sprite: unit {unit['index']} has no sprite")
+    print(f"PASS {case}: unit {unit['index']}'s sprite handed to the empty unit record "
+          f"{(spare - base) // UNIT_SIZE}")
+
+
 UNIT_LINK, UNIT_PRIMARY = 0x1B4, 0x12  # a rider's link is 0x80 | its mount's index, a mount's 0x40 | its rider's
 
 
@@ -315,6 +351,8 @@ def run_case(path: Path) -> None:
                 poke_units(args[1:], case)
             elif command == "ride":
                 ride(args, case)
+            elif command == "orphan" and args and args[0] == "sprite":
+                orphan_sprite(args[1:], case)
             elif command == "copy" and args and args[0] == "roster":
                 # copy roster FROM TO [sprites=S] [job=J] [name_id=N] [level=N] [right_hand=I]: a party member more, or with those fields
                 # someone else (a guest in slots 50-53: sprites=0x29 job=0x29 name_id=25 is the guest Rafa)
@@ -443,7 +481,15 @@ def run_case(path: Path) -> None:
                 path = SHOTS / path_name(case_file) / f"{args[0]}.png"
                 harness.shot(argparse.Namespace(file=path))
             elif command == "defeat":
-                chosen = harness.defeat([number(a) for a in args] or None)
+                # defeat [UNIT...] or defeat FIELD=VALUE...: the enemies, those battle units, or the units that match
+                # (`defeat job=0x29`: a guest downed, whatever its place among the units).
+                if any("=" in a for a in args):
+                    chosen = [u["index"] for u in find("unit", fields(args))]
+                    if not chosen:
+                        raise CaseFailure(f"defeat: no unit {describe(fields(args))}")
+                    chosen = harness.defeat(chosen)
+                else:
+                    chosen = harness.defeat([number(a) for a in args] or None)
                 if not chosen:
                     raise CaseFailure("defeat found no active enemy units")
                 print(f"PASS {case}: defeated units {chosen}")
@@ -460,13 +506,21 @@ def run_case(path: Path) -> None:
                     if actual != expected:
                         raise CaseFailure(f"var 0x{variable:X}: expected 0x{expected:X}, got 0x{actual:X}")
                     print(f"PASS {case}: var 0x{variable:X}=0x{actual:X}")
+                elif kind == "peek":
+                    # expect peek ADDRESS BYTE...: the bytes there (hex; `+0x2FCF86C` an address in the game's image)
+                    at = harness.image_base() + number(args[1][1:]) if args[1].startswith("+") else number(args[1])
+                    expected_bytes = bytes.fromhex("".join(args[2:]))
+                    actual_bytes = harness.peek_bytes(at, len(expected_bytes))
+                    if actual_bytes != expected_bytes:
+                        raise CaseFailure(f"peek {args[1]}: expected {expected_bytes.hex(' ')}, got {actual_bytes.hex(' ')}")
+                    print(f"PASS {case}: peek {args[1]} = {actual_bytes.hex(' ')}")
                 elif kind == "field-visible":
                     flag = int.from_bytes(harness.peek_bytes(harness.image_base() + 0x2FF9E00, 4), "little")
                     if flag:
                         raise CaseFailure(f"battle renderer exit flag is {flag}; the field is hidden")
                     print(f"PASS {case}: battle renderer remains active")
                 else:
-                    raise CaseFailure("expect supports unit, entry, var, or field-visible")
+                    raise CaseFailure("expect supports unit, entry, roster, var, peek, or field-visible")
             else:
                 raise CaseFailure(f"unknown command {command!r}")
         except (IndexError, ValueError) as error:

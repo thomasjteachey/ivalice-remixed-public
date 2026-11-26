@@ -1,0 +1,33 @@
+# The end of the battle at Riovanes Castle's gate (event 281) with the guest Rafa a crystal whose body is gone, as in
+# a battle played to that point (a tester on 0.9.39, 2026-11-25: her "Guest Departure" card showed Balthier's face).
+# The remaster's fallback for a guest it can't find by id (riovanes-gate-end-crystal.txt) also names the face for
+# the cards in its own code, by her old sprite set 0x19, and that number stays whenever the status panel can't name
+# a face itself: for a unit no sprite answers for. In the port graphic 0x19 is ReMixed's Balthier and Rafa is 0x29.
+# riovanes-gate-end-crystal.txt only sets her status bit, so her sprite was still there and the panel named her
+# face. The harness's copy of this scenario runs the closing scene without the battle's turns, so a body can't be
+# played to a crystal here (tried: her count doesn't run); the case sets her status bit and takes her sprite away
+# from her instead (`orphan sprite`), which is the state the lookup meets. The rest as in that case. The face number
+# the cards are given ([0x2FCF86C]) is hers (0x29; 0x19 on 0.9.39), and the frames before each Enter show the card.
+#   python -I tools/quick_test.py --restart tests/quick/riovanes-gate-end-real-crystal.txt
+name Riovanes gate end with Rafa a crystal and her body gone
+wait world depth=1 state=0 timeout=20
+copy roster 0 50 sprites=0x29 job=0x29 name_id=25
+expect roster name_id=25
+scenario 0x119 event=0x119
+wait log "reveal treasures: map 6" press=RETURN every=1 timeout=150
+formation units=1
+wait log "loads event 281 in place of event" timeout=60
+wait unit player=1 present=1 timeout=120 press=RETURN every=2
+show units
+poke unit job=0x29 offset=0x61 or=40
+wait seconds 5
+defeat
+wait log "a speech box names no battle unit" press=RETURN every=0.6 timeout=200
+orphan sprite job=0x29
+send poke +0x782A94 19 01 00 00
+wait log "reading file 0x4 " press=RETURN every=0.6 timeout=60
+send poke +0x782A94 02 00 00 00
+send peek +0x2FCF86C 4
+advance event 4 every=0.6 shots=1 timeout=300
+expect peek +0x2FCF86C 29 00 00 00
+expect roster name_id=25 count=0

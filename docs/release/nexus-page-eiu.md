@@ -6,13 +6,13 @@ The upgrade gets its own page on Nexus, and Ivalice ReMixed lists it as a requir
 (https://github.com/thomasjteachey/eiu-ivalice-chronicles, MIT). The file is the upgrade's folder from ReMixed's
 package (`mod/release/nexus/EventInstructionUpgrade-<version>.zip`, cut from `IvaliceReMixed-<version>.zip`), so it
 carries the `eiu-battle-words.bin` ReMixed's build writes; upload a new one only when the upgrade changes.
-Written for 1.0.1 (2026-11-17), the build in ReMixed 0.9.6.
+Written for 1.0.2 (2026-11-26), the build in ReMixed 0.9.40.
 
 ## Page fields
 
 - **Name:** Event Instruction Upgrade
 - **Category:** Utilities (or Modders Resources)
-- **Version:** 1.0.1
+- **Version:** 1.0.2
 - **Language:** English
 - **Requirements:** FFT Mod Loader by Nenkai (https://www.nexusmods.com/finalfantasytacticstheivalicechronicles/mods/4),
   and Reloaded-II with its shared hooks (the loader needs those too)
@@ -60,9 +60,9 @@ The code, the docs (the instructions, writing events, the API for your own routi
 
 ## File (the upload)
 
-- **File:** `mod/release/nexus/EventInstructionUpgrade-1.0.1.zip` (the folder `fftivc.utility.eventinstructionupgrade`
+- **File:** `mod/release/nexus/EventInstructionUpgrade-1.0.2.zip` (the folder `fftivc.utility.eventinstructionupgrade`
   at its top)
-- **Name:** Event Instruction Upgrade 1.0.1
+- **Name:** Event Instruction Upgrade 1.0.2
 - **Category:** Main file
 - **Description:** Drag onto Reloaded-II. Needs the FFT Mod Loader. Enhanced mode.
 

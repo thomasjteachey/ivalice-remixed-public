@@ -247,7 +247,10 @@ try. If a test would still take minutes, make it fast first (a shortcut in the h
 
 Each case prints one `PASS` or `FAIL` line per expectation and a final elapsed time. Case files use one small command
 per line: `scenario`, `setvar`, `send`, `advance`, `formation`, `defeat`, `key`, `shot`, `poke unit`, `ride`,
-`wait unit|entry|log|world|seconds`, `expect unit|entry|roster|var` and `show slots|roster|units|sprites`. `show`
+`wait unit|entry|log|world|seconds`, `expect unit|entry|roster|var|peek` and `show slots|roster|units|sprites`
+(`defeat job=0x29` downs the units that match instead of the enemies; `expect peek +0x2FCF86C 29 00 00 00` wants
+those bytes at an address in the game's image; `orphan sprite job=0x29` takes a unit's sprite away from it, so no
+sprite answers for the unit, as once its body has gone to a crystal: `tests/quick/riovanes-gate-end-real-crystal.txt`). `show`
 prints the battle units' roster slots and battle ids (or the roster, their jobs, or the unit sprites' 15 sheet slots
 and 16 sprite objects) into the case's output, as evidence; `send` prints what the game answers (`send state`, `send
 peek +0x3C7C950 4`, `send watch`). A case on the

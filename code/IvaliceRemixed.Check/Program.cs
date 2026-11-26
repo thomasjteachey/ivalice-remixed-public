@@ -6408,6 +6408,12 @@ internal static unsafe class SelfTest
               $"sprite set 0x{*(byte*)GuestLookup.SpriteSetByte:X2}",
               *(int*)(at + 6) == 0x119 && *(byte*)(at + GuestLookup.CharacterAt) == 0x19
               && *(byte*)GuestLookup.SpriteSetByte == 0x29 && GuestLookup.SpriteSet == 0x29);
+        Check($"the face it names for the cards (the dword at 0x{GuestLookup.FaceNumber - game.Image.ImageStart:X}, into " +
+              $"[0x{GuestLookup.FaceNumber + 4 + *(int*)(GuestLookup.FaceNumber - 4) - game.Image.ImageStart:X}]) is graphic " +
+              $"0x{*(int*)GuestLookup.FaceNumber:X}'s",
+              GuestLookup.FaceNumber - game.Image.ImageStart == 0x214312 && *(int*)GuestLookup.FaceNumber == 0x29
+              && *(ushort*)(GuestLookup.FaceNumber - 6) == 0x05C7
+              && GuestLookup.FaceNumber + 4 + *(int*)(GuestLookup.FaceNumber - 4) - game.Image.ImageStart == 0x2FCF86C);
         var target = GuestLookup.PanelCall + 5 + *(int*)(GuestLookup.PanelCall + 1);
         Check($"the panel's call 0x{GuestLookup.PanelCall - game.Image.ImageStart:X} (the panel 0x{GuestLookup.Panel - game.Image.ImageStart:X}) goes " +
               "to the stub",
@@ -9833,6 +9839,31 @@ internal static unsafe class SelfTest
             Check($"the {mode} power mode is ReMixed's preset 0x{SaveOptions.Power(new Options { PowerMode = mode }):X8} and reads back",
                   SaveOptions.Decode(Read, new Options()).PowerMode == mode);
         }
+        // A battle continued from its autosave, or begun again from the System Menu: its setup runs before the
+        // save's variables are put back, so the setup's check finds no options. It writes nothing and leaves the
+        // options in effect; the first walk's check, with the save's variables there, puts the save's own in effect.
+        save.Clear();
+        var seen = (-1, -1, -1, -1L);
+        var atSetup = SaveOptions.Step(Read, Write, settings, adopt: false, ref seen, out var setupNote);
+        Check("a battle's setup that finds no options writes nothing and changes nothing until the first walk",
+              save.Count == 0 && atSetup == null && setupNote == SaveOptions.WaitingNote && seen == (-1, -1, -1, -1L));
+        SaveOptions.Encode(all, Read, Write); // the load puts the save's variables in place
+        var atWalk = SaveOptions.Step(Read, Write, settings, adopt: true, ref seen, out var walkNote);
+        var expectedAtWalk = SaveOptions.Decode(Read, settings);
+        Check("the first walk then reads the save's own options (Revive after battle, JP 200%)",
+              atWalk != null && walkNote == null && Options.Same(atWalk, expectedAtWalk)
+              && atWalk.PlayerDeaths == Options.PlayerDeathRule.ReviveAfterBattle && atWalk.JpGain == 200);
+        Check("a check that finds the same variables again changes nothing",
+              SaveOptions.Step(Read, Write, settings, adopt: true, ref seen, out var sameNote) == null && sameNote == null
+              && SaveOptions.Step(Read, Write, settings, adopt: false, ref seen, out sameNote) == null && sameNote == null);
+        // A save with no options of its own (a new game, or one from before) takes the mod's settings at a check
+        // that may write: the world map's, or the first walk of a new game's first battle.
+        save.Clear();
+        seen = (-1, -1, -1, -1L);
+        var adopted = SaveOptions.Step(Read, Write, settings, adopt: true, ref seen, out var adoptNote);
+        Check("a save with no options takes the mod's settings where the check may write, with the marker",
+              adopted != null && Options.Same(adopted, settings) && adoptNote == SaveOptions.AdoptedNote
+              && (Read(SaveOptions.Rates) & SaveOptions.Marker) != 0);
         return failures;
     }
 

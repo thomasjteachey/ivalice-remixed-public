@@ -990,6 +990,10 @@ internal static unsafe class RemixedScenarios
     /// </summary>
     internal static void KeepBattleMark()
     {
+        // The first walk after a setup: by now a continued battle's variables are the save's (its setup ran before
+        // they were loaded), so the save's own options are read here (SaveOptions).
+        if (_battleMarkPending)
+            SaveOptions.Sync();
         if (Nemesis.GetVariable == null || Nemesis.SetVariable == null || _presets == null)
             return;
         if (BattleMarksOff)

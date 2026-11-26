@@ -201,8 +201,8 @@ internal static unsafe class RemixedEvents
     /// </summary>
     internal static void MapRosterJobLevels(Action<uint, int, nint> map, byte* roster)
     {
-        for (var k = 0; k < Ps1Memory.RosterSlots; k++)
-            map(Ps1Memory.Roster + (uint)k * Ps1Memory.RosterSize + RosterJobLevelsAt, JobLevelBytes,
+        for (var k = 0; k < UnitTables.RosterSlots; k++) // every slot, at its PS1 address (the PS1's 20, then the mod's own)
+            map(Ps1Memory.RosterAddress(k) + RosterJobLevelsAt, JobLevelBytes,
                 (nint)(roster + k * UnitTables.RosterSize + RemasterJobLevelsAt));
     }
 
@@ -390,17 +390,16 @@ internal static unsafe class RemixedEvents
     /// for byte +1. Addresses outside the roster do nothing, as on the PS1. Returns the two slots, if swapped.</summary>
     internal static (uint First, uint Second)? SwapRoster(byte* roster, uint first, uint second)
     {
-        const uint size = Ps1Memory.RosterSize;
-        if (first < Ps1Memory.Roster || second < Ps1Memory.Roster)
-            return null;
-        var (a, b) = ((first - Ps1Memory.Roster) / size, (second - Ps1Memory.Roster) / size);
-        if (a >= Ps1Memory.RosterSlots || b >= Ps1Memory.RosterSlots || a == b)
+        // Either may be a slot past the PS1's 20 (a guest, or a big party's member), at the address the roster lookup
+        // gave it (Ps1Memory.RosterAddress).
+        var (a, b) = (Ps1Memory.RosterSlot(first), Ps1Memory.RosterSlot(second));
+        if (a < 0 || b < 0 || a == b)
             return null;
         var x = roster + a * UnitTables.RosterSize;
         var y = roster + b * UnitTables.RosterSize;
         for (var k = 0; k < UnitTables.RosterSize; k++)
             if (k != 1)
                 (x[k], y[k]) = (y[k], x[k]);
-        return (a, b);
+        return ((uint)a, (uint)b);
     }
 }

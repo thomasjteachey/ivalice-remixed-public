@@ -9,8 +9,19 @@ namespace IvaliceRemixed.Patches;
 /// first time the mod meets a save without them (var 0x14's bit 0x10000000 clear: a new game, or a save from before),
 /// the mod's settings (Config.json, <see cref="Options.Settings"/>) go in as its own, as ReMixed's options event sets
 /// its defaults the first time it runs; from then on <see cref="Options.Current"/> follows the save in play, checked
-/// on every world-map frame and at each battle's start. The extra options menu changes them in the save. The settings
-/// with no place in a save (the test mode, separate saves, the Argath campaign, fast-forward) stay the mod's.
+/// on every world-map frame, at each battle's setup and at its first walk of the battle conditions. The extra options
+/// menu changes them in the save. The settings with no place in a save (the test mode, separate saves, the Argath
+/// campaign, fast-forward) stay the mod's.
+/// <para>A battle continued from its autosave (the title's Continue), and one begun again from the System Menu
+/// ("Retry from Start of Battle", "Change Formation and Retry"), is set up while the variables are empty, before the
+/// save's are put back: the setup's check found none of the save's options there, wrote the mod's settings over the
+/// empty variables and used them for the whole battle, the save's own only coming back with the world map (a tester
+/// on 0.9.39, 2026-11-25: a party member lost for good with Player Deaths on "Revive after battle", JP at the mod's
+/// 125% for the save's 200%; all three ways seen in the hidden PC game the same day). The game then put the save's
+/// variables over what was written, so the save itself kept its options (var 0x14 and the flags read back as the
+/// save's each time). So the setup's check only reads: with no options there it leaves the ones in effect, which
+/// are the save's own on a retry, and the first walk, where the variables are the save's again, checks once more
+/// and is the one that may write.</para>
 /// </summary>
 internal static unsafe class SaveOptions
 {
@@ -36,6 +47,7 @@ internal static unsafe class SaveOptions
     private static int** _words;
     private static (int Rates, int Powers, int Nemesis, long Flags) _seen = (-1, -1, -1, -1);
     private static int _failed;
+    private static bool _waited; // a battle's setup found no options; the next check that reads some says so
 
     public static void Install(Game game)
     {
@@ -43,7 +55,7 @@ internal static unsafe class SaveOptions
         if (Nemesis.GetVariable == null)
             Nemesis.FindVariables(game.Image);
         _words = (int**)GameImage.Rip((nint)Nemesis.SetVariable + 0x14, 3, 7); // mov rax, [0x7830D8]
-        BattleEvents.OnStart(game, "each save's options", Sync);
+        BattleEvents.OnStart(game, "each save's options", () => Sync(adopt: false));
     }
 
     /// <summary>A variable's value: the 32-bit word for one under 0x80 (read straight from the remaster's array, as
@@ -96,33 +108,67 @@ internal static unsafe class SaveOptions
     }
 
     /// <summary>The save in play's options in effect: its own, given the mod's settings first if it has none. On the
-    /// world map's frames and at each battle's start; cheap when nothing changed.</summary>
-    internal static void Sync()
+    /// world map's frames and at a battle's first walk (<see cref="RemixedScenarios.KeepBattleMark"/>); cheap when
+    /// nothing changed. At a battle's setup <paramref name="adopt"/> is false: variables with no options then may be
+    /// a continued or retried battle's, not put back yet, so nothing is written and the options in effect stay until
+    /// the first walk.</summary>
+    internal static void Sync(bool adopt = true)
     {
         try
         {
             if (_words == null || *_words == null)
                 return;
-            if ((Read(Rates) & Marker) == 0)
-            {
-                Encode(Options.Settings, Read, Write);
-                _log.Info("options: the save in play had none of its own; it takes the mod's settings");
-            }
-            long flags = 0;
-            for (var k = 0; k < Flags.Length; k++)
-                flags |= (long)(Read(Flags[k]) != 0 ? 1 : 0) << k;
-            var seen = (Read(Rates), Read(Powers), Read(NemesisWord) & NemesisOff, flags);
-            if (seen == _seen)
+            var options = Step(Read, Write, Options.Settings, adopt, ref _seen, out var note);
+            if (note != null)
+                _log.Info(note);
+            _waited |= note == WaitingNote;
+            if (options == null)
                 return;
-            _seen = seen;
-            if (Options.Use(Decode(Read, Options.Settings)))
+            // Said again after a setup that found none, changed or not: the log then shows a continued or retried
+            // battle with the save's own options at its first walk.
+            if ((Options.Use(options) | _waited) && note == null)
                 _log.Info($"options: the save's: {Options.Current}");
+            _waited = false;
         }
         catch (Exception e)
         {
             if (Interlocked.Increment(ref _failed) <= 3)
                 _log.Error($"options: reading the save's failed: {e}");
         }
+    }
+
+    internal const string AdoptedNote = "options: the save in play had none of its own; it takes the mod's settings";
+    internal const string WaitingNote = "options: no options in the variables at this battle's setup (a battle continued "
+                                        + "from a save or begun again is set up before its variables are put back): "
+                                        + "nothing written, the options in effect stay until the battle's first walk";
+
+    /// <summary>One check of the save's variables (<paramref name="read"/>, <paramref name="write"/>): the options to
+    /// put in effect, or null when they are as last <paramref name="seen"/>. Variables without the marker take
+    /// <paramref name="settings"/> as their own when <paramref name="adopt"/> is set; otherwise they are left alone,
+    /// with the options in effect as they are, and the next check reads afresh.</summary>
+    internal static Options? Step(Func<int, int> read, Action<int, int> write, Options settings, bool adopt,
+                                  ref (int Rates, int Powers, int Nemesis, long Flags) seen, out string? note)
+    {
+        note = null;
+        if ((read(Rates) & Marker) == 0)
+        {
+            if (!adopt)
+            {
+                seen = (-1, -1, -1, -1);
+                note = WaitingNote;
+                return null;
+            }
+            Encode(settings, read, write);
+            note = AdoptedNote;
+        }
+        long flags = 0;
+        for (var k = 0; k < Flags.Length; k++)
+            flags |= (long)(read(Flags[k]) != 0 ? 1 : 0) << k;
+        var now = (read(Rates), read(Powers), read(NemesisWord) & NemesisOff, flags);
+        if (now == seen)
+            return null;
+        seen = now;
+        return Decode(read, settings);
     }
 
     /// <summary>Puts <paramref name="options"/> into the save in play (the Extra Options menu) and in effect.</summary>
