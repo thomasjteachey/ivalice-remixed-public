@@ -174,6 +174,9 @@ internal static unsafe class Harness
                     parts.Length > 2 ? Number(parts[2]) : 16, parts.Length > 3 ? Number(parts[3]) : 1);
             case "dispatchinfo":
                 return Patches.TavernStorage.HarnessSummary();
+            case "dispatchhome":
+                // Every one of ReMixed's groups out back now (its days up), without waiting out the days.
+                return Patches.TavernStorage.HarnessHome();
             case "bar":
             {
                 // The Tavern screen the mod last saw and its state (+0x98), for watching its menu.

@@ -126,6 +126,19 @@ internal static unsafe class TavernStorage
     /// ([[UI root] + 0x10] + 0x58) has the cursor's unit at +0xB4, as the picker's button bar (0x19E1C8) reads it.</summary>
     internal const int PickedAt = 0xB30, PickedCountAt = 0xB40, MostPicked = 3, UnitViewAt = 0x58, CursorUnitAt = 0xB4,
                        SelectPress = 1, ConfirmUnitsPress = 2;
+    /// <summary>The Tavern's state for the catalog's requests (0x2ED540). Its request 0xD, a finished group's report,
+    /// puts the Tavern in its report state (13), then looks among the records' +1 for the focused row (the catalog
+    /// record's +0x138) and starts that record's results and report screens. ReMixed's groups keep their entry's key
+    /// there, not their carrier row, so none matched: the report never started and the Tavern stayed in its report
+    /// state for good, the game frozen as a Special Training group came back (a player on Nexus, 0.9.41).
+    /// <see cref="OnReportRequest"/> lends them their carrier rows for the search.</summary>
+    internal const string ReportRequestPattern =
+        "48 89 5C 24 10 48 89 74 24 18 57 48 83 EC 40 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 44 24 30 8B 15 ?? ?? ?? ?? " +
+        "33 DB 48 8B F1 F6 C2 04";
+    internal const int ReportFinishedRequest = 0xD;
+    /// <summary>The finished errands' dates, 9 bits an errand from 0x11A70D0 (the report's payout writes its row's),
+    /// which ends where the count downs (<see cref="States"/>) begin.</summary>
+    internal const int DateBits = 9, DatesBefore = 0x70;
 
     internal const int ProfitTable = 0xB6, ListBegin = 0x60, ListEnd = 0x68;
     internal static nint DayChangeAt { get; private set; }
@@ -154,6 +167,7 @@ internal static unsafe class TavernStorage
     internal static nint ProfitHeaderAt { get; private set; }
     internal static nint SetTextAt { get; private set; }
     internal static nint PickerPressAt { get; private set; }
+    internal static nint ReportRequestAt { get; private set; }
     internal static byte* Count { get; private set; }
     internal static byte* RecordsAt { get; private set; }
     internal static byte* States { get; private set; }
@@ -188,6 +202,11 @@ internal static unsafe class TavernStorage
     private static delegate* unmanaged<nint, nint, void> _profitHeader;
     private static delegate* unmanaged<nint, int, nint, void> _setText;
     private static delegate* unmanaged<nint, int*, void> _pickerPress;
+    private static delegate* unmanaged<int*, void> _reportRequest;
+    /// <summary>The records <see cref="OnReportRequest"/> lent their carrier rows, by index (-1 none), with their
+    /// entries' keys, while the native request runs.</summary>
+    private static readonly int[] LentKeys = Enumerable.Repeat(-1, NativeRecords).ToArray();
+    private static bool _inReportRequest;
     private static delegate* unmanaged<nint, nint> _profitRecordInit;
     private static nint* _profitTable;
     private static nint* _tableManager;
@@ -280,6 +299,7 @@ internal static unsafe class TavernStorage
         ProfitHeaderAt = image.FindUnique(ProfitHeaderPattern);
         SetTextAt = image.FindUnique(SetTextPattern);
         PickerPressAt = image.FindUnique(PickerPressPattern);
+        ReportRequestAt = image.FindUnique(ReportRequestPattern);
         if (*(byte*)(SendAt + 0x37) != 0x0F || *(byte*)(SendAt + 0x38) != 0xB7)
             throw new InvalidDataException("the native errand sender's selected row moved");
         SelectedRow = (ushort*)GameImage.Rip(SendAt + 0x37, 3, 7);
@@ -332,6 +352,8 @@ internal static unsafe class TavernStorage
         _pickerPress = (delegate* unmanaged<nint, int*, void>)game.Hooks.Hook(
             PickerPressAt, (nint)(delegate* unmanaged<nint, int*, void>)&OnPickerPress,
             "the roster picker's presses (confirm on a picked unit)");
+        _reportRequest = (delegate* unmanaged<int*, void>)game.Hooks.Hook(
+            ReportRequestAt, (nint)(delegate* unmanaged<int*, void>)&OnReportRequest, "the Tavern catalog's requests");
 
         _log.Info("dispatch missions: in the Tavern's menu in place of Errands, with Propositions, Jobs, Special " +
                   "Training, Contests and recall/reports in the native view");
@@ -405,6 +427,24 @@ internal static unsafe class TavernStorage
             _ => throw new ArgumentException($"unknown Dispatch kind '{kind}'"),
         };
         return _harnessKind ?? "all";
+    }
+
+    /// <summary>For the harness: every one of ReMixed's groups out home now (its days up, done), as its days running
+    /// out on the world map would bring them.</summary>
+    internal static string HarnessHome()
+    {
+        var count = Math.Min(*Count, (byte)NativeRecords);
+        var home = 0;
+        for (var i = 0; i < count; i++)
+        {
+            var record = RecordsAt + i * RecordBytes;
+            if (!IsDispatchRecord(record) || (record[0] & 4) != 0)
+                continue;
+            record[2] = record[3];
+            record[0] |= 4;
+            home++;
+        }
+        return $"{home} group(s) home";
     }
 
     internal static string HarnessSummary()
@@ -550,6 +590,8 @@ internal static unsafe class TavernStorage
                     _log.Info($"remixed scenarios: the Tavern's {(missions ? "Missions" : "Rumors")} chosen");
                 }
             }
+            if (_inReportRequest && _dispatchView && request != null && *request == ReportFinishedRequest)
+                LendCarrierRows();
             if (!_dispatchView && request != null && *(int*)(screen + 0x98) == MenuState
                 && *request is ErrandsRequest or LockedErrandsRequest)
             {
@@ -681,7 +723,11 @@ internal static unsafe class TavernStorage
                 HideMissionsTexts();
                 RemixedScenarios.RumorFilter = RemixedScenarios.AllRumors;
             }
-            if (_dispatchView && state != 4 && state is not (>= 6 and <= 12) && state != 23)
+            // The view closes as the Tavern leaves its errand screens: its farewell (0), menu (1), Rumors (2, 3) or the
+            // locked Errands' note (5). A report runs through states past 12 (13: its story and results), where the
+            // view closing let the report read the borrowed row as a native errand and the list come back without
+            // ReMixed's groups.
+            if (_dispatchView && state is 0 or 1 or 2 or 3 or 5)
             {
                 ApplyProfitHeading(false);
                 ApplyProfitPrompt(false);
@@ -1255,6 +1301,61 @@ internal static unsafe class TavernStorage
         }
     }
 
+    /// <summary>The Tavern catalog's requests (<see cref="ReportRequestPattern"/>). Its request 0xD (a finished group's
+    /// report) looks for the record whose +1 is the focused row: ReMixed's groups are lent their carrier rows for it
+    /// (<see cref="OnBarRequest"/>, once the request is known to be that one), and given their keys back after.</summary>
+    [UnmanagedCallersOnly]
+    private static void OnReportRequest(int* state)
+    {
+        _inReportRequest = true;
+        try
+        {
+            _reportRequest(state);
+        }
+        finally
+        {
+            _inReportRequest = false;
+            try
+            {
+                ReturnLentRows();
+            }
+            catch (Exception e)
+            {
+                _log.Error($"dispatch missions: a group's key couldn't be put back after its report request ({e.Message})");
+            }
+        }
+    }
+
+    private static void LendCarrierRows()
+    {
+        var count = Math.Min(*Count, (byte)NativeRecords);
+        var lent = 0;
+        for (var i = 0; i < count; i++)
+        {
+            var record = RecordsAt + i * RecordBytes;
+            if (LentKeys[i] >= 0 || !IsDispatchRecord(record) || !Carriers.TryGetValue(record[1], out var carrier))
+                continue;
+            LentKeys[i] = record[1];
+            record[1] = (byte)carrier;
+            record[0] &= 0x7F;
+            lent++;
+        }
+        _log.Info($"dispatch missions: a finished group's report asked for; {lent} group(s) lent their rows");
+    }
+
+    private static void ReturnLentRows()
+    {
+        for (var i = 0; i < NativeRecords; i++)
+        {
+            if (LentKeys[i] < 0)
+                continue;
+            var record = RecordsAt + i * RecordBytes;
+            record[1] = (byte)LentKeys[i];
+            record[0] |= DispatchRecord;
+            LentKeys[i] = -1;
+        }
+    }
+
     [UnmanagedCallersOnly]
     private static void OnReport(nint screen)
     {
@@ -1271,9 +1372,13 @@ internal static unsafe class TavernStorage
             if ((uint)index < *Count)
             {
                 var record = RecordsAt + index * RecordBytes;
-                if (IsDispatchRecord(record) && Entries.TryGetValue(record[1], out entry)
-                    && Carriers.TryGetValue(entry.Key, out carrier))
+                if (IsDispatchRecord(record) && Entries.TryGetValue(record[1], out entry))
                 {
+                    // The payout writes the record's row's variable (0x360 + row), count down and date: an entry this
+                    // page doesn't list borrows row 0, whose three are put back as any carrier's are. Left with its
+                    // key, the payout wrote past the native errands' 96 (variable 0x360 + 96 and on is another's).
+                    if (!Carriers.TryGetValue(entry.Key, out carrier))
+                        carrier = 0;
                     units = Math.Min(record[5], (byte)slots.Length);
                     new ReadOnlySpan<byte>(record + 6, units).CopyTo(slots);
                     record[0] &= 0x7F;
@@ -1289,11 +1394,16 @@ internal static unsafe class TavernStorage
             _log.Error($"dispatch missions: a report couldn't read its group ({e.Message})");
         }
 
+        // The payout writes the carrier row's date among the native errands' (9 bits a row): keep theirs.
+        var dates = States - DatesBefore;
+        var dateAt = carrier < 0 ? 0 : carrier * DateBits / 8;
+        var savedDates = carrier < 0 ? (ushort)0 : *(ushort*)(dates + dateAt);
         _report(screen);
         if (variable >= 0)
         {
             Nemesis.SetVariable(variable, savedVariable, 0);
             States[carrier] = savedCountdown;
+            *(ushort*)(dates + dateAt) = savedDates;
         }
         if (entry == null)
             return;

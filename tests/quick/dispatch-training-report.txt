@@ -1,0 +1,57 @@
+# A Special Training group's return (a player on Nexus, 0.9.41: the game froze as units came back from Special
+# Training). Run with --restart --location 2 (Eagrose, which has a tavern). Valor Training is sent from the Dispatch
+# view opened on its Training page, the harness brings the group home at once (`dispatchhome`, its days up), and
+# Recall Units lists it; the confirm button on it asks for its report, which used to find no record (ReMixed's group
+# keeps its catalog key where the game looks for the list's row) and leave the Tavern in its report state for good.
+# The report now runs: its screens, Valor's +3 Brave, the unit free again, and the list back.
+name A Special Training group comes back
+wait world depth=1 state=0 timeout=20
+setvar 0x6E 0x10
+key C wait=0.5
+key RETURN
+wait world depth=2 state=4 timeout=10
+key S wait=0.5
+key RETURN
+wait world depth=2 state=5 timeout=10
+wait seconds 2
+send dispatch training 16 1
+wait log dispatch missions: opened the native view timeout=10
+wait seconds 2
+key RETURN wait=3
+key RETURN wait=1.5
+key LEFT wait=1.5
+key RETURN
+wait log dispatch missions: confirm on a picked unit confirms the 1 unit.s. picked timeout=10
+wait seconds 2
+key RETURN wait=2.5
+key RETURN
+wait log dispatch missions: sent 1 unit.s. on Training .Valor. timeout=10
+wait seconds 3
+expect roster errand=1
+key RETURN wait=3
+# Opened on its Training page by the harness, one Back closes the Dispatch view (a second is the Tavern's farewell).
+key ESCAPE
+wait world depth=2 state=5 timeout=10
+wait seconds 2.5
+send dispatchhome
+send dispatch all 16 1
+wait log dispatch missions: opened the native view timeout=10
+wait seconds 2
+key DOWN wait=0.6
+key DOWN wait=0.6
+key DOWN wait=0.6
+key DOWN wait=0.6
+key RETURN
+wait log dispatch missions: opened Recall timeout=10
+wait seconds 2.5
+send dispatchinfo
+shot recall-page
+wait log dispatch missions: a finished group.s report asked for; 1 group.s. lent their rows press=RETURN every=2 timeout=12
+wait seconds 2
+shot report-opening
+wait log dispatch missions: Training .Valor. reported for 1 unit.s.; 1 permanent training effect.s. press=RETURN every=1.5 timeout=40
+wait seconds 3
+shot after-report
+expect roster errand=1 count=0
+key RETURN wait=3
+shot back-on-list

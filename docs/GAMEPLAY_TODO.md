@@ -838,6 +838,17 @@ Asked on the Deck (2026-11-18):
   have written past their storage. Recall had the same mix-up, so it didn't find the group. Both now go by the row
   chosen in the list. Seen in the hidden PC game (`tests/quick/dispatch-button.txt`): Valor sent and kept as
   ReMixed's group, its unit away, then recalled with the unit back. *small*
+- [x] The game froze as units came back from Special Training (a player on Nexus, 0.9.41). Choosing a finished group
+  in Dispatch Missions asks the game for its report, and the game looks for the group by the list's row; ReMixed's
+  groups keep their own mission number there, so it found none, never started the report, and the Tavern waited on
+  it for good. It affected every kind of mission, not only Special Training. The group now shows the game its row
+  while it's looked for, the Dispatch screens stay up through the report (they closed as it began, so its numbers
+  were a remaster errand's), and the report's payout no longer writes past the remaster's 96 errands. Seen in the
+  hidden PC game (`tests/quick/dispatch-training-report.txt`, which brings the group home at once with the harness's
+  `dispatchhome`, 2026-11-27): Valor sent, home, its report from Recall Units played through, its Brave effect
+  applied, the unit free again and the Dispatch list back. Still wrong: the report paid 258 gil, the remaster's
+  numbers for the row it borrows, where ReMixed's Special Training pays none (ReMixed's own report rules are on the
+  unmerged branch `claude/remove-native-dispatch-text-d031b0`). *high*
 - Dispatch Missions with nothing to send yet is ReMixed's own design: its catalog opens by the story section (var
   0x6F, which the story's events step and side chapter 1-A restarts at 1): Special Training from the start, Jobs and
   the first Mining and Exploration sets at section 3 (the Wiegraf and Gustav scene in chapter 1, or 1-A's scene at its
