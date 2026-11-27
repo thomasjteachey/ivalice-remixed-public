@@ -1,0 +1,47 @@
+# Mount Bervenia's dark-Agrias battle (0x2EB, after its summoning scene 0x1B6) won, through the closing on the volcano
+# to the world map. The doppelganger's fall (preset 0xF7's set 7) runs 0x2EA's LABEL 17, which returns to the preset
+# with flag 0x8E set, and that runs 0x0F7's closing (LABEL 11) as a copy of its own (build_mod.py AFTER_SPLITS). From
+# 0.9.32 that copy had 0x355, the dispatch tavern scene's number too, so the closing ran on the tavern's record: its map
+# reload brought the tavern's Ramza placeholders in as Agrias (0x90), Valmafra (0x91) and the Wizard (0x92), their
+# boxes showed Ramza's face, a stray Ramza stood at the edge, and the scene stuck (a player on 0.9.40, 2026-11-27).
+# The copy is now 0x1C5 (453), and the build stops on two events at one number.
+name Bervenia dark-Agrias battle's closing, to the world map
+wait world depth=1 state=0 timeout=25
+send poke +0x11A7D10 1E
+send poke +0x11A7D12 1E
+send poke +0x11A7F40 1E 00
+copy roster 2 3
+scenario 0x1B6
+wait log "loaded event 438" timeout=90
+send speed 5
+wait log "scenario 0x2EB takes ReMixed's battle conditions" press=RETURN every=0.8 timeout=300
+wait log "formation: screen open" timeout=150
+# Five placed: the first group's four, then the screen moves to the second by itself (after a placing it waits on
+# the next tile's unit, where Tab and Space do nothing, so `units=1 second=1` stalled).
+formation units=5
+wait unit battle_id=0x80 present=1 timeout=100
+defeat
+wait log "event 746's message 32 shown" press=RETURN every=0.8 timeout=150
+# The closing runs inside the live battle (no "loaded event" line): condition set 1, then its lines 34-48.
+wait log "condition set 1 fires" press=RETURN every=0.8 timeout=150
+send speed off
+wait log "event 453's message 34 shown" timeout=120
+show units
+expect unit battle_id=0x90 job=0x1E
+expect unit battle_id=0x91 job=0x21
+wait seconds 8
+shot closing-start
+# Its staged middle takes over two minutes at normal speed (01:39-01:41 between lines 43 and 44, 2026-11-27).
+send speed 5
+wait log "event 453's message 47 shown" press=RETURN every=3 timeout=300
+send speed off
+wait log "event 453's message 48 shown" press=RETURN every=3 timeout=120
+wait seconds 8
+shot closing-end
+send speed 5
+advance world every=0.8 timeout=300
+send speed off
+expect var 0x6E 0xB
+expect var 0x282 1
+wait seconds 3
+shot world

@@ -425,8 +425,15 @@ battle, Testing).
   the face of the battle's off-field actor of that person, where it has one (your call, 2026-11-25). Seen in the
   hidden PC game: Elias's reply with his Black Mage face (`tests/quick/bervenia-elias-stand-in.txt`). The music in
   that battle is ReMixed's own track 99, still to port (the music item below); the remaster's track 99 plays in its
-  place. The harness's formation helper doesn't fill these 4 + 2 formations yet: their units were placed by hand.
-  *medium*
+  place. The harness's formation helper now fills them (2026-11-27: it backs out of the next tile's unit list when
+  "Commence battle?" doesn't come up). *medium*
+- [x] The scene after the dark-Agrias battle on the volcano went wrong (a player on 0.9.40, 2026-11-27: "Valmafra and
+  Agrias had Ramza's portraits, a random Ramza looking over in the corner, then it soft-locked"). Since 0.9.32 that
+  closing scene shared its event number with the dispatch tavern's scene, so it ran on the tavern's setup and brought
+  the tavern's stand-in Ramzas onto the volcano in Agrias's, Valmafra's and the Wizard's places. It has a number of its
+  own now, and the build stops if two of ReMixed's events ever share one (no other pair did). Seen in the hidden PC
+  game: the closing with Agrias, Valmafra and the Wizard, each with their own face, through its last line to the world
+  map (`tests/quick/bervenia-dark-agrias-closing.txt`). *small*
 - [x] Valmafra's unit card showed no primary skillset (seen on the Deck, 2026-11-25): her Arc Witch's Spell Strike
   had its name but no icon, and the remaster leaves a skillset with no icon off the card. All 21 skillsets ReMixed
   names that the remaster had left empty had the same gap (Blue Magic, Witchcraft, Combat Skill, Sorcery, Fellblade,

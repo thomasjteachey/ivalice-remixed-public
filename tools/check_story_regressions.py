@@ -35,10 +35,10 @@ DISPLAY_STATE_6 = bytes([0x78, 0x06, 0x3C, 0xE5, 0x38, 0x00])
 # Generated event -> (returned preset, event selected by that preset once flag 0x8E is set). Split scene/battle and
 # post-battle copies remain here deliberately: every encoded same-map edge must stay safe even if normally inactive.
 LIVE_RETURN_EDGES = {
-    121: (0x01C, 122), 123: (0x1FC, 124), 746: (0x0F7, 853), 753: (0x0EF, 850),
+    121: (0x01C, 122), 123: (0x1FC, 124), 746: (0x0F7, 453), 753: (0x0EF, 850),
     756: (0x0F0, 851), 757: (0x0F2, 844), 766: (0x1FD, 852), 844: (0x0F2, 844),
     845: (0x1FC, 124), 850: (0x0EF, 850), 851: (0x0F0, 851), 852: (0x1FD, 852),
-    853: (0x0F7, 853),
+    453: (0x0F7, 453),
     886: (0x103, 886),
 }
 # These returns feed a recruitment scene. Their roster writer is left to that scene's join screen (display state 7),
@@ -801,7 +801,7 @@ def check_bervenia() -> str:
         raise AssertionError("Bervenia's split battle must reach its END without closing unopened dialogue boxes")
     if not event(0x1B6).endswith(battle_end[:-1] + close_boxes + battle_end[-1:]):
         raise AssertionError("Bervenia's full summoning scene must still close its opened dialogue boxes")
-    if [(1, (0x8E, 1)), (0x19, (0x355,))] not in preset_sets(preset):
+    if [(1, (0x8E, 1)), (0x19, (0x1C5,))] not in preset_sets(preset):
         raise AssertionError("Bervenia's first battle must load a distinct post-battle dialogue event")
     data = UNIT_PRESETS.read_bytes()
     table_bytes = int.from_bytes(data[:2], "little")

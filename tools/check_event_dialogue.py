@@ -129,9 +129,9 @@ def check_chapter_opening_speech_boxes(code: bytes, lengths: bytes, lines: range
 
 
 def check_bervenia_postbattle_copy(owners: dict[int, list[int]], ranges: dict[int, range]) -> None:
-    """The volcano battle's closing (0x355, which preset 0xF7's flag-0x8E set runs after the doppelganger falls) must own
+    """The volcano battle's closing (0x1C5, which preset 0xF7's flag-0x8E set runs after the doppelganger falls) must own
     a populated copy of 0x2EA's dialogue."""
-    source, closing = 0x2EA, 0x355
+    source, closing = 0x2EA, 0x1C5
     copied = dialogue_rows(owners[closing][0], ranges[closing])
     if copied != dialogue_rows(owners[source][0], ranges[source]):
         raise AssertionError("Bervenia's post-battle event does not have 0x2EA's ReMixed dialogue")

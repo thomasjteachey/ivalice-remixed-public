@@ -588,8 +588,12 @@ def formation(units: int, second: int = 0, reveal: str = "no", ask_wait: float =
         else:
             send("key SPACE")
             if not wait_log(COMMENCE_ASKED, 6, before=asked):
-                print(f"  commence try {attempt + 1}: Space didn't bring up \"Commence battle?\"")
-                nap(1)
+                # After a placing that leaves places open the screen waits on the next tile's unit list, which takes
+                # no Space (nor Tab): Escape (its Back) returns to the tiles, where Space commences with places left
+                # over (a two-group formation not filled, 2026-11-27).
+                print(f"  commence try {attempt + 1}: Space didn't bring up \"Commence battle?\"; Escape to the tiles")
+                send("key ESCAPE")
+                nap(2)
                 continue
         nap(4)  # the box takes no keys while it opens (an F 1.5 s after it was lost, 2026-11-18)
         snap(f"formation-{attempt + 1}-commence")

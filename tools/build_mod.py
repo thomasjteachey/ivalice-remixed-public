@@ -4165,7 +4165,14 @@ FRESH_ENTRY_BATTLES = {0x6F, 0x9D, 0xF8}
 # of another number, so the same event run again had its code and no text. The code mod's walker now has such a run
 # loaded afresh (RemixedScenarios.ReloadOnRerun), which is what ReMixed's other in-battle runs of one event needed
 # (their boxes came up empty); the splits stay, as seen working.
-AFTER_SPLITS = {0x115: 0x34C, 0x112: 0x352, 0x114: 0x353, 0x119: 0x354, 0x0F7: 0x355}
+# 0x0F7's copy had 0x355 from 0.9.32, the number the dispatch tavern's scene (TAVERN_SCENE) already had: the closing ran
+# 0x0F7's code on the tavern's record, so its map reload brought the tavern's battle entry in, Ramza placeholders, in
+# Agrias's and Valmafra's places (their boxes with Ramza's face, a stray Ramza at the map's edge) and the scene stuck
+# (a player on 0.9.40, 2026-11-27). The free numbers below 0x377 are used up, so it takes the remaster's 453, a temple
+# scene that can't run since TEMPLE_SECOND_WAVE took the battle before it; check_scenario_numbers stops the build on
+# two events at one number.
+AFTER_SPLITS = {0x115: 0x34C, 0x112: 0x352, 0x114: 0x353, 0x119: 0x354, 0x0F7: 0x1C5}
+REUSED_SCENARIO_NUMBERS |= {AFTER_SPLITS[0x0F7]}
 # Every generated event that contains an AFTER_BATTLE_RETURN hand-off. This deliberately includes inactive copies of
 # a split scene's victory label: keeping the transform global prevents a later condition or checkpoint from reviving
 # a display-state-7 map teardown. Each has exactly one such edge in ReMixed's source.
@@ -5516,6 +5523,29 @@ def write_unit_presets(battle_new: bytes, unit_presets: dict[int, bytes]) -> str
             f"{', '.join(str(p) for p in used)})")
 
 
+def scenario_number_owners() -> dict[int, list[str]]:
+    """Each event number the mod writes a script (and, but for the tavern's events and REMIXED_EVENTS, a record) at ->
+    what it's written for: ReMixed's scenarios, the battles split from their scenes, their post-battle runs, the
+    tavern's events and ReMixed's events at their own numbers."""
+    owners: dict[int, list[str]] = {}
+    for kind, numbers in (("scenario", REMIXED_SCENARIOS), ("split battle", BATTLE_SPLITS),
+                          ("post-battle run", AFTER_SPLITS), ("tavern event", TAVERN_EVENTS),
+                          ("event", {n: n for n in REMIXED_EVENTS})):
+        for theirs, ours in numbers.items():
+            owners.setdefault(ours, []).append(f"ReMixed's 0x{theirs:03X} ({kind})")
+    return owners
+
+
+def check_scenario_numbers() -> None:
+    """Exits when two of ReMixed's events take one number: the second written takes the first's script while the
+    record stays the first's, so it runs on the other's map, battle entry and units (AFTER_SPLITS: 0x0F7's closing
+    and the tavern's scene, 0.9.32-0.9.40)."""
+    shared = {ours: owners for ours, owners in scenario_number_owners().items() if len(owners) > 1}
+    if shared:
+        sys.exit("two events at one number: " + "; ".join(f"0x{ours:X}: {', '.join(owners)}"
+                                                          for ours, owners in sorted(shared.items())))
+
+
 def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
                             entry_unit_presets: dict[int, bytes]) -> tuple[str, bytes]:
     """ReMixed's scenarios (REMIXED_SCENARIOS), renumbered: their events as eventNNN.e with the code mod's mark, their
@@ -5660,6 +5690,7 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
     return_presets = {u16(records[theirs], 0x16): split_presets[theirs] for theirs in BATTLE_SPLITS if theirs != 0xF8}
     # Each of ReMixed's scenarios, then the battles split from their scenes (BATTLE_SPLITS), which share their scene's
     # text: (ReMixed's, the mod's, the scene's for a split battle).
+    check_scenario_numbers()
     jobs = [(theirs, ours, None) for theirs, ours in REMIXED_SCENARIOS.items()]
     jobs += [(theirs, battle, REMIXED_SCENARIOS[theirs]) for theirs, battle in BATTLE_SPLITS.items()]
     jobs += [(theirs, split, None) for theirs, split in AFTER_SPLITS.items()]  # their post-battle runs: as themselves
@@ -5872,7 +5903,7 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
         if ours in AFTER_SPLITS.values():
             # A post-battle copy is loaded by the live battle's conditions; it is not another battle setup. In
             # particular 0x0F7's code contains the formations for its earlier monster battle, which must not make the
-            # private closing event (0x355) advertise a deployable formation of its own.
+            # private closing event (0x1C5) advertise a deployable formation of its own.
             record[9:13] = bytes(4)
         if theirs not in TAVERN_EVENTS:
             scenarios.append(bytes(record))
@@ -8424,7 +8455,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata. The title screen's plaque shows it (write_title_screen).
-RELEASE_VERSION = "0.9.40"
+RELEASE_VERSION = "0.9.41"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:
