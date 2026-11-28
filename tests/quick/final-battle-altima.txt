@@ -1,0 +1,26 @@
+# The remaster's final battle (scenario 0x143: map 55, battle entry 0x1B9, Ultima's first form with four Ultima Demons)
+# straight from the harness's save, the AI playing the party (the PC's test mode). A Nexus user's report on 0.9.42:
+# the final boss moves once and the game freezes, again after a restart. Ultima teleports with an ability's effect
+# (0x318090), and the port had given those abilities ReMixed's Dark Knight effects without ReMixed's move of the
+# teleport to 0x1A0-0x1A3 (Patches/InPlace.cs), so her first turn never ended. Event 323 is the battle's opening (Ajora
+# becomes Ultima and summons the demons, then the conditions); event 324, scenario 0x144, is the change into the second
+# form in the middle of the battle. Started on its own it runs with no first form on the field and faults, and downing
+# the first form with `defeat` doesn't start it, so the second form's teleport isn't reached here. The harness runs a
+# requested stock scenario as scenario 2, which the game ends after the opening, so var 0x27 is set to 0x143 while the
+# opening plays and the battle follows it. The opening runs at x5.
+# About 6 minutes. Run with
+#   python -I tools/quick_test.py --restart tests/quick/final-battle-altima.txt
+name Final battle: Ultima's first turn ends
+wait world depth=1 state=0 timeout=20
+send speed 5
+scenario 0x143 event=0x143
+wait log "reveal treasures: map 55" press=RETURN every=1 timeout=150
+formation units=1
+wait log "loaded event 323" timeout=120
+setvar 0x27 0x143
+wait unit job=0x41 present=1 timeout=600 press=RETURN every=1
+show units
+wait unit job=0x41 turn=1 timeout=600 press=RETURN every=1.5
+shot first-form-turn
+wait unit job=0x41 turn=0 timeout=120
+shot first-form-after

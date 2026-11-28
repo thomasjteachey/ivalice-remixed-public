@@ -132,6 +132,29 @@ internal static unsafe class InPlace
             "F6 C1 40 74 09 41 F6 C3 01 75 03 83 F1 40 8B C1 25 CE 00 00 00 45 84 DB 0F 48 C1 8B C8 A8 0C 74 6C F6 43 64 02 " +
             "75 06 44 84 73 65 74 60 8B C8 81 E1 F3 00 00 00 EB 56",
             24, [0x0F, 0x48, 0xC1], [0x0F, 0x49, 0xC1]),
+        // Ultima's teleport (PS1 0x8008A700 and 0x8008A780; the remaster's 0x318090): her first form (sprite 0x41) and
+        // second (0x49) vanish and reappear with an ability's effect where everyone else's teleport is a sound. Vanilla
+        // plays 0xDB and 0xDC as she vanishes, 0xB8 and 0x028 as she reappears; ReMixed made those four slots abilities
+        // of its own (Teleport 3, Summon Angel, Summon Demon) and moved the teleport to 0x1A2, 0x1A3, 0x1A1 and 0x1A0,
+        // whose effects (AbilityEffectNumberFilterData) it set to vanilla's 231, 232, 192 and 43. The port took the
+        // effects without the move, so her first teleport in the final battle played a Dark Knight's ability and the
+        // battle waited for it for good (a Nexus user on 0.9.42). The four `mov edx` immediates take ReMixed's numbers.
+        new("Ultima reappears from her teleport as 0x1A1 (first form)",
+            "3C 41 74 2E 3C 49 74 20 8D 53 12 48 8B CE E8 ?? ?? ?? ?? 8D 4B 69 E8 ?? ?? ?? ?? 48 8B CE E8 ?? ?? ?? ?? " +
+            "E9 ?? ?? ?? ?? BA ?? ?? 00 00 E9 ?? ?? ?? ?? BA ?? ?? 00 00",
+            51, [0xB8, 0x00], [0xA1, 0x01]),
+        new("Ultima reappears from her teleport as 0x1A0 (second form)",
+            "3C 41 74 2E 3C 49 74 20 8D 53 12 48 8B CE E8 ?? ?? ?? ?? 8D 4B 69 E8 ?? ?? ?? ?? 48 8B CE E8 ?? ?? ?? ?? " +
+            "E9 ?? ?? ?? ?? BA ?? ?? 00 00 E9 ?? ?? ?? ?? BA ?? ?? 00 00",
+            41, [0x28, 0x00], [0xA0, 0x01]),
+        new("Ultima vanishes into her teleport as 0x1A2 (first form)",
+            "80 7E 0A 49 74 1D 8D 53 12 48 8B CE E8 ?? ?? ?? ?? 8D 4B 68 E8 ?? ?? ?? ?? 48 8B CE E8 ?? ?? ?? ?? " +
+            "EB 18 BA ?? ?? 00 00 EB 05 BA ?? ?? 00 00",
+            43, [0xDB, 0x00], [0xA2, 0x01]),
+        new("Ultima vanishes into her teleport as 0x1A3 (second form)",
+            "80 7E 0A 49 74 1D 8D 53 12 48 8B CE E8 ?? ?? ?? ?? 8D 4B 68 E8 ?? ?? ?? ?? 48 8B CE E8 ?? ?? ?? ?? " +
+            "EB 18 BA ?? ?? 00 00 EB 05 BA ?? ?? 00 00",
+            36, [0xDC, 0x00], [0xA3, 0x01]),
     ];
 
     // For the offline check: each change applied, where its pattern starts and the bytes written.

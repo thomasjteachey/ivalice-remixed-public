@@ -385,6 +385,15 @@ Everything else ReMixed's gameplay changes is ported or settled (Done), or waits
 or the story port (below). The formulas ReMixed rewrote in place were ported on 2026-11-12 (Done; to see in a
 battle, Testing).
 
+- [x] The final battle froze as Ultima first moved (a player on Nexus, 0.9.42, again after a restart). Ultima, in both
+  her forms, vanishes and reappears with an ability's effect when she teleports, where everyone else's teleport is a
+  sound. ReMixed made those four slots abilities of its own (its Dark Knight's Teleport 3, Summon Angel and Summon
+  Demon) and moved her teleport to four other slots, with the old effects; the port took the effects but not the move,
+  so her teleport played a Dark Knight's ability and the battle waited on it for good. Her teleport now uses ReMixed's
+  slots (`Patches/InPlace.cs`). Only Ultima teleports this way, so no other battle was affected. Seen in the hidden PC
+  game (`tests/quick/final-battle-altima.txt`, 2026-11-27): the battle straight after its opening, the first form's
+  turn hung before the fix and ends after it, Ultima teleporting and casting. The second form's teleport (the same
+  change) isn't seen in the game yet: the harness can't bring on the change of form. *small*
 - [ ] The lock-up a tester still had in 1-A's last battle on 0.9.35 (2026-11-23) is fixed for the way that could be
   found, a battle continued from an older build's autosave (below). A battle begun anew did not hang on the PC in any
   way tried. Still to hear from him: whether he pressed Continue or began the battle again, what the screen showed,

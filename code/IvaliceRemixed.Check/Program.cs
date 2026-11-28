@@ -1762,7 +1762,7 @@ internal static unsafe class SelfTest
         }
         var image = game.Image.ImageStart;
         Check($"{InPlace.Applied.Count} written ({string.Join(", ", InPlace.Applied.Select(a => $"{a.Name} 0x{a.At - image:X}"))})",
-              InPlace.Applied.Count == 13 && InPlace.Applied.All(a => new ReadOnlySpan<byte>((void*)a.At, a.Bytes.Length).SequenceEqual(a.Bytes)));
+              InPlace.Applied.Count == 17 && InPlace.Applied.All(a => new ReadOnlySpan<byte>((void*)a.At, a.Bytes.Length).SequenceEqual(a.Bytes)));
         // The AI's "can't be seen" test through the game's routine (0x48 before the patched test): a Transparent unit.
         var seen = InPlace.Applied.FirstOrDefault(a => a.Name.StartsWith("the AI sees"));
         if (seen.Name != null)
