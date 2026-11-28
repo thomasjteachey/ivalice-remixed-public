@@ -1,0 +1,70 @@
+# The Argath campaign's last battle at Fort Zeakden (ReMixed's event 0x102, the port's scenario 0x323), vanilla's
+# 0x04F retold: the tower's door opens after Zalbag and Argath's first lines (field object 0), the kidnapper comes
+# out onto the bridge with Tietra, and after the fourteenth line he goes back in and the door shuts (object 1), which
+# the remaster moves the redrawn map for as its scene 79's (the map's one animation), the build's
+# MAP_MOVEMENT_SCENES. The redrawn map draws the door open until that animation has played, since the remaster's own
+# scene opens it as it starts; ReMixed's is shut through its first lines and in the battle after the scene. So the
+# event puts the animation on its last frame as it starts (the code mod's line "set on its last frame", before the
+# scene and again before the battle) and back on its first after object 0 ("set to state 1"), the build's
+# MAP_ANIMATION_CALLS. Framed: the door shut as the camera passes it (the `first` film, some 15 to 25 s in), open
+# with the kidnapper in it (`opened`), shutting (`second`), and shut in the battle (`battle`).
+# How each part is framed: the scene is played fast to a line or two ahead, then at its own speed while the code
+# mod's line is waited for ("map movements: scenario ...'s field object N moves the redrawn map as the remaster's
+# scene M's", logged the first time each object starts in a run), with a press every 4 s to close the lines on the
+# way and a frame every second (film=: NAME-NNNN.png, tenths of a second into the wait), so the last of them is
+# the map just before the part moves, however the lines closed. Then a frame at once (NAME-at), six peeks of the
+# redrawn map's first animations (kind, state: 2 is running), and frames by the clock (NAME-after-NN, seconds).
+#   python -I tools/quick_test.py --restart tests/quick/zeakden-gate-argath.txt
+name The Argath campaign at Fort Zeakden: the tower's door (0x102)
+wait world depth=1 state=0 timeout=20
+scenario 0x323
+wait log "loaded event 803" timeout=90
+wait log "map movements: map animation 0 \(kind \d+\) set on its last frame" timeout=30
+wait log "map movements: scenario 0x323's field object 0 moves the redrawn map as the remaster's scene 79's" press=RETURN every=4 film=first timeout=180
+shot first-at
+send peek [[+0x3CC96B8]+0x24280]+0x20 8
+send peek [[+0x3CC96B8]+0x24280]+0x17BFC 8
+send peek [[+0x3CC96B8]+0x24280]+0x2F7D8 8
+send peek [[+0x3CC96B8]+0x24280]+0x473B4 8
+send peek [[+0x3CC96B8]+0x24280]+0x5EF90 8
+send peek [[+0x3CC96B8]+0x24280]+0x76B6C 8
+wait log "map movements: map animation 0 \(kind \d+\) set to state 1" timeout=10
+shot opened-at
+wait seconds 1
+shot opened-after-01
+wait seconds 1
+shot opened-after-02
+wait seconds 2
+shot opened-after-04
+wait seconds 3
+shot opened-after-07
+send speed 5
+wait log "map movements: scenario 0x323's field object 1 moves the redrawn map as the remaster's scene 79's" press=RETURN every=1 film=second film_every=0.4 timeout=600
+send speed off
+shot second-at
+send peek [[+0x3CC96B8]+0x24280]+0x20 8
+send peek [[+0x3CC96B8]+0x24280]+0x17BFC 8
+send peek [[+0x3CC96B8]+0x24280]+0x2F7D8 8
+send peek [[+0x3CC96B8]+0x24280]+0x473B4 8
+send peek [[+0x3CC96B8]+0x24280]+0x5EF90 8
+send peek [[+0x3CC96B8]+0x24280]+0x76B6C 8
+wait seconds 1
+shot second-after-01
+wait seconds 1
+shot second-after-02
+wait seconds 2
+shot second-after-04
+wait seconds 3
+shot second-after-07
+send speed 5
+wait log "formation: screen open" press=RETURN every=1 timeout=400
+send speed off
+formation units=1
+wait log "map movements: map animation 0 \(kind \d+\) set on its last frame" timeout=120
+send peek [[+0x3CC96B8]+0x24280]+0x20 8
+wait seconds 8
+shot battle-08
+wait seconds 8
+shot battle-16
+wait seconds 8
+shot battle-24

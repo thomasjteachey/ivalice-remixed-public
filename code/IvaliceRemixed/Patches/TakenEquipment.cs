@@ -4,7 +4,10 @@ namespace IvaliceRemixed.Patches;
 
 /// <summary>
 /// ReMixed's "equipment taken from your own units isn't lost", the stolen half: an item stolen from one of your units
-/// comes back to the inventory after the battle. Installed by <see cref="Rules"/> with "taken-equipment".
+/// comes back to the inventory after the battle. With the mod's Broken equipment setting at BackAfterBattle (not
+/// ReMixed's: its broken items go on sale at the Poachers' Den, which the remaster's den has no room for) a broken one
+/// comes back the same way, and so does a katana Draw Out breaks (<see cref="KatanaBreak"/>). Installed by
+/// <see cref="Rules"/> with "taken-equipment".
 /// </summary>
 /// <remarks>
 /// <para>ReMixed's taking step (PS1 0x8018D3F8, rewritten in place to 0x8018D4D4): for each slot it empties, unless the
@@ -22,7 +25,9 @@ namespace IvaliceRemixed.Patches;
 /// </remarks>
 internal static unsafe class TakenEquipment
 {
-    public const int Slots = 0x1A, SlotCount = 7, Empty = 0xFF, Items = 0x105, Steal = 0x10, MaxOwned = 99;
+    /// <summary>The result's +0x12: <see cref="Steal"/> hands the item to the thief, <see cref="Break"/> only empties the
+    /// slot (the taking step tests both, 0x14).</summary>
+    public const int Slots = 0x1A, SlotCount = 7, Empty = 0xFF, Items = 0x105, Steal = 0x10, Break = 0x04, MaxOwned = 99;
 
     private static Game _game = null!;
     private static delegate* unmanaged<void*> _taking;      // the original: returns whether anything was taken
@@ -90,11 +95,15 @@ internal static unsafe class TakenEquipment
     }
 
     /// <summary>
-    /// After the taking: each slot a steal emptied on one of the player's units goes in the pool. Returns how many.
+    /// After the taking: each slot a steal emptied on one of the player's units goes in the pool, and each one a break
+    /// emptied with the Broken equipment setting at BackAfterBattle. Returns how many.
     /// </summary>
     internal static int Note(byte* owner, byte* result, ushort* before)
     {
-        if (result == null || (result[0x12] & Steal) == 0 || !Players(owner))
+        if (result == null || !Players(owner))
+            return 0;
+        var stolen = (result[0x12] & Steal) != 0;
+        if (!stolen && ((result[0x12] & Break) == 0 || !BrokenComesBack))
             return 0;
         var noted = 0;
         var slots = (ushort*)(owner + Slots);
@@ -105,9 +114,23 @@ internal static unsafe class TakenEquipment
                 continue;
             Pool[item]++;
             noted++;
-            Tracer.Line(_game.Log, $"taken equipment: item 0x{item:X3} stolen from unit {owner[Battle.UnitIndex]} comes back after the battle");
+            _game.Log.Info($"taken equipment: item 0x{item:X3} {(stolen ? "stolen from" : "broken on")} unit {owner[Battle.UnitIndex]} comes back after the battle");
         }
         return noted;
+    }
+
+    /// <summary>Whether broken equipment comes back after the battle (the mod's Broken equipment setting).</summary>
+    internal static bool BrokenComesBack => Options.Current.BrokenEquipment == Options.BrokenEquipmentRule.BackAfterBattle;
+
+    /// <summary>A broken item of the player's (Draw Out's katana) back after the battle, with the setting on; whether
+    /// it was pooled.</summary>
+    internal static bool Broken(int item)
+    {
+        if (!BrokenComesBack || item is 0 or Empty || item >= Items || Pool[item] == 0xFF)
+            return false;
+        Pool[item]++;
+        _game?.Log.Info($"taken equipment: item 0x{item:X3} broken (Draw Out) comes back after the battle");
+        return true;
     }
 
     /// <summary>One of the player's units: in the roster (+2), or a guest on the player's team that the player controls.</summary>
@@ -128,7 +151,7 @@ internal static unsafe class TakenEquipment
             var room = MaxOwned - equipped - have;
             var back = Math.Clamp(pool, 0, Math.Max(room, 0));
             Inventory[item] = (byte)(have + back);
-            Tracer.Line(_game.Log, $"taken equipment: {back} of item 0x{item:X3} back in the inventory ({pool} stolen)");
+            _game.Log.Info($"taken equipment: {back} of item 0x{item:X3} back in the inventory ({pool} taken)");
         }
     }
 

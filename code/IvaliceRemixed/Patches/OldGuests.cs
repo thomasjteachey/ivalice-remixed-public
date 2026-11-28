@@ -364,9 +364,52 @@ internal static unsafe class OldGuests
             _log.Info($"old guests: repaired {repaired} roster record(s) from an earlier build");
         if (_getVariable == null)
             return; // at install: the title screen's roster, no save's variables yet
-        var gone = DismissDepartedPerformers(_roster, _inventory, _getVariable(StoryProgress));
+        var progress = _getVariable(StoryProgress);
+        var gone = DismissDepartedPerformers(_roster, _inventory, progress);
         if (gone != 0)
             _log.Info($"old guests: dismissed {gone} of Bryn and Lorne, who left at 1-A's river camp (an earlier build missed them)");
+        if (GuestSideChapterAgrias(_roster, progress) is >= 0 and var slot)
+            _log.Info($"old guests: 1-A's Agrias made chapter 2's guest in place of the second Agrias an earlier build "
+                      + $"made (roster slot {slot} to guest slot)");
+    }
+
+    /// <summary>Chapter 2's guest Agrias, from its opening (progress 0xF, event 117) until event 158 takes her out
+    /// (<see cref="GuestAgriasUntil"/>).</summary>
+    internal const int GuestAgriasFrom = 0xF, GuestAgriasUntil = 0x16;
+
+    /// <summary>
+    /// A save made with a build before 0.9.43 after side chapter 1-A has two Agrias in chapter 2: 1-A's (name id 0x1E)
+    /// in a party slot, where 0x11A put her (ReMixed's guest slot 18 was the remaster's party slot 18), and the guest
+    /// the remaster's opening made (name id 0x34, its guest Agrias's) in a guest slot. ReMixed has 1-A's as the guest
+    /// (tools/build_mod.py SIDE_CHAPTER_A_GUEST), so she takes the guest's slot, her levels and gear with her, and her
+    /// party slot is emptied; the opening's guest and the gear it came with go. Only while Agrias is a guest. Returns
+    /// the party slot she came from, or -1.
+    /// </summary>
+    internal static int GuestSideChapterAgrias(byte* roster, int progress)
+    {
+        if (roster == null || progress is < GuestAgriasFrom or >= GuestAgriasUntil)
+            return -1;
+        int guest = -1, party = -1;
+        for (var slot = 1; slot < FirstGuestSlot + GuestSlots; slot++)
+        {
+            var record = roster + slot * UnitTables.RosterSize;
+            if (record[1] == 0xFF || record[0] != Agrias)
+                continue;
+            var name = *(int*)(record + RosterName);
+            if (slot >= FirstGuestSlot && name == OldAgrias && guest < 0)
+                guest = slot;
+            else if (slot < FirstGuestSlot && name == Agrias && party < 0)
+                party = slot;
+        }
+        if (guest < 0 || party < 0)
+            return -1;
+        var into = roster + guest * UnitTables.RosterSize;
+        var from = roster + party * UnitTables.RosterSize;
+        var number = into[1];
+        new Span<byte>(from, UnitTables.RosterSize).CopyTo(new Span<byte>(into, UnitTables.RosterSize));
+        into[1] = number;
+        from[1] = 0xFF;
+        return party;
     }
 
     /// <summary>

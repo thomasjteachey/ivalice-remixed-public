@@ -13,6 +13,8 @@ Buttons: CROSS SQUARE TRIANGLE CIRCLE START SELECT UP DOWN LEFT RIGHT L1 R1 L2 R
     peek ADDR LEN | poke ADDR HEX
                              RAM, by PS1 address (hex)
     defeat                   the battle's deployed enemies: HP 0 and Dead, as the remaster harness's defeat does
+    scenario HEX             from the state wm: start ReMixed's scenario HEX (the cursor to Mandalia Plains, Circle, and
+                             the scenario written into var 0x27 in place of Mandalia's 5); film what follows
     instrument | counters    count the world map's window callbacks (WLDCORE 0x8009E690, 57 types) through stubs at
                              0x800A8000 (free on the world map), then print and reset the counts
     card                     write the memory card to the run folder's card.mcd
@@ -80,6 +82,17 @@ for command in " ".join(sys.argv[2:]).split(";"):
                 seen.append(f"{i}: {n}x a0 {a0:08X} [a0] {first if first is None else hex(first)}")
         log(p[1] if len(p) > 1 else "counters", "; ".join(seen) or "none")
         emu.poke(0x800A9000, bytes(57 * 8))
+    elif op == "scenario":  # from `wm`: the cursor to Mandalia Plains, Circle, and var 0x27 (5 there) made the one asked
+        emu.run(60)
+        emu.hold("UP", 10)
+        emu.run(20)
+        emu.hold("LEFT", 10)
+        emu.run(20)
+        emu.tap("CIRCLE", 0)
+        if emu.u32(0x800577B8) != 5:
+            sys.exit(f"var 0x27 is 0x{emu.u32(0x800577B8):X}, not Mandalia's 5: `scenario` starts from the state wm")
+        emu.poke(0x800577B8, int(p[1], 16).to_bytes(4, "little"))
+        log(f"scenario 0x{int(p[1], 16):X} in var 0x27")
     elif op == "card":
         emu.save_card(os.path.join(HOME, "card.mcd"))
     else:

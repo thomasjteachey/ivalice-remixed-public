@@ -289,18 +289,28 @@ def wait_record(kind: str, wanted: dict[str, int], timeout: float, case: str, li
     raise CaseFailure(f"{case}:{line}: {kind} did not appear in {timeout:g}s ({describe(wanted)})")
 
 
-def wait_log_pressing(pattern: str, timeout: float, before: int, press: str | None, every: float) -> bool:
+def wait_log_pressing(pattern: str, timeout: float, before: int, press: str | None, every: float,
+                      film: Path | None = None, film_every: float = 1.0) -> bool:
     """Whether a log line matching pattern beyond the first `before` comes within timeout, pressing `press` (if any)
-    every `every` seconds meanwhile, as a player confirming through a scene would."""
-    deadline = time.monotonic() + timeout
-    next_press = time.monotonic() + every
+    every `every` seconds meanwhile, as a player confirming through a scene would. With `film` (a path's start), a
+    frame every `film_every` seconds while waiting (film-NNNN.png, tenths of a second into the wait): the last one
+    is the scene just before the line came, whatever the presses closed on the way."""
+    began = time.monotonic()
+    deadline = began + timeout
+    next_press = began + every
+    next_frame = began
     while time.monotonic() < deadline:
         if harness.count_log(pattern) > before:
             return True
+        if film is not None and time.monotonic() >= next_frame:
+            tenths = round((time.monotonic() - began) * 10)
+            harness.shot(argparse.Namespace(file=film.with_name(f"{film.name}-{tenths:04d}.png")))
+            next_frame = time.monotonic() + film_every
+            continue  # the line may have come while the frame was taken: look before any press
         if press and time.monotonic() >= next_press:
             harness.send(f"key {press}")
             next_press = time.monotonic() + every
-        time.sleep(0.25)
+        time.sleep(0.1 if film is not None else 0.25)
     return harness.count_log(pattern) > before
 
 
@@ -426,7 +436,10 @@ def run_case(path: Path) -> None:
                             wanted[key] = number(value)
                     snapshots[kind] = wait_record(kind, wanted, timeout, case, line_number, press, every)
                 elif kind == "log":
-                    timeout, press, every = 20.0, None, 1.0
+                    # wait log PATTERN [timeout=S] [press=KEY every=S] [film=NAME [film_every=S]]: with film, frames
+                    # NAME-NNNN.png in the case's folder while waiting (tenths of a second in), the last one just
+                    # before the line came.
+                    timeout, press, every, film, film_every = 20.0, None, 1.0, None, 1.0
                     patterns = []
                     for arg in args[1:]:
                         if arg.startswith("timeout="):
@@ -435,12 +448,17 @@ def run_case(path: Path) -> None:
                             press = arg.split("=", 1)[1]
                         elif arg.startswith("every="):
                             every = float(arg.split("=", 1)[1])
+                        elif arg.startswith("film="):
+                            film = SHOTS / path_name(case_file) / arg.split("=", 1)[1]
+                        elif arg.startswith("film_every="):
+                            film_every = float(arg.split("=", 1)[1])
                         else:
                             patterns.append(arg)
                     pattern = " ".join(patterns)
                     if pattern not in log_matches:
                         log_matches[pattern] = harness.count_log(pattern, starting_logs)
-                    found = (wait_log_pressing(pattern, timeout, log_matches[pattern], press, every) if press
+                    found = (wait_log_pressing(pattern, timeout, log_matches[pattern], press, every, film, film_every)
+                             if press or film
                              else harness.wait_log(pattern, timeout, before=log_matches[pattern]) is not None)
                     if not found:
                         raise CaseFailure(f"log did not match {pattern!r} in {timeout:g}s")
@@ -507,10 +525,18 @@ def run_case(path: Path) -> None:
                         raise CaseFailure(f"var 0x{variable:X}: expected 0x{expected:X}, got 0x{actual:X}")
                     print(f"PASS {case}: var 0x{variable:X}=0x{actual:X}")
                 elif kind == "peek":
-                    # expect peek ADDRESS BYTE...: the bytes there (hex; `+0x2FCF86C` an address in the game's image)
-                    at = harness.image_base() + number(args[1][1:]) if args[1].startswith("+") else number(args[1])
+                    # expect peek ADDRESS BYTE...: the bytes there (hex; `+0x2FCF86C` an address in the game's image,
+                    # `[[+0x3CC96B8]+0x24280]+0x18` one behind pointers, as `send peek` takes it)
                     expected_bytes = bytes.fromhex("".join(args[2:]))
-                    actual_bytes = harness.peek_bytes(at, len(expected_bytes))
+                    if args[1].startswith("["):
+                        text = harness.send(f"peek {args[1]} {len(expected_bytes)}")
+                        if text.startswith("error"):
+                            raise CaseFailure(f"peek {args[1]}: {text}")
+                        actual_bytes = b"".join(bytes.fromhex(line[6:6 + 47].strip())
+                                                for line in text.splitlines()[1:])[:len(expected_bytes)]
+                    else:
+                        at = harness.image_base() + number(args[1][1:]) if args[1].startswith("+") else number(args[1])
+                        actual_bytes = harness.peek_bytes(at, len(expected_bytes))
                     if actual_bytes != expected_bytes:
                         raise CaseFailure(f"peek {args[1]}: expected {expected_bytes.hex(' ')}, got {actual_bytes.hex(' ')}")
                     print(f"PASS {case}: peek {args[1]} = {actual_bytes.hex(' ')}")

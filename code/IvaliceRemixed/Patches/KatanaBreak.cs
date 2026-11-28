@@ -137,6 +137,9 @@ internal static unsafe class KatanaBreak
         code.ToArray().CopyTo(new Span<byte>(stub, code.Count));
     }
 
+    /// <summary>The game's roll, then ReMixed's rules. A preview (the targeting screen's, the AI's: the battle's
+    /// simulating flag) gets 0x1000 from the game without a roll; it's left as it is and remembers no break, which would
+    /// break the katana in the same unit's next real action (read in the remaster's roll, 2026-11-27).</summary>
     [UnmanagedCallersOnly]
     private static void Roll()
     {
@@ -145,11 +148,14 @@ internal static unsafe class KatanaBreak
         {
             var attacker = *_game.Battle.Attacker;
             var own = *_game.Routines.AttackerResult;
-            if (attacker == null || own == null || *(ushort*)(own + 0x12) != Broken)
+            if (attacker == null || own == null || *(ushort*)(own + 0x12) != Broken || *_game.Routines.Simulating != 0)
                 return;
             if (!Spared(attacker))
             {
-                *Broke = attacker - _game.TurnCode.Units + 1; // the setup's decision breaks it for this action
+                var unit = attacker - _game.TurnCode.Units + 1;
+                if (*Broke != unit && TakenEquipment.Players(attacker)) // once an action, as the katana breaks once
+                    TakenEquipment.Broken(*(ushort*)(own + 4));
+                *Broke = unit; // the setup's decision breaks it for this action
                 Tracer.Line(_game.Log, $"katana break: the roll broke it (job 0x{attacker[3]:X2}, skillset 0x{attacker[0x1A1]:X2})");
                 return;
             }

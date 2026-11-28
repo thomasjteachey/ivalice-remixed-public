@@ -1,0 +1,36 @@
+# The Argath campaign's second scene at the Beoulve manor (ReMixed's event 0x106, the port's scenario 0x319), on
+# vanilla 0x036's map: after the seventh line the door opens (field object 1) and Argath walks out. The redrawn door
+# goes by the remaster's scene 54 (the map's second animation), as in 0x012 (beoulve-manor-door-reprimand.txt).
+# How each part is framed: the scene is played fast to a line or two ahead, then at its own speed while the code
+# mod's line is waited for ("map movements: scenario ...'s field object N moves the redrawn map as the remaster's
+# scene M's", logged the first time each object starts in a run), with a press every 4 s to close the lines on the
+# way and a frame every second (film=: NAME-NNNN.png, tenths of a second into the wait), so the last of them is
+# the map just before the part moves, however the lines closed. Then a frame at once (NAME-at), six peeks of the
+# redrawn map's first animations (kind, state: 2 is running), and frames by the clock (NAME-after-NN, seconds).
+#   python -I tools/quick_test.py --restart tests/quick/beoulve-manor-door-farewell.txt
+name The Argath campaign at the Beoulve manor: the door (0x106)
+wait world depth=1 state=0 timeout=20
+scenario 0x319
+wait log "loaded event 793" timeout=90
+wait seconds 12
+shot scene-start
+send speed 5
+wait log "event 793's message (5|33) shown" press=RETURN every=1 timeout=300
+send speed off
+wait log "map movements: scenario 0x319's field object 1 moves the redrawn map as the remaster's scene 54's" press=RETURN every=4 film=door timeout=180
+expect peek [[+0x3CC96B8]+0x24280]+0x17C00 02 00 00 00
+shot door-at
+send peek [[+0x3CC96B8]+0x24280]+0x20 8
+send peek [[+0x3CC96B8]+0x24280]+0x17BFC 8
+send peek [[+0x3CC96B8]+0x24280]+0x2F7D8 8
+send peek [[+0x3CC96B8]+0x24280]+0x473B4 8
+send peek [[+0x3CC96B8]+0x24280]+0x5EF90 8
+send peek [[+0x3CC96B8]+0x24280]+0x76B6C 8
+wait seconds 1
+shot door-after-01
+wait seconds 1
+shot door-after-02
+wait seconds 2
+shot door-after-04
+wait seconds 3
+shot door-after-07

@@ -1,0 +1,59 @@
+# Inside Eagrose Castle in Zalbag's story (ReMixed's event 0x06F, the port's scenario 0x373), vanilla's 0x1B4 retold:
+# after Dycedarg and Zalbag's first lines a door opens for the first Hokuten knight (field object 4), and after "My
+# lord!" another for the last two (object 0). The remaster moves the redrawn hall's doors for both from its code's
+# list, by the scene's number (436: its map's first animation for object 4, its second for object 0); ReMixed's
+# scene under the port's number is now asked as that scene (the build's MAP_MOVEMENT_SCENES). The battle's formation
+# comes first here (started on its own; after ReMixed's arrival scene it follows that), then its scene.
+# How each part is framed: the scene is played fast to a line or two ahead, then at its own speed while the code
+# mod's line is waited for ("map movements: scenario ...'s field object N moves the redrawn map as the remaster's
+# scene M's", logged the first time each object starts in a run), with a press every 4 s to close the lines on the
+# way and a frame every second (film=: NAME-NNNN.png, tenths of a second into the wait), so the last of them is
+# the map just before the part moves, however the lines closed. Then a frame at once (NAME-at), six peeks of the
+# redrawn map's first animations (kind, state: 2 is running), and frames by the clock (NAME-after-NN, seconds).
+#   python -I tools/quick_test.py --restart tests/quick/eagrose-hall-doors.txt
+name Inside Eagrose Castle: the hall's doors
+wait world depth=1 state=0 timeout=20
+scenario 0x373
+wait log "formation: screen open" timeout=150
+formation units=1
+wait log "loaded event 883" timeout=90
+send speed 5
+wait log "event 883's message (4|20) shown" press=RETURN every=1 timeout=300
+send speed off
+wait log "map movements: scenario 0x373's field object 4 moves the redrawn map as the remaster's scene 436's" press=RETURN every=4 film=first-door timeout=180
+expect peek [[+0x3CC96B8]+0x24280]+0x24 02 00 00 00
+shot first-door-at
+send peek [[+0x3CC96B8]+0x24280]+0x20 8
+send peek [[+0x3CC96B8]+0x24280]+0x17BFC 8
+send peek [[+0x3CC96B8]+0x24280]+0x2F7D8 8
+send peek [[+0x3CC96B8]+0x24280]+0x473B4 8
+send peek [[+0x3CC96B8]+0x24280]+0x5EF90 8
+send peek [[+0x3CC96B8]+0x24280]+0x76B6C 8
+wait seconds 1
+shot first-door-after-01
+wait seconds 1
+shot first-door-after-02
+wait seconds 2
+shot first-door-after-04
+wait seconds 3
+shot first-door-after-07
+send speed 5
+wait log "event 883's message (7|23) shown" press=RETURN every=1 timeout=300
+send speed off
+wait log "map movements: scenario 0x373's field object 0 moves the redrawn map as the remaster's scene 436's" press=RETURN every=4 film=second-door timeout=180
+expect peek [[+0x3CC96B8]+0x24280]+0x17C00 02 00 00 00
+shot second-door-at
+send peek [[+0x3CC96B8]+0x24280]+0x20 8
+send peek [[+0x3CC96B8]+0x24280]+0x17BFC 8
+send peek [[+0x3CC96B8]+0x24280]+0x2F7D8 8
+send peek [[+0x3CC96B8]+0x24280]+0x473B4 8
+send peek [[+0x3CC96B8]+0x24280]+0x5EF90 8
+send peek [[+0x3CC96B8]+0x24280]+0x76B6C 8
+wait seconds 1
+shot second-door-after-01
+wait seconds 1
+shot second-door-after-02
+wait seconds 2
+shot second-door-after-04
+wait seconds 3
+shot second-door-after-07

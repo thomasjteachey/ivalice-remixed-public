@@ -1,0 +1,28 @@
+# Broken equipment comes back after the battle (a player's request on 0.9.40, 2026-11-27: the Rendezvous knights break
+# gear constantly). With the mod's Broken equipment setting at BackAfterBattle, an item broken on one of your units goes
+# back in the inventory as the battle ends, as a stolen one does. Run with
+#   python -I tools/quick_test.py --restart --location 24 --stop tests/quick/broken-equipment-back.txt
+# A random battle on Mandalia Plains, the setting on for this run (`send option`, Config.json untouched), two units
+# placed, each given Arts of War (0x07) as its secondary with Rend Helm (0x8A: bit 0x40 of +0xA8, the Knight's learned
+# bits), PA 99 and a Grand Helmet (0x9C) on its head (+0x1A), none in the inventory. The first of them to act uses
+# Rend Helm on the other (`ally`); the break is noted, the enemies are downed, and after the battle the inventory holds
+# one Grand Helmet.
+name Broken equipment comes back after the battle
+send testmode record
+send option BrokenEquipment BackAfterBattle
+wait world depth=1 state=0 timeout=20
+key RETURN
+wait log "reveal treasures: map" press=RETURN every=3 timeout=180
+formation units=2
+poke unit player=1 present=1 offset=0x13 hex=07
+poke unit player=1 present=1 offset=0xA8 or=40
+poke unit player=1 present=1 offset=0x3E hex=63
+poke unit player=1 present=1 offset=0x1A hex=9C00
+send poke +0x11A7C9C 00
+send act 07 08A ally
+wait log "harness: unit \d+ uses 0x08A" timeout=240
+wait log "taken equipment: item 0x09C broken on unit \d+ comes back after the battle" timeout=60
+shot broken
+defeat
+wait log "taken equipment: 1 of item 0x09C back in the inventory" press=RETURN every=3 timeout=240
+expect peek +0x11A7C9C 01

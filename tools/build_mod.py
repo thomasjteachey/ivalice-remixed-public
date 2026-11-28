@@ -805,7 +805,7 @@ CODE_RULES = ["unevadable", "team-targeting", "auras", "limit-charge", "status-t
               "riding-actions", "persistent-performances", "hitting-bodies", "arc-obstacles",
               "taken-equipment", "victory-bonus",
               "move-find", "nemesis", "separate-saves", "remixed-events", "pack-files", "remixed-sprites",
-              "remixed-faces", "old-guests", "guest-lookup", "remixed-scenarios", "world-roads",
+              "remixed-faces", "old-guests", "guest-lookup", "map-movements", "remixed-scenarios", "world-roads",
               "unit-presets", "story-ai"]
 
 
@@ -1488,6 +1488,11 @@ OPTIONS_PAGE = [
          "changed, but Rare equipment will no longer be able to be stolen,\nand invited humans will no longer join "
          "after battle. Unique items are unchanged.",
          [("LeftOut", "No random Rare gear"), ("Allowed", "Random Rare gear")]),
+        # The mod's own, not ReMixed's (asked 2026-11-27, a player's request): kept in the mod's settings.
+        ("BrokenEquipment", "Broken Equipment",
+         "Equipment broken on your units in battle (Rend, or a katana in Draw Out):\nNot in ReMixed. For every "
+         "save: kept in the mod's settings.",
+         [("Lost", "Is lost"), ("BackAfterBattle", "Returns after battle")]),
     ]),
     ("Permadeath", [
         ("PlayerDeaths", "Player Deaths",
@@ -1561,7 +1566,7 @@ OPTIONS_PAGE = [
 ]
 # Options the mod keeps in its settings (Config.json) for every save rather than in the save, which the page changes
 # there.
-OPTIONS_PAGE_MOD = {"FastForward"}
+OPTIONS_PAGE_MOD = {"FastForward", "BrokenEquipment"}
 
 
 def options_page(first_text: int) -> tuple[dict[int, str], dict, dict]:
@@ -2953,7 +2958,14 @@ WAIT_FOR_MESSAGES = bytes([0xE5, 0x01, 0x00])
 # ReMixed's does, a press during it still closes it, and nothing waits on a press. Event: the three instructions.
 TIMED_NOTICES = {0xA4: (bytes.fromhex("F1 90 01"), bytes.fromhex("E5 01 00"), bytes.fromhex("51 03 FF FF 00 00"))}
 NOTICE_STYLE_PLACE = 0xF0
-NOTICE_MESSAGES = {0xA4: {19}, 0xEC: {26, 28}}
+# The same holds for every line of ReMixed's in the narration layer that ends on a press (its FE) with the event waiting
+# on it (E5 1, at once or after a few steps), checked in all the shipped events (2026-11-26): 1-A's prologue (0x0EC and
+# 0x111, its copy in the PSP script, which is the one that runs), the Stone's four lines at Eagrose (0x10E: "Holder of
+# the Holy Stone...", style 9, the voice with no box; a tester on 0.9.39: "some on screen text that SPEEDS by") and
+# the Argath campaign's opening narration (0x0FD's "During the Fifty Year War..."). ReMixed's timed narration (its FF:
+# the Argath campaign's ending, 0x103's 12, and its credits, 0x0A2) would need a hold instead, as 0x0A4's has: open in
+# docs/GAMEPLAY_TODO.md.
+NOTICE_MESSAGES = {0xA4: {19}, 0xEC: {26, 28}, 0x111: {26, 28}, 0x10E: {2, 4, 8, 11}, 0x0FD: {18}}
 NOTICE_BOX_PLACE = 0x98
 for _event in NOTICE_MESSAGES:
     EVENT_BOXES.setdefault(_event, {}).update({NOTICE_STYLE_PLACE | box:
@@ -3054,6 +3066,22 @@ ALGUS_HIGH_MARKS = {0xFD: (bytes([0xAE, 0x18, 0x00, 0x10, 0x00]), bytes([0xAE, 0
                     0xFE: (bytes([0xAE, 0x01, 0x00, 0xE0, 0x00]), bytes([0xAE, 0x01, 0x00, 0x00, 0x00]))}
 for _event, _mark in ALGUS_HIGH_MARKS.items():
     EVENT_CODE_PATCHES.setdefault(_event, []).append(_mark)
+# 1-A's end (0x11A) makes its Agrias chapter 2's guest Agrias: it moves her (ReMixed's roster swap) into the PS1's
+# roster slot 18 (0x80059174, +1 = 0x12), its third guest slot (the PS1 keeps its guests in 16-19; 1-A's Valmafra and
+# Elias are in the first two), so its chapter 2 finds her there and makes no Agrias of its own (0x01B). The remaster's
+# guests are in 50-53, so slot 18 is an ordinary party slot there: she stayed a party unit, and the remaster's chapter-2
+# opening (event 117) saved a guest Agrias of its own beside her (a player, 2026-11-27: two Agrias, Alicias and Lavians,
+# and their gear; RosterGuard keeps the repeats out of the join). She goes to the remaster's third guest slot, 52, at the
+# PS1 address the upgrade gives it (Ps1Memory.RosterAddress: 0x80E00000 + 52 x 0x100), +1 its number. The upgrade's
+# swap reads either address (RemixedEvents.SwapRoster).
+SIDE_CHAPTER_A_GUEST_SLOT = 52
+_GUEST_ADDRESS = 0x80E00000 + SIDE_CHAPTER_A_GUEST_SLOT * 0x100
+SIDE_CHAPTER_A_GUEST = [
+    (bytes.fromhex("b0 01 00 74 91"),  # ADD var 1, 0x9174 (var 1 is 0x80050000): slot 18
+     bytes([0xAC, 0x01, 0x00]) + (_GUEST_ADDRESS >> 16).to_bytes(2, "little")
+     + bytes([0xB0, 0x01, 0x00]) + (_GUEST_ADDRESS & 0xFFFF).to_bytes(2, "little")),
+    (bytes.fromhex("ae 00 00 12 00"), bytes([0xAE, 0x00, 0x00, SIDE_CHAPTER_A_GUEST_SLOT, 0x00]))]  # its +1
+EVENT_CODE_PATCHES.setdefault(0x11A, []).extend(SIDE_CHAPTER_A_GUEST)
 
 
 def question_box(code: bytes, lengths: bytes, question: tuple[int, int, int] | None) -> bytes:
@@ -3080,6 +3108,18 @@ def question_box(code: bytes, lengths: bytes, question: tuple[int, int, int] | N
     return bytes(out)
 
 
+def shown_notices(code: bytes, lengths: bytes, notices: set[int]) -> set[int]:
+    """The messages NOTICE_MESSAGES' MESSAGEs show as the event runs: where ReMixed writes the number in (the PSP
+    script's, as in 0x0FD: its 18 shows as 38), the one message_numbers works out, else their own."""
+    numbers, out, at = message_numbers(code, lengths), set(), 0
+    while at < len(code):
+        if code[at] == 0x10 and u16(code, at + 3) in notices:
+            shown = numbers.get(at)
+            out.add(u16(code, at + 3) if shown is None else shown)
+        at += 1 + lengths[code[at]]
+    return out
+
+
 def timed_notice(code: bytes, parts: tuple[bytes, bytes, bytes] | None) -> bytes:
     """A notice's wait, hold and close (TIMED_NOTICES) as wait, close, hold: it closes on its own."""
     if parts is None:
@@ -3090,12 +3130,30 @@ def timed_notice(code: bytes, parts: tuple[bytes, bytes, bytes] | None) -> bytes
     return code.replace(wait + hold + close, wait + close + hold)
 
 
-def notice_boxes(code: bytes, lengths: bytes, messages: set[int] | None) -> bytes:
+def closed_by_event(code: bytes, lengths: bytes, at: int, box: int) -> bool:
+    """Whether the event's next use of a box from `at` on is a close of it (0x51 with no message), rather than a
+    MESSAGE or a swap into it, or its END."""
+    while at < len(code):
+        ins = code[at:at + 1 + lengths[code[at]]]
+        at += len(ins)
+        if ins[0] == 0xDB:
+            return False
+        if ins[0] == 0x10 and len(ins) == 15 and ins[2] & 3 == box:
+            return False
+        if ins[0] == 0x51 and len(ins) == 6 and ins[1] == box:
+            return u16(ins, 2) == CLOSE_BOX
+    return False
+
+
+def notice_boxes(code: bytes, lengths: bytes, messages: set[int] | None) -> tuple[bytes, int]:
     """Put one-shot narration messages in private speech-box styles. Their existing E5 1 waits then require a player
-    press, and keeping the source box number lets the event's own close release the wait that follows it."""
+    press, and keeping the source box number lets the event's own close release the wait that follows it. Where the
+    event doesn't close the box before using it again (ReMixed's line closed itself on the press, as the Stone's do in
+    0x10E), the box is closed after the wait: in a speech window it stayed up, the line and then an empty frame, over
+    the scene's next lines (seen on the PC, 2026-11-28). Returns the code and the number of closes added."""
     if not messages:
-        return code
-    out, at, found = bytearray(), 0, set()
+        return code, 0
+    out, at, found, waiting, closed = bytearray(), 0, set(), set(), 0
     while at < len(code):
         ins = bytearray(code[at:at + 1 + lengths[code[at]]])
         at += len(ins)
@@ -3106,11 +3164,18 @@ def notice_boxes(code: bytes, lengths: bytes, messages: set[int] | None) -> byte
                 sys.exit(f"ReMixed's notice message {message} has unsupported box {box}")
             ins[2] = NOTICE_STYLE_PLACE | box
             found.add(message)
+            waiting.add(box)
         out += ins
+        if bytes(ins) == WAIT_FOR_MESSAGES and waiting:
+            for box in sorted(waiting):
+                if not closed_by_event(code, lengths, at, box):
+                    out += bytes([0x51, box]) + CLOSE_BOX.to_bytes(2, "little") + bytes(2)
+                    closed += 1
+            waiting.clear()
     if found != messages:
         missing = ", ".join(str(n) for n in sorted(messages - found))
         sys.exit(f"ReMixed's acknowledgable notice message(s) {missing} aren't where the build expects them")
-    return bytes(out)
+    return bytes(out), closed
 
 
 # Vanilla's 3D-object instructions (0x54 Use3DObject, 0x56 Wait3DObject) animate a map's moving parts from the
@@ -3133,6 +3198,160 @@ def without_map_objects(code: bytes, lengths: bytes) -> tuple[bytes, int]:
             ins, count = b"", count + 1
         out += ins
     return bytes(out), count
+
+
+# The redrawn maps' moving parts (docs/REMASTER.md, "The event interpreter"). A field object (0x55 n, waited for by
+# 0x57) moves a part of the classic map: a gate, a door, a drawbridge. The remaster's redrawn map has animations of
+# its own for those (its RefinedBgAnim rows), and which of them a field object starts is compiled into its code by the
+# scene's number (var 0x27) and the object: exe 0xC729C and 0xC9538, both called from the field objects' start
+# (0x24F5A0). REMASTER_MAP_MOVEMENTS is those lists: the remaster's scene -> the objects that move something there
+# (read from the code, 2026-11-26; the code mod's offline check runs the two functions for every scene and object and
+# fails if this isn't what they do). ReMixed's scenes run under the port's own numbers, which the lists don't know:
+# the classic gate rose and the redrawn one stood still, and Ramza walked in through Eagrose Castle's portcullis (a
+# tester on 0.9.39, 2026-11-26).
+REMASTER_MAP_MOVEMENTS = {
+    0x02: {1}, 0x04: {1, 2}, 0x06: {2, 4}, 0x2D: {3}, 0x36: {1}, 0x3A: {1}, 0x4D: {0}, 0x4F: {1}, 0x75: {2},
+    0x93: {0}, 0x9C: {2}, 0xA0: {0}, 0xA7: {0, 1}, 0xAC: {1}, 0xC1: {2}, 0xCD: {0, 1, 4, 5}, 0xD9: {0}, 0xE9: {2},
+    0xF3: {2}, 0xF9: {2}, 0xFB: {2}, 0x113: {2, 3}, 0x11B: {0}, 0x12E: {2}, 0x159: {2}, 0x176: {0}, 0x18C: {1},
+    0x1AD: {0, 1}, 0x1B2: {1}, 0x1B4: {0, 4}}
+# ReMixed's scene -> the remaster's scene it stands in for where its field objects are concerned: the same map, and
+# the objects ReMixed's scene uses among those the remaster's moves (None: ReMixed's scene uses a map's objects that
+# the remaster's list moves nothing for in any scene). The code mod gives the lists that scene's number while one of
+# ReMixed's runs (Patches/MapMovements.cs), and 0, a scene on neither list, for every other scene of ReMixed's: some
+# of the port's numbers are the remaster's own (0x1B2 and 0x1B4 are ReMixed's Depths of Murond).
+#   0x06E Eagrose Castle's gate (map 1): vanilla's 0x1B2 retold, its switch and portcullis (object 1 of 1-4).
+#   0x06F inside Eagrose (map 10): vanilla's 0x1B4, objects 4 and 0: the hall's two doors, opened for the Hokuten
+#     knights (the map's first and second animations).
+#   0x09D Lionel Castle's gate (map 12): vanilla's 0x09C (the remaster's 156), object 2; its object 6 is the
+#     remaster's own instruction there (MAP_ANIMATION_CALLS).
+#   0x00F (the Argath campaign, map 11): vanilla's 0x02D (the remaster's 45), object 3; its object 5 likewise.
+#   0x012 and 0x106 (map 23, the Beoulve manor): vanilla's 0x036, object 1 (0x03A's is the same): the manor's door
+#     (the map's second animation). In 0x012 it opens out of the picture, the camera on the roofs.
+#   0x0FC (map 56, Orbonne): the door that opens and shuts, objects 2 and 1, as in the remaster's 4 (the first
+#     animation the opening; object 1 stops it and starts the second, the shutting). Three times over in 0x0FC.
+#   0x100 and 0x104 (map 27, a snowbound fort): the door at the top of its slope, as in the remaster's 205. Object 0
+#     opens it (the third animation), and in 0x104 object 1 shuts it again (the fourth).
+#   0x102 (map 49, Fort Zeakden): vanilla's 0x04F, object 1: the tower's door shutting (the map's one animation).
+#     Its object 0, the door's opening, is in the remaster's own scene too and moves nothing redrawn there, since
+#     the redrawn map starts with the door open: 0x102, and 0x103 after it, which uses only object 0, set that
+#     animation by hand (MAP_ANIMATION_CALLS).
+#   0x11A (map 57, under Orbonne): object 2, as in the remaster's 233 and 243: the vault's door, opened for Delita.
+# Seen in the hidden PC game (2026-11-26), each beside ReMixed on the PS1 and the same: 0x06E's portcullis, 0x00F's
+# door (tests/quick/eagrose-gate-arrival.txt, argath-reprimand-doors.txt), 0x06F's two doors (eagrose-hall-doors),
+# 0x012's and 0x106's (beoulve-manor-door-reprimand, -farewell), 0x100's and 0x104's (sluice-gate-argath, -hirame),
+# 0x0FC's three times (orbonne-door-agrias), 0x11A's (orbonne-vault-door), and 0x102's (zeakden-gate-argath) once
+# its door started shut. 0x09D's gate is open at its first line (lionel-gate-movements.txt), with no PS1 frame.
+MAP_MOVEMENT_SCENES: dict[int, int | None] = {
+    0x06E: 0x1B2, 0x06F: 0x1B4, 0x09D: 0x9C, 0x00F: 0x2D, 0x012: 0x36, 0x106: 0x36, 0x0FC: 0x04, 0x100: 0xCD,
+    0x104: 0xCD, 0x102: 0x4F, 0x103: None, 0x11A: 0xE9}
+FIELD_OBJECT_USE = 0x55
+# The remaster's own instruction for the redrawn map's animations, 0xCD (u32 animation, u32 mode: state 1 for mode 1,
+# else 2), which its scripts have at two of the scenes above where vanilla's had a field object alone; in one of
+# ReMixed's events 0xCD is the upgrade's PostEvent, so the event calls the code mod's routine instead (0xCF 0xC8,
+# Patches/MapMovements.cs Routine), the animation and the mode in the two words the extended statuses borrow
+# (EXTENDED_STATUS_ACTOR, EXTENDED_STATUS_MODE: written before each call). ReMixed's event -> [(the instruction it
+# comes after, the animation, the mode)]: the remaster's 156 has "0xCD 5, 0" in place of vanilla's object 6 (Lionel's
+# gate), and its 45 "0xCD 2, 0" after object 5.
+# The routine has a mode of the mod's own too, 2: the animation stands on its last frame. Fort Zeakden's tower (map
+# 49) needs it. Vanilla's scene there (0x04F, the remaster's 79) opens the tower's door with object 0 as it starts and
+# shuts it with object 1 near its end, so the redrawn map draws the door open until its one animation, the shutting,
+# has played, and the remaster's list moves nothing for object 0. ReMixed's 0x102 has three lines of its own before
+# object 0, with the tower in the picture's right edge on a wide screen: the door stood open through them (seen in
+# the hidden PC game, 2026-11-26), where the PS1's is shut until object 0. And the battle after the scene loads the
+# map again, door open, where the PS1's battle has it shut (seen on the PS1 the same day). So 0x102 puts the
+# animation on its last frame as it starts (its LABEL 00, which the scene's run and the battle's both pass: the door
+# shut), and back on its first after object 0 (mode 1: the door open; at once, there being no opening to play, and
+# at the picture's edge). 0x103, the scene after that battle, opens the door with its own object 0 as it starts: the
+# same call there, in case its map is still the battle's.
+MAP_ANIMATION_ROUTINE = 0x000000C8
+MAP_ANIMATION_AT_END = 2
+MAP_ANIMATION_CALLS: dict[int, list[tuple[bytes, int, int]]] = {
+    0x09D: [(bytes([0x55, 6, 0]), 5, 0)],
+    0x00F: [(bytes([0x55, 5, 0]), 2, 0)],
+    0x102: [(bytes([0x0E, 0x00]), 0, MAP_ANIMATION_AT_END), (bytes([0x55, 0, 0]), 0, 1)],
+    0x103: [(bytes([0x55, 0, 0]), 0, 1)]}
+
+
+def map_animation_call(animation: int, mode: int) -> bytes:
+    """ReMixed's event code (the PS1 layout) for the remaster's 0xCD: the two words set, then the routine."""
+    return (struct.pack("<BHH", 0xAE, 0xB7E, animation) + struct.pack("<BHH", 0xAE, 0xB7F, mode)
+            + bytes([0xCF]) + MAP_ANIMATION_ROUTINE.to_bytes(4, "little"))
+
+
+for _event, _calls in MAP_ANIMATION_CALLS.items():
+    for _after, _animation, _mode in _calls:
+        EVENT_CODE_INSERTS.setdefault(_event, []).append((_after, map_animation_call(_animation, _mode)))
+
+
+def field_objects(code: bytes, lengths: bytes) -> set[int]:
+    """The field objects an event's code (the PS1 layout) uses (0x55 n)."""
+    used, at = set(), 0
+    while at < len(code):
+        op = code[at]
+        if op == FIELD_OBJECT_USE and at + 2 < len(code):
+            used.add(u16(code, at + 1))
+        at += 1 + lengths[op]
+    return used
+
+
+def map_movement_rows(event_code, lengths: bytes, records: dict[int, bytes], remaster_maps: dict[int, int],
+                      scenes: dict[int, int | None] | None = None) -> list[list[int]]:
+    """The code mod's data for MAP_MOVEMENT_SCENES (Patches/MapMovements.cs): [the port's scenario, the remaster's
+    scene whose map movements it takes or 0], for every number the port gives one of ReMixed's events. event_code(n)
+    is ReMixed's event n's code, records its scenario records (the map at +2), remaster_maps the remaster's scenes'
+    maps. Stops the build for a scene of ReMixed's that uses a field object on a map where the remaster's list moves
+    something and isn't in the table, and for a stand-in on another map or one that moves none of the objects used."""
+    scenes = MAP_MOVEMENT_SCENES if scenes is None else scenes
+    listed_maps: dict[int, set[int]] = {}
+    for scene in REMASTER_MAP_MOVEMENTS:
+        listed_maps.setdefault(remaster_maps[scene], set()).add(scene)
+    rows: dict[int, int] = {}
+    for theirs, ours in sorted(REMIXED_SCENARIOS.items()):
+        stand_in = scenes.get(theirs)
+        used = field_objects(event_code(theirs), lengths)
+        where = records[theirs][2] if theirs in records else None
+        if theirs not in scenes:
+            if used and listed_maps.get(where):
+                sys.exit(f"ReMixed's event 0x{theirs:X} uses field object(s) {sorted(used)} on map {where}, where the "
+                         f"remaster's scene(s) {', '.join(str(s) for s in sorted(listed_maps[where]))} move the redrawn "
+                         "map by their own numbers: give it the scene it stands in for (MAP_MOVEMENT_SCENES)")
+        elif stand_in is not None:
+            if remaster_maps[stand_in] != where:
+                sys.exit(f"ReMixed's event 0x{theirs:X} is on map {where}, not map {remaster_maps[stand_in]} as the "
+                         f"remaster's scene {stand_in} (MAP_MOVEMENT_SCENES)")
+            if not used & REMASTER_MAP_MOVEMENTS[stand_in]:
+                sys.exit(f"ReMixed's event 0x{theirs:X} uses field object(s) {sorted(used)}, none of those the "
+                         f"remaster's scene {stand_in} moves the redrawn map for (MAP_MOVEMENT_SCENES)")
+        for number in (ours, BATTLE_SPLITS.get(theirs), AFTER_SPLITS.get(theirs)):
+            if number is not None:
+                rows[number] = stand_in or 0
+    for ours in TAVERN_EVENTS.values():
+        rows.setdefault(ours, 0)
+    return [[ours, scene] for ours, scene in sorted(rows.items())]
+
+
+def map_movement_data(cfg: dict, test_evt: bytes, battle_new: bytes) -> dict:
+    """The code mod's rule data for the redrawn maps' moving parts (map_movement_rows), with the remaster's own list
+    (REMASTER_MAP_MOVEMENTS) for its offline check: ReMixed's scenario records from its ATTACK.OUT, the remaster's
+    scenes' maps from its exe."""
+    with Disc(vanilla_bin(cfg)) as vanilla, Disc(remixed_bin(cfg)) as patched:
+        attack = FilePair(vanilla, patched).get("EVENT/ATTACK.OUT")[1]
+    records = {}
+    for k in range(0x1F4):
+        at = SCENARIO_TABLE + SCENARIO_SIZE * k
+        if u16(attack, at):
+            records[u16(attack, at)] = attack[at:at + SCENARIO_SIZE]
+    exe = (Path(cfg["target"]["tic_dir"]) / "FFT_enhanced.exe").read_bytes()
+    table, remaster_maps = 0x8ECAB0 - 0x1C00, {}  # the remaster's scenario records in the exe file (+2 the map)
+    for k in range(0x377):
+        record = exe[table + SCENARIO_SIZE * k:table + SCENARIO_SIZE * (k + 1)]
+        if not u16(record, 0):
+            break
+        remaster_maps[u16(record, 0)] = record[2]
+    lengths = battle_new[EVENT_LENGTHS - BATTLE_BASE:EVENT_LENGTHS - BATTLE_BASE + 256]
+    rows = map_movement_rows(lambda n: remixed_event_code(test_evt, battle_new, n), lengths, records, remaster_maps)
+    return {"scenes": rows,
+            "listed": [[scene, sorted(objects)] for scene, objects in sorted(REMASTER_MAP_MOVEMENTS.items())]}
 
 
 def insert_code(code: bytes, lengths: bytes, inserts: list[tuple[bytes, bytes]] | None) -> bytes:
@@ -3257,17 +3476,24 @@ OWN_STORY_STEPS = [("1-A", REMIXED_WORLD_STEPS, SIDE_CHAPTER_A_FLAG), ("the Algu
 # starts: (var 0x6E at least, the stage at least, the stage it becomes). Araguay Woods' last scene (127) set the story
 # to 0x11 and the stage to 478 together; ReMixed's (0x01D, 0x107) set the story alone, which left the stage at Dorter's
 # 465 and the road on from the woods to Zeirchele Falls (road 21) grey until the falls.
-STORY_STAGE_FLOORS = [(0x11, 465, 478)]
+# Eagrose in chapter 4: the remaster's scenes there (433-440, REMASTER_SCENES_SKIPPED) moved the stage from 1710 ("Meet
+# with Dycedarg at Eagrose Castle.") to 1770 ("Rescue Alma from Mullonde Cathedral."), its last (440) with the story
+# to 0x34; ReMixed's (0x06E, 0x06F, 0x10E) set the story alone, so the objective line and its marker stayed on Eagrose,
+# where nothing more plays, until Mullonde's first scene (442: 1780). A tester on 0.9.39 (2026-11-26): "Storyline can
+# continue just by going to Mullonde. Nothing triggers if you leave and go back to Eagrose."
+STORY_STAGE_FLOORS = [(0x11, 465, 478), (0x34, 1700, 1770)]
+# The remaster's scenes that one of REMASTER_STARTS_REPLACED's starts no longer leads to: its chain from that event on,
+# which ReMixed's scenes play in place of. Their stages count as lost (check_story_stages), as a reused number's do.
+REMASTER_SCENES_SKIPPED = {(2, 433): range(433, 441)}
 # The stages the reused numbers' events set that nothing sets now, each with why that is left: (the remaster's event,
 # quest, stage). check_story_stages stops the build on one that isn't here or in STORY_STAGE_FLOORS.
 STORY_STAGES_LEFT = {
     (122, 0, 470): "Araguay Woods, inside the battle: the same roads and objective as 465, and 478 follows",
     (123, 0, 472): "Araguay Woods, inside the battle: as 470",
     (124, 0, 474): "Araguay Woods, inside the battle: as 470",
-    (434, 0, 1720): "Eagrose's end: no road greyed at 1710 or 1720, but the objective line stays \"Meet with Dycedarg at "
-                    "Eagrose Castle.\" until 1760 at Mullonde (open: docs/GAMEPLAY_TODO.md; the story's progress doesn't "
-                    "tell the two apart, so it needs the stage set as ReMixed's Eagrose ends)",
-    (436, 0, 1730): "Eagrose's end: as 1720",
+    (434, 0, 1720): "Eagrose, inside its scenes: the objective and roads of 1770, which follows as the story reaches 0x34",
+    (436, 0, 1730): "Eagrose, inside its scenes: as 1720",
+    (439, 0, 1760): "Eagrose, inside its scenes: as 1720",
     (452, 0, 1830): "the temple: the same roads and objective as 1820",
     (469, 2, 35): "a side quest's stage (quest 2): the same roads and objective as its 30",
 }
@@ -5657,6 +5883,7 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
     sync_sets = 0  # waits for ReMixed's text code made sets (TEXT_SYNC)
     boxes_reopened = 0  # swaps to a longer line made boxes of their own (CLOSE_BOX)
     pages_shown = 0  # long lines' later pages shown after their first (PAGE_CHARS)
+    notices_closed = 0  # notice boxes closed after their wait (notice_boxes)
     speech_boxes_switched = 0  # inactive remaster speech boxes closed before the other speaker's line
     objects_dropped = 0  # 3D-object instructions on maps the build makes looks for (MAP_OBJECT_USE)
     graphics_rerouted = 0  # LoadEVTCHR instructions moved to ReMixed-only copies of redrawn graphics
@@ -6041,6 +6268,8 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
                                         patches=patches, idle=idle - unsafe,
                                         returned_to=ours in returned_to, return_presets=return_presets,
                                         defer_return_writeback=theirs in DEFER_RETURN_WRITE_BACK)
+        if theirs == 0x11A and any(ps1.count(new) != 1 or ps1.count(old) for old, new in SIDE_CHAPTER_A_GUEST):
+            sys.exit("ReMixed's 0x11A doesn't move 1-A's Agrias as the build expects (SIDE_CHAPTER_A_GUEST)")
         made = ps1.count(AFTER_BATTLE_HOME) - raw_code.count(AFTER_BATTLE_HOME)
         live_made = (ps1.count(AFTER_BATTLE_RETURN_HOME) - raw_code.count(AFTER_BATTLE_RETURN_HOME)
                      + ps1.count(AFTER_BATTLE_DEFERRED_HOME) - raw_code.count(AFTER_BATTLE_DEFERRED_HOME))
@@ -6065,7 +6294,8 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
             self_patches[ours] = made
         patch_next_targets(ps1, lengths, theirs)
         ps1 = question_box(ps1, lengths, QUESTION_BOXES.get(theirs))
-        ps1 = notice_boxes(ps1, lengths, NOTICE_MESSAGES.get(theirs))
+        ps1, made = notice_boxes(ps1, lengths, NOTICE_MESSAGES.get(theirs))
+        notices_closed += made
         ps1 = timed_notice(ps1, TIMED_NOTICES.get(theirs))
         ps1 = insert_code(ps1, lengths, EVENT_CODE_INSERTS.get(theirs))
         if theirs in MIDSCENE_JOIN_SCREENS:
@@ -6115,7 +6345,8 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
         code, named, template = remaster_message_layout(ps1, lengths, first, menus, tavern=theirs in TAVERN,
                                                         boxes=EVENT_BOXES.get(theirs),
                                                         menu_box=theirs in DYNAMIC_MENU_PLACEHOLDERS)
-        notice_pages = {page for notice in NOTICE_MESSAGES.get(theirs, ()) for page in pages.get(notice, ())}
+        notice_pages = {page for notice in shown_notices(ps1, lengths, NOTICE_MESSAGES.get(theirs, set()))
+                        for page in pages.get(notice, ())}
         if missing_pages := notice_pages - named:
             sys.exit(f"ReMixed's event 0x{theirs:X} omits notice pages {sorted(missing_pages)}")
         try:
@@ -6151,7 +6382,7 @@ def write_remixed_scenarios(cfg: dict, held: dict[int, str], presets: bytes,
     done.append(write_scenario_texts(cfg, texts_written))
     done.append(f"{menus_all} menu(s), {menus_shown} named by a MESSAGE as it stands (the rest through 0xE6)")
     done.append(f"{sync_sets} wait(s) for ReMixed's text code made sets")
-    done.append(f"{boxes_reopened} swap(s) to a longer line made boxes of their own, {pages_shown} later page(s) of long lines shown in boxes of their own")
+    done.append(f"{boxes_reopened} swap(s) to a longer line made boxes of their own, {pages_shown} later page(s) of long lines shown in boxes of their own, {notices_closed} notice box(es) closed after their wait")
     done.append(f"{speech_boxes_switched} speaker switch(es) close the inactive speech box before the next line")
     done.append(f"{objects_dropped} 3D-object instruction(s) on the build's own map looks made waits")
     done.append(f"{graphics_rerouted} LoadEVTCHR instruction(s) routed to ReMixed-only redraws")
@@ -6373,6 +6604,16 @@ EVENT_GRAPHIC_ALIASES = {
     0x79: 0xF2,
 }
 REMIXED_EVENT_GRAPHICS = (*EVENT_GRAPHICS_IN_PLACE, *EVENT_GRAPHIC_ALIASES)
+# An event graphic's frame has a second one that stands for its other side: as the camera turns, the game draws the
+# frame paired with the one held (0 with 1, 12 with 13), as it turns a unit's sprite between its front and back.
+# ReMixed's events keep the camera still while such a graphic is out, and where a pose's pair isn't the same picture
+# ReMixed draws it so (Dycedarg's two kneeling frames, 12 and 13 of 0x59). The Stone isn't: frame 0 of 0x59, beside
+# vanilla's figure in frame 1, so as the remaster's camera turned in Dycedarg's change (0x10E) the Stone became a man
+# (a tester on 0.9.39, 2026-11-26: "the stone EVTCHR sprite might need to get swapped out"; ReMixed's author: "the
+# camera angle change is fucking up the EVTCHR... I didn't think to do the same for the Stone"). The port's copy draws
+# the Stone from both sides: graphic -> the frames whose pair is pointed at them (the frame table, EVENT_FRAMES).
+EVENT_FRAMES = 0x500  # a graphic's frame table: a u32 offset (from 0x5A0) per frame
+EVENT_GRAPHIC_ONE_SIDED = {0x59: (0,)}
 # With the enhanced sprites on, the remaster draws an event graphic from a texture of its own instead of its pixels: the
 # entry of system/ffto/g2d.dat that op 0x58 names for it (the table at 0x714490: 1242 for 0x6F), the graphic's own art
 # redrawn at twice the size, sampled where the graphic's frames say. 1242 is vanilla's 0x6F (a copy of 0x7A, figures
@@ -6566,9 +6807,15 @@ def check_story_stages(cfg: dict) -> str:
         return found
 
     lost, kept, wrong = set(), 0, []
+    skipped = {number for chain in REMASTER_SCENES_SKIPPED.values() for number in chain}
+    if set(REMASTER_SCENES_SKIPPED) - set(REMASTER_STARTS_REPLACED):
+        wrong.append("REMASTER_SCENES_SKIPPED names a start that REMASTER_STARTS_REPLACED doesn't replace")
     for path in stock_event_paths(cfg):
         theirs = stages(path.read_bytes(), path.name)
         mine = ours / path.name
+        if theirs and int(path.stem[5:]) in skipped:
+            lost |= {(int(path.stem[5:]), quest, stage) for quest, stage in theirs}
+            continue
         if not theirs or not mine.exists():
             continue
         code = mine.read_bytes()
@@ -6607,7 +6854,7 @@ def check_story_stages(cfg: dict) -> str:
                              "world-map steps shows: its marker would stand on a hidden place")
     if wrong:
         sys.exit("the remaster's story stage: " + "; ".join(wrong))
-    return (f"{len(lost)} stage(s) of the remaster's lost with reused numbers: {len(floors)} follow the story's "
+    return (f"{len(lost)} stage(s) of the remaster's lost with reused numbers or skipped scenes: {len(floors)} follow the story's "
             f"progress, {len(STORY_STAGES_LEFT)} left with a reason; {kept} kept in the stock events the mod ships; no "
             f"road greyed in {len(OWN_STORY_STEPS)} stories of ReMixed's own")
 
@@ -6657,6 +6904,12 @@ def write_event_graphics(cfg: dict) -> str:
             graphics.extend(bytes(need - len(graphics)))
         target_at = slice(target_graphic * EVTCHR_BYTES, (target_graphic + 1) * EVTCHR_BYTES)
         graphics[target_at] = theirs[source_at]
+        for frame in EVENT_GRAPHIC_ONE_SIDED.get(source_graphic, ()):
+            table = target_graphic * EVTCHR_BYTES + EVENT_FRAMES
+            graphics[table + 4 * (frame ^ 1):table + 4 * (frame ^ 1) + 4] = graphics[table + 4 * frame:table + 4 * frame + 4]
+    one_sided = sum(len(frames) for frames in EVENT_GRAPHIC_ONE_SIDED.values())
+    if not set(EVENT_GRAPHIC_ONE_SIDED) <= set(REMIXED_EVENT_GRAPHICS):
+        sys.exit("EVENT_GRAPHIC_ONE_SIDED names a graphic the mod doesn't ship")
     out = MOD_DIR / "FFTIVC" / "data" / "enhanced" / "fftpack" / "event_evtchr_bin.bin"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_bytes(graphics)
@@ -6720,6 +6973,7 @@ def write_event_graphics(cfg: dict) -> str:
                          for alias, (source, entry) in EVENT_TEXTURES.items())
     return (f"{len(REMIXED_EVENT_GRAPHICS)} of ReMixed's ({own}), {len(EVENT_GRAPHICS_IN_PLACE)} in place and "
             f"{len(EVENT_GRAPHIC_ALIASES)} in private slots; enhanced textures for " + textured
+            + f"; {one_sided} frame(s) drawn the same from both sides (EVENT_GRAPHIC_ONE_SIDED)"
             + f"; none of their slots loaded by the {stock_events} stock scenes; "
             + (f"old texture(s) taken out: {', '.join(stale)}; " if stale else "")
             + f"{animation_uses} pose use(s), {unique_animations} unique alias/animation pairs audited")
@@ -8455,7 +8709,7 @@ def hold_custom_monster_graphics(result: TableResult, scus_old: bytes, scus_new:
 
 # The release's version: raise it for each published build (docs/release/RELEASING.md). The ReMixed version the
 # build is made from goes after it, as build metadata. The title screen's plaque shows it (write_title_screen).
-RELEASE_VERSION = "0.9.43"
+RELEASE_VERSION = "0.9.44"
 
 
 def write_mod_config(version: str, with_code: bool) -> None:
@@ -8908,6 +9162,7 @@ def main() -> None:
                                                       "sprite-aliases": sprite_aliases,
                                                       "old-guests": old_guest_rows(),
                                                       "guest-lookup": guest_lookup_rows(),
+                                                      "map-movements": map_movement_data(cfg, test_evt, battle_new),
                                                       "side-chapter-objectives": side_chapter_objectives(),
                                                       "own-story-flags": [mark for _, _, mark in OWN_STORY_STEPS],
                                                       "own-story-destinations": own_story_destinations(),

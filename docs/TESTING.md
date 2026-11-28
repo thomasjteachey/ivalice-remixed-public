@@ -249,7 +249,9 @@ Each case prints one `PASS` or `FAIL` line per expectation and a final elapsed t
 per line: `scenario`, `setvar`, `send`, `advance`, `formation`, `defeat`, `key`, `shot`, `poke unit`, `ride`,
 `wait unit|entry|log|world|seconds`, `expect unit|entry|roster|var|peek` and `show slots|roster|units|sprites`
 (`defeat job=0x29` downs the units that match instead of the enemies; `expect peek +0x2FCF86C 29 00 00 00` wants
-those bytes at an address in the game's image; `orphan sprite job=0x29` takes a unit's sprite away from it, so no
+those bytes at an address in the game's image, and `expect peek [[+0x3CC96B8]+0x24280]+0x24 02 00 00 00` at one behind
+pointers, as `send peek` takes it (the redrawn map's first animation running: `tests/quick/eagrose-gate-arrival.txt`);
+`orphan sprite job=0x29` takes a unit's sprite away from it, so no
 sprite answers for the unit, as once its body has gone to a crystal: `tests/quick/riovanes-gate-end-real-crystal.txt`). `show`
 prints the battle units' roster slots and battle ids (or the roster, their jobs, or the unit sprites' 15 sheet slots
 and 16 sprite objects) into the case's output, as evidence; `send` prints what the game answers (`send state`, `send
@@ -261,10 +263,12 @@ player and present, 1 or 0), so `wait unit player=1 present=1 turn=1` waits for 
 player=1 present=1 offset=0x13 hex=08` sets a field on each (`or=` ORs bits in): a quick way to give units a skillset,
 a learned ability or a weapon for a test, in any battle. The PC's settings have the test mode's RecordAndAutoBattle, where the AI plays the party; `send testmode
 record` keeps the party the player's for the rest of the run (before the battle), for a case that drives the battle
-menus, and `send testmode auto` hands it back.
+menus, and `send testmode auto` hands it back. `send option NAME VALUE` (for example `send option BrokenEquipment
+BackAfterBattle`) puts one of the mod's settings in effect for the run without touching Config.json; a save's own
+options come back at its next check, so it's for the settings the mod keeps for every save.
 
 `send act SKILLSET ABILITY TARGET` makes a party unit use an ability without driving the menus: `send act 08 195
-foe` is Two Shots (skillset 0x08, ability 0x195) at the nearest foe's panel (TARGET is also `self`, the acting unit's
+foe` is Two Shots (skillset 0x08, ability 0x195) at the nearest foe's panel (TARGET is also `ally`, the nearest other living unit of its own team, `self`, the acting unit's
 panel, a battle unit's index, or `X,Y[,LEVEL]`; an item's ability names its item too, so `send act 06 170 self` is a
 Potion on the unit itself, and a Draw Out names its katana (ability − 0x26: `send act 13 04F self` is Murasame, katana 0x29; the unit needs it learned and the party a katana, `tests/quick/katana-break-dark-knight.txt`); a fifth word queues it that many times, for a turn's two actions; a last word `moved`
 marks the unit as having moved just before that act's confirm, so its mark ends the turn there and then, as after a
@@ -283,7 +287,12 @@ formation. tests/quick/two-shots.txt is the whole pattern: a random battle, a un
 two `act`s, and the mod's lines for both shots. tests/quick/performance-through-item.txt gives a unit Don't Move
 (`poke unit`), so each act ends its turn without the menus: a song, then a Potion on its next turn.
 Each `wait log` consumes a matching line logged during the current case, so earlier runs in the same game cannot pass it.
-`wait log PATTERN press=RETURN every=1` confirms through a scene until the line comes. `key K [times=N] [wait=S]`
+`wait log PATTERN press=RETURN every=1` confirms through a scene until the line comes; with `film=NAME` (and
+`film_every=S`, 1 s by default) it also saves a frame every so often while it waits (`NAME-NNNN.png`, tenths of a
+second into the wait), so the last one is the scene just before the line came: the way to frame a moment "before"
+whose distance from the last line isn't known (a press timed by hand closed the line early at ×5 and only finished
+its typing at the scene's own speed; `tests/quick/eagrose-hall-doors.txt` and the other map-movement cases).
+`key K [times=N] [wait=S]`
 posts a key to the game's own window; before each key in a menu, `wait world depth=D state=S` waits for that menu
 (the world map is depth 1, state 0; Esc opens Units at depth 2, state 1), so a key never lands on the wrong screen.
 `shot NAME` saves `work/harness/quick/CASE/NAME.png` at that step, for checking by eye, and every case also leaves
@@ -442,7 +451,10 @@ its own screen: a blue-green backdrop and one menu box) and `eo-levels` (its fir
 Any of ReMixed's scenarios can be reached from `wm` (Gariland, chapter 1): on the world map hold Up, then Left, 10
 frames each (the cursor on Mandalia Plains), press Circle, and in the next frames, as soon as the location's script sets
 var 0x27 (0x800577B8, to 5), write the scenario wanted there instead; ReMixed then loads that one, with its formation
-and Preparation Menu (Start Battle, then Down to Yes). A Brave Story round won't load that way (each goes on from
+and Preparation Menu (Start Battle, then Down to Yes). `step.py`'s `scenario HEX` does all of that (the buttons need a
+pause between them, and var 0x27 is already 5 as Circle is let go): `python -I tools/deck/psx/step.py wm "scenario 6E;
+film eagate 3000 60 - CIRCLE 90"` is ReMixed's arrival at Eagrose Castle, its gate rising about 2,460 frames in, in a
+few seconds of the PC's time. A Brave Story round won't load that way (each goes on from
 the last; a lone round hands on to 0xC2), so its rounds were played from the first (0xB8), with the player's units
 handed to the AI (unit +5 & ~0x08) and the enemies defeated: states `mbr-b9` to `mbr-c1` are each round as it loads
 (2026-11-12; the hydra in `mbr-bb`, the grey dragon in `mbr-bf`).

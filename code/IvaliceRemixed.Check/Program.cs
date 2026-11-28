@@ -131,6 +131,7 @@ try
         problems += SelfTest.PerformerJobRules(game, log);
         problems += SelfTest.DismissByNameRule(game, log);
         problems += SelfTest.SideChapterRepair(log);
+        problems += SelfTest.RepeatJoins(log);
         problems += SelfTest.WorldRoadRules(game, log);
         problems += SelfTest.EventUnitNumbers(game, log);
         problems += SelfTest.RemixedScenarioTables(game, log);
@@ -141,6 +142,7 @@ try
         problems += SelfTest.FacePortraits(game, log);
         problems += SelfTest.OldGuestMoves(game, log);
         problems += SelfTest.GuestLookupRule(game, log);
+        problems += SelfTest.MapMovementRules(game, log);
         problems += SelfTest.RemixedMessageMoving(log);
         problems += SelfTest.RemixedConditionTypes(log);
         problems += SelfTest.RemixedWalkOrder(log);
@@ -162,6 +164,7 @@ try
         problems += SelfTest.TwoShotsLists(game, log);
         problems += SelfTest.HarnessAct(game, log);
         problems += SelfTest.GuestControls(game, log);
+        problems += SelfTest.SettingsRefresh(log);
         problems += SelfTest.ReflectBounces(game, log);
         problems += SelfTest.GunSkillRules(game, log);
         problems += SelfTest.DragonTechRules(game, log);
@@ -2499,6 +2502,7 @@ internal static unsafe class SelfTest
     private static int FakeUnitSetup(byte* unit, byte* record)
     {
         unit[GuestControl.Team] = record[0x18];
+        unit[Battle.UnitTeam] = record[0x18];
         return 7;
     }
 
@@ -2534,7 +2538,7 @@ internal static unsafe class SelfTest
         {
             record[0x18] = team;
             var r = ((delegate* unmanaged<byte*, byte*, int>)GuestControl.SetupAt)(unit, record);
-            return $"{unit[GuestControl.Team]:X2}{(r == 7 ? "" : " (result lost)")}";
+            return $"{unit[GuestControl.Team]:X2}/{unit[Battle.UnitTeam]:X2}{(r == 7 ? "" : " (result lost)")}";
         }
         var deployed = Setup(0x00); // ReMixed's default, Deployed: the hook leaves a guest alone
         var optionsBefore = Options.Current;
@@ -2548,7 +2552,44 @@ internal static unsafe class SelfTest
         Check($"with Deployed (the default) a guest stays a guest ({deployed}); with Always (a save's own option) a guest " +
               $"of the player's team becomes the player's ({guest}); the player's own ({player}) and other teams " +
               $"({enemy}, {other}) stay",
-              deployed == "00" && guest == "08" && player == "08" && enemy == "10" && other == "20");
+              deployed == "00/00" && guest == "08/08" && player == "08/08" && enemy == "10/10" && other == "20/20");
+        return failures;
+    }
+
+    /// <summary>The mod's settings read again when their Config.json changes with the game open, the ones applied at
+    /// startup kept.</summary>
+    public static int SettingsRefresh(Log log)
+    {
+        var failures = 0;
+        void Check(string name, bool ok)
+        {
+            if (!ok) failures++;
+            log.Info($"self-test: settings refresh, {name}{(ok ? "" : ": WRONG")}");
+        }
+        var before = (Options.Settings, Options.SettingsWritten);
+        var path = Path.Combine(Path.GetTempPath(), $"ivalice-remixed-check-{Environment.ProcessId}.json");
+        try
+        {
+            new Options { FilePath = path }.Write(path);
+            Options.Settings = Options.Read(path, out _);
+            Options.SettingsWritten = Options.WrittenAt(path);
+            var unchanged = Options.RefreshSettings();
+            new Options { ArgathCampaign = true, GuestControl = Options.GuestControlRule.Always,
+                          SeparateSaves = false }.Write(path);
+            File.SetLastWriteTimeUtc(path, Options.SettingsWritten.AddSeconds(5));
+            Thread.Sleep(1100); // at most one check a second
+            var note = Options.RefreshSettings();
+            var s = Options.Settings;
+            Check($"unchanged, nothing read ({unchanged ?? "none"}); changed, read again ({(note != null ? "a note" : "none")}): " +
+                  $"Argath campaign {s.ArgathCampaign}, guests {s.GuestControl}, separate saves kept {s.SeparateSaves}",
+                  unchanged == null && note != null && s.ArgathCampaign && s.GuestControl == Options.GuestControlRule.Always
+                  && s.SeparateSaves);
+        }
+        finally
+        {
+            (Options.Settings, Options.SettingsWritten) = before;
+            File.Delete(path);
+        }
         return failures;
     }
 
@@ -2993,6 +3034,33 @@ internal static unsafe class SelfTest
         remembered.Clear();
         var passed = Draw(0x50, 0x13);
         Check($"a roll that passes keeps the katana ({passed}) and isn't remembered", passed == "kept" && !remembered[0]);
+        // A preview (the simulating flag): the game marks a break without a roll; it's left so and not remembered.
+        remembered.Clear();
+        *r.Simulating = 1;
+        var preview = Draw(0x50, 0x13);
+        *r.Simulating = 0;
+        Check($"a preview's mark ({preview}) is the game's and isn't remembered for the next real action",
+              preview == "break" && !remembered[0]);
+        // Broken equipment back after the battle: a broken katana (Murasame, 0x29) is pooled once an action, however
+        // many targets' rolls break it; with the setting at Lost, not at all.
+        var optionsBefore = Options.Current;
+        Options.Use(new Options { BrokenEquipment = Options.BrokenEquipmentRule.BackAfterBattle });
+        TakenEquipment.Clear();
+        b.Weapon[4] = 100;
+        *(ushort*)(attacker + 0x1A8) = 0x29; // the weapon the game's roll puts in the own result's +4
+        (attacker[3], attacker[0x1A1], attacker[Battle.UnitSupports + 2], attacker[Battle.UnitSupports + 3]) = (0x50, 0x13, 0, 0);
+        *KatanaBreak.Broke = 0;
+        roll();
+        roll();
+        var once = TakenEquipment.Pooled(0x29);
+        Options.Use(new Options());
+        *KatanaBreak.Broke = 0;
+        roll();
+        var lost = TakenEquipment.Pooled(0x29) - once;
+        Options.Use(optionsBefore);
+        TakenEquipment.Clear();
+        Check($"with Broken equipment at BackAfterBattle a broken katana comes back once for an action of two targets ({once}); " +
+              $"at Lost it doesn't ({lost})", once == 1 && lost == 0);
         *KatanaBreak.Broke = 0;
         b.Weapon[4] = chance;
         *r.Simulating = simulating;
@@ -4599,8 +4667,24 @@ internal static unsafe class SelfTest
             slots[1] = TakenEquipment.Empty;
             result[0x12] = 0x04;
             var broken = TakenEquipment.Note(unit, result, before);
-            Check($"a steal notes {stolen} (item 0x24 pooled {TakenEquipment.Pooled(0x24)}), a break {broken} (0x25 pooled {TakenEquipment.Pooled(0x25)})",
+            Check($"a steal notes {stolen} (item 0x24 pooled {TakenEquipment.Pooled(0x24)}), a break with Broken equipment at Lost {broken} (0x25 pooled {TakenEquipment.Pooled(0x25)})",
                   stolen == 1 && TakenEquipment.Pooled(0x24) == 1 && broken == 0 && TakenEquipment.Pooled(0x25) == 0);
+            // The same break with the mod's setting at BackAfterBattle: pooled; then an enemy's break isn't.
+            var optionsBefore = Options.Current;
+            Options.Use(new Options { BrokenEquipment = Options.BrokenEquipmentRule.BackAfterBattle });
+            var kept = TakenEquipment.Note(unit, result, before);
+            unit[2] = 0xFF; unit[5] = 0x18;
+            var enemyBreak = TakenEquipment.Note(unit, result, before);
+            unit[2] = 3; unit[5] = 0x08;
+            Options.Use(optionsBefore);
+            Check($"with Broken equipment at BackAfterBattle a break notes {kept} (0x25 pooled {TakenEquipment.Pooled(0x25)}), an enemy's {enemyBreak}",
+                  kept == 1 && TakenEquipment.Pooled(0x25) == 1 && enemyBreak == 0);
+            TakenEquipment.Clear();
+            TakenEquipment.Note(unit, result, before); // at Lost again: nothing
+            result[0x12] = TakenEquipment.Steal;
+            new Span<ushort>(slots, TakenEquipment.SlotCount).CopyTo(new Span<ushort>(before, TakenEquipment.SlotCount));
+            before[0] = 0x24;
+            TakenEquipment.Note(unit, result, before); // the steal again, for the battle end below
             // The battle end: 5 owned becomes 6; one at 99 owned stays 99 (none lost from it either).
             TakenEquipment.Inventory[0x24] = 5;
             var counted = TakenEquipment.Owned(0x24);
@@ -4988,6 +5072,11 @@ internal static unsafe class SelfTest
               $"{WorldRoads.Floor(440, 0x11)}, {WorldRoads.Floor(478, 0x11)}, {WorldRoads.Floor(540, 0x20)}",
               WorldRoads.Floor(465, 0x11) == 478 && WorldRoads.Floor(474, 0x12) == 478 && WorldRoads.Floor(465, 0x10) == 465
               && WorldRoads.Floor(440, 0x11) == 440 && WorldRoads.Floor(478, 0x11) == 478 && WorldRoads.Floor(540, 0x20) == 540);
+        Check($"the stage past Eagrose in chapter 4: 1710 with the story at 0x34 is {WorldRoads.Floor(1710, 0x34)}, 1760 " +
+              $"{WorldRoads.Floor(1760, 0x34)}; 1710 at 0x33 stays {WorldRoads.Floor(1710, 0x33)}, and 1780 at 0x34 " +
+              $"{WorldRoads.Floor(1780, 0x34)}",
+              WorldRoads.Floor(1710, 0x34) == 1770 && WorldRoads.Floor(1760, 0x34) == 1770
+              && WorldRoads.Floor(1710, 0x33) == 1710 && WorldRoads.Floor(1780, 0x34) == 1780);
         return failures;
     }
 
@@ -5048,6 +5137,71 @@ internal static unsafe class SelfTest
         System.Runtime.InteropServices.NativeMemory.Free(roster);
         log.Info($"self-test: 1-A roster repair, {first} records then {again}: Lorne a Bard, Lavian's 1-A bit off (her own "
                  + $"errand bit kept), Agrias off 0x34, Elias's join bit off, Ashley and others' errands left; Bryn and Lorne dismissed past the river camp ({early}, {late}, {twice}) with their gear back{(ok ? "" : ": WRONG")}");
+        return ok ? 0 : 1;
+    }
+
+    /// <summary>Chapter 2's opening after side chapter 1-A (the remaster's entry 0x110): its Alicia, Lavian and guest
+    /// Agrias (name id 0x34) don't join beside 1-A's (RosterGuard.KeepOutRepeats); Rad, whom the roster hasn't, a unit
+    /// loaded from the roster, a random name and an empty slot do as before. Then a save an earlier build left with
+    /// both Agrias (OldGuests.GuestSideChapterAgrias): 1-A's takes the guest slot while Agrias is a guest, once.</summary>
+    public static int RepeatJoins(Log log)
+    {
+        const int size = UnitTables.RosterSize;
+        var roster = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(UnitTables.RosterSlots * size);
+        var units = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(Battle.UnitCount * Battle.UnitSize);
+        for (var k = 0; k < UnitTables.RosterSlots; k++)
+            roster[k * size + 1] = 0xFF;
+        for (var k = 0; k < Battle.UnitCount; k++)
+            units[k * Battle.UnitSize + 1] = 0xFF;
+        void Record(int slot, byte sprites, int name, byte level)
+        {
+            var r = roster + slot * size;
+            r[0] = sprites;
+            r[1] = (byte)slot;
+            r[OldGuests.RosterLevel] = level;
+            *(int*)(r + RosterGuard.RosterName) = name;
+        }
+        void Unit(int index, byte sprites, byte flags, int name)
+        {
+            var u = units + index * Battle.UnitSize;
+            u[0] = sprites;
+            u[1] = (byte)index;
+            u[6] = flags;
+            *(int*)(u + RosterGuard.UnitName) = name;
+        }
+        Record(0, 0x02, 0x02, 9);                                    // Ramza
+        Record(3, 0x81, OldGuests.Alicia, 14);                       // 1-A's knights, levelled
+        Record(4, 0x81, OldGuests.Lavian, 13);
+        Record(OldGuests.FirstGuestSlot + 2, OldGuests.Agrias, OldGuests.Agrias, 15); // 1-A's Agrias, the guest
+        Unit(0, 0x80, 0x90, 0x7F);                                   // Rad joins: not in the roster
+        Unit(1, 0x81, 0x50, OldGuests.Alicia);
+        Unit(2, 0x81, 0x50, OldGuests.Lavian);
+        Unit(3, OldGuests.Agrias, 0x51, OldGuests.OldAgrias);        // the remaster's guest Agrias (joins, saves)
+        Unit(4, 0x81, 0x58, OldGuests.Alicia);                       // one loaded from the roster: its own record
+        Unit(5, 0x80, 0x90, 0x123);                                  // a generated name
+        Unit(6, 0x80, 0x90, 0xFF);                                   // a random one asked for
+        var kept = RosterGuard.KeepOutRepeats(units, roster, null);
+        var again = RosterGuard.KeepOutRepeats(units, roster, null);
+        byte Flags(int index) => units[index * Battle.UnitSize + 6];
+        var ok = kept == 3 && again == 0 && Flags(0) == 0x90 && Flags(1) == 0x40 && Flags(2) == 0x40 && Flags(3) == 0x40
+                 && Flags(4) == 0x58 && Flags(5) == 0x90 && Flags(6) == 0x90;
+        // An earlier build's save: 1-A's Agrias (level 15) in party slot 18, the opening's (name 0x34, level 10) a guest.
+        roster[(OldGuests.FirstGuestSlot + 2) * size + 1] = 0xFF;
+        Record(18, OldGuests.Agrias, OldGuests.Agrias, 15);
+        Record(OldGuests.FirstGuestSlot, OldGuests.Agrias, OldGuests.OldAgrias, 10);
+        var before = OldGuests.GuestSideChapterAgrias(roster, OldGuests.GuestAgriasFrom - 1);
+        var after = OldGuests.GuestSideChapterAgrias(roster, OldGuests.GuestAgriasUntil);
+        var moved = OldGuests.GuestSideChapterAgrias(roster, OldGuests.GuestAgriasFrom);
+        var twice = OldGuests.GuestSideChapterAgrias(roster, OldGuests.GuestAgriasFrom);
+        var guest = roster + OldGuests.FirstGuestSlot * size;
+        ok &= before == -1 && after == -1 && moved == 18 && twice == -1 && roster[18 * size + 1] == 0xFF
+              && guest[1] == OldGuests.FirstGuestSlot && guest[0] == OldGuests.Agrias
+              && *(int*)(guest + OldGuests.RosterName) == OldGuests.Agrias && guest[OldGuests.RosterLevel] == 15;
+        System.Runtime.InteropServices.NativeMemory.Free(units);
+        System.Runtime.InteropServices.NativeMemory.Free(roster);
+        log.Info($"self-test: no story character joins twice, {kept} kept out then {again} (Alicia, Lavian and the guest "
+                 + $"Agrias beside 1-A's; Rad, a loaded unit and random names join); an earlier build's two Agrias "
+                 + $"(slot {moved} to the guest slot, then {twice}){(ok ? "" : ": WRONG")}");
         return ok ? 0 : 1;
     }
 
@@ -6424,6 +6578,177 @@ internal static unsafe class SelfTest
               stub.SequenceEqual(GuestLookup.NullUnitStub(GuestLookup.NullStub, GuestLookup.Panel))
               && stub[..5].SequenceEqual(new byte[] { 0x48, 0x85, 0xD2, 0x74, 0x05 }) && stub[5] == 0xE9 && stub[10] == 0xC3
               && GuestLookup.NullStub + 10 + BitConverter.ToInt32(stub[6..10]) == GuestLookup.Panel);
+        return failures;
+    }
+
+    /// <summary>
+    /// The redrawn maps' moving parts in ReMixed's scenes (<see cref="MapMovements"/>): the two calls found and turned
+    /// to the mod; the remaster's own two lists run for every scene and object on made-up views, which must move
+    /// exactly what the build's list says; then the mod's turn of them: one of ReMixed's scenes moves what the
+    /// remaster's scene it stands in for moves, another of ReMixed's nothing, a scene of the remaster's own what it did.
+    /// </summary>
+    public static int MapMovementRules(Game game, Log log)
+    {
+        var failures = 0;
+        void Check(string name, bool ok)
+        {
+            if (!ok) failures++;
+            log.Info($"self-test: map movements, {name}{(ok ? "" : ": WRONG")}");
+        }
+        if (MapMovements.AnimationsCall == 0)
+        {
+            Check("isn't installed", false);
+            return failures;
+        }
+        long Off(nint at) => at - game.Image.ImageStart;
+        Check($"the lists' calls at 0x{Off(MapMovements.MarksCall):X} and 0x{Off(MapMovements.AnimationsCall):X}, the lists " +
+              $"0x{Off((nint)MapMovements.GameMarks):X} and 0x{Off((nint)MapMovements.GameAnimations):X}, the screens " +
+              $"0x{Off((nint)MapMovements.Screens):X}",
+              Off(MapMovements.MarksCall) == 0x24FA5E && Off(MapMovements.AnimationsCall) == 0x24FA98
+              && Off((nint)MapMovements.GameMarks) == 0xC9538 && Off((nint)MapMovements.GameAnimations) == 0xC729C
+              && Off((nint)MapMovements.Screens) == 0x3CC96B8);
+        bool Turned(nint call, nint stub)
+        {
+            var code = new ReadOnlySpan<byte>((void*)stub, MapMovements.StubSize);
+            return *(byte*)call == 0xE8 && call + 5 + *(int*)(call + 1) == stub && code[0] == 0x48 && code[1] == 0xB8
+                   && code[10] == 0xFF && code[11] == 0xE0
+                   && code.SequenceEqual(MapMovements.StubCode((nint)BitConverter.ToInt64(code[2..10])));
+        }
+        Check("both calls go to stubs that jump to the mod",
+              Turned(MapMovements.MarksCall, MapMovements.MarksStub) && Turned(MapMovements.AnimationsCall, MapMovements.AnimationsStub));
+
+        // Made-up views: the map view (its animations, their kinds: kind n + 1 for animation n) and the other view (its
+        // marks, 0x57F800 to 0x57FA60), each with a map loaded (not -1).
+        const int viewBytes = 0x300000, otherBytes = 0x580000, marksFrom = 0x57F800, marksBytes = 0x260;
+        var view = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(viewBytes);
+        var other = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(otherBytes);
+        for (var n = 0; n < MapMovements.AnimationCount; n++)
+            *(int*)(view + MapMovements.AnimationKinds + 8 * n) = n + 1;
+        int* Entry(int n) => (int*)(view + MapMovements.Animations + (nint)MapMovements.AnimationBytes * n);
+        // The animations' states after a call, as "n:state" for each one set, and the view put back.
+        string Moved()
+        {
+            var moved = new List<string>();
+            for (var n = 0; n < MapMovements.AnimationCount; n++)
+            {
+                var entry = Entry(n);
+                if (entry[0] != 0 || entry[1] != 0)
+                    moved.Add($"{n}:{entry[1]}{(entry[0] == n + 1 ? "" : "?")}");
+                new Span<byte>(entry, 8 + MapMovements.ClockBytes).Clear();
+            }
+            return string.Join(" ", moved);
+        }
+        var found = new SortedDictionary<int, SortedSet<int>>();
+        void Found(int scene, int item)
+        {
+            if (!found.TryGetValue(scene, out var items))
+                found[scene] = items = [];
+            items.Add(item);
+        }
+        for (var scene = 0; scene < 0x400; scene++)
+            for (var item = 0; item < 8; item++)
+            {
+                for (var part = 0; part < 8; part++)
+                    for (var direction = -1; direction <= 1; direction++)
+                    {
+                        MapMovements.GameAnimations((nint)view, scene, part, item, direction);
+                        if (Moved().Length > 0)
+                            Found(scene, item);
+                    }
+                foreach (var fill in new byte[] { 0x00, 0xFF })
+                {
+                    new Span<byte>(other + marksFrom, marksBytes).Fill(fill);
+                    MapMovements.GameMarks((nint)other, scene, item);
+                    if (new Span<byte>(other + marksFrom, marksBytes).IndexOfAnyExcept(fill) >= 0)
+                        Found(scene, item);
+                }
+            }
+        var ran = string.Join(", ", found.Select(p => $"0x{p.Key:X}: {string.Join("/", p.Value)}"));
+        var built = string.Join(", ", MapMovements.Listed.OrderBy(p => p.Key)
+            .Select(p => $"0x{p.Key:X}: {string.Join("/", p.Value.OrderBy(o => o))}"));
+        Check($"the remaster's own lists move something for {found.Count} scene(s) ({ran}), the build's "
+              + $"REMASTER_MAP_MOVEMENTS {(ran == built ? "the same" : "not: " + built)}",
+              found.Count > 0 && ran == built);
+
+        // Through the mod, as the game calls them. Eagrose Castle's gate: scene 434's object 1 starts animations 1 and 2.
+        var animate = (delegate* unmanaged<nint, int, int, int, int, void>)MapMovements.AnimationsStub;
+        var mark = (delegate* unmanaged<nint, int, int, void>)MapMovements.MarksStub;
+        MapMovements.GameAnimations((nint)view, 0x1B2, 0, 1, 0);
+        var own = Moved();
+        var theirs = MapMovements.Scenes.GetValueOrDefault(0x36A);
+        animate((nint)view, 0x36A, 0, 1, 0);
+        var arrival = Moved();
+        Check($"ReMixed's arrival at Eagrose (the port's 0x36A, standing in for scene {theirs}) moves the gate with object 1 "
+              + $"as the remaster's 434 does: animations {arrival} (the remaster's: {own})",
+              theirs == 0x1B2 && own == "1:2 2:2" && arrival == own);
+        animate((nint)view, 0x1B2, 0, 1, 0);
+        var depths = Moved();
+        Check($"ReMixed's Depths of Murond (the port's 0x1B2, a number of the remaster's list) moves nothing: \"{depths}\"",
+              MapMovements.Scenes.TryGetValue(0x1B2, out var none) && none == 0 && depths == "");
+        animate((nint)view, 0x9C, 0, 2, 0);
+        var lionel = Moved();
+        Check($"a scene of the remaster's own keeps its movements (156, Lionel's gate, object 2): {lionel}",
+              !MapMovements.Scenes.ContainsKey(0x9C) && lionel == "0:2 1:2");
+        // The marks of the other view: scene 4's object 2 (Orbonne's door), from all set.
+        byte[] Marks(nint list, int scene, int item)
+        {
+            var marks = new Span<byte>(other + marksFrom, marksBytes);
+            marks.Fill(0xFF);
+            ((delegate* unmanaged<nint, int, int, void>)list)((nint)other, scene, item);
+            return marks.ToArray();
+        }
+        var ownMarks = Marks((nint)MapMovements.GameMarks, 4, 2);
+        var orbonne = MapMovements.Scenes.FirstOrDefault(p => p.Value == 4).Key;
+        var itsMarks = Marks((nint)mark, orbonne, 2);
+        var noMarks = Marks((nint)mark, 0x1B2, 2);
+        Check($"the marks: the port's 0x{orbonne:X} (standing in for scene 4) changes what scene 4's object 2 does, and the "
+              + "Depths' number nothing",
+              orbonne != 0 && ownMarks.AsSpan().IndexOfAnyExcept((byte)0xFF) >= 0 && itsMarks.AsSpan().SequenceEqual(ownMarks)
+              && noMarks.AsSpan().IndexOfAnyExcept((byte)0xFF) < 0);
+
+        // The routine (the remaster's 0xCD): the animation's kind from the map's rows, state 2, or 1 for mode 1.
+        var line = MapMovements.Start((nint)view, 5, 0);
+        var started = Moved();
+        MapMovements.Start((nint)view, 5, 1);
+        var stopped = Moved();
+        // The mod's own mode 2: an animation on its last frame, as the game's frame code (0xC7664) leaves one of a
+        // kind that plays once. Made-up frames: animation 5's parts 0 and 3 have 12 and 7 frames, the rest none.
+        var frames = (byte*)System.Runtime.InteropServices.NativeMemory.AllocZeroed(
+            (nuint)(MapMovements.FrameBytes * MapMovements.AnimationCount));
+        int* Frames(int n, int part) =>
+            (int*)(frames + MapMovements.FrameBytes * n + MapMovements.PartBytes * part + MapMovements.PartFrames);
+        *Frames(5, 0) = 12;
+        *Frames(5, 3) = 7;
+        *(nint*)(view + MapMovements.ViewFrames) = (nint)frames;
+        float[] Clocks() => new ReadOnlySpan<float>(Entry(5) + 2, MapMovements.Parts).ToArray();
+        var ended = MapMovements.Start((nint)view, 5, MapMovements.AtEnd);
+        var (set, setState) = (Clocks(), Entry(5)[1]);
+        var tick = (delegate* unmanaged<nint, float, void>)(game.Image.ImageStart + 0xC7664);
+        tick((nint)view, 1f);
+        var held = Clocks();
+        MapMovements.Start((nint)view, 5, 0);
+        Entry(5)[0] = 2;  // a kind that plays once (2, 4 and 7 do)
+        for (var k = 0; k < 20; k++)
+            tick((nint)view, 1f);
+        var (played, playedState) = (Clocks(), Entry(5)[1]);
+        Moved();
+        *(nint*)(view + MapMovements.ViewFrames) = 0;
+        System.Runtime.InteropServices.NativeMemory.Free(frames);
+        Check($"the routine's mode 2 ({ended}): clocks {string.Join(" ", set)}, state {setState}; the game's frame code "
+              + $"leaves them ({string.Join(" ", held)}), and an animation that plays once, played by it from the start, "
+              + $"stops on the same ({string.Join(" ", played)}, state {playedState})",
+              setState == 1 && set[0] == 7f && set[3] == 6f && set.Count(c => c != 0f) == 2
+              && held.AsSpan().SequenceEqual(set) && played.AsSpan().SequenceEqual(set) && playedState == 1);
+        MapMovements.Start((nint)view, MapMovements.AnimationCount, 0);
+        MapMovements.Start(0, 5, 0);
+        *(int*)(view + MapMovements.ViewMap) = -1;
+        MapMovements.Start((nint)view, 5, 0);
+        var unloaded = Moved();
+        Check($"the routine for the remaster's 0xCD: mode 0 gives \"{started}\" ({line}), mode 1 \"{stopped}\"; an animation "
+              + $"past the last, no view and a view with no map loaded give nothing (\"{unloaded}\")",
+              started == "5:2" && stopped == "5:1" && unloaded == "");
+        System.Runtime.InteropServices.NativeMemory.Free(view);
+        System.Runtime.InteropServices.NativeMemory.Free(other);
         return failures;
     }
 
@@ -9908,10 +10233,11 @@ internal static unsafe class SelfTest
         var custom = new Options { JpGain = 37 };
         Check("a setting none of the choices has (set in the mod's settings) has no index",
               OptionsPage.Current(options.First(o => o.Setting.Name == nameof(Options.JpGain)), custom) == -1);
-        Check("only Controls → Fast-forward is kept for every save (in the mod's settings), not in the save",
+        // The mod's own two (Levels, Jobs & Gear → Broken Equipment, Controls → Fast-forward), in the page's order.
+        string[] modKept = [nameof(Options.BrokenEquipment), nameof(Options.FastForward)];
+        Check("only Broken Equipment and Controls → Fast-forward are kept for every save (in the mod's settings), not in the save",
               options.Where(o => o.Mod).Select(o => o.Setting.Name).SequenceEqual(
-                  options.Any(o => o.Setting.Name == nameof(Options.FastForward))
-                      ? new[] { nameof(Options.FastForward) } : Array.Empty<string>()));
+                  modKept.Where(name => options.Any(o => o.Setting.Name == name))));
         var fastForward = options.FirstOrDefault(o => o.Setting.Name == nameof(Options.FastForward));
         if (fastForward == null)
             log.Info("self-test: options page, this list has no Controls group (one from before it; a full build adds it)");

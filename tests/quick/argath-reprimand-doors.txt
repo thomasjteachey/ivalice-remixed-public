@@ -1,0 +1,25 @@
+# The Argath campaign's reprimand in Eagrose Castle (ReMixed's event 0x00F, the port's scenario 0x313: "What madness
+# possessed you that you would abandon your posts..."), vanilla's 0x02D retold: after Dycedarg's question the doors
+# open (field objects 3 and 5). The remaster's own scene there (45) moves the redrawn map's animation 0 for object 3
+# by the scene's number, and has its own instruction (0xCD: animation 2) after object 5. ReMixed's scene under the
+# port's number got neither; now the code's list is asked as scene 45 (the build's MAP_MOVEMENT_SCENES: the first
+# line) and the event calls the code mod's routine after object 5 (MAP_ANIMATION_CALLS: the second line). The scene
+# is played fast to the doors, then framed at its own speed.
+#   python -I tools/quick_test.py --restart tests/quick/argath-reprimand-doors.txt
+name The Argath campaign's reprimand: the doors
+wait world depth=1 state=0 timeout=20
+scenario 0x313
+wait log "loaded event 787" timeout=90
+send speed 5
+wait log "event 787's message (11|31) shown" press=RETURN every=1 timeout=300
+send speed off
+wait seconds 6
+shot doors-before
+key RETURN
+wait log "map movements: scenario 0x313's field object 3 moves the redrawn map as the remaster's scene 45's" timeout=120
+expect peek [[+0x3CC96B8]+0x24280]+0x24 02 00 00 00
+wait log "map movements: map animation 2 \(kind \d+\) set to state 2" timeout=30
+wait seconds 2
+shot doors-opening
+wait seconds 4
+shot doors-open

@@ -49,6 +49,7 @@ internal static unsafe class BattleEnd
         Armed = false;
         if (armed)
             Run(Before, "before");
+        RosterGuard.KeepOutRepeats(); // a scene's joins too, battle or not: no story character joins twice
         var result = _writeBack();
         if (armed)
             Run(After, "after");

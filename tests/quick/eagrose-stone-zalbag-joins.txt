@@ -1,0 +1,95 @@
+# Eagrose in chapter 4, after the battle: Dycedarg's change (ReMixed's 0x10E, event 884), Zalbag kept alive by Shell,
+# his thanks and his join (0x06E's second half, event 874), and the world map after. A tester on 0.9.39 (2026-11-26)
+# saw four things here:
+# - The Stone's lines ("Holder of the Holy Stone...") sped by. They're in the narration layer, which the remaster
+#   closes once its text has run; they wait for a press now (tools/build_mod.py NOTICE_MESSAGES). `stone-line`: the
+#   first of them still up 6 s after it came, nothing pressed.
+# - The Stone turned into a man as the camera turned: the frame paired with the Stone's in ReMixed's graphic 0x59 is
+#   a figure (EVENT_GRAPHIC_ONE_SIDED). The stone-* frames show the Stone and its lines as the camera turns.
+# - "Recruit" on Zalbag's join screen, then the lines for "no" ("you would be of more help if you went your own
+#   way"): the upgrade's party test looked at the first 20 places only, and a chapter-4 party puts him past them
+#   (fixed in the upgrade's 1.0.2, 0.9.40). Here the first 21 places are filled first, so he joins in place 21 or
+#   later; `joined` is his join screen, then the White Chocobo's, and his lines for "yes" ("Then House Beoulve is no
+#   more"), not message 9.
+# - The world map's objective stayed "Meet with Dycedarg at Eagrose Castle.": the remaster's stage now follows the
+#   story to 1770 ("Rescue Alma from Mullonde Cathedral.") as the world map comes back (STORY_STAGE_FLOORS).
+# With Zalbag protected, Dycedarg's change goes on into a battle with Adramelk (its first block ends on "Your turn,
+# Ramza"); he is downed (`defeat`), and his fall's block hands on to Zalbag's scene. The harness's save is from chapter
+# 1, so the world map shows the remaster's tutorial cards for the stages skipped first; three presses close them.
+#   python -I tools/quick_test.py --restart tests/quick/eagrose-stone-zalbag-joins.txt
+name Eagrose: the Stone's lines and sprite, Zalbag joins past the 20th place, the goal after
+wait world depth=1 state=0 timeout=20
+setvar 0x6E 0x33
+send stage 0 1710
+copy roster 0 1 sprites=0x80 job=0x4A
+copy roster 0 2 sprites=0x80 job=0x4A
+copy roster 0 3 sprites=0x80 job=0x4A
+copy roster 0 4 sprites=0x80 job=0x4A
+copy roster 0 5 sprites=0x80 job=0x4A
+copy roster 0 6 sprites=0x80 job=0x4A
+copy roster 0 7 sprites=0x80 job=0x4A
+copy roster 0 8 sprites=0x80 job=0x4A
+copy roster 0 9 sprites=0x80 job=0x4A
+copy roster 0 10 sprites=0x80 job=0x4A
+copy roster 0 11 sprites=0x80 job=0x4A
+copy roster 0 12 sprites=0x80 job=0x4A
+copy roster 0 13 sprites=0x80 job=0x4A
+copy roster 0 14 sprites=0x80 job=0x4A
+copy roster 0 15 sprites=0x80 job=0x4A
+copy roster 0 16 sprites=0x80 job=0x4A
+copy roster 0 17 sprites=0x80 job=0x4A
+copy roster 0 18 sprites=0x80 job=0x4A
+copy roster 0 19 sprites=0x80 job=0x4A
+copy roster 0 20 sprites=0x80 job=0x4A
+scenario 0x373
+wait log "formation: screen open" press=RETURN every=1 timeout=300
+formation units=1
+advance opening every=1.5 timeout=300
+wait unit battle_id=0x8 present=1 timeout=60
+poke unit battle_id=0x8 offset=0x64 or=10
+show units
+defeat
+wait log "loaded event 884" press=RETURN every=2 timeout=120
+wait log "event 884's message (2|25) shown" press=RETURN every=1.5 timeout=200
+wait seconds 6
+shot stone-line
+wait log "event 884's message (4|27) shown" press=RETURN every=1.5 timeout=120
+wait seconds 4
+shot stone-second
+wait log "event 884's message (8|31) shown" press=RETURN every=1.5 timeout=120
+wait seconds 4
+shot stone-third
+wait log "event 884's message (11|34) shown" press=RETURN every=1.5 timeout=120
+wait seconds 4
+shot stone-last
+wait log "event 884's message (18|41) shown" press=RETURN every=1.5 timeout=300
+wait seconds 4
+shot adramelk-line
+key RETURN
+wait seconds 8
+shot adramelk-battle
+defeat
+wait log "event 874.s message" press=RETURN every=1.5 timeout=300
+wait log "to the join screen" press=RETURN every=2 timeout=240
+wait seconds 4
+shot join-screen
+key RETURN
+wait log "join screen: battle id 0x08" timeout=30
+wait seconds 2
+shot joined
+wait log "event 874's message (12|25) shown" press=RETURN every=1.5 timeout=120
+wait seconds 2
+shot yes-lines
+advance world every=1.5 timeout=300
+show roster
+expect roster sprites=0x8
+expect var 0x6E 0x34
+wait log "world roads: the remaster's stage 1710 is 1770" timeout=30
+send stage
+key RETURN
+wait seconds 3
+key RETURN
+wait seconds 3
+key RETURN
+wait seconds 4
+shot world-after

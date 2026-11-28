@@ -1,0 +1,28 @@
+# Side chapter 1-A's three carry on into chapter 2 (a player on 0.9.42, 2026-11-27: "Doing the side story you get
+# double Agrias/Alicia/Lavian", and their gear). The test save gets 1-A's party as 0x0FC leaves it: its Agrias
+# (sprite set and name id 0x1E) and the Lionsguard knights Alicia (0x79) and Lavian (0x78), generic women, in party
+# slots. Then 1-A's last scene, 0x11A (the mod's 0x7F), which moves its Agrias into the remaster's third guest slot,
+# 52 (tools/build_mod.py SIDE_CHAPTER_A_GUEST), and hands on to the remaster's chapter-2 opening (event 117, battle
+# entry 0x110), whose Alicia, Lavian and guest Agrias (name id 0x34) are kept out of its join (RosterGuard), and Rad,
+# whom the save hasn't, joins. Both scenes at x5, a frame before each press, to the world map. Run with
+#   python -I tools/quick_test.py --restart --stop tests/quick/side-chapter-end-roster.txt
+name 1-A's three carry on into chapter 2
+wait world depth=1 state=0 timeout=30
+copy roster 0 3 sprites=0x1E job=0x1E name_id=0x1E right_hand=0x13
+copy roster 0 4 sprites=0x81 job=0x4C name_id=0x79
+copy roster 0 5 sprites=0x81 job=0x4C name_id=0x78
+show roster
+setvar 0x6C 0
+setvar 0x6E 0xE
+send speed 5
+scenario 0x7F
+wait log "scenario 0x7F" timeout=60
+advance world every=1.5 shots=1 timeout=900
+show roster
+expect roster name_id=0x1E slot=52
+expect roster name_id=0x1E count=1
+expect roster name_id=0x34 count=0
+expect roster name_id=0x79 count=1
+expect roster name_id=0x78 count=1
+expect roster name_id=0x7F count=1
+send speed off

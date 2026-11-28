@@ -40,6 +40,7 @@ public class Startup : IMod
             var optionsPath = Path.Combine(loader.GetModConfigDirectory(modConfig.ModId), Options.FileName);
             Options.Current = Options.Read(optionsPath, out var problem);
             Options.Settings = Options.Current.Copy();
+            Options.SettingsWritten = Options.WrittenAt(optionsPath);
             if (problem != null)
                 log.Warn($"options: {optionsPath} can't be read ({problem}); using ReMixed's defaults");
             log.Info($"options: {Options.Current}");

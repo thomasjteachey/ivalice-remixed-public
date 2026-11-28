@@ -766,6 +766,17 @@ internal static unsafe class Rules
                 game.Log.Error($"rules: the remaster's lookup of a guest by sprite set not moved: {e.Message}");
             }
         }
+        if (rules.Remove("map-movements"))
+        {
+            try
+            {
+                enabled.Add(MapMovements.Install(game, data.GetProperty("map-movements")));
+            }
+            catch (Exception e)
+            {
+                game.Log.Error($"rules: the redrawn maps' gates and doors stand still in ReMixed's scenes: {e.Message}");
+            }
+        }
         if (rules.Remove("remixed-scenarios"))
         {
             try

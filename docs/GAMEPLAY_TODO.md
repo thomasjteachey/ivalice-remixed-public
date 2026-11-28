@@ -5,7 +5,7 @@ is, and what it waits on. The technical details (what ReMixed's code does, where
 [MECHANICS.md](MECHANICS.md) and [REMASTER.md](REMASTER.md); data held back is in
 [the build report](generated/mod-build.md).
 
-**Progress: 94% of gameplay** (106 done, 6 open: 2 small, 4 medium, 0 large). Worked out from this list by
+**Progress: 94% of gameplay** (106 done, 7 open: 4 small, 3 medium, 0 large). Worked out from this list by
 `python -I tools/todo_progress.py`, open items weighted by size (small 1, medium 3, large 15) and done ones at 2 each,
 and updated with every change to the list. Everything outside the story and display ports is ported or settled
 (the formulas ReMixed rewrote in place were the last, 2026-11-12; ReMixed's own battles writing their units back,
@@ -499,18 +499,79 @@ the Lionel scene's event art and Two Shots have sessions of their own):
   Seen in the hidden PC game: the black shape on 0.9.39, the white bird on the fix
   (`tests/quick/eagrose-gate-arrival.txt`). Not seen: Zalbag in his other colours, and a White Chocobo's face on
   a unit card. *small*
-- [ ] Eagrose Castle's gate stands still after Ramza uses the switch, and he walks in through it (the same
-  tester, same scene; seen in the hidden PC game: the portcullis down as he walks into it). Looked into
-  (2026-11-26), not fixed. It isn't ReMixed's script: with the remaster's own script for this scene put in its
-  place the gate stayed down just the same, and so it did with the game's own table of map movements instead of
-  the mod's. The remaster's script has nothing in it that moves the redrawn gate, where its other gate scenes
-  (Lionel's among them) do carry an instruction for that. So either the remaster's own scene leaves this gate
-  down too, or something in how the port sets the scene up stops it. Next: watch this scene in the game without
-  the mod (Eagrose Castle at the start of chapter 4's ending, a save just before it). If the gate rises there,
-  compare how the two scenes are set up; if not, it is the remaster's own and stays. Found on the way: ReMixed's
-  scenes at Lionel's gate (Beowulf and Reis's story) and one in the Argath campaign retell scenes where the
-  remaster does move a part of the map, with an instruction ReMixed's scenes can't carry yet; not seen in the
-  game, and likely still as well. *medium*
+- [x] Eagrose Castle's gate stood still after Ramza used the switch, and he walked in through it (the same
+  tester, same scene). Fixed 2026-11-26; the port was at fault. The remaster keeps the old map under its redrawn
+  one, and a scene's switch moves the old gate. Which redrawn part moves with it comes from a list built into the
+  game, and the list goes by the scene's number: "in scene 434, this part of the old map raises that part of the
+  new one". ReMixed's scenes run under numbers of the port's own, which the list has never heard of, so the old
+  gate rose out of sight and the redrawn one stayed down. (That is also why the remaster's own script made no
+  difference when it was tried in this scene's place: it ran under the port's number too. So the remaster's gate
+  does rise in its own game; the game's code says so, and the offline check runs that code.) The port now tells
+  the list which of the remaster's scenes each of ReMixed's stands in for.
+  The same cause, everywhere it applies: eleven of ReMixed's scenes move a part of a map that the remaster moves
+  by its list. Zalbag's story at Eagrose has two (the gate, and the hall inside that follows it), Beowulf's story
+  one (Lionel Castle's gate), the Argath campaign five (Dycedarg's reprimand, where the doors open, among them),
+  the branch where Hirame was saved one, and 1-A's end at Orbonne two. All
+  eleven are told their scene now, and every other scene of ReMixed's is told "none", so a number the port
+  borrowed from the remaster can't move another map by mistake. Two of them (Lionel's gate, the reprimand) also
+  need a second movement that the remaster's scripts start with an instruction of their own, which ReMixed's
+  scenes couldn't carry; they start it now too. The build stops if a scene of ReMixed's ever uses a moving part
+  on such a map without having been given its scene, and the offline check runs the game's own list for every
+  scene and compares it with the one the build goes by (30 scenes, the same).
+  Seen in the hidden PC game, all eleven, ten of them side by side with ReMixed on the PS1 and the same:
+  - Eagrose's portcullis going up after the switch and Ramza walking in under it
+    (`tests/quick/eagrose-gate-arrival.txt`), and in the hall inside, the two doors opening for the Hokuten
+    knights, one after the other (`eagrose-hall-doors.txt`).
+  - The Argath campaign: the door opening for Larg in the reprimand (`argath-reprimand-doors.txt`); the Beoulve
+    manor's door in both scenes there (`beoulve-manor-door-reprimand.txt`, where it opens out of the picture while
+    the camera is on the roofs and stands open when the camera comes down, as on the PS1, and
+    `beoulve-manor-door-farewell.txt`, where it opens in plain view and Argath walks out); the door at the top of
+    the snowbound fort's slope, which the kidnapper runs through (`sluice-gate-argath.txt`); and Fort Zeakden's
+    tower door shutting behind him (`zeakden-gate-argath.txt`).
+  - The branch where Hirame was saved: the same fort's door opening for the knights sent in to search and shutting
+    behind them (`sluice-gate-hirame.txt`).
+  - 1-A's end: Orbonne's door opening and shutting as Agrias and her knights go in, opening and shutting again
+    months later as a knight comes out to stand guard, and opening once more for the wounded Whitney
+    (`orbonne-door-agrias.txt`); and under the monastery, the vault's door opening as Delita comes in
+    (`orbonne-vault-door.txt`).
+  - Lionel's gate standing open as its scene fades in on "The gate's wide open." (`lionel-gate-movements.txt`; its
+    movements happen under a black screen, and it is the one without a PS1 frame beside it: the PS1's formation
+    wouldn't start that battle from the test state).
+  One of the eleven was wrong and is put right: Fort Zeakden's tower door. The redrawn fort is drawn with that
+  door open, because the remaster's own scene opens it in its first second; the only movement it has is the
+  shutting. ReMixed's scene has three lines of its own first, with the tower at the right edge of a wide screen,
+  so the door stood open where ReMixed's is still shut, and the battle after the scene, which loads the map
+  afresh, was fought with the door open where ReMixed's is shut. Now the door starts shut in that scene and in
+  its battle and is opened at ReMixed's moment (at once: the redrawn map has no opening to play, and it happens at
+  the picture's edge), then shuts on its own cue as before. Seen in the hidden PC game beside the PS1: shut at the
+  start, open when the kidnapper stands in it, shutting behind him, shut in the battle.
+- [x] In Dycedarg's change at Eagrose the Stone's lines ("Holder of the Holy Stone... Promise me...") sped by
+  unread (a tester on 0.9.39, 2026-11-26). ReMixed shows them as words with no box, which the remaster takes down as
+  soon as they've run, whatever the scene waits for. They wait for a press now in a box of their own, as ReMixed's
+  wait for one. Every such line in the port was checked: the same went for the Argath campaign's opening narration
+  ("During the Fifty Year War..."), fixed too, and for 1-A's prologue, fixed on 0.9.5 but lost again in 0.9.40's
+  copy of the scene that runs (put back). In a box of its own the line stayed up once read, first whole and then
+  as an empty frame, over the scene's next lines, since ReMixed's line closed itself on the press: each such box now
+  closes after its press where the scene doesn't close it itself. Seen in the hidden PC game (2026-11-28,
+  `tests/quick/eagrose-stone-zalbag-joins.txt`): the Stone's first line still up 6 s after it came with nothing
+  pressed, and each of the four alone on screen. *small*
+- [x] The Stone in the same scene turned into a man as the camera turned (the same tester: "the stone EVTCHR sprite
+  might need to get swapped out"). A picture an event puts on the field has a second one for its other side, which
+  the game shows as the camera turns; ReMixed's scenes keep the camera still while one is out, and the Stone's other
+  side is someone else (ReMixed's author: the camera angle change is what does it; he drew Dycedarg's two sides
+  alike for it, not the Stone's). The port's Stone shows the Stone from both sides. Seen in the hidden PC game:
+  the Stone by the fallen Dycedarg in every frame of the scene; the camera didn't turn to the Stone's other side
+  there, so that side is checked in the shipped picture only. *small*
+- [x] Zalbag's join screen at Eagrose answered "Recruit" with the lines for "no" ("you would be of more help if you
+  went your own way") (the same tester, on 0.9.39). The scene asks whether Zalbag is in the party, and the
+  upgrade's test looked at the first 20 places only, where a chapter-4 party has him past them: fixed in 0.9.40 (the
+  upgrade's 1.0.2, the dragon hunters' item above). Seen in the hidden PC game on 0.9.43
+  (`tests/quick/eagrose-stone-zalbag-joins.txt`, the first 21 places filled): Zalbag joins into place 21, the White
+  Chocobo after him, then his "Then House Beoulve is no more", and the world map after. *small*
+- [ ] ReMixed's narration on a timer runs by unread, as the Stone's lines did: the Argath campaign's ending ("For the
+  crime of murdering a son of House Beoulve...") and its credits roll (ReMixed's and The Lion War's credits, in the
+  Depths of Murond). Each needs to stay up as long as ReMixed's does, as the Rendezvous notice does now, rather than
+  wait for a press. Found reading the scenes (2026-11-26), not seen in the game. *small*
 - [ ] ReMixed's choice before the duel with Wiegraf inside Riovanes Castle ("Reject duel" or "Accept duel", so the
   fight needn't be fought alone) isn't in the port: the remaster's scene and its solo fight play (the same tester
   remembered it rightly). Looked into (2026-11-26), not built: it is story-port work, bigger than the three fixes
@@ -543,12 +604,29 @@ the Lionel scene's event art and Two Shots have sessions of their own):
     ones (the remaster's own priest, first colour set), and no instruction of the scene colours it; what darkens
     it isn't found. Still to try: the same figure on another tile or another map, to tell the map's lighting from
     the way the unit is drawn.
-  - The 1-A Agrias, Alicia and Lavian kept beside chapter 2's new ones: a design choice to settle before building.
-    ReMixed turns the 1-A three into chapter 2's guests; the remaster's chapter 2 makes its own at its opening
-    (two Lv 8 knights who join, a Lv 10 guest Agrias), so a player has both. What each way would take is written
-    up for the choice (keep the levelled three, or let them leave as 1-A ends).
+  - The 1-A Agrias, Alicia and Lavian kept beside chapter 2's new ones: settled for ReMixed's way and fixed
+    (2026-11-27, the item on the doubled three below).
 
   *medium*
+- [x] Two of Agrias, Alicia and Lavian in chapter 2 after side chapter 1-A, each with her gear (a player on 0.9.42,
+  2026-11-27: "Doing the side story you get double Agrias/Alicia/Lavian"). In ReMixed the 1-A three carry on: 1-A's
+  end puts its Agrias in the PS1's third guest slot (18; the PS1 keeps guests in 16-19), and chapter 2's opening
+  skips the join of anyone the roster has by name. The port runs the remaster's own opening there (event 117), which
+  has no such check: its Alicia, Lavian and Rad are generic Knights, which the remaster's skip by sprite set misses,
+  and its guest Agrias is written in with no check at all, while 1-A's Agrias sat in the remaster's party slot 18
+  (its guests are in 50-53). Now 1-A's Agrias goes to the remaster's third guest slot, 52, so she is chapter 2's guest
+  with her levels and gear, as in ReMixed, and the remaster's later battles load her from there. And no unit made
+  afresh from battle data joins as a story character (a name of its own) whom the roster already has, for every join
+  of the remaster's and ReMixed's (`RosterGuard`; the remaster's guest Agrias and Rafa count as their party selves).
+  None of the remaster's or ReMixed's own joins is kept out by that: read in their battle data, each such character
+  joins once, or is sent away first. A save already in chapter 2 with both Agrias, up to Lionel (story progress
+  0xF-0x15), is put right as it loads: 1-A's Agrias takes the guest's slot and the other goes. The extra Alicia and
+  Lavian stay, as they're ordinary party members by then: a player can dismiss the ones they don't want. Not
+  handled: a save past Lionel with both Agrias. Seen in the hidden PC game (2026-11-28,
+  `tests/quick/side-chapter-end-roster.txt`: the test save given 1-A's Agrias, Alicia and Lavian, then 0x11A at x5
+  into the chapter-2 opening): 1-A's Agrias in guest slot 52, the opening's Alicia, Lavian and guest Agrias kept out
+  of its join, Rad alone on the join screen, then the world map with chapter 2's objective; one of each of the three in
+  the roster. The save repair is self-tested offline, not seen on a loaded save. *medium*
 - [x] The road from the Zeklaus Desert to Dorter was drawn grey in side chapter 1-A, though the party walks it (a
   tester, 2026-11-22), and the objective's diamond stood on Dorter all through the chapter, whatever its objective line
   said. The remaster keeps its own count of the story, which only its own scenes move on. From it the world map takes
@@ -574,12 +652,14 @@ the Lionel scene's event art and Two Shots have sessions of their own):
   all through side chapter 1-A, in the Argath campaign and in Beowulf's arc). The Treasure Wheel's chests and Reveal
   Treasures' arrows stay as they were seen beside the PS1. Seen in the hidden PC game (2026-11-25): the dream's
   knight carrying the child, before and after, in `tests/quick/side-chapter-roads.txt`'s frame of him. *small*
-- [ ] After Eagrose in chapter 4 the world map's objective line stays "Meet with Dycedarg at Eagrose Castle." until
-  Mullonde (found 2026-11-25, reading the scenes; not seen in the game). ReMixed's Eagrose scenes stand in for the
-  remaster's two that moved its count of the story on to "Rescue Alma from Mullonde Cathedral.", and the story's own
-  progress doesn't change between the two, so the count can't follow it as it does after Araguay: it has to be set as
-  ReMixed's Eagrose ends. No road is greyed by it. The other scenes whose count is left behind change nothing a player
-  sees (the build names each, with why). *small*
+- [x] After Eagrose in chapter 4 the world map's objective line stayed "Meet with Dycedarg at Eagrose Castle." and its
+  marker on Eagrose, where nothing more plays, until Mullonde's first scene (a tester on 0.9.39, 2026-11-26: "Nothing
+  triggers if you leave and go back to Eagrose"; found 2026-11-25 reading the scenes). The remaster's own Eagrose
+  scenes move its count of the story on as they play, the last with the story's progress; ReMixed's play in their
+  place and set the progress alone. Now the count follows the progress as the world map comes back, to "Rescue Alma
+  from Mullonde Cathedral.", as it does after Araguay (the note here before, that the progress doesn't change between
+  the two, was a misreading). No road was greyed by it. Seen in the hidden PC game: back on the world map after
+  Zalbag's scene the remaster's count is 1770 (`tests/quick/eagrose-stone-zalbag-joins.txt`). *small*
 - [x] 1-A's last battle hung on a black screen when a child fell (a tester on the Deck, 2026-11-22: a red chocobo's
   Choco Meteor, then nothing answered, fast-forward included). ReMixed's event for the fall names the fallen child as
   the speaker of its cry one instruction too early, so it overwrote the next instruction instead. The PS1's script
@@ -865,6 +945,27 @@ Asked on the Deck (2026-11-18):
 
 Reported by a player:
 
+- [x] Broken equipment back after the battle (a player's request on 0.9.40, 2026-11-27: the Rendezvous knights
+  break gear constantly; ReMixed sells it at the Poachers' Den, which the remaster's den has no room for). A new
+  setting of the mod's own, Broken equipment (Lost by default, or Back after battle), in Configure Mod and on the
+  ReMixed tab under Levels, Jobs & Gear: gear the Knight's Rend abilities break on your units, and a katana Draw Out
+  breaks, goes back in the inventory when the battle ends, as stolen gear already does. Found on the way: a preview
+  of a Draw Out (the targeting screen's, the AI's) could leave a break behind for the same unit's next real one;
+  fixed. Seen in the hidden PC game (2026-11-28, `tests/quick/broken-equipment-back.txt`): with the setting on, a
+  Rend Helm on one of your own units broke its Grand Helmet, and after the battle the inventory held one (0 before).
+  The katana half and the preview fix are checked offline only. *small*
+- [ ] Guest control set to Always, and Delita still the AI's in the second battle, at Gariland (a player on 0.9.40,
+  2026-11-27). The setting gave a guest to the player in only one of the two places the game keeps a unit's side,
+  and the game puts the other back over it, so no guest ever changed hands (the test mode's hand-over to the AI met
+  the same, 2026-11-05). Now both are set; checked offline, not seen in the game yet. To see: Gariland with Guest
+  control at Always, Delita takes orders. *small*
+- [ ] The Argath campaign ticked, and a new game was the normal one (the same player). Configure Mod's settings were
+  read only as the game started, so a change made there with the game open reached nothing until a restart; the
+  same went for the options a new game takes as its own (Guest control among them). Now the mod reads its settings
+  again when Configure Mod saves them, and the Argath campaign and a new game's options follow at once (test mode,
+  separate saves and fast-forward still wait for a restart). Checked offline; whether this was the player's case
+  isn't known yet (their log would say: "scenario 0x2 ... hands on to"). To see: tick it with the game open, start
+  a new game, the tunnel after the chapel. *small*
 - [x] The game closed at the end of the battle at Riovanes Castle's gate, a few seconds after "Pray let them be safe.
   Alma...and Rapha, too." (a tester on 0.9.22), and in the frog scene before it Rafa was another character's sprite
   and face, with "? joined the party as a guest" at level 0. The port moved the remaster's Rafa off sprite set 0x19
@@ -1736,9 +1837,11 @@ In order:
 - ReMixed's Dark Knight is the remaster's own Dark Knight job (its gear, skills and unlock: Knight 8 and Black Mage
   8), for men and women; Bard and Dancer keep their own slots, with ReMixed's songs and the two-job innate. The job
   menu doesn't offer it yet (below, waiting for the display port).
-- Broken gear at the Poachers' Den, settled as not portable: the remaster's den trades 96 monster carcasses
-  (PoachItem, one common and one rare row per monster), and its saved counts have exactly 97 slots with other save
-  data after them, so there's no room for broken equipment or katanas.
+- Broken gear at the Poachers' Den, settled as not portable as ReMixed has it: the remaster's den trades 96 monster
+  carcasses (PoachItem, one common and one rare row per monster), and its saved counts have exactly 97 slots with
+  other save data after them, so there's no room for broken equipment or katanas. Doing it would take new den
+  entries, counts kept by the mod beside each save, and code in the den's screen. The mod's own Broken equipment
+  setting returns broken gear after the battle instead (below).
 - Sexuality and Charm, settled: ReMixed's setting reaches Charm only through zodiac compatibility (already
   ported); the menu's other Charm differences have no code behind them.
 - The party level that enemies scale to leaves out units away on errands (ReMixed's rule; vanilla counts the whole

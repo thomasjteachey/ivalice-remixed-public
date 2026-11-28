@@ -18,6 +18,14 @@ namespace IvaliceRemixed.Patches;
 /// each was in the roster twice after the scene (seen on the PC). A unit this join writes has its flag cleared now. It
 /// shows no join screen: that's display state 7's (<see cref="BattleEnd.JoinScreenPending"/>), whose writes of the
 /// units it shows are logged here.</para>
+/// <para>A story character who'd join a second time (<see cref="KeepOutRepeats"/>): before either join, a unit made
+/// afresh from its battle data (not loaded from the roster, +6 &amp; 0x08) that would join (+6 &amp; 0x10) under a story
+/// name of its own (a name id under 0x100; a generated one is 0x100 and up) the roster already has, doesn't. The
+/// remaster's own skip by sprite set misses the Lionsguard knights (generics), and a joiner that saves its formation (+6
+/// &amp; 1, the chapter-2 guest Agrias) is written in with no check at all, so after side chapter 1-A the remaster's
+/// chapter-2 opening (event 117, battle entry 0x11B) made a second Agrias, Alicia and Lavian, each with her own gear (a
+/// player, 2026-11-27). ReMixed's own opening (0x01B) clears the join flag of each one the roster has by name
+/// (HAS_CHARACTER), which the remaster's script can't do, so the rule does it for every join, theirs and ReMixed's.</para>
 /// Installed with ReMixed's scenarios (<see cref="RemixedScenarios"/>).
 /// </summary>
 internal static unsafe class RosterGuard
@@ -31,18 +39,24 @@ internal static unsafe class RosterGuard
     internal const string JoinNowPattern =
         "48 89 5C 24 08 48 89 6C 24 18 56 57 41 56 48 83 EC 20 44 8A F1 48 8D 2D ?? ?? ?? ?? 33 DB 83 FB 14";
     internal const uint NotWritten = 0xFFFFFFFF;
-    internal const byte JoinsFlag = 0x10;
+    internal const byte JoinsFlag = 0x10, LoadsFormation = 0x08, SavesFormation = 0x01;
+    /// <summary>A battle unit's name id (+0x1FC) and a roster record's (+0x230). A story name is under 0xFF: the battle
+    /// data's 0xFF asks for a random one, and a generated name is 0x100 and up.</summary>
+    internal const int UnitName = 0x1FC, RosterName = 0x230, RandomName = 0xFF;
 
     internal static nint At, JoinNowAt;
     private static delegate* unmanaged<byte*, int, uint> _game;
     private static delegate* unmanaged<byte, void> _joinNow;
     private static Log _log = null!;
-    private static int _noted, _joinsNoted;
+    private static int _noted, _joinsNoted, _repeatsNoted;
     private static bool _joining;
+    private static byte* _units, _roster;
 
     public static void Install(Game game)
     {
         _log = game.Log;
+        _units = game.TurnCode.Units;
+        _roster = OldGuests.FindRoster(game.Image);
         At = game.Image.FindUnique(Pattern);
         _game = (delegate* unmanaged<byte*, int, uint>)game.Hooks.Hook(
             At, (nint)(delegate* unmanaged<byte*, int, uint>)&WriteBack, "the roster write-back");
@@ -64,9 +78,59 @@ internal static unsafe class RosterGuard
         return true;
     }
 
+    /// <summary>The character a name id is: the remaster names its guests Agrias and Rafa by the ids of their second
+    /// sprite sets (0x34, 0x19; CharaName "Agrias", "Rapha") and the party's by their own (0x1E, 0x29), and each guest is
+    /// sent away before the party's joins (events 158 and 281), so the pairs are one character. 1-A's Agrias is 0x1E.</summary>
+    internal static int Character(int name) => name switch
+    {
+        OldGuests.OldAgrias => OldGuests.Agrias,
+        OldGuests.OldRafa => OldGuests.Rafa,
+        _ => name,
+    };
+
+    /// <summary>The battle units that would join as a story character the roster already has, kept out of the join:
+    /// their join and save flags cleared. Returns how many. Called before the join now and the battle end's
+    /// write-back.</summary>
+    internal static int KeepOutRepeats(byte* units, byte* roster, Action<string>? note)
+    {
+        if (units == null || roster == null)
+            return 0;
+        var kept = 0;
+        for (var k = 0; k < Battle.UnitCount; k++)
+        {
+            var unit = units + k * Battle.UnitSize;
+            if (unit[1] == 0xFF || (unit[6] & JoinsFlag) == 0 || (unit[6] & LoadsFormation) != 0)
+                continue;
+            var name = *(int*)(unit + UnitName);
+            if (name is <= 0 or >= RandomName)
+                continue;
+            for (var slot = 0; slot < UnitTables.RosterSlots; slot++)
+            {
+                var record = roster + slot * UnitTables.RosterSize;
+                if (record[1] == 0xFF || Character(*(int*)(record + RosterName)) != Character(name))
+                    continue;
+                unit[6] &= unchecked((byte)~(JoinsFlag | SavesFormation));
+                kept++;
+                note?.Invoke($"battle unit {k} (battle id 0x{unit[0x191]:X2}, sprite set 0x{unit[0]:X2}, name id 0x{name:X}) "
+                             + $"won't join: roster slot {slot} has the character already");
+                break;
+            }
+        }
+        return kept;
+    }
+
+    /// <summary><see cref="KeepOutRepeats"/> on the game's battle units and roster.</summary>
+    internal static void KeepOutRepeats() =>
+        KeepOutRepeats(_units, _roster, text =>
+        {
+            if (_repeatsNoted++ < 16)
+                _log.Info($"roster guard: {text}");
+        });
+
     [UnmanagedCallersOnly]
     private static void JoinNow(byte opening)
     {
+        KeepOutRepeats();
         _joining = true;
         try
         {

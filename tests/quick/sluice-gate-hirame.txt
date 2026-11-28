@@ -1,0 +1,49 @@
+# The branch where Hirame was saved (ReMixed's event 0x104, the port's scenario 0x375), at the snowbound fort (map
+# 27): after the Knight Captain's first line ("You three, check this building.") field object 0 opens the door at the
+# top of the slope, three knights go in, and object 1 shuts it behind them. The remaster moves the redrawn door from
+# its code's list as its scene 205's (object 0: the map's third animation, the opening; object 1 stops it and starts
+# the fourth, the shutting), the build's MAP_MOVEMENT_SCENES. The two pokes give the roster Hirame and Wright, as
+# the scene's own case does (roster-loads-hirame.txt).
+# How each part is framed: the scene is played fast to a line or two ahead, then at its own speed while the code
+# mod's line is waited for ("map movements: scenario ...'s field object N moves the redrawn map as the remaster's
+# scene M's", logged the first time each object starts in a run), with a press every 4 s to close the lines on the
+# way and a frame every second (film=: NAME-NNNN.png, tenths of a second into the wait), so the last of them is
+# the map just before the part moves, however the lines closed. Then a frame at once (NAME-at), six peeks of the
+# redrawn map's first animations (kind, state: 2 is running), and frames by the clock (NAME-after-NN, seconds).
+#   python -I tools/quick_test.py --restart tests/quick/sluice-gate-hirame.txt
+name The Hirame branch at the snowbound fort: its door opens and shuts (0x104)
+wait world depth=1 state=0 timeout=20
+send poke +0x11A8D78 35
+send poke +0x11A8FA8 36 00
+scenario 0x375
+wait log "loaded event 885" timeout=90
+wait log "map movements: scenario 0x375's field object 0 moves the redrawn map as the remaster's scene 205's" press=RETURN every=4 film=first timeout=180
+expect peek [[+0x3CC96B8]+0x24280]+0x2F7DC 02 00 00 00
+shot first-at
+send peek [[+0x3CC96B8]+0x24280]+0x20 8
+send peek [[+0x3CC96B8]+0x24280]+0x17BFC 8
+send peek [[+0x3CC96B8]+0x24280]+0x2F7D8 8
+send peek [[+0x3CC96B8]+0x24280]+0x473B4 8
+send peek [[+0x3CC96B8]+0x24280]+0x5EF90 8
+send peek [[+0x3CC96B8]+0x24280]+0x76B6C 8
+wait log "map movements: scenario 0x375's field object 1 moves the redrawn map as the remaster's scene 205's" press=RETURN every=4 film=second timeout=180
+expect peek [[+0x3CC96B8]+0x24280]+0x473B8 02 00 00 00
+shot second-at
+send peek [[+0x3CC96B8]+0x24280]+0x20 8
+send peek [[+0x3CC96B8]+0x24280]+0x17BFC 8
+send peek [[+0x3CC96B8]+0x24280]+0x2F7D8 8
+send peek [[+0x3CC96B8]+0x24280]+0x473B4 8
+send peek [[+0x3CC96B8]+0x24280]+0x5EF90 8
+send peek [[+0x3CC96B8]+0x24280]+0x76B6C 8
+wait seconds 1
+shot second-after-01
+wait seconds 1
+shot second-after-02
+wait seconds 2
+shot second-after-04
+wait seconds 3
+shot second-after-07
+wait seconds 4
+shot second-after-11
+wait seconds 4
+shot second-after-15

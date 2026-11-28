@@ -1,0 +1,22 @@
+# ReMixed's battle at Lionel Castle's gate in Beowulf's story (its event 0x09D, the port's scenario 0x1D6): the
+# opening moves the gate with three field objects before its first line ("The gate's wide open. I've never seen such
+# an obvious trap."), under a black screen, as vanilla's 0x09C does. The remaster's own scene there (156) has its
+# instruction for the redrawn map (0xCD: animation 5) in place of the first object, and its code's list moves
+# animations 0 and 1 for the second (object 2) by the scene's number. ReMixed's scene under the port's number got
+# neither. Now its event calls the code mod's routine after the first object (the build's MAP_ANIMATION_CALLS: its
+# line names animation 5) and the list is asked as scene 156 (MAP_MOVEMENT_SCENES: the line for object 2, with
+# animation 0 running then, state 2). The third object's line comes some 12 s on, when the second has finished;
+# then the scene fades in on its first line, framed with the gate open behind it.
+#   python -I tools/quick_test.py --restart tests/quick/lionel-gate-movements.txt
+name Lionel's gate in Beowulf's story: the gate's movements
+wait world depth=1 state=0 timeout=20
+scenario 0x1D6
+wait log "formation: screen open" press=RETURN every=1 timeout=150
+formation units=1
+wait log "loaded event 470" timeout=90
+wait log "map movements: map animation 5 \(kind \d+\) set to state 2" timeout=120
+wait log "map movements: scenario 0x1D6's field object 2 moves the redrawn map as the remaster's scene 156's" timeout=120
+expect peek [[+0x3CC96B8]+0x24280]+0x24 02 00 00 00
+wait log "map movements: scenario 0x1D6's field object 4 moves the redrawn map as the remaster's scene 156's" timeout=60
+wait seconds 12
+shot first-line

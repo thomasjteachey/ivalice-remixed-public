@@ -8,7 +8,8 @@ namespace IvaliceRemixed;
 /// <summary>
 /// ReMixed's Extra Options that the code mod supports, as Reloaded-II mod settings (docs/MECHANICS.md:
 /// "Extra Options"). The defaults are ReMixed's, as a player meets them once its story has begun.
-/// Read once at startup from Config.json in the mod's config folder; a change needs a restart.
+/// Read at startup from Config.json in the mod's config folder, and again when it changes while the game runs
+/// (<see cref="RefreshSettings"/>); the ones applied at startup (test mode, separate saves, fast-forward) need a restart.
 /// </summary>
 /// <remarks>
 /// No game code here: Reloaded-II's launcher loads this class (through <see cref="Configurator"/>)
@@ -48,6 +49,15 @@ public sealed class Options : IConfigurable
     }
 
     /// <summary>Unit Levels, Stats &amp; Equipment → Job Stats (ReMixed's flag 0xEA).</summary>
+    /// <summary>Broken equipment: the mod's own, not one of ReMixed's options (asked 2026-11-27).</summary>
+    public enum BrokenEquipmentRule
+    {
+        /// <summary>Gone for good, as in the remaster.</summary>
+        Lost,
+        /// <summary>Back in the inventory after the battle, as stolen equipment comes back.</summary>
+        BackAfterBattle,
+    }
+
     public enum JobStatRule
     {
         /// <summary>The unit's job only, unless it has Bard and Dancer's innate (0x1E5).</summary>
@@ -342,7 +352,8 @@ public sealed class Options : IConfigurable
                  "named Algus or Argath, which the remaster doesn't allow; with this on, a new game's opening (the " +
                  "chapel at Orbonne) goes on to it instead of the first battle. New games only: turn it off again " +
                  "for a normal one. Ported to its end (after its ending you're back on the world map), but played " +
-                 "in the game only as far as its battle in the woods so far.")]
+                 "in the game only as far as its battle in the woods so far. Can be changed with the game open, before " +
+                 "starting the new game.")]
     [DefaultValue(false)]
     public bool ArgathCampaign { get; set; }
 
@@ -503,13 +514,72 @@ public sealed class Options : IConfigurable
     [DefaultValue(JobStatRule.JobOnly)]
     public JobStatRule JobStats { get; set; } = JobStatRule.JobOnly;
 
+    [Category("Units"), DisplayName("Broken equipment")]
+    [Description("Equipment broken on your units in battle (by the Knight's Rend abilities, or a katana breaking in " +
+                 "Draw Out) is lost, as in the remaster, or back in the inventory after the battle, as stolen equipment " +
+                 "comes back. ReMixed puts it on sale at the Poachers' Den instead, which the remaster's den has no room " +
+                 "for. Not part of ReMixed. Kept in the mod's settings for every save; also on the ReMixed tab of the " +
+                 "game's Settings (Levels, Jobs & Gear), where a change applies at once.")]
+    [DefaultValue(BrokenEquipmentRule.Lost)]
+    public BrokenEquipmentRule BrokenEquipment { get; set; } = BrokenEquipmentRule.Lost;
+
     /// <summary>The options in effect: the save's own once one is in play (<see cref="Patches.SaveOptions"/>), the mod's
     /// settings until then.</summary>
     public static Options Current { get; set; } = new();
 
     /// <summary>The mod's settings (Config.json, read at startup): a save's options until it has its own, and the
-    /// settings a save has no place for (the test mode, separate saves, the Argath campaign).</summary>
+    /// settings a save has no place for (the test mode, separate saves, the Argath campaign, broken equipment).</summary>
     public static Options Settings { get; set; } = new();
+
+    /// <summary>When the settings' Config.json was last written as they were read (<see cref="RefreshSettings"/>).</summary>
+    internal static DateTime SettingsWritten { get; set; }
+    private static long _settingsChecked = -1000; // the first check reads the file
+
+    /// <summary>The settings' Config.json's last write, or default when there's none or it can't be read.</summary>
+    internal static DateTime WrittenAt(string path)
+    {
+        try
+        {
+            return File.Exists(path) ? File.GetLastWriteTimeUtc(path) : default;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return default;
+        }
+    }
+
+    /// <summary>
+    /// The mod's settings read again when their Config.json changed since (checked at most once a second): Reloaded-II's
+    /// Configure Mod saves it while the game runs, and read only at startup a change there reached nothing until the
+    /// game was restarted (a player on 0.9.40, 2026-11-27: the Argath campaign and Guest control ticked, and the new game
+    /// had neither). The settings applied at startup (test mode, separate saves, fast-forward) keep their values until
+    /// then. A note for the log when the settings changed, else null.
+    /// </summary>
+    internal static string? RefreshSettings()
+    {
+        var path = Settings.FilePath;
+        var now = Environment.TickCount64;
+        if (path == null || now - _settingsChecked < 1000)
+            return null;
+        _settingsChecked = now;
+        var written = WrittenAt(path);
+        if (written == SettingsWritten)
+            return null;
+        SettingsWritten = written;
+        var next = Read(path, out var problem);
+        if (problem != null)
+            return $"options: {path} changed but can't be read ({problem}); the mod's settings stay as they were";
+        (next.TestMode, next.SeparateSaves, next.FastForward) = (Settings.TestMode, Settings.SeparateSaves, Settings.FastForward);
+        if (Same(next, Settings))
+            return null;
+        Settings = next;
+        // The ones a save has no place for and that work without a restart follow in the options in play too (a
+        // save's take the rest from the settings only when they're read: SaveOptions.Decode).
+        var current = Current.Copy();
+        (current.ArgathCampaign, current.BrokenEquipment) = (next.ArgathCampaign, next.BrokenEquipment);
+        Use(current);
+        return $"options: {FileName} changed; the mod's settings (a save's until it has its own): {next}";
+    }
 
     /// <summary>Raised when <see cref="Use"/> puts other options in effect, for the rules that keep a copy.</summary>
     internal static event Action? Changed;
@@ -592,6 +662,7 @@ public sealed class Options : IConfigurable
         if (!Enum.IsDefined(options.EnemyJobs)) options.EnemyJobs = default;
         if (!Enum.IsDefined(options.RareEquipment)) options.RareEquipment = default;
         if (!Enum.IsDefined(options.JobStats)) options.JobStats = default;
+        if (!Enum.IsDefined(options.BrokenEquipment)) options.BrokenEquipment = default;
         if (!Enum.IsDefined(options.FixedLevels)) options.FixedLevels = default;
         if (!Enum.IsDefined(options.LevelScaling)) options.LevelScaling = default;
         if (!Enum.IsDefined(options.EnemyLevelBoost)) options.EnemyLevelBoost = default;
@@ -626,7 +697,7 @@ public sealed class Options : IConfigurable
     }
 
     public override string ToString() =>
-        $"player deaths {PlayerDeaths}, bodies {Bodies}, JP {JpGain}%, spillover 1/{SpilloverJp}, JP refund {JpRefund}, EXP {ExpGain}%, victory bonus {VictoryBonus}, nemesis {NemesisSystem}, test mode {TestMode}, separate saves {SeparateSaves}, argath campaign {ArgathCampaign}, fast-forward {FastForward}, " +
+        $"player deaths {PlayerDeaths}, bodies {Bodies}, JP {JpGain}%, spillover 1/{SpilloverJp}, JP refund {JpRefund}, EXP {ExpGain}%, victory bonus {VictoryBonus}, nemesis {NemesisSystem}, test mode {TestMode}, separate saves {SeparateSaves}, argath campaign {ArgathCampaign}, fast-forward {FastForward}, broken equipment {BrokenEquipment}, " +
         $"back attacks {BackAttacks}, " +
         $"bravery {Bravery}, knockback {Knockback}, weapon range {WeaponRange}, poaching {PoachingOdds}, guests {GuestControl}, zodiac {ZodiacStrength}, sexuality {Sexuality}, " +
         $"job stats {JobStats}, job levels {JobLevels}, enemy jobs {EnemyJobs}, rare equipment {RareEquipment}, " +

@@ -13,7 +13,9 @@ namespace IvaliceRemixed.Patches;
 /// deployment slots from 16, the guests deployed by hand, and with flag 0xDE in every slot from 0, so the story's
 /// guests too. The remaster deploys no guests by hand, so only Always does anything: a hook on the unit setup from
 /// battle data (0x27612C, which copies the record's +0x18 into +0x05 and +0x1EE; one caller, which keeps only the
-/// result) sets the bit for a player-team unit after the game has built it.
+/// result) sets the bit for a player-team unit after the game has built it, in both: the remaster gives a unit its
+/// current team (+5) from its base team (+0x1EE) again, so with the bit in +5 alone a guest stayed the AI's (a player
+/// on 0.9.40, 2026-11-27: Delita at Gariland; the test mode's hand-over to the AI had the same, 2026-11-05).
 /// </remarks>
 internal static unsafe class GuestControl
 {
@@ -53,12 +55,15 @@ internal static unsafe class GuestControl
         return result;
     }
 
-    /// <summary>A player-team unit the player doesn't control yet becomes the player's.</summary>
+    /// <summary>A player-team unit the player doesn't control yet becomes the player's, in its current team (+5) and its
+    /// base team (+0x1EE).</summary>
     internal static bool Control(byte* unit)
     {
-        if (unit == null || (unit[Team] & (TeamBits | ControlBit)) != 0)
+        if (unit == null || (unit[Team] & TeamBits) != 0 || (unit[Battle.UnitTeam] & TeamBits) != 0
+            || (unit[Team] & unit[Battle.UnitTeam] & ControlBit) != 0)
             return false;
         unit[Team] |= ControlBit;
+        unit[Battle.UnitTeam] |= ControlBit;
         Tracer.Line(_game.Log, $"guest control: a guest (job 0x{unit[3]:X2}) is the player's to control");
         return true;
     }

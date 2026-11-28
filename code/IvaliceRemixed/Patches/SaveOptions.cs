@@ -11,7 +11,7 @@ namespace IvaliceRemixed.Patches;
 /// its defaults the first time it runs; from then on <see cref="Options.Current"/> follows the save in play, checked
 /// on every world-map frame, at each battle's setup and at its first walk of the battle conditions. The extra options
 /// menu changes them in the save. The settings with no place in a save (the test mode, separate saves, the Argath
-/// campaign, fast-forward) stay the mod's.
+/// campaign, fast-forward, broken equipment) stay the mod's.
 /// <para>A battle continued from its autosave (the title's Continue), and one begun again from the System Menu
 /// ("Retry from Start of Battle", "Change Formation and Retry"), is set up while the variables are empty, before the
 /// save's are put back: the setup's check found none of the save's options there, wrote the mod's settings over the
@@ -116,6 +116,8 @@ internal static unsafe class SaveOptions
     {
         try
         {
+            if (Options.RefreshSettings() is { } changed)
+                _log.Info(changed);
             if (_words == null || *_words == null)
                 return;
             var options = Step(Read, Write, Options.Settings, adopt, ref _seen, out var note);

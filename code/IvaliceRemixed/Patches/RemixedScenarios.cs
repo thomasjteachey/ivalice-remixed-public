@@ -487,18 +487,22 @@ internal static unsafe class RemixedScenarios
         {
             var scenario = Nemesis.GetVariable(0x27);
             // The named hand-off (the Argath campaign's, from the opening): taken for Ramza named one of its names, as
-            // in ReMixed, or with the Argath campaign setting on, as the remaster's enhanced game won't rename Ramza.
+            // in ReMixed, or with the Argath campaign setting on, as the remaster's enhanced game won't rename Ramza. The
+            // setting is the mod's, not a save's: read from the settings, again if Config.json changed with the game open.
+            if (NamedHandOffs.Count > 0 && Options.RefreshSettings() is { } changed)
+                _log.Info(changed);
+            var argath = Options.Settings.ArgathCampaign;
             foreach (var (from, to, mode, names) in NamedHandOffs)
             {
                 if (scenario != from)
                     continue;
                 var name = RosterName(0);
                 var named = names.Any(n => string.Equals(n, name, StringComparison.OrdinalIgnoreCase));
-                var taken = named || Options.Current.ArgathCampaign;
+                var taken = named || argath;
                 var (ownTo, ownMode) = OwnHandOffs.GetValueOrDefault(from);
                 SetHandOff(from, taken ? to : ownTo, taken ? mode : ownMode);
                 _log.Info($"remixed scenarios: scenario 0x{from:X} with Ramza named \"{name}\"" +
-                          $"{(Options.Current.ArgathCampaign ? " and the Argath campaign setting on" : "")} " +
+                          $"{(argath ? " and the Argath campaign setting on" : "")} " +
                           $"hands on to 0x{(taken ? to : ownTo):X}");
             }
             if (Presets.TryGetValue(scenario, out var preset))

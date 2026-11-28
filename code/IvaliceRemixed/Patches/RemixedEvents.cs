@@ -134,6 +134,8 @@ internal static unsafe class RemixedEvents
         });
         BattleEnd.Install(game);
         api.AddRoutine(MidsceneJoinReturn, BattleEnd.RestoreMidsceneField);
+        // The remaster's own map-animation instruction (0xCD), which one of ReMixed's events can't carry.
+        MapMovements.AddRoutine(api);
         api.AddRoutine(LiveBattleWriteBack, () =>
         {
             // What it returns is the joiners it queued for a join screen, which this call doesn't show: none join.

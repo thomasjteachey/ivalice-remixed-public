@@ -80,7 +80,7 @@ internal static unsafe class BattleAct
 
     /// <summary>
     /// <c>act SKILLSET ABILITY TARGET [TIMES] [moved]</c> (hex skillset and ability): TARGET is <c>foe</c> (the nearest living unit of
-    /// another team), <c>self</c> (the acting unit's panel), a battle unit's index (its panel), or <c>X,Y[,LEVEL]</c>; an
+    /// another team), <c>ally</c> (the nearest other living unit of its own team), <c>self</c> (the acting unit's panel), a battle unit's index (its panel), or <c>X,Y[,LEVEL]</c>; an
     /// item's ability (Items, 0x06: the item + 0x80, a Potion 0x170) names its item too; TIMES queues it that often (a turn's two
     /// actions in one go, as the second's menu comes moments after the first); <c>moved</c> marks the unit as having moved
     /// (+0x1B9 bit 1) just before the confirm, as a move first would, so that the action's mark ends the turn there and then
@@ -110,7 +110,7 @@ internal static unsafe class BattleAct
             return line;
         }
         if (parts.Length < 4)
-            return "error: act SKILLSET ABILITY foe|self|INDEX|X,Y[,LEVEL] [TIMES] [moved], or act clear";
+            return "error: act SKILLSET ABILITY foe|ally|self|INDEX|X,Y[,LEVEL] [TIMES] [moved], or act clear";
         var extra = parts.Skip(4).ToList();
         var moved = extra.RemoveAll(p => p.Equals("moved", StringComparison.OrdinalIgnoreCase)) > 0;
         var times = extra.Count > 0 ? int.Parse(extra[0]) : 1;
@@ -205,11 +205,12 @@ internal static unsafe class BattleAct
         else
         {
             var index = request.Target.Equals("foe", StringComparison.OrdinalIgnoreCase) ? Nearest(units, actor)
+                : request.Target.Equals("ally", StringComparison.OrdinalIgnoreCase) ? Nearest(units, actor, ally: true)
                 : request.Target.Equals("self", StringComparison.OrdinalIgnoreCase) ? actor[UnitIndex]
                 : int.Parse(request.Target);
             if ((uint)index >= Battle.UnitCount)
             {
-                _game.Log.Error("harness: act: no foe on the field");
+                _game.Log.Error($"harness: act: no {request.Target} on the field");
                 return;
             }
             var t = units + index * Battle.UnitSize;
@@ -240,8 +241,9 @@ internal static unsafe class BattleAct
                        + $"{request.Where}{(request.Moved ? ", as having moved" : "")}, from the menu's state 0x{state:X}");
     }
 
-    /// <summary>The nearest living unit on the field of another team than <paramref name="actor"/>'s (+0x1EE &amp; 0x30).</summary>
-    private static int Nearest(byte* units, byte* actor)
+    /// <summary>The nearest living unit on the field of another team than <paramref name="actor"/>'s (+0x1EE &amp; 0x30), or
+    /// with <paramref name="ally"/> of the same team.</summary>
+    private static int Nearest(byte* units, byte* actor, bool ally = false)
     {
         var best = -1;
         var distance = int.MaxValue;
@@ -249,7 +251,7 @@ internal static unsafe class BattleAct
         {
             var u = units + k * Battle.UnitSize;
             if (u[1] == 0xFF || u == actor || *(ushort*)(u + Battle.UnitHp) == 0
-                || (u[Battle.UnitTeam] & 0x30) == (actor[Battle.UnitTeam] & 0x30))
+                || ((u[Battle.UnitTeam] & 0x30) == (actor[Battle.UnitTeam] & 0x30)) != ally)
                 continue;
             var d = Math.Abs(u[UnitX] - actor[UnitX]) + Math.Abs(u[UnitY] - actor[UnitY]);
             if (d < distance)

@@ -3,8 +3,12 @@
 # the mount as a black shape and the gate standing still after the switch; both seen here the same day.
 # The mount is ReMixed's White Chocobo, the chocobo's art in a fourth palette ReMixed added to its sheet, which
 # the port didn't ship (tools/build_mod.py REMIXED_PALETTE_SHEETS): white on this build, in the `mount` frame.
-# The gate still stands (docs/GAMEPLAY_TODO.md: it does with the remaster's own script in this scene's place too);
-# the frames before each Enter, to the hand-on to the confrontation (event 883), show it as Ramza walks in.
+# The gate: the remaster moves its redrawn maps' parts from lists in its code, by the scene's number, and knew
+# nothing of the port's 0x36A, so the redrawn portcullis stood while the classic one under it rose. The code mod
+# now gives the lists the remaster's own scene, 434 (Patches/MapMovements.cs, the build's MAP_MOVEMENT_SCENES): its
+# line comes as the switch is thrown, the gate's two animations are running then (state 2 of animation 1), and the
+# frames after it show the portcullis going up (`gate-rising`) and gone (`gate-up`) before Ramza walks in; the
+# frames before each Enter then go on to the hand-on to the confrontation (event 883).
 #   python -I tools/quick_test.py --restart tests/quick/eagrose-gate-arrival.txt
 name Eagrose's gate: Zalbag's mount and the gate
 wait world depth=1 state=0 timeout=20
@@ -15,4 +19,18 @@ expect unit job=0x95 sprite_palette=3
 wait log "event 874's message (2|15) shown" press=RETURN every=1.5 timeout=200
 wait seconds 5
 shot mount
+wait log "event 874's message (3|16) shown" press=RETURN every=1.5 timeout=120
+wait seconds 8
+shot gate-down
+key RETURN
+wait log "map movements: scenario 0x36A's field object 1 moves the redrawn map as the remaster's scene 434's" timeout=120
+expect peek [[+0x3CC96B8]+0x24280]+0x17BFC 04 00 00 00 02 00 00 00
+wait seconds 2
+shot gate-rising
+wait seconds 2
+shot gate-rising-2
+wait seconds 4
+shot gate-up
+send peek [[+0x3CC96B8]+0x24280]+0x17BFC 44
+send peek [[+0x3CC96B8]+0x24280]+0x2F7D8 44
 advance event 883 every=1.5 shots=1 timeout=300

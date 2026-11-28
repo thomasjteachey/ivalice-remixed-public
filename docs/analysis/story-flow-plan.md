@@ -1397,7 +1397,8 @@ Read offline (ReMixed's events, world statements and records), shipped not seen 
   Ovelia. Then, outside a replay: var 0x6F 5, flag 0x92, the first four missions' unlocks (0x1A5-0x1A8), the world
   map's chapter-2 places and routes (chapter 1's and Orbonne shown, 1-A's hidden: the remaster's own chapter-1 reveals
   are the same flags, all among them), the Persons states (0x3C0-0x3FF), Agrias moved to roster slot 18 as a guest
-  (+4 bit 0x02, ReMixed's guest marker, which the remaster doesn't read: in the port she stays an ordinary unit there),
+  (the PS1's third guest slot, 16-19; +4 bit 0x02, ReMixed's guest marker), so ReMixed's 0x01B finds her and clears
+  its own Agrias's join, as it does Alicia's, Lavian's and Rad's when the roster has them by name (HAS_CHARACTER),
   every unit's errand byte cleared but bit 0 (1-A's units kept aside), and on to ReMixed's 0x01B, chapter 2's start:
   the remaster's 0x074 (REMASTER_HAND_OFFS).
 - **In the port** (`SIDE_CHAPTER_A_END` in tools/build_mod.py): 0x0FC as 126 and 0x11A as 127, Araguay Woods scenes
@@ -1410,8 +1411,12 @@ Read offline (ReMixed's events, world statements and records), shipped not seen 
   remaster's rows), so each step is its flag at 0 and the story's value, then the action, and waits for 1-A's mark
   (flag 0x2EC) as 1-A's starts do; ReMixed's two 0x1D steps (var 0x6D, a tutorial's) are left out, as the remaster
   leaves out vanilla's. Both events need nothing more by their instructions. Not seen in the game yet.
-- **To look at in the game:** Agrias, an ordinary unit in slot 18 after 0x11A, when the remaster's chapter 2 has her
-  join (its join skips a sprite set the roster has); Orbonne shown through chapter 2 (as in ReMixed; the remaster
+- **Chapter 2's opening after 1-A** (2026-11-27, a player's two Agrias, Alicias and Lavians): the port's 0x11A puts
+  Agrias in the remaster's third guest slot, 52 (SIDE_CHAPTER_A_GUEST), not its party slot 18, and the code mod keeps
+  any unit made from battle data out of a join when the roster has its story character (`RosterGuard`), which the
+  remaster's event 117 (entry 0x110: Rad, Alicia, Lavian joining, the guest Agrias joining and saving) can't check.
+- **To look at in the game:** Agrias the guest after 0x11A, with 1-A's levels, and no second Alicia, Lavian or
+  Agrias after event 117; Orbonne shown through chapter 2 (as in ReMixed; the remaster
   shows it at 34); 0x11A's flags are ReMixed's over the remaster's own at its chapter 2's start.
 
 ## The Nemesis's return (0x11D, read 2026-11-12)
